@@ -26,6 +26,9 @@ import scala.util.chaining.scalaUtilChainingOps
 
 object MainForm {
 
+  private val detailsTag = htmlTag("details")
+  private val summaryTag = htmlTag("summary")
+
   val currentGlobalAlert: Var[Option[String]] = Var(None)
 
   private val tooltipX: Var[Int] = Var(0)
@@ -33,7 +36,7 @@ object MainForm {
 
   private val tooltip: ReactiveHtmlElement[HTMLDivElement] =
     div(
-      className := "card p-1",
+      className := "card p-1 game-tooltip",
       position.absolute,
       top.px <-- tooltipY.signal.distinct.map(_ - 15),
       left.px <-- tooltipX.signal.distinct.map(_ + 50),
@@ -44,18 +47,20 @@ object MainForm {
   private val ctrlPressedVar = Var(false)
   private val shiftPressedVar = Var(false)
 
+  private val windowWidthVar: Var[Long] = Var(window.innerWidth.toLong)
+  private val mobileMultiplier = Var(1)
+
   private val modifiersMultiplierSignal: Signal[Int] =
     ctrlPressedVar.signal
-      .combineWith(shiftPressedVar.signal)
-      .map { case (ctrl, shift) =>
-        getMouseEventMultiplier(ctrl, shift)
+      .combineWith(shiftPressedVar.signal, mobileMultiplier.signal, windowWidthVar.signal)
+      .map { case (ctrl, shift, mobile, width) =>
+        if (width <= 767) mobile else getMouseEventMultiplier(ctrl, shift)
       }
 
   private val ResourcesWidth = 500
   private val NestWidth = 800
   private val MessagesWidth = 575
 
-  private val windowWidthVar: Var[Long] = Var(1000)
   private val windowWidthLimit: Long =
     ResourcesWidth + NestWidth + MessagesWidth
 
@@ -67,9 +72,9 @@ object MainForm {
     dom.window.addEventListener(
       "resize",
       (_: dom.Event) => {
-        Var.set(
-          windowWidthVar -> window.innerWidth.toLong
-        )
+        tooltipVisible.set(false)
+        tooltipContent.set(div())
+        windowWidthVar.set(window.innerWidth.toLong)
       }
     )
 
@@ -85,17 +90,20 @@ object MainForm {
     }
 
     div(
+      className := "antidle-app",
       topBarDiv,
       div(
-        className := "m-2",
+        className := "m-2 game-layout",
         className := "d-flex justify-content-start",
         className := "fs-4",
         className("flex-column") <-- windowWidthVar.signal.map(_ < windowWidthLimit),
         div(
+          className := "resources-column",
           resourcesDiv,
         ),
         mainTabsDiv,
         div(
+          className := "activity-column",
           child.maybe <-- ifUnlockedOpt(buildQueueUnlockedSignal)(buildQueueDiv),
           messagesDiv,
         ),
@@ -129,7 +137,7 @@ object MainForm {
 
   private def topBarDiv: ReactiveHtmlElement[HTMLDivElement] =
     div(
-      className := "flex-column",
+      className := "flex-column game-topbar",
       div(
         className := "m-2",
         div(
@@ -143,6 +151,7 @@ object MainForm {
             className := "d-flex justify-content-between align-items-center",
             timeDiv,
             div(
+              className := "topbar-spacer",
               width.px := 75,
               nbsp,
             ),
@@ -210,7 +219,7 @@ object MainForm {
 
   private def mainTabsDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
-      className := "card m-1",
+      className := "card m-1 game-main",
       width.px := NestWidth,
       maxWidth.px := NestWidth,
       div(
@@ -264,7 +273,7 @@ object MainForm {
               className := "nav-item",
               a(
                 className := "nav-link",
-                idAttr := "upgrades-tab",
+                idAttr := "explore-tab",
                 dataAttr("bs-toggle") := "tab",
                 href := "#exploreContent",
                 role := "tab",
@@ -287,6 +296,22 @@ object MainForm {
       ),
       div(
         className := "card-body",
+        div(
+          className := "mobile-only batch-controls",
+          label(
+            forId := "mobile-action-amount",
+            "Action amount",
+            small(className := "d-block text-body-secondary", "Eggs and worker assignments"),
+          ),
+          select(
+            idAttr := "mobile-action-amount",
+            className := "form-select",
+            Seq(1, 10, 25, 250).map { amount =>
+              option(value := amount.toString, s"×$amount")
+            },
+            onChange.mapToValue.map(_.toInt) --> mobileMultiplier.writer,
+          ),
+        ),
         div(
           className := "tab-content",
           div(
@@ -424,11 +449,20 @@ object MainForm {
   private def buildQueueDiv: ReactiveHtmlElement[HTMLDivElement] = {
     def buildTaskName(buildTask: BuildTask, index: Int): ReactiveHtmlElement[HTMLSpanElement] = {
       span(
+        className := "build-task",
+        role := "button",
+        tabIndex := 0,
         buildTask.chamberType.name,
         " [",
         TickCalculator.calculateTicksToResources(buildTask.actionCost),
         "]",
         onClick --> { _ => Actions.removeBuildTask(index) },
+        onKeyDown --> { event =>
+          if (event.key == "Enter" || event.key == " ") {
+            event.preventDefault()
+            Actions.removeBuildTask(index)
+          }
+        },
       ).amendThis(elem =>
         createTooltipForActionButton(
           elem = elem,
@@ -441,7 +475,7 @@ object MainForm {
 
     div(
       className := "m-1",
-      className := "card",
+      className := "card game-panel",
       className := "fs-4",
       width.px := MessagesWidth,
       maxWidth.px := MessagesWidth,
@@ -477,7 +511,7 @@ object MainForm {
   private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "m-1",
-      className := "card",
+      className := "card game-panel",
       className := "fs-4",
       width.px := MessagesWidth,
       maxWidth.px := MessagesWidth,
@@ -502,7 +536,7 @@ object MainForm {
   private def resourcesDiv: Modifier[ReactiveHtmlElement[HTMLDivElement]] =
     div(
       className := "m-1",
-      className := "card",
+      className := "card game-panel",
       className := "fs-5",
       width.px := ResourcesWidth,
       maxWidth.px := ResourcesWidth,
@@ -588,10 +622,15 @@ object MainForm {
       case true =>
         Some(
           div(
-            className := "row",
+            className := "row resource-row",
             div(
               className := "col-4 text-nowrap",
-              name,
+              child <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
+                tooltipOpt.filter(_ => mobile) match {
+                  case Some(content) => detailsTag(summaryTag(name), content)
+                  case None => span(name)
+                }
+              },
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
               className := "col-3 text-end text-nowrap",
@@ -696,7 +735,7 @@ object MainForm {
       topRightBadgeSignal: Signal[Option[ReactiveHtmlElement[HTMLElement]]] = Val(None),
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
-      className := "col-6 px-3 py-2 d-grid",
+      className := "col-6 px-3 py-2 d-grid action-cell",
       button(
         className := "btn btn-primary position-relative",
         className := "fs-4",
@@ -725,6 +764,15 @@ object MainForm {
             }
           },
       ),
+      child.maybe <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
+        Option.when(mobile) {
+          detailsTag(
+            className := "mobile-only action-details",
+            summaryTag(s"Details: $name"),
+            actionDetails(descriptionSignal, costSignal, bonusSignal),
+          )
+        }
+      },
     ).amendThis(elem =>
       createTooltipForActionButton(elem, descriptionSignal, costSignal, bonusSignal)
     )
@@ -735,49 +783,53 @@ object MainForm {
       costSignal: Signal[ActionCost],
       bonusSignal: Signal[ActionBonus],
   ): EventListener[MouseEvent, MouseEvent] =
-    setTooltip(
-      elem,
-      div(
-        className := "p-1",
-        child.maybe <-- descriptionSignal.map {
-          _.map { descriptionDiv =>
-            div(
-              className := "text-center",
-              maxWidth.px := 350,
-              descriptionDiv,
-              hr(),
-            )
-          }
-        },
-        child <-- costSignal.map { cost =>
+    setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal))
+
+  private def actionDetails(
+      descriptionSignal: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
+      costSignal: Signal[ActionCost],
+      bonusSignal: Signal[ActionBonus],
+  ): ReactiveHtmlElement[HTMLDivElement] =
+    div(
+      className := "p-1",
+      child.maybe <-- descriptionSignal.map {
+        _.map { descriptionDiv =>
           div(
-            className := "d-flex flex-column justify-content-center text-center",
-            ifGreater0(cost.sugar)(prettyNumberSimple("", _, " sugar")),
-            ifGreater0(cost.tunnelingSpace)(prettyNumberSimple("", _, " tunneling space")),
-            ifGreater0(cost.colonyPoints)(prettyNumberSimple("", _, " colony points")),
-            ifGreater0(cost.idleWorkers)(prettyNumberSimple("", _, " idle workers")),
+            className := "text-center",
+            maxWidth.px := 350,
+            descriptionDiv,
+            hr(),
           )
-        },
-        child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
-          if (cost == ActionCost.empty || bonus == ActionBonus.empty)
-            None
-          else
-            Some(hr())
-        },
-        child <-- bonusSignal.map { bonus =>
-          div(
-            className := "d-flex flex-column justify-content-center text-center",
-            ifGreater0(bonus.sugar)(prettyNumberSimple("+", _, " sugar")),
-            ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
-            ifGreater0(bonus.colonyPointsEachWorker)(
-              prettyNumberSimple("+", _, " colony points/worker/s")
-            ),
-            ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
-            ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
-            ifGreater0(bonus.maxWorkers)(prettyNumberSimple("+", _, " max workers")),
-          )
-        },
-      )
+        }
+      },
+      child <-- costSignal.map { cost =>
+        div(
+          className := "d-flex flex-column justify-content-center text-center",
+          ifGreater0(cost.sugar)(prettyNumberSimple("", _, " sugar")),
+          ifGreater0(cost.tunnelingSpace)(prettyNumberSimple("", _, " tunneling space")),
+          ifGreater0(cost.colonyPoints)(prettyNumberSimple("", _, " colony points")),
+          ifGreater0(cost.idleWorkers)(prettyNumberSimple("", _, " idle workers")),
+        )
+      },
+      child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
+        if (cost == ActionCost.empty || bonus == ActionBonus.empty)
+          None
+        else
+          Some(hr())
+      },
+      child <-- bonusSignal.map { bonus =>
+        div(
+          className := "d-flex flex-column justify-content-center text-center",
+          ifGreater0(bonus.sugar)(prettyNumberSimple("+", _, " sugar")),
+          ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
+          ifGreater0(bonus.colonyPointsEachWorker)(
+            prettyNumberSimple("+", _, " colony points/worker/s")
+          ),
+          ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
+          ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
+          ifGreater0(bonus.maxWorkers)(prettyNumberSimple("+", _, " max workers")),
+        )
+      },
     )
 
   private def tasksDiv: ReactiveHtmlElement[HTMLDivElement] =
@@ -790,13 +842,16 @@ object MainForm {
       children <-- unlockedAntTasks.map(_.map(taskDiv)),
     )
 
+  private def taskMultiplier(event: MouseEvent): Int =
+    if (window.innerWidth <= 767) mobileMultiplier.now() else getMouseEventMultiplier(event)
+
   private def taskDiv(antTask: AntTask): ReactiveHtmlElement[HTMLDivElement] = {
     val amountSignal: Signal[Long] =
       antsSignal.map(_.tasks.find(_._1 == antTask).map(_._2).getOrElse(0L)).distinct
     val id = s"task-${antTask.toString.toLowerCase}"
 
     // TODO: Improve this, add bonuses dynamically, instead of constants
-    val tooltipSignal: ReactiveHtmlElement[HTMLDivElement] =
+    def taskDescription: ReactiveHtmlElement[HTMLDivElement] =
       antTask match {
         case AntTask.SugarCollector =>
           div(prettyNumberSimple("+", defaultTaskCollectSugarSecond, " sugar per second / ant"))
@@ -814,7 +869,7 @@ object MainForm {
 
     div(
       idAttr := id,
-      className := "row",
+      className := "row task-row",
       span(
         className := "col-6",
         antTask.name,
@@ -824,18 +879,17 @@ object MainForm {
         ")",
       ),
       div(
-        className := "col-2",
+        className := "col-2 task-controls",
         when(antTask.showButtons)(
           button(
             className := "btn btn-primary",
             className := "m-1",
             cursor.pointer,
-            i(
-              className := "fa-solid fa-minus",
-            ),
+            aria.label := s"Remove ${antTask.name}",
+            span(aria.hidden := true, "−"),
             disabled <-- amountSignal.map(_ == 0),
             onClick --> { mouseEvent =>
-              Actions.reduceAntTask(antTask, getMouseEventMultiplier(mouseEvent) * u)
+              Actions.reduceAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
           ),
         ),
@@ -844,18 +898,18 @@ object MainForm {
             className := "btn btn-primary",
             className := "m-1",
             cursor.pointer,
-            i(
-              className := "fa-solid fa-plus",
-            ),
+            aria.label := s"Assign ${antTask.name}",
+            span(aria.hidden := true, "+"),
             disabled <-- idleWorkersCountSignal.map(_ == 0),
             onClick --> { mouseEvent =>
-              Actions.incrementAntTask(antTask, getMouseEventMultiplier(mouseEvent) * u)
+              Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
           ),
         ),
       ),
       div(className := "col-4"),
-    ).amendThis(elem => setTooltip(elem, tooltipSignal))
+      div(className := "mobile-only task-description", taskDescription),
+    ).amendThis(elem => setTooltip(elem, taskDescription))
   }
 
   private def upgradesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
