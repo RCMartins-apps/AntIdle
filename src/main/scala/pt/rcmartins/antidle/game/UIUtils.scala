@@ -23,7 +23,7 @@ object UIUtils {
       contentOpt: Option[ReactiveHtmlElement[HTMLDivElement]],
   ): EventListener[MouseEvent, MouseEvent] =
     onMouseEnter --> { _ =>
-      contentOpt.foreach { content =>
+      contentOpt.filter(_ => org.scalajs.dom.window.innerWidth > 767).foreach { content =>
         Var.set(
           tooltipVisible -> true,
           tooltipTarget -> elem,
@@ -37,7 +37,7 @@ object UIUtils {
       content: ReactiveHtmlElement[HTMLElement],
   ): EventListener[MouseEvent, MouseEvent] =
     onMouseEnter --> { _ =>
-      Var.set(
+      if (org.scalajs.dom.window.innerWidth > 767) Var.set(
         tooltipVisible -> true,
         tooltipTarget -> elem,
         tooltipContent -> content,
