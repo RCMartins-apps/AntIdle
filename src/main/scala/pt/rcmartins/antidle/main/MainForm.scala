@@ -567,12 +567,6 @@ object MainForm {
           showSignal = nurseryUnlockedSignal,
         ),
         child.maybe <-- createResourceDiv(
-          name = "Scouts",
-          resourceSignal = scoutResourceSignal,
-          resourceEstimationSignal = Val(div()),
-          showSignal = nestSignal.map(_.chambers.nurseryChamber.level > 0),
-        ),
-        child.maybe <-- createResourceDiv(
           name = "Colony Points",
           resourceSignal = colonyPointsSignal,
           resourceEstimationSignal =
@@ -617,6 +611,12 @@ object MainForm {
           resourceSignal = workersResourceSignal,
           resourceEstimationSignal = Val(div()),
           showSignal = unlocksSignal.map(_.resources.showWorkers)
+        ),
+        child.maybe <-- createResourceDiv(
+          name = "Scouts",
+          resourceSignal = scoutResourceSignal,
+          resourceEstimationSignal = Val(div()),
+          showSignal = nestSignal.map(_.chambers.nurseryChamber.level > 0),
         ),
       )
     )
