@@ -5,7 +5,7 @@ import pt.rcmartins.antidle.game.Constants.{SugarImprovementBonusPerc, u}
 import pt.rcmartins.antidle.game.saves.SaveLoad
 import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
-import pt.rcmartins.antidle.model.{AllData, AntBrood, AntTask, BuildTask}
+import pt.rcmartins.antidle.model.{AllData, AntBrood, AntTask, BasicResources, BuildTask}
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -106,13 +106,19 @@ object TickUpdater {
               allData
           }
         },
-        // Colony points update
+        // Derive capacity from the level so existing saves receive the bonus too.
         allData => {
-          allData.giveResources(
-            colonyPoints = allData.nestAttributes.chambers.nestChamber.level *
-              allData.ants.workersCount *
-              Constants.defaultNestLevelColonyPointsTick,
-          )
+          val nestLevel = allData.nestAttributes.chambers.nestChamber.level
+          allData
+            .modify(_.basicResources.colonyPoints.maxAmount)
+            .setTo(
+              BasicResources.initial.colonyPoints.maxAmount +
+                nestLevel.toLong * Constants.NestUpgradeBonusMaxColonyPoints
+            )
+            .giveResources(
+              colonyPoints = nestLevel * allData.ants.workersCount *
+                Constants.defaultNestLevelColonyPointsTick,
+            )
         },
         // Exploration parties update
         allData => {

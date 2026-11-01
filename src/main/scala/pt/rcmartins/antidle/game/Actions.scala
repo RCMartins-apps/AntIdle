@@ -102,6 +102,7 @@ object Actions {
           ActionBonus(
             colonyPointsEachWorker = Constants.defaultNestLevelColonyPointsSecond,
             maxWorkers = Constants.NestUpgradeBonusMaxWorkers,
+            maxColonyPoints = Constants.NestUpgradeBonusMaxColonyPoints,
           )
         case ChamberType.Queen =>
           ActionBonus(

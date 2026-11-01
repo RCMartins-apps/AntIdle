@@ -5,6 +5,7 @@ case class ActionBonus(
     eggs: Long = 0L,
     colonyPointsEachWorker: Long = 0L,
     maxSugar: Long = 0L,
+    maxColonyPoints: Long = 0L,
     maxEggs: Long = 0L,
     maxWorkers: Long = 0L,
 )

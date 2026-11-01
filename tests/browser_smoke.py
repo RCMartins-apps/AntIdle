@@ -65,6 +65,37 @@ def progressed_game(initial):
     return game
 
 
+def check_nest_capacity(page, initial):
+    game = progressed_game(initial)
+    game["ants"]["workers"] = 0
+    game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
+    # Simulate a save created before the per-level capacity bonus existed.
+    game["basicResources"]["colonyPoints"] = {"amount": 2000 * UNIT, "maxAmount": 2000 * UNIT}
+    load_game(page, game)
+    page.clock.run_for(400)
+    migrated = save_game(page)
+    assert migrated["basicResources"]["colonyPoints"] == {
+        "amount": 2000 * UNIT, "maxAmount": 3500 * UNIT
+    }
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    page.get_by_text("Details: Expand Nest", exact=True).click()
+    expect(page.locator("details[open]")).to_contain_text("+500 max colony points")
+    page.get_by_role("button", name="Expand Nest", exact=False).click()
+    page.clock.run_for(400)
+    upgraded = save_game(page)
+    assert upgraded["nestAttributes"]["chambers"]["nestChamber"]["level"] == 4
+    assert upgraded["basicResources"]["colonyPoints"]["maxAmount"] == 4000 * UNIT
+    page.clock.run_for(1000)
+    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 4000 * UNIT
+    page.reload(wait_until="networkidle")
+    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 4000 * UNIT
+    game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 0
+    load_game(page, game)
+    page.clock.run_for(400)
+    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 2000 * UNIT
+    print("PASS nest capacity: existing saves, +500 per level, stable ticks, save reload, level zero")
+
+
 def run_checks(browser, url):
     outcomes = {}
     for width in (320, 390, 767, 768, 844, 1024, 1920):
@@ -143,6 +174,8 @@ def run_checks(browser, url):
         page.get_by_text("Details: Lay Egg", exact=True).click()
         expect(page.locator("details[open]")).to_contain_text("Ants require a constant sugar supply")
         assert_fits(page, 390)
+        if width == 390:
+            check_nest_capacity(page, initial)
         assert not errors, errors
         print(f"PASS {width}px: layout, tabs, saves, batch parity, resize")
         context.close()
