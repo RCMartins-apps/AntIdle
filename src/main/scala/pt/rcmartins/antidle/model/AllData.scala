@@ -24,7 +24,6 @@ case class AllData(
   def hasResources(actionCost: ActionCost): Boolean =
     basicResources.hasResources(actionCost) && ants.hasIdleWorkersForCost(actionCost)
 
-  /** Just checks if there are resources available */
   def hasResourcesUpdate(actionCost: ActionCost)(updateIfPossibleF: AllData => AllData): AllData =
     if (hasResources(actionCost))
       updateIfPossibleF(spendResources(actionCost))
@@ -49,7 +48,7 @@ case class AllData(
       .usingIf(tunnelingSpace > 0)(_.addValue(tunnelingSpace))
       // colonyPoints
       .modify(_.basicResources.colonyPoints)
-      .usingIf(colonyPoints > 0)(_ + colonyPoints) // TODO change when colonyPoints are limited...
+      .usingIf(colonyPoints > 0)(_ + colonyPoints)
       .modify(_.statistics.colonyPointsU)
       .usingIf(colonyPoints > 0)(_.addValue(colonyPoints))
 
