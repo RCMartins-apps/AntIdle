@@ -27,6 +27,13 @@ object AntBrood {
     val name: String = "Egg"
   }
 
+  case class ScoutEgg(initialTick: Long) extends AntBrood {
+    val isEgg: Boolean = true
+    val isLarvae: Boolean = false
+    val isPupae: Boolean = false
+    val name: String = "Scout Egg"
+  }
+
   case class Larvae(
       initialTick: Long,
   ) extends AntBrood {

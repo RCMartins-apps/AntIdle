@@ -561,6 +561,18 @@ object MainForm {
           showSignal = unlocksSignal.map(_.resources.showTunnelingSpace),
         ),
         child.maybe <-- createResourceDiv(
+          name = "Protein",
+          resourceSignal = proteinSignal,
+          resourceEstimationSignal = Val(div()),
+          showSignal = nurseryUnlockedSignal,
+        ),
+        child.maybe <-- createResourceDiv(
+          name = "Scouts",
+          resourceSignal = scoutResourceSignal,
+          resourceEstimationSignal = Val(div()),
+          showSignal = nestSignal.map(_.chambers.nurseryChamber.level > 0),
+        ),
+        child.maybe <-- createResourceDiv(
           name = "Colony Points",
           resourceSignal = colonyPointsSignal,
           resourceEstimationSignal =
@@ -586,7 +598,10 @@ object MainForm {
                           b(antBlood.name + ": "),
                           child <-- currentTickSignal.map { currentTick =>
                             prettyTimeFromTicks(
-                              (antBlood.initialTick + AntBrood.defaultTicksToGrow) - currentTick
+                              (antBlood.initialTick + (antBlood match {
+                              case _: AntBrood.ScoutEgg => Constants.ScoutGrowthTicks
+                              case _ => AntBrood.defaultTicksToGrow
+                            })) - currentTick
                             )
                           },
                           " to grow to next stage."
@@ -721,6 +736,31 @@ object MainForm {
         chamberType = ChamberType.FoodStorage,
         unlockF = _.canBuildFoodStorageChamber,
       ),
+      child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
+        val cost = Actions.buildChamberCost(ChamberType.Nursery)
+        actionButton(
+          name = "Nursery Chamber",
+          enabledSignal = Val(true),
+          descriptionSignal = Val(Some(div("A nursery supports three scouts per level. Scout eggs need protein and mature in 30 seconds."))),
+          costSignal = cost,
+          bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
+          topRightBadgeSignal = chambersSignal.map(chambers =>
+            Option.when(chambers.nurseryChamber.level > 0)(span(chambers.nurseryChamber.level))),
+          onClickAction = _ => useSignalValue[ActionCost](cost,
+            cost => Actions.addBuildTask(BuildTask(ChamberType.Nursery, cost))),
+        )
+      },
+      child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
+        actionButton(
+          name = "Raise Scout Egg",
+          enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
+            .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
+          descriptionSignal = Val(Some(div("Raise one scout in 30 seconds. Scouts use colony and egg capacity, eat sugar, and guide woodland expeditions."))),
+          costSignal = Val(ScoutProgression.eggCost),
+          bonusSignal = Val(ActionBonus.empty),
+          onClickAction = _ => Actions.raiseScout(),
+        )
+      },
     )
   }
 
@@ -805,6 +845,7 @@ object MainForm {
       child <-- costSignal.map { cost =>
         div(
           className := "d-flex flex-column justify-content-center text-center",
+          ifGreater0(cost.protein)(prettyNumberSimple("", _, " protein")),
           ifGreater0(cost.sugar)(prettyNumberSimple("", _, " sugar")),
           ifGreater0(cost.tunnelingSpace)(prettyNumberSimple("", _, " tunneling space")),
           ifGreater0(cost.colonyPoints)(prettyNumberSimple("", _, " colony points")),
@@ -829,6 +870,7 @@ object MainForm {
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxWorkers)(prettyNumberSimple("+", _, " max workers")),
+          ifGreater0(bonus.maxScouts)(prettyNumberSimple("+", _, " max scouts")),
         )
       },
     )
@@ -840,16 +882,16 @@ object MainForm {
         "Idle Ants: ",
         b(child <-- idleWorkersCountSignal.map(prettyNumberFixedSize)),
       ),
-      children <-- unlockedAntTasks.map(_.map(taskDiv)),
+      children <-- unlockedAntTasks.map(_.map(task => taskDiv(task))),
     )
 
   private def taskMultiplier(event: MouseEvent): Int =
     if (window.innerWidth <= 767) mobileMultiplier.now() else getMouseEventMultiplier(event)
 
-  private def taskDiv(antTask: AntTask): ReactiveHtmlElement[HTMLDivElement] = {
+  private def taskDiv(antTask: AntTask, idSuffix: String = ""): ReactiveHtmlElement[HTMLDivElement] = {
     val amountSignal: Signal[Long] =
       antsSignal.map(_.tasks.find(_._1 == antTask).map(_._2).getOrElse(0L)).distinct
-    val id = s"task-${antTask.toString.toLowerCase}"
+    val id = s"task-${antTask.toString.toLowerCase}$idSuffix"
 
     // TODO: Improve this, add bonuses dynamically, instead of constants
     def taskDescription: ReactiveHtmlElement[HTMLDivElement] =
@@ -864,6 +906,8 @@ object MainForm {
               " tunneling space per second / ant"
             )
           )
+        case AntTask.CarcassHarvester =>
+          div("Harvests 0.8 food per second. Food offsets sugar upkeep; surplus is consumed. Protein is recovered when the carcass is exhausted.")
         case AntTask.Explorer =>
           div("Ants exploring the surroundings.")
       }
@@ -901,7 +945,10 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Assign ${antTask.name}",
             span(aria.hidden := true, "+"),
-            disabled <-- idleWorkersCountSignal.map(_ == 0),
+            disabled <-- idleWorkersCountSignal.combineWith(explorationSignal).map {
+              case (idle, exploration) => idle == 0 ||
+                (antTask == AntTask.CarcassHarvester && exploration.carcasses.isEmpty)
+            },
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
@@ -951,87 +998,95 @@ object MainForm {
   }
 
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
-    def createExploreArea(
-        name: String,
-        unlockFunc: Signal[Boolean],
-        costSignal: Signal[ActionCost],
-        description: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
-    ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] =
-      ifUnlockedOpt(unlockFunc) {
-        actionButton(
-          name = name,
-          enabledSignal = hasResourcesSignal(costSignal).combineWith(explorationSignal).map {
-            case (hasResources, exploration) =>
-              hasResources && exploration.explorationParties.sizeIs < Constants.MaxExplorationParties
-          },
-          descriptionSignal = description,
-          costSignal = costSignal,
-          bonusSignal = Val(ActionBonus.empty),
-          onClickAction = _ =>
-            useSignalValue[ActionCost](
-              costSignal,
-              actionCost => Actions.explore(actionCost),
-            ),
-        )
-      }
+    val amountOfExplorersVar = Var(1L * u)
 
-    val amountOfExplorersVar: Var[Long] = Var(1L * u)
+    def area(name: String, distant: Boolean): ReactiveHtmlElement[HTMLDivElement] = {
+      val cost = amountOfExplorersVar.signal.map(ExplorationHelper.cost(_, distant))
+      actionButton(
+        name = name,
+        enabledSignal = hasResourcesSignal(cost).combineWith(explorationSignal, availableScoutsSignal)
+          .map { case (resources, exploration, scouts) =>
+            resources && exploration.explorationParties.size < Constants.MaxExplorationParties &&
+              (!distant || scouts >= u)
+          },
+        descriptionSignal = Val(Some(div(if (distant)
+          "A 45-second expedition guided by one scout. Brings back an insect with twice the food and protein, if carcass storage has room."
+        else "A 15-second expedition. The first trip finds a dead insect; later trips may find insects, sugar, or nothing."))),
+        costSignal = cost,
+        bonusSignal = Val(ActionBonus.empty),
+        onClickAction = _ => useSignalValue(amountOfExplorersVar.signal,
+          workers => Actions.explore(workers, distant)),
+      )
+    }
 
     div(
       className := "row",
       div(
-        className := "col-12 px-3 py-2 d-grid",
+        className := "col-12 px-3 py-2",
+        p("Explore, harvest a dead insect, and recover protein to build a Nursery and raise scouts."),
+        label(
+          forId := "explorer-count",
+          "Workers to send: ",
+          b(child <-- amountOfExplorersVar.signal.map(prettyNumberInt)),
+        ),
+        input(
+          idAttr := "explorer-count",
+          className := "form-range",
+          `type` := "range",
+          MinAttr := "1",
+          MaxAttr <-- idleWorkersCountSignal.map(amount => Math.max(1L, amount / u).toString),
+          disabled <-- idleWorkersCountSignal.map(_ < u),
+          value <-- amountOfExplorersVar.signal.map(amount => (amount / u).toString),
+          onInput.mapToValue.map(_.toLong * u) --> amountOfExplorersVar.writer,
+        ),
+      ),
+      area("Explore Surroundings", distant = false),
+      child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
         div(
-          className := "row px-0",
-          className := "d-flex justify-content-start align-items-center",
-          div(
-            className := "col-6",
-            "Number of explorers to send:",
-            nbsp,
-            child <-- amountOfExplorersVar.signal.map(amount => b(prettyNumberInt(amount))),
-          ),
-          div(
-            className := "col-6",
-            input(
-              className := "form-range",
-              `type` := "range",
-              MinAttr := "1",
-              MaxAttr <-- maxWorkers.map(amount => (amount / u).toString),
-              value <-- amountOfExplorersVar.signal.map(amount => (amount / u).toString),
-              onInput --> { ev =>
-                val value = ev.target.asInstanceOf[HTMLInputElement].value.toLong
-                amountOfExplorersVar.set(value * u)
-              },
-            ),
-          ),
-        ),
-      ),
-      child.maybe <-- createExploreArea(
-        name = "Explore Surroundings",
-        Val(true),
-        amountOfExplorersVar.signal.map(amount =>
-          ActionCost(sugar = amount * 10, idleWorkers = amount)
-        ),
-        description = Val(Some(div("Send explorer ants out exploring the nest surroundings."))),
-      ),
+          className := "col-12 px-0",
+          p(className := "px-3", "Available scouts: ",
+            b(child <-- availableScoutsSignal.map(prettyNumberInt)),
+            ". Raise a scout egg in the Nest to guide a woodland expedition."),
+          div(className := "row mx-0", area("Explore Woodland Edge", distant = true)),
+        )
+      },
       div(
-        className := "pt-3 px-3",
-        "Number of exploration parties: ",
-        child <-- explorationSignal.map(_.explorationParties.size),
-        " / ",
-        b(Constants.MaxExplorationParties),
+        className := "col-12 px-3 py-2",
+        "Expeditions: ", child.text <-- explorationSignal.map(_.explorationParties.size),
+        s" / ${Constants.MaxExplorationParties}",
+        children <-- explorationSignal.map(_.explorationParties.map { party =>
+          div(
+            b(if (party.scouts > 0) "Woodland edge: " else "Surroundings: "),
+            s"${prettyNumberStr(party.amountWorkers)} workers", ", ",
+            child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))),
+          )
+        }),
       ),
-      div(
-        className := "col-12 pt-3 d-grid",
-        children <-- explorationSignal.map {
-          _.explorationParties.map { case ExplorationParty(amountWorkers, _, targetTick) =>
-            div(
-              b(s"[${prettyNumberStr(amountWorkers)} Explorer Ant${plural(amountWorkers / u)}] "),
-              child.text <-- currentTickSignal.map(targetTick - _).map(prettyTimeFromTicks),
-            )
-          }
-        }
-      )
+      child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
+        div(
+          className := "col-12 px-3 py-2",
+          h5("Carcass harvesting"),
+          p("Harvesters work on one insect at a time. Food offsets sugar upkeep; surplus food is consumed. Exhausting an insect yields protein. Up to three insects can be stored."),
+          taskDiv(AntTask.CarcassHarvester, "-explore"),
+          div(
+            children <-- explorationSignal.map { exploration =>
+              if (exploration.carcasses.isEmpty) Seq(p("No carcasses left. Explore to find another insect."))
+              else exploration.carcasses.zipWithIndex.map { case (carcass, index) =>
+                div(
+                  className := "card p-2 my-2",
+                  b(if (index == 0) "Dead insect — ready to harvest" else "Dead insect — stored"),
+                  div(s"Food remaining: ${prettyNumberStr(carcass.foodRemaining)} / ${prettyNumberStr(carcass.totalFood)}"),
+                  div(className := "progress my-2",
+                    div(className := "progress-bar", role := "progressbar",
+                      aria.label := "Carcass food remaining",
+                      width.percent := (100.0 * carcass.foodRemaining / carcass.totalFood))),
+                  div(s"Protein on completion: ${prettyNumberStr(carcass.proteinReward)}"),
+                )
+              }
+            },
+          ),
+        )
+      },
     )
   }
 

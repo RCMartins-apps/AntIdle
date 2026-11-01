@@ -73,9 +73,20 @@ object Constants {
       case ChamberType.Nest        => cost(20 * u, exponent1_50)
       case ChamberType.Queen       => cost(25 * u, exponent1_50)
       case ChamberType.FoodStorage => cost(50 * u, exponent1_14)
-      case ChamberType.Nursery     => 0 // TODO
+      case ChamberType.Nursery     => cost(100 * u, exponent1_50)
     }
   }
+
+  val CarcassFood: Long = 120 * u
+  val CarcassProtein: Long = 5 * u
+  val HarvesterFoodPerTick: Long = (0.8 * u / TicksPerSecond).toLong
+  val MaxStoredCarcasses: Int = 3
+  val NurseryProteinCost: Long = 3 * u
+  val NurseryBonusMaxScouts: Long = 3 * u
+  val ScoutSugarCost: Long = 50 * u
+  val ScoutProteinCost: Long = 2 * u
+  val ScoutGrowthTicks: Long = 30 * TicksPerSecond
+  val DistantExplorationTicks: Long = 45 * TicksPerSecond
 
   val MaxExplorationParties: Int = 1
 

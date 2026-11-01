@@ -57,11 +57,17 @@ object Utils {
   val pupaeCountSignal: Signal[Long] =
     antsSignal.map(_.eggsAndLarvae.count(_.isPupae) * u).distinct
 
+  val scoutsSignal: Signal[Long] = antsSignal.map(_.scouts).distinct
+  val availableScoutsSignal: Signal[Long] = antsSignal.combineWith(explorationSignal)
+    .map { case (ants, exploration) => ScoutProgression.available(ants, exploration) }.distinct
+  val scoutResourceSignal: Signal[BasicResource] = scoutsSignal.combineWith(nestSignal)
+    .map { case (amount, nest) => BasicResource(amount, nest.maxScouts) }
+
   val antAndBroodCount: Signal[Long] =
     workersSignal
-      .combineWith(eggsCountSignal, larvaeCountSignal, pupaeCountSignal)
-      .map { case (workers, eggs, larvae, pupae) =>
-        workers + eggs + larvae + pupae
+      .combineWith(eggsCountSignal, larvaeCountSignal, pupaeCountSignal, scoutsSignal)
+      .map { case (workers, eggs, larvae, pupae, scouts) =>
+        workers + eggs + larvae + pupae + scouts
       }
       .distinct
 
@@ -71,7 +77,9 @@ object Utils {
   val idleWorkersCountSignal: Signal[Long] = antsData.signal.map(_.idleWorkersCount).distinct
 
   val sugarSignal: Signal[BasicResource] = resourcesSignal.map(_.sugar).distinct
-//  val proteinsSignal: Signal[BasicResource] = resourcesSignal.map(_.proteins).distinct
+  val proteinSignal: Signal[BasicResource] = resourcesSignal.map(_.protein).distinct
+  val nurseryUnlockedSignal: Signal[Boolean] = explorationSignal.combineWith(proteinSignal)
+    .map { case (exploration, protein) => exploration.proteinDiscovered || protein.amount > 0 }.distinct
 //  val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
   val tunnelingSpaceSignal: Signal[BasicResource] = resourcesSignal.map(_.tunnelingSpace).distinct
   val colonyPointsSignal: Signal[BasicResource] = resourcesSignal.map(_.colonyPoints).distinct

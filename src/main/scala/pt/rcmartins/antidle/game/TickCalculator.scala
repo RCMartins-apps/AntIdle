@@ -71,13 +71,15 @@ object TickCalculator {
       antTaskCountSignal(AntTask.SugarCollector)
         .combineWith(
           upgradesSignal,
-          antsSignal.map(_.upkeepWorkersCount).distinct,
+          antsSignal,
+          explorationSignal,
         )
         .map {
           case (
                 sugarCollectorAmount,
                 upgrades,
-                upkeepWorkersCount
+                ants,
+                exploration,
               ) =>
             List(
               Some(
@@ -95,9 +97,11 @@ object TickCalculator {
               Some(
                 ResourceOrigin(
                   "Ants Demand",
-                  -upkeepWorkersCount * antsSugarUpkeepTick,
+                  -ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick,
                 )
               ),
+              Some(ResourceOrigin("Carcass food", CarcassProgression.foodOffset(exploration, ants)))
+                .filter(_.tickResourceU > 0),
             ).flatten
         }
     )

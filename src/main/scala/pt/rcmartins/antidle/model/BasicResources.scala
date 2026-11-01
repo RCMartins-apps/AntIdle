@@ -7,7 +7,7 @@ import zio.json._
 case class BasicResources(
     sugar: BasicResource = BasicResource.initial,
     tunnelingSpace: BasicResource = BasicResource.initial,
-//    proteins: BasicResource = BasicResource.initial,
+    protein: BasicResource = BasicResource(0L, 100 * u),
 //    water: BasicResource = BasicResource.initial,
     colonyPoints: BasicResource = BasicResource.initial,
 //    DNA: BasicResource = BasicResource.initial,
@@ -17,7 +17,7 @@ case class BasicResources(
     copy(
       sugar = sugar - actionCost.sugar,
       tunnelingSpace = tunnelingSpace - actionCost.tunnelingSpace,
-//      proteins = proteins - actionCost.proteins,
+      protein = protein - actionCost.protein,
 //      water = water - actionCost.water,
       colonyPoints = colonyPoints - actionCost.colonyPoints,
 //      DNA = DNA - actionCost.DNA,
@@ -26,7 +26,7 @@ case class BasicResources(
   def hasResources(cost: ActionCost): Boolean =
     sugar >= cost.sugar &&
       tunnelingSpace >= cost.tunnelingSpace &&
-//      proteins >= cost.proteins &&
+      protein >= cost.protein &&
 //      water >= cost.water &&
       colonyPoints >= cost.colonyPoints
 //      DNA >= cost.DNA

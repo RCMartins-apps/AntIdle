@@ -23,7 +23,7 @@ object ChamberBonuses {
       case ChamberType.FoodStorage =>
         ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar)
       case ChamberType.Nursery =>
-        ActionBonus.empty
+        ActionBonus(maxScouts = Constants.NurseryBonusMaxScouts)
     }
 
   def completeUpgrade(allData: AllData, chamberType: ChamberType): AllData = {
@@ -48,6 +48,8 @@ object ChamberBonuses {
       .using(_ + bonus.maxSugar)
       .modify(_.basicResources.colonyPoints.maxAmount)
       .using(_ + bonus.maxColonyPoints)
+      .modify(_.nestAttributes.maxScouts)
+      .using(_ + bonus.maxScouts)
   }
 
   def colonyPointsPerTick(chambers: AllChamberData, workersCount: Int): Long =
