@@ -96,27 +96,7 @@ object Actions {
     }
 
   def getActionBonus(chamberType: ChamberType): Signal[ActionBonus] =
-    Val(
-      chamberType match {
-        case ChamberType.Nest =>
-          ActionBonus(
-            colonyPointsEachWorker = Constants.defaultNestLevelColonyPointsSecond,
-            maxWorkers = Constants.NestUpgradeBonusMaxWorkers,
-            maxColonyPoints = Constants.NestUpgradeBonusMaxColonyPoints,
-          )
-        case ChamberType.Queen =>
-          ActionBonus(
-            maxEggs = Constants.QueenChamberBonusMaxEggs,
-            maxWorkers = Constants.QueenChamberBonusMaxWorkers,
-          )
-        case ChamberType.FoodStorage =>
-          ActionBonus(
-            maxSugar = Constants.FoodStorageChamberBonusMaxSugar,
-          )
-        case ChamberType.Nursery =>
-          ActionBonus()
-      }
-    )
+    Val(ChamberBonuses.forChamber(chamberType))
 
   def buildChamberCost(chamberType: ChamberType): Signal[ActionCost] =
     getChamber(chamberType)

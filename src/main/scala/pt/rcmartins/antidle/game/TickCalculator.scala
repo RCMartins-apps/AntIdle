@@ -122,13 +122,13 @@ object TickCalculator {
       antsSignal
         .map(_.workersCount)
         .distinct
-        .combineWith(chambersSignal.map(_.nestChamber.level).distinct)
-        .map { case (workersCount, nestChamberLevel) =>
+        .combineWith(chambersSignal.distinct)
+        .map { case (workersCount, chambers) =>
           List(
             Some(
               ResourceOrigin(
                 "Workers",
-                nestChamberLevel * workersCount * defaultNestLevelColonyPointsTick,
+                ChamberBonuses.colonyPointsPerTick(chambers, workersCount),
               )
             ),
           ).flatten
