@@ -69,11 +69,13 @@ def check_nest_capacity(page, initial):
     game = progressed_game(initial)
     game["ants"]["workers"] = 0
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
-    # Simulate a save created before the per-level capacity bonus existed.
+    # A version-1 save receives its missing bonus once, during loading.
+    game["version"] = 1
     game["basicResources"]["colonyPoints"] = {"amount": 2000 * UNIT, "maxAmount": 2000 * UNIT}
     load_game(page, game)
-    page.clock.run_for(400)
+    # No tick is needed for migration.
     migrated = save_game(page)
+    assert migrated["version"] == 2
     assert migrated["basicResources"]["colonyPoints"] == {
         "amount": 2000 * UNIT, "maxAmount": 3500 * UNIT
     }
@@ -93,7 +95,14 @@ def check_nest_capacity(page, initial):
     load_game(page, game)
     page.clock.run_for(400)
     assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 2000 * UNIT
-    print("PASS nest capacity: existing saves, +500 per level, stable ticks, save reload, level zero")
+    # Current-version saves keep their stored capacity, including other bonuses.
+    game["version"] = 2
+    game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
+    game["basicResources"]["colonyPoints"]["maxAmount"] = 7250 * UNIT
+    load_game(page, game)
+    page.clock.run_for(400)
+    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 7250 * UNIT
+    print("PASS nest capacity: v1 migration, v2 preservation, upgrades, stable ticks, save reload")
 
 
 def run_checks(browser, url):
