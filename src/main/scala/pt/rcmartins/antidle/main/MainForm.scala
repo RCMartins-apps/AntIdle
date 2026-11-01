@@ -301,7 +301,6 @@ object MainForm {
           label(
             forId := "mobile-action-amount",
             "Action amount",
-            small(className := "d-block text-body-secondary", "Eggs and worker assignments"),
           ),
           select(
             idAttr := "mobile-action-amount",
@@ -741,7 +740,7 @@ object MainForm {
         actionButton(
           name = "Nursery Chamber",
           enabledSignal = Val(true),
-          descriptionSignal = Val(Some(div("A nursery supports three scouts per level. Scout eggs need protein and mature in 30 seconds."))),
+          descriptionSignal = Val(None),
           costSignal = cost,
           bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
           topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -755,7 +754,7 @@ object MainForm {
           name = "Raise Scout Egg",
           enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
             .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-          descriptionSignal = Val(Some(div("Raise one scout in 30 seconds. Scouts use colony and egg capacity, eat sugar, and guide woodland expeditions."))),
+          descriptionSignal = Val(Some(div("Matures in 30s. Uses colony and egg capacity."))),
           costSignal = Val(ScoutProgression.eggCost),
           bonusSignal = Val(ActionBonus.empty),
           onClickAction = _ => Actions.raiseScout(),
@@ -907,7 +906,7 @@ object MainForm {
             )
           )
         case AntTask.CarcassHarvester =>
-          div("Harvests 0.8 food per second. Food offsets sugar upkeep; surplus is consumed. Protein is recovered when the carcass is exhausted.")
+          div("0.8 food/s per ant.")
         case AntTask.Explorer =>
           div("Ants exploring the surroundings.")
       }
@@ -1010,8 +1009,8 @@ object MainForm {
               (!distant || scouts >= u)
           },
         descriptionSignal = Val(Some(div(if (distant)
-          "A 45-second expedition guided by one scout. Brings back an insect with twice the food and protein, if carcass storage has room."
-        else "A 15-second expedition. The first trip finds a dead insect; later trips may find insects, sugar, or nothing."))),
+          "45s · 1 scout · 2× food and protein. Requires carcass storage."
+        else "15s · Insects, sugar, or nothing."))),
         costSignal = cost,
         bonusSignal = Val(ActionBonus.empty),
         onClickAction = _ => useSignalValue(amountOfExplorersVar.signal,
@@ -1023,7 +1022,6 @@ object MainForm {
       className := "row",
       div(
         className := "col-12 px-3 py-2",
-        p("Explore, harvest a dead insect, and recover protein to build a Nursery and raise scouts."),
         label(
           forId := "explorer-count",
           "Workers to send: ",
@@ -1046,7 +1044,7 @@ object MainForm {
           className := "col-12 px-0",
           p(className := "px-3", "Available scouts: ",
             b(child <-- availableScoutsSignal.map(prettyNumberInt)),
-            ". Raise a scout egg in the Nest to guide a woodland expedition."),
+          ),
           div(className := "row mx-0", area("Explore Woodland Edge", distant = true)),
         )
       },
@@ -1065,12 +1063,13 @@ object MainForm {
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
           className := "col-12 px-3 py-2",
-          h5("Carcass harvesting"),
-          p("Harvesters work on one insect at a time. Food offsets sugar upkeep; surplus food is consumed. Exhausting an insect yields protein. Up to three insects can be stored."),
+          h5("Carcasses", small(className := "text-body-secondary ms-2",
+            child.text <-- explorationSignal.map(e => s"${e.carcasses.size} / ${Constants.MaxStoredCarcasses}"))),
+          p("Food offsets sugar upkeep; surplus is lost."),
           taskDiv(AntTask.CarcassHarvester, "-explore"),
           div(
             children <-- explorationSignal.map { exploration =>
-              if (exploration.carcasses.isEmpty) Seq(p("No carcasses left. Explore to find another insect."))
+              if (exploration.carcasses.isEmpty) Seq(p("No carcasses."))
               else exploration.carcasses.zipWithIndex.map { case (carcass, index) =>
                 div(
                   className := "card p-2 my-2",
