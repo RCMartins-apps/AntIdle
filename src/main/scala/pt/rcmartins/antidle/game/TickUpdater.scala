@@ -4,7 +4,7 @@ import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants.{SugarImprovementBonusPerc, u}
 import pt.rcmartins.antidle.game.saves.SaveLoad
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
-import pt.rcmartins.antidle.model.{AllData, AntBrood, AntTask, BuildTask}
+import pt.rcmartins.antidle.model.{AllData, AntTask, BuildTask}
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -17,26 +17,8 @@ object TickUpdater {
       Seq[AllData => AllData](
         // Tick update
         allData => allData.modify(_.world.currentTick).using(_ + 1),
-        // Eggs -> Ants update
-        allData => {
-          val updatedEggsAndLarvae: Seq[Either[Unit, AntBrood]] =
-            allData.ants.eggsAndLarvae.map {
-              case AntBrood.Egg(initialTick)
-                  if allData.currentTick >= initialTick + AntBrood.defaultTicksToGrow =>
-                Left(())
-              case other =>
-                Right(other)
-            }
-          val newWorkers = updatedEggsAndLarvae.count(_.isLeft) * u
-
-          allData
-            .modify(_.ants.eggsAndLarvae)
-            .setTo(updatedEggsAndLarvae.flatMap(_.toOption))
-            .modify(_.ants.workers)
-            .usingIf(newWorkers > 0)(_ + newWorkers)
-            .modify(_.statistics.maxAliveWorkers)
-            .usingIf(newWorkers > 0)(_.max(allData.ants.workersCount + (newWorkers / u).toInt))
-        },
+        // Brood maturation is shared by workers and the new scout caste.
+        ScoutProgression.growBrood,
         // Ants income from tasks
         allData => {
           def countWorkers(task: AntTask): Long =
@@ -104,8 +86,10 @@ object TickUpdater {
             }
         },
         // Sugar upkeep + death ants by starving (should be the last data update)
-        allData => {
-          val sugarUpkeep = allData.ants.upkeepWorkersCount * Constants.antsSugarUpkeepTick
+        beforeHarvest => {
+          val (allData, foodOffset) = CarcassProgression.harvest(beforeHarvest)
+          val sugarUpkeep = ScoutProgression.upkeepCount(allData.ants, allData.exploration) *
+            Constants.antsSugarUpkeepTick - foodOffset
           val sugarRemaining =
             Math.min(
               allData.basicResources.sugar.maxAmount,
@@ -150,7 +134,9 @@ object TickUpdater {
                               antsData
                           )
                             .modify(_.workers)
-                            .using(_ - 1 * u)
+                            .using(workers => Math.max(0L, workers - u))
+                            .modify(_.scouts)
+                            .usingIf(antsData.workers == 0)(scouts => Math.max(0L, scouts - u))
                             .modify(_.sugarCumulativeDebt)
                             .using(debt => Math.max(0, debt - Constants.AntDeathRiskThreshold))
                         }

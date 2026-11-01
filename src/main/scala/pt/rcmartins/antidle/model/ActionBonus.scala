@@ -8,6 +8,7 @@ case class ActionBonus(
     maxColonyPoints: Long = 0L,
     maxEggs: Long = 0L,
     maxWorkers: Long = 0L,
+    maxScouts: Long = 0L,
 )
 
 object ActionBonus {

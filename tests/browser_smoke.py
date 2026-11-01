@@ -75,7 +75,7 @@ def check_nest_capacity(page, initial):
     load_game(page, game)
     # No tick is needed for migration.
     migrated = save_game(page)
-    assert migrated["version"] == 2
+    assert migrated["version"] == 3
     assert migrated["basicResources"]["colonyPoints"] == {
         "amount": 2000 * UNIT, "maxAmount": 3500 * UNIT
     }

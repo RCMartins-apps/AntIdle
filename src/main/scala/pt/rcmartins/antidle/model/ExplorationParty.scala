@@ -6,6 +6,7 @@ case class ExplorationParty(
     amountWorkers: Long,
     startingTick: Long,
     targetTick: Long,
+    scouts: Long = 0L,
 )
 
 object ExplorationParty {

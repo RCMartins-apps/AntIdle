@@ -27,7 +27,8 @@ object Actions {
 
   def incrementAntTask(antTask: AntTask, amountU: Long): Unit =
     actionUpdater.writer.onNext { allData =>
-      allData.modify(_.ants).using(_.addToTask(antTask, amountU))
+      if (antTask == AntTask.CarcassHarvester && allData.exploration.carcasses.isEmpty) allData
+      else allData.modify(_.ants).using(_.addToTask(antTask, amountU))
     }
 
   val layEggActionEnabled: Signal[Boolean] =
@@ -41,15 +42,15 @@ object Actions {
     actionUpdater.writer.onNext { allData =>
       val maxEggs: Int =
         Math.min(
-          allData.nestAttributes.maxEggsCount,
+          allData.nestAttributes.maxEggsCount - allData.ants.eggsAndLarvae.count(_.isEgg),
           allData.nestAttributes.maxWorkersCount - allData.ants.workersAndLarvaeCount,
         )
 
       val mult: Int =
-        Math.min(
+        Math.max(0, Math.min(
           Math.min(maxMultiplierUsed, maxEggs),
           (allData.basicResources.sugar.amount / Constants.LayEggSugarCost).toInt,
-        )
+        ))
 
       allData
         .modify(_.basicResources.sugar)
@@ -78,12 +79,8 @@ object Actions {
     }
 
   def unlockUpgrade(actionCost: ActionCost, unlockAction: UpgradesData => UpgradesData): Unit =
-    actionUpdater.writer.onNext { allData =>
-      allData
-        .spendResources(actionCost)
-        .modify(_.upgrades)
-        .using(unlockAction)
-    }
+    actionUpdater.writer.onNext(_.hasResourcesUpdate(actionCost)(allData =>
+      allData.modify(_.upgrades).using(unlockAction)))
 
   def getChamber(chamberType: ChamberType): Signal[Chamber] =
     chambersSignal.map { chambers =>
@@ -102,28 +99,15 @@ object Actions {
     getChamber(chamberType)
       .map(_.level)
       .distinct
-      .map(level => ActionCost(tunnelingSpace = getChamberTunnelingSpaceNeeded(chamberType, level)))
+      .map(level => ActionCost(
+        tunnelingSpace = getChamberTunnelingSpaceNeeded(chamberType, level),
+        protein = if (chamberType == ChamberType.Nursery) NurseryProteinCost * (level + 1) else 0L,
+      ))
 
-  def explore(actionCost: ActionCost): Unit =
-    actionUpdater.writer.onNext {
-      _.hasResourcesUpdate(actionCost) { allData =>
-        allData
-          .modify(_.ants)
-          .using(_.addToTask(AntTask.Explorer, actionCost.idleWorkers))
-          .modify(_.exploration.explorationParties)
-          .using(
-            ExplorationParty.create(
-              actionCost.idleWorkers,
-              allData.world.currentTick,
-              Constants.ExplorationTimeTicks,
-            ) :: _
-          )
-          .modify(_.statistics.explorationsCount)
-          .using(_.addValue(1))
-          .modify(_.statistics.explorationsWorkersSentU)
-          .using(_.addValue(actionCost.idleWorkers))
-      }
+  def raiseScout(): Unit =
+    actionUpdater.writer.onNext(ScoutProgression.raise)
 
-    }
+  def explore(workers: Long, distant: Boolean = false): Unit =
+    actionUpdater.writer.onNext(ExplorationHelper.start(_, workers, distant))
 
 }

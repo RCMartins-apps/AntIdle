@@ -46,8 +46,8 @@ object SaveLoad {
   private def loadFromJson(str: String): Option[AllData] =
     str.fromJson[AllDataForSave].toOption.map(_.toAllData).map(migrateSave)
 
-  private def migrateSave(allData: AllData): AllData =
-    if (allData.version == 1)
+  private def migrateSave(allData: AllData): AllData = {
+    val version2 = if (allData.version == 1)
       allData
         .modify(_.basicResources.colonyPoints.maxAmount)
         .using(_ + allData.nestAttributes.chambers.nestChamber.level.toLong *
@@ -56,6 +56,10 @@ object SaveLoad {
         .setTo(2)
     else
       allData
+
+    // New progression fields have backward-compatible defaults in their models.
+    if (version2.version == 2) version2.copy(version = 3) else version2
+  }
 
   private def base64ToJson(str: String): String =
     new String(java.util.Base64.getDecoder.decode(str.getBytes))

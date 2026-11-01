@@ -39,6 +39,11 @@ object AntTask {
 //    val name: String = "Nursery"
 //  }
 
+  case object CarcassHarvester extends AntTask {
+    val uiOrder: Int = 4
+    val name: String = "Carcass Harvester"
+  }
+
   case object Explorer extends AntTask {
     val uiOrder: Int = 100
     val name: String = "Explorer"
