@@ -40,3 +40,12 @@ An inherited HTTPS proxy is supported, with localhost bypassed.
 
 The page loads Bootstrap, jQuery, Font Awesome, and Popper from external CDNs;
 network access to those assets is required for the complete interface.
+
+## Chamber bonuses
+
+Define chamber effects in `game/ChamberBonuses.scala` (`forChamber`). Action details,
+completed upgrades, colony-point income, and income estimates use this shared
+source. Balance values remain in `game/Constants.scala`. Changing an existing
+capacity bonus or assigning it to another chamber does not require changes to
+`Actions.scala` or `TickUpdater.scala`. Existing saved capacities stay additive;
+the version-1 save migration still runs only when loading old saves.

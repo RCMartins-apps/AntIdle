@@ -105,6 +105,58 @@ def check_nest_capacity(page, initial):
     print("PASS nest capacity: v1 migration, v2 preservation, upgrades, stable ticks, save reload")
 
 
+def check_chamber_bonuses(page, initial):
+    def capacities(game):
+        return {
+            "workers": game["nestAttributes"]["maxWorkers"],
+            "eggs": game["nestAttributes"]["maxEggs"],
+            "sugar": game["basicResources"]["sugar"]["maxAmount"],
+            "colony": game["basicResources"]["colonyPoints"]["maxAmount"],
+        }
+
+    for name, chamber, increases, details in (
+        ("Expand Nest", "nestChamber", {"workers": 10, "colony": 500},
+         ("+10 max workers", "+500 max colony points", "+0.01 colony points/worker/s")),
+        ("Queen's Chamber", "queenChamber", {"workers": 5, "eggs": 2},
+         ("+5 max workers", "+2 max eggs")),
+        ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
+         ("+1000 max sugar",)),
+    ):
+        game = progressed_game(initial)
+        game["ants"]["workers"] = 0
+        game["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
+        load_game(page, game)
+        page.get_by_text(f"Details: {name}", exact=True).click()
+        for text in details:
+            expect(page.locator("details[open]")).to_contain_text(text)
+        page.get_by_role("button", name=name, exact=False).click()
+        page.clock.run_for(200)
+        result = save_game(page)
+        assert result["nestAttributes"]["chambers"][chamber]["level"] == (
+            game["nestAttributes"]["chambers"][chamber]["level"] + 1
+        )
+        assert capacities(result) == {
+            key: value + increases.get(key, 0) * UNIT
+            for key, value in capacities(game).items()
+        }, name
+        assert result["nestAttributes"]["buildQueue"] == []
+        page.clock.run_for(400)
+        assert capacities(save_game(page)) == capacities(result)
+        page.reload(wait_until="networkidle")
+        assert capacities(save_game(page)) == capacities(result)
+
+    game = progressed_game(initial)
+    game["ants"]["workers"] = 10 * UNIT
+    game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
+    game["basicResources"]["colonyPoints"]["amount"] = 0
+    game["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
+    load_game(page, game)
+    page.clock.run_for(200)
+    result = save_game(page)
+    assert result["basicResources"]["colonyPoints"]["amount"] == 600
+    print("PASS shared chamber bonuses: displayed and applied caps, Queen worker bonus, income, save reload")
+
+
 def run_checks(browser, url):
     outcomes = {}
     for width in (320, 390, 767, 768, 844, 1024, 1920):
@@ -185,6 +237,7 @@ def run_checks(browser, url):
         assert_fits(page, 390)
         if width == 390:
             check_nest_capacity(page, initial)
+            check_chamber_bonuses(page, initial)
         assert not errors, errors
         print(f"PASS {width}px: layout, tabs, saves, batch parity, resize")
         context.close()

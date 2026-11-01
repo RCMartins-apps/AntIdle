@@ -3,7 +3,6 @@ package pt.rcmartins.antidle.game
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants.{SugarImprovementBonusPerc, u}
 import pt.rcmartins.antidle.game.saves.SaveLoad
-import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 import pt.rcmartins.antidle.model.{AllData, AntBrood, AntTask, BuildTask}
 
@@ -76,34 +75,7 @@ object TickUpdater {
                 .spendResources(finishBuilding.actionCost)
                 .modify(_.nestAttributes.buildQueue)
                 .setTo(otherBuildings)
-                .pipe { allData =>
-                  finishBuilding.chamberType match {
-                    case ChamberType.Nest =>
-                      allData
-                        .modify(_.nestAttributes.chambers.nestChamber.level)
-                        .using(_ + 1)
-                        .modify(_.nestAttributes.maxWorkers)
-                        .using(_ + Constants.NestUpgradeBonusMaxWorkers)
-                        .modify(_.basicResources.colonyPoints.maxAmount)
-                        .using(_ + Constants.NestUpgradeBonusMaxColonyPoints)
-                    case ChamberType.Queen =>
-                      allData
-                        .modify(_.nestAttributes.chambers.queenChamber.level)
-                        .using(_ + 1)
-                        .modify(_.nestAttributes.maxEggs)
-                        .using(_ + Constants.QueenChamberBonusMaxEggs)
-                    case ChamberType.FoodStorage =>
-                      allData
-                        .modify(_.nestAttributes.chambers.foodStorageChamber.level)
-                        .using(_ + 1)
-                        .modify(_.basicResources.sugar.maxAmount)
-                        .using(_ + Constants.FoodStorageChamberBonusMaxSugar)
-                    case ChamberType.Nursery =>
-                      allData
-                        .modify(_.nestAttributes.chambers.nurseryChamber.level)
-                        .using(_ + 1)
-                  }
-                }
+                .pipe(ChamberBonuses.completeUpgrade(_, finishBuilding.chamberType))
             case _ =>
               allData
           }
@@ -111,9 +83,10 @@ object TickUpdater {
         // Colony points update
         allData => {
           allData.giveResources(
-            colonyPoints = allData.nestAttributes.chambers.nestChamber.level *
-              allData.ants.workersCount *
-              Constants.defaultNestLevelColonyPointsTick,
+            colonyPoints = ChamberBonuses.colonyPointsPerTick(
+              allData.nestAttributes.chambers,
+              allData.ants.workersCount,
+            ),
           )
         },
         // Exploration parties update
