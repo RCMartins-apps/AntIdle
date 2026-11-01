@@ -106,6 +106,7 @@ object Actions {
         case ChamberType.Queen =>
           ActionBonus(
             maxEggs = Constants.QueenChamberBonusMaxEggs,
+            maxWorkers = Constants.QueenChamberBonusMaxWorkers,
           )
         case ChamberType.FoodStorage =>
           ActionBonus(

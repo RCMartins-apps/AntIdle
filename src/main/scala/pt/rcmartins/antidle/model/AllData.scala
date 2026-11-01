@@ -78,7 +78,7 @@ case class AllData(
 
 object AllData {
 
-  val CurrentVersion = 1
+  val CurrentVersion = 2
 
   private val MaxMessages = 10
 

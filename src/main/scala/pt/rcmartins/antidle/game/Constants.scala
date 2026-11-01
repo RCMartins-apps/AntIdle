@@ -36,6 +36,7 @@ object Constants {
   val exponent0_95: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(0.95, _))
   val exponent1_14: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.14, _))
   val exponent1_25: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.25, _))
+  val exponent1_50: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.50, _))
   val exponent1_75: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.75, _))
 
   val LayEggSugarCost: Long = 10 * u
@@ -53,7 +54,8 @@ object Constants {
   val (antsSugarUpkeepTick: Long, antsSugarUpkeepSecond: Long) =
     tickAndSeconds(perSecondValue = (0.2 * u).toLong)
 
-  val NestUpgradeBonusMaxWorkers: Long = 5 * u
+  val NestUpgradeBonusMaxWorkers: Long = 10 * u
+  val QueenChamberBonusMaxWorkers: Long = 5 * u
   val QueenChamberBonusMaxEggs: Long = 2 * u
   val FoodStorageChamberBonusMaxSugar: Long = 1000 * u
 
@@ -67,8 +69,8 @@ object Constants {
       (base * multiplier(level)).toLong
 
     chamberType match {
-      case ChamberType.Nest        => cost(20 * u, exponent1_75)
-      case ChamberType.Queen       => cost(25 * u, exponent1_25)
+      case ChamberType.Nest        => cost(20 * u, exponent1_50)
+      case ChamberType.Queen       => cost(25 * u, exponent1_50)
       case ChamberType.FoodStorage => cost(50 * u, exponent1_14)
       case ChamberType.Nursery     => 0 // TODO
     }
