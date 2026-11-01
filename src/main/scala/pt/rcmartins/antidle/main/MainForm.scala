@@ -825,6 +825,7 @@ object MainForm {
           ifGreater0(bonus.colonyPointsEachWorker)(
             prettyNumberSimple("+", _, " colony points/worker/s")
           ),
+          ifGreater0(bonus.maxColonyPoints)(prettyNumberSimple("+", _, " max colony points")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxWorkers)(prettyNumberSimple("+", _, " max workers")),

@@ -1,8 +1,9 @@
 package pt.rcmartins.antidle.game.saves
 
+import com.softwaremill.quicklens.ModifyPimp
 import org.scalajs.dom.window.localStorage
 import pt.rcmartins.antidle.game.Utils.{actionUpdater, lastSavedTick, unlocksOwner}
-import pt.rcmartins.antidle.game.{UnlockUtils, Utils}
+import pt.rcmartins.antidle.game.{Constants, UnlockUtils, Utils}
 import pt.rcmartins.antidle.main.MainForm.currentGlobalAlert
 import pt.rcmartins.antidle.model.AllData
 import zio.json._
@@ -43,7 +44,18 @@ object SaveLoad {
   }
 
   private def loadFromJson(str: String): Option[AllData] =
-    str.fromJson[AllDataForSave].toOption.map(_.toAllData)
+    str.fromJson[AllDataForSave].toOption.map(_.toAllData).map(migrateSave)
+
+  private def migrateSave(allData: AllData): AllData =
+    if (allData.version == 1)
+      allData
+        .modify(_.basicResources.colonyPoints.maxAmount)
+        .using(_ + allData.nestAttributes.chambers.nestChamber.level.toLong *
+          Constants.NestUpgradeBonusMaxColonyPoints)
+        .modify(_.version)
+        .setTo(2)
+    else
+      allData
 
   private def base64ToJson(str: String): String =
     new String(java.util.Base64.getDecoder.decode(str.getBytes))

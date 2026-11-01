@@ -84,6 +84,8 @@ object TickUpdater {
                         .using(_ + 1)
                         .modify(_.nestAttributes.maxWorkers)
                         .using(_ + Constants.NestUpgradeBonusMaxWorkers)
+                        .modify(_.basicResources.colonyPoints.maxAmount)
+                        .using(_ + Constants.NestUpgradeBonusMaxColonyPoints)
                     case ChamberType.Queen =>
                       allData
                         .modify(_.nestAttributes.chambers.queenChamber.level)
