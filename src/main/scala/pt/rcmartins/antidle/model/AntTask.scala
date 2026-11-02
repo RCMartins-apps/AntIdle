@@ -39,9 +39,11 @@ object AntTask {
 //    val name: String = "Nursery"
 //  }
 
-  case object CarcassHarvester extends AntTask {
+  case object CarcassCarrier extends AntTask {
     val uiOrder: Int = 4
-    val name: String = "Carcass Harvester"
+    val name: String = "Carcass Carrier"
+    override val showButtons: Boolean = false
+    override val hasAntUpkeep: Boolean = false
   }
 
   case object Explorer extends AntTask {

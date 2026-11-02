@@ -27,9 +27,11 @@ object Actions {
 
   def incrementAntTask(antTask: AntTask, amountU: Long): Unit =
     actionUpdater.writer.onNext { allData =>
-      if (antTask == AntTask.CarcassHarvester && allData.exploration.carcasses.isEmpty) allData
-      else allData.modify(_.ants).using(_.addToTask(antTask, amountU))
+      allData.modify(_.ants).using(_.addToTask(antTask, amountU))
     }
+
+  def retrieveCarcass(index: Int): Unit =
+    actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 
   val layEggActionEnabled: Signal[Boolean] =
     sugarSignal

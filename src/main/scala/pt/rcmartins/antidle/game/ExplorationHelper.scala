@@ -37,13 +37,12 @@ object ExplorationHelper {
     val findCarcass = !allData.exploration.carcassDiscovered || exploration.scouts > 0 ||
       random.nextInt(100) < 45
 
-    if (findCarcass && allData.exploration.carcasses.size < MaxStoredCarcasses)
+    if (findCarcass)
       CarcassProgression.discover(returned, if (exploration.scouts > 0) 2 else 1)
-    else if (findCarcass || random.nextInt(100) < 80) {
+    else if (random.nextInt(100) < 80) {
       val sugarFound = dices(random, exploration.amountWorkers / u, 20).sum * u
       returned.giveResources(sugar = sugarFound)
-        .addMessage(s"Exploration: Found ${UINumbersUtils.prettyNumberStr(sugarFound)} sugar!" +
-          (if (findCarcass) " Carcass stores are full; harvest one to make room." else ""))
+        .addMessage(s"Exploration: Found ${UINumbersUtils.prettyNumberStr(sugarFound)} sugar!")
     } else returned.addMessage("Exploration: Found nothing...")
   }
 

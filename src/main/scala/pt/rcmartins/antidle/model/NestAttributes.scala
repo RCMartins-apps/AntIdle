@@ -14,6 +14,8 @@ case class NestAttributes(
     maxBuildQueue: Int = 1,
 ) {
 
+  def maxCarcasses: Int = InitialCarcassSlots + chambers.nurseryChamber.level
+
   def maxEggsCount: Int = (maxEggs / u).toInt
   def maxAntsCount: Int = (maxAnts / u).toInt
 

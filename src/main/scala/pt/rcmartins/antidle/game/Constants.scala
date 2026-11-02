@@ -79,8 +79,9 @@ object Constants {
 
   val CarcassFood: Long = 120 * u
   val CarcassProtein: Long = 5 * u
-  val HarvesterFoodPerTick: Long = (0.8 * u / TicksPerSecond).toLong
-  val MaxStoredCarcasses: Int = 3
+  val CarcassCarriers: Long = 5 * u
+  val CarcassRetrievalTicks: Long = 10 * TicksPerSecond
+  val InitialCarcassSlots: Int = 1
   val NurseryProteinCost: Long = 3 * u
   val NurseryBonusMaxAnts: Long = 3 * u
   val ScoutSugarCost: Long = 50 * u

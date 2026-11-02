@@ -85,9 +85,10 @@ object TickUpdater {
               }
             }
         },
+        CarcassProgression.returnCarcasses,
         // Sugar upkeep + death ants by starving (should be the last data update)
-        beforeHarvest => {
-          val (allData, foodOffset) = CarcassProgression.harvest(beforeHarvest)
+        beforeUpkeep => {
+          val (allData, foodOffset) = CarcassProgression.consumeFood(beforeUpkeep)
           val sugarUpkeep = ScoutProgression.upkeepCount(allData.ants, allData.exploration) *
             Constants.antsSugarUpkeepTick - foodOffset
           val sugarRemaining =

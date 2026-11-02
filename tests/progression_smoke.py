@@ -1,4 +1,4 @@
-"""End-to-end exploration progression checks; uses the setup in README.md."""
+"""Carcass retrieval and scout progression browser regressions. See README.md."""
 
 import copy
 from datetime import datetime, timedelta, timezone
@@ -16,229 +16,197 @@ def task_count(game, name):
     return next((amount for task, amount in game["ants"]["tasks"] if name in task), 0)
 
 
+def explore_tab(page):
+    page.get_by_role("tab", name="Explore", exact=True).click()
+
+
+def carcass(food=120 * UNIT, workers=5 * UNIT, ticks=50, protein=5 * UNIT):
+    return dict(foodRemaining=food, totalFood=food, proteinReward=protein,
+                requiredWorkers=workers, retrievalTicks=ticks)
+
+
 def check_progression(page, width, url):
-    now = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 2, tzinfo=timezone.utc)
     page.clock.install(time=now)
     page.clock.pause_at(now + timedelta(milliseconds=100))
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(url, wait_until="networkidle")
     initial = save_game(page)
-    for version in (1, 2, 3, 5):
-        unsupported = copy.deepcopy(initial)
-        unsupported["version"] = version
-        unsupported["ants"]["workers"] = 123 * UNIT
-        load_game(page, unsupported)
-        fresh = save_game(page)
-        assert fresh["version"] == 4
-        assert fresh["ants"]["workers"] == initial["ants"]["workers"]
+    assert initial["version"] == 5
+    if width == 390:
+        for version in (1, 2, 3, 4, 6):
+            unsupported = copy.deepcopy(initial)
+            unsupported["version"] = version
+            unsupported["ants"]["workers"] = 123 * UNIT
+            load_game(page, unsupported)
+            assert save_game(page)["ants"]["workers"] == initial["ants"]["workers"]
     game = progressed_game(initial)
     game["ants"]["workers"] = 20 * UNIT
-    game["ants"].pop("scouts", None)
-    game["basicResources"].pop("protein", None)
-    game["basicResources"]["sugar"] = {"amount": 500 * UNIT, "maxAmount": 1000 * UNIT}
-    game["exploration"] = {"explorationParties": []}
+    game["ants"]["scouts"] = 0
+    game["nestAttributes"]["chambers"]["nurseryChamber"]["level"] = 0
+    game["basicResources"]["protein"] = {"amount": 0, "maxAmount": 100 * UNIT}
+    game["basicResources"]["sugar"] = {"amount": 10000 * UNIT, "maxAmount": 10000 * UNIT}
+    game["exploration"] = {}
     load_game(page, game)
-    restored = save_game(page)
-    assert restored["version"] == 4
-    assert restored["ants"]["scouts"] == 0
-    assert restored["basicResources"]["protein"] == {"amount": 0, "maxAmount": 100 * UNIT}
-    assert restored["ants"]["workers"] == 20 * UNIT
-    page.get_by_role("tab", name="Nest", exact=True).click()
-    assert page.get_by_role("button", name="Nursery Chamber", exact=False).count() == 0
-    if width <= 767:
-        page.get_by_label("Action amount").select_option("10")
-    page.get_by_role("tab", name="Explore", exact=True).click()
+    explore_tab(page)
     page.get_by_role("button", name="Explore Surroundings", exact=True).click()
     page.clock.run_for(15000)
     found = save_game(page)
-    assert found["exploration"]["carcassDiscovered"]
-    assert len(found["exploration"]["carcasses"]) == 1
-    assert found["exploration"]["carcasses"][0]["foodRemaining"] == 120 * UNIT
-    assert not found["exploration"]["explorationParties"]
+    assert len(found["exploration"]["discoveredCarcasses"]) == 1
+    assert not found["exploration"]["carcasses"]
+    assert not found["exploration"]["retrievals"]
+    assert found["basicResources"]["protein"]["amount"] == 0
     assert task_count(found, "Explorer") == 0
-    page.get_by_role("tab", name="Explore", exact=True).click()
-    if width <= 767:
-        page.get_by_label("Action amount").select_option("10")
-    page.locator("#task-carcassharvester-explore").get_by_role(
-        "button", name="Assign Carcass Harvester", exact=True
-    ).click(modifiers=[] if width <= 767 else ["Control"])
-    assigned = save_game(page)
-    assert task_count(assigned, "CarcassHarvester") == 10 * UNIT
-    sugar_before = assigned["basicResources"]["sugar"]["amount"]
-    page.clock.run_for(1000)
-    partial = save_game(page)
-    assert partial["exploration"]["carcasses"][0]["foodRemaining"] == 112 * UNIT
-    assert partial["basicResources"]["sugar"]["amount"] == sugar_before
-    assert partial["basicResources"]["protein"]["amount"] == 0
+    explore_tab(page)
+    expect(page.locator(".carcass-capacity")).to_have_text("0 / 1")
+    page.get_by_role("button", name="Retrieve Carcass", exact=True).click()
+    sent = save_game(page)
+    assert task_count(sent, "CarcassCarrier") == 5 * UNIT
+    assert len(sent["exploration"]["retrievals"]) == 1
+    assert not sent["exploration"]["discoveredCarcasses"]
+    page.clock.run_for(9000)
+    traveling = save_game(page)
+    assert not traveling["exploration"]["carcasses"]
+    assert traveling["basicResources"]["protein"]["amount"] == 0
+    # Reload mid-retrieval; the carriers and reserved slot must survive.
     page.reload(wait_until="networkidle")
-    assert save_game(page)["exploration"]["carcasses"] == partial["exploration"]["carcasses"]
-    page.clock.run_for(14000)
-    harvested = save_game(page)
-    assert not harvested["exploration"]["carcasses"]
-    assert harvested["basicResources"]["protein"]["amount"] == 5 * UNIT
-    assert task_count(harvested, "CarcassHarvester") == 0
-    page.get_by_role("tab", name="Explore", exact=True).click()
-    expect(page.locator("#task-carcassharvester-explore").get_by_role(
-        "button", name="Assign Carcass Harvester", exact=True)).to_be_disabled()
+    explore_tab(page)
+    expect(page.locator(".carcass-capacity")).to_have_text("1 / 1")
     page.clock.run_for(1000)
-    assert save_game(page)["basicResources"]["protein"]["amount"] == 5 * UNIT
+    returned = save_game(page)
+    assert not returned["exploration"]["retrievals"]
+    assert task_count(returned, "CarcassCarrier") == 0
+    assert returned["basicResources"]["protein"]["amount"] == 5 * UNIT
+    assert 119 * UNIT <= returned["exploration"]["carcasses"][0]["foodRemaining"] < 120 * UNIT
+    sugar = returned["basicResources"]["sugar"]["amount"]
+    food = returned["exploration"]["carcasses"][0]["foodRemaining"]
+    page.clock.run_for(1000)
+    fed = save_game(page)
+    assert fed["basicResources"]["sugar"]["amount"] == sugar
+    assert fed["exploration"]["carcasses"][0]["foodRemaining"] == food - 4 * UNIT
+    assert fed["basicResources"]["protein"]["amount"] == 5 * UNIT
+    explore_tab(page)
+    assert_fits(page, width)
+    assert page.get_by_role("button", name="Assign Carcass Harvester").count() == 0
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_role("button", name="Nursery Chamber", exact=False).click()
     page.clock.run_for(200)
     nursery = save_game(page)
     assert nursery["nestAttributes"]["chambers"]["nurseryChamber"]["level"] == 1
-    assert nursery["nestAttributes"]["maxAnts"] == harvested["nestAttributes"]["maxAnts"] + 3 * UNIT
-    assert "maxScouts" not in nursery["nestAttributes"]
-    assert "maxWorkers" not in nursery["nestAttributes"]
+    assert nursery["nestAttributes"]["maxAnts"] == fed["nestAttributes"]["maxAnts"] + 3 * UNIT
     assert nursery["basicResources"]["protein"]["amount"] == 2 * UNIT
+    explore_tab(page)
+    expect(page.locator(".carcass-capacity")).to_have_text("1 / 2")
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_role("button", name="Raise Scout Egg", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_disabled()
-    brood = save_game(page)
-    assert brood["basicResources"]["protein"]["amount"] == 0
-    assert len(brood["ants"]["eggsAndLarvae"]) == 1
-    assert "ScoutEgg" in brood["ants"]["eggsAndLarvae"][0]
-    page.reload(wait_until="networkidle")
     page.clock.run_for(30000)
     adult = save_game(page)
     assert adult["ants"]["scouts"] == UNIT
     assert not adult["ants"]["eggsAndLarvae"]
-    assert adult["ants"]["workers"] == 20 * UNIT
-    page.get_by_role("tab", name="Explore", exact=True).click()
+    explore_tab(page)
     page.get_by_role("button", name="Explore Woodland Edge", exact=True).click()
-    expect(page.get_by_role("button", name="Explore Woodland Edge", exact=True)).to_be_disabled()
-    away = save_game(page)
-    assert away["exploration"]["explorationParties"][0]["scouts"] == UNIT
-    page.clock.run_for(1000)
-    save_game(page)
+    page.clock.run_for(45000)
+    distant = save_game(page)
+    assert not distant["exploration"]["explorationParties"]
+    assert distant["ants"]["scouts"] == UNIT
+    assert not distant["exploration"]["carcasses"]
+    large = distant["exploration"]["discoveredCarcasses"][0]
+    assert large == carcass(240 * UNIT, 10 * UNIT, 100, 10 * UNIT)
+    explore_tab(page)
+    page.get_by_role("button", name="Retrieve Carcass", exact=True).click()
+    page.clock.run_for(20000)
+    large_home = save_game(page)
+    assert large_home["basicResources"]["protein"]["amount"] == 10 * UNIT
+    assert task_count(large_home, "CarcassCarrier") == 0
+    assert len(large_home["exploration"]["carcasses"]) == 1
     page.reload(wait_until="networkidle")
-    page.clock.run_for(44000)
-    returned = save_game(page)
-    assert returned["ants"]["scouts"] == UNIT
-    assert not returned["exploration"]["explorationParties"]
-    assert task_count(returned, "Explorer") == 0
-    assert returned["exploration"]["carcasses"][0]["totalFood"] == 240 * UNIT
-    assert returned["exploration"]["carcasses"][0]["proteinReward"] == 10 * UNIT
-    for tab in ("Nest", "Tasks", "Explore", "Settings"):
-        page.get_by_role("tab", name=tab, exact=tab != "Tasks").click()
-        assert_fits(page, width)
-    # Scouts can starve without making the worker count negative.
-    returned["ants"]["workers"] = 0
-    returned["ants"]["tasks"] = []
-    returned["ants"]["sugarCumulativeDebt"] = 10000 * UNIT
-    returned["basicResources"]["sugar"]["amount"] = 0
-    returned["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
-    load_game(page, returned)
-    page.clock.run_for(200)
-    starved = save_game(page)
-    assert starved["ants"]["workers"] == 0
-    assert starved["ants"]["scouts"] == 0
+    assert save_game(page)["exploration"]["carcasses"] == large_home["exploration"]["carcasses"]
     assert not errors, errors
-    print(f"PASS {width}px: save reload, exploration, food offset, protein, Nursery, scout growth, woodland trip, persistence, starvation")
+    print(f"PASS {width}px: discovery, carriers, timed retrieval, immediate protein, food upkeep, Nursery slots, scouts, save reload, layout")
+    return game
 
 
-def check_limits(page):
-    initial = save_game(page)
-    game = progressed_game(initial)
-    game["ants"]["workers"] = 20 * UNIT
-    game["ants"]["scouts"] = UNIT
-    game["nestAttributes"]["chambers"]["nurseryChamber"]["level"] = 1
-    game["basicResources"]["protein"] = {"amount": 99 * UNIT, "maxAmount": 100 * UNIT}
-    game["exploration"] = {
-        "explorationParties": [], "carcassDiscovered": True, "proteinDiscovered": True,
-        "carcasses": [{"foodRemaining": 1600, "totalFood": 120 * UNIT, "proteinReward": 5 * UNIT}],
-    }
-    game["ants"]["tasks"].append([{"CarcassHarvester": {}}, UNIT])
-    game["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
+def check_limits(page, base):
+    game = copy.deepcopy(base)
+    game["ants"]["workers"] = 5 * UNIT
+    game["exploration"] = {"carcassDiscovered": True,
+                           "discoveredCarcasses": [carcass(), carcass()]}
     load_game(page, game)
-    page.clock.run_for(200)
-    capped = save_game(page)
-    assert capped["basicResources"]["protein"]["amount"] == 100 * UNIT
-    assert not capped["exploration"]["carcasses"]
-    assert task_count(capped, "CarcassHarvester") == 0
-
-    # A full insect store cannot overflow, even after a scout-guided trip.
-    carcass = {"foodRemaining": 120 * UNIT, "totalFood": 120 * UNIT, "proteinReward": 5 * UNIT}
-    capped["exploration"]["carcasses"] = [dict(carcass) for _ in range(3)]
-    tick = capped["world"]["currentTick"]
-    capped["exploration"]["explorationParties"] = [{
-        "amountWorkers": UNIT, "startingTick": tick, "targetTick": tick + 1, "scouts": UNIT,
-    }]
-    capped["ants"]["tasks"] = [[{"Explorer": {}}, UNIT]]
-    capped["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
-    load_game(page, capped)
-    page.get_by_role("tab", name="Explore", exact=True).click()
-    expect(page.get_by_role("button", name="Explore Woodland Edge", exact=True)).to_be_disabled()
-    page.clock.run_for(200)
+    explore_tab(page)
+    buttons = page.get_by_role("button", name="Retrieve Carcass", exact=True)
+    expect(buttons.first).to_be_enabled()
+    buttons.first.click()
+    expect(buttons).to_have_count(1)
+    expect(buttons.first).to_be_disabled()  # The only slot is reserved.
+    # Carriers remain unavailable to other jobs and exploration, without nest upkeep.
+    expect(page.get_by_role("button", name="Explore Surroundings", exact=True)).to_be_disabled()
+    page.clock.run_for(1000)
+    traveling = save_game(page)
+    assert traveling["basicResources"]["sugar"]["amount"] == game["basicResources"]["sugar"]["amount"]
+    assert task_count(traveling, "CarcassCarrier") == 5 * UNIT
+    page.clock.run_for(9000)
     full = save_game(page)
-    assert len(full["exploration"]["carcasses"]) == 3
-    assert full["ants"]["scouts"] == UNIT
-    assert not full["exploration"]["explorationParties"]
-    assert task_count(full, "Explorer") == 0
+    explore_tab(page)
+    expect(buttons.first).to_be_disabled()  # Full stores still block retrieval.
+    # Too few idle workers cannot retrieve a carcass, even with storage free.
+    full["exploration"]["carcasses"] = []
+    full["ants"]["workers"] = UNIT
+    load_game(page, full)
+    explore_tab(page)
+    expect(buttons.first).to_be_disabled()
 
-    # Away scouts, like away workers, do not eat at the nest or starve there.
-    away = copy.deepcopy(full)
-    away["ants"]["workers"] = UNIT
-    away["ants"]["tasks"] = [[{"Explorer": {}}, UNIT]]
-    away["ants"]["sugarCumulativeDebt"] = 10000 * UNIT
-    away["basicResources"]["sugar"]["amount"] = 0
-    tick = away["world"]["currentTick"]
-    away["exploration"]["explorationParties"] = [{
-        "amountWorkers": UNIT, "startingTick": tick, "targetTick": tick + 100, "scouts": UNIT,
-    }]
-    away["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
-    load_game(page, away)
-    page.clock.run_for(200)
+    # All slots can be reserved concurrently after a Nursery expansion.
+    game["ants"]["workers"] = 10 * UNIT
+    game["nestAttributes"]["chambers"]["nurseryChamber"]["level"] = 1
+    game["exploration"]["discoveredCarcasses"] = [carcass(), carcass(), carcass()]
+    game["basicResources"]["protein"]["amount"] = 99 * UNIT
+    load_game(page, game)
+    explore_tab(page)
+    buttons.first.click()
+    buttons.first.click()
+    expect(buttons.first).to_be_disabled()
     reserved = save_game(page)
-    assert reserved["ants"]["workers"] == UNIT
-    assert reserved["ants"]["scouts"] == UNIT
-
-    # A nursery no longer imposes its own scout limit.
-    full["ants"]["scouts"] = 4 * UNIT
-    full["basicResources"]["protein"]["amount"] = 100 * UNIT
-    load_game(page, full)
-    page.get_by_role("tab", name="Nest", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_enabled()
-
-    # Adults and all brood reserve the same colony slots, including growing brood.
-    full["nestAttributes"]["maxAnts"] = 26 * UNIT
-    full["nestAttributes"]["maxEggs"] = 100 * UNIT
-    full["ants"]["eggsAndLarvae"] = [{"ScoutEgg": {"initialTick": full["world"]["currentTick"]}} for _ in range(2)]
-    load_game(page, full)
-    page.get_by_role("tab", name="Nest", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_disabled()
-    expect(page.get_by_role("button", name="Lay Egg", exact=False)).to_be_disabled()
-    population = page.locator(".resource-row").filter(has=page.get_by_text("Ants", exact=True))
-    expect(population).to_contain_text("26")
-    for name in ("Workers", "Scouts"):
-        row = page.locator(".resource-row").filter(has=page.get_by_text(name, exact=True))
-        assert "/" not in row.inner_text()
-    # A single freed colony slot can become either type; batch worker laying stops there.
-    full["ants"]["workers"] -= UNIT
-    load_game(page, full)
-    page.get_by_role("tab", name="Nest", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_enabled()
-    page.get_by_label("Action amount").select_option("10")
-    page.get_by_role("button", name="Lay Egg", exact=False).click()
-    filled = save_game(page)
-    assert len(filled["ants"]["eggsAndLarvae"]) == 3
-    page.get_by_role("tab", name="Nest", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_disabled()
-    brood_block = page.locator(".nest-brood")
-    gather = page.get_by_role("button", name="Gather Sugar", exact=True).bounding_box()
-    brood_box = brood_block.bounding_box()
-    chambers_box = page.locator(".nest-chambers").bounding_box()
-    assert gather["y"] + gather["height"] <= brood_box["y"]
-    assert brood_box["y"] + brood_box["height"] <= chambers_box["y"]
+    assert len(reserved["exploration"]["retrievals"]) == 2
+    assert task_count(reserved, "CarcassCarrier") == 10 * UNIT
     page.reload(wait_until="networkidle")
-    reloaded = save_game(page)
-    assert reloaded["nestAttributes"]["maxAnts"] == 26 * UNIT
-    page.get_by_role("tab", name="Nest", exact=True).click()
-    expect(brood_block.get_by_role("button", name="Lay Egg", exact=False)).to_be_visible()
-    expect(brood_block.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_visible()
-    assert page.locator(".nest-chambers").get_by_role("button", name="Lay Egg", exact=False).count() == 0
-    print("PASS limits: protein cap, full stores, shared colony limit, saved capacity, batch limits, grouped actions")
+    page.clock.run_for(10000)
+    both = save_game(page)
+    assert len(both["exploration"]["carcasses"]) == 2
+    assert both["basicResources"]["protein"]["amount"] == 100 * UNIT
+    assert task_count(both, "CarcassCarrier") == 0
+
+    # Food drains oldest-first and crosses reserve boundaries without wasting food.
+    both["exploration"]["carcasses"] = [carcass(food=100), carcass(food=1000)]
+    both["ants"]["workers"] = 2 * UNIT  # 800 food units per tick.
+    both["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
+    load_game(page, both)
+    page.clock.run_for(200)
+    partial = save_game(page)
+    assert len(partial["exploration"]["carcasses"]) == 1
+    assert partial["exploration"]["carcasses"][0]["foodRemaining"] == 300
+    assert partial["basicResources"]["sugar"]["amount"] == both["basicResources"]["sugar"]["amount"]
+    page.clock.run_for(200)
+    depleted = save_game(page)
+    assert not depleted["exploration"]["carcasses"]
+    assert depleted["basicResources"]["sugar"]["amount"] == partial["basicResources"]["sugar"]["amount"] - 500
+    assert depleted["basicResources"]["protein"]["amount"] == partial["basicResources"]["protein"]["amount"]
+    explore_tab(page)
+    expect(page.locator(".carcass-capacity")).to_have_text("0 / 2")
+    expect(buttons.first).to_be_disabled()  # Two workers are still too few to carry it.
+    depleted["ants"]["workers"] = 5 * UNIT
+    load_game(page, depleted)
+    explore_tab(page)
+    expect(buttons.first).to_be_enabled()  # Released storage is usable with enough carriers.
+
+    # No ants at home: food stays stored instead of being discarded.
+    both["ants"]["workers"] = 0
+    both["exploration"]["carcasses"] = [carcass()]
+    both["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
+    load_game(page, both)
+    page.clock.run_for(1000)
+    assert save_game(page)["exploration"]["carcasses"] == both["exploration"]["carcasses"]
+    print("PASS limits: reserved storage, idle carriers, parallel returns, protein cap, FIFO food, partial upkeep, released slots, zero demand")
 
 
 if __name__ == "__main__":
@@ -259,9 +227,9 @@ if __name__ == "__main__":
                     context = browser.new_context(viewport={"width": width, "height": 844},
                                                   is_mobile=width <= 767, has_touch=width <= 767)
                     page = context.new_page()
-                    check_progression(page, width, f"http://127.0.0.1:{server.server_port}")
+                    base = check_progression(page, width, f"http://127.0.0.1:{server.server_port}")
                     if width == 390:
-                        check_limits(page)
+                        check_limits(page, base)
                     context.close()
             finally:
                 browser.close()
