@@ -40,7 +40,7 @@ object ChamberBonuses {
 
     val bonus = forChamber(chamberType)
     withLevel
-      .modify(_.nestAttributes.maxWorkers)
+      .modify(_.nestAttributes.maxAnts)
       .using(_ + bonus.maxAnts)
       .modify(_.nestAttributes.maxEggs)
       .using(_ + bonus.maxEggs)
