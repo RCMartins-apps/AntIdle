@@ -12,18 +12,18 @@ object ChamberBonuses {
       case ChamberType.Nest =>
         ActionBonus(
           colonyPointsEachWorker = Constants.defaultNestLevelColonyPointsSecond,
-          maxWorkers = Constants.NestUpgradeBonusMaxWorkers,
+          maxAnts = Constants.NestUpgradeBonusMaxWorkers,
           maxColonyPoints = Constants.NestUpgradeBonusMaxColonyPoints,
         )
       case ChamberType.Queen =>
         ActionBonus(
           maxEggs = Constants.QueenChamberBonusMaxEggs,
-          maxWorkers = Constants.QueenChamberBonusMaxWorkers,
+          maxAnts = Constants.QueenChamberBonusMaxWorkers,
         )
       case ChamberType.FoodStorage =>
         ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar)
       case ChamberType.Nursery =>
-        ActionBonus(maxScouts = Constants.NurseryBonusMaxScouts)
+        ActionBonus(maxAnts = Constants.NurseryBonusMaxScouts)
     }
 
   def completeUpgrade(allData: AllData, chamberType: ChamberType): AllData = {
@@ -41,15 +41,13 @@ object ChamberBonuses {
     val bonus = forChamber(chamberType)
     withLevel
       .modify(_.nestAttributes.maxWorkers)
-      .using(_ + bonus.maxWorkers)
+      .using(_ + bonus.maxAnts)
       .modify(_.nestAttributes.maxEggs)
       .using(_ + bonus.maxEggs)
       .modify(_.basicResources.sugar.maxAmount)
       .using(_ + bonus.maxSugar)
       .modify(_.basicResources.colonyPoints.maxAmount)
       .using(_ + bonus.maxColonyPoints)
-      .modify(_.nestAttributes.maxScouts)
-      .using(_ + bonus.maxScouts)
   }
 
   def colonyPointsPerTick(chambers: AllChamberData, workersCount: Int): Long =

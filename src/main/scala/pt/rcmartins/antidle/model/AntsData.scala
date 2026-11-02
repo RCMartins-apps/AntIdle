@@ -17,7 +17,7 @@ case class AntsData(
 
   lazy val workersCount: Int = (workers / u).toInt
 
-  lazy val workersAndLarvaeCount: Int = workersCount + (scouts / u).toInt + eggsAndLarvae.length
+  lazy val populationCount: Int = workersCount + (scouts / u).toInt + eggsAndLarvae.length
 
   lazy val upkeepWorkersCount: Long =
     (scouts + idleWorkersCount +

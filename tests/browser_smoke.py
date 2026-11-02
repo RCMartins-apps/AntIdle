@@ -116,9 +116,9 @@ def check_chamber_bonuses(page, initial):
 
     for name, chamber, increases, details in (
         ("Expand Nest", "nestChamber", {"workers": 10, "colony": 500},
-         ("+10 max workers", "+500 max colony points", "+0.01 colony points/worker/s")),
+         ("+10 max ants", "+500 max colony points", "+0.01 colony points/worker/s")),
         ("Queen's Chamber", "queenChamber", {"workers": 5, "eggs": 2},
-         ("+5 max workers", "+2 max eggs")),
+         ("+5 max ants", "+2 max eggs")),
         ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
          ("+1000 max sugar",)),
     ):

@@ -19,11 +19,9 @@ object ScoutProgression {
     canRaise(allData.ants, allData.nestAttributes, allData.basicResources)
 
   def canRaise(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean = {
-    val scoutBrood = ants.eggsAndLarvae.count(_.isInstanceOf[AntBrood.ScoutEgg]) * u
     nest.chambers.nurseryChamber.level > 0 &&
-      ants.scouts + scoutBrood < nest.maxScouts &&
       ants.eggsAndLarvae.count(_.isEgg) < nest.maxEggsCount &&
-      ants.workersAndLarvaeCount < nest.maxWorkersCount && resources.hasResources(eggCost)
+      ants.populationCount < nest.maxAntsCount && resources.hasResources(eggCost)
   }
 
   def raise(allData: AllData): AllData =

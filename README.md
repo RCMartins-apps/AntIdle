@@ -87,3 +87,11 @@ python3 tests/progression_smoke.py
 These cover discovering and harvesting an insect, temporary food support,
 protein costs, Nursery construction, scout maturation, woodland expeditions,
 saving/reloading at intermediate stages, and phone/desktop layouts.
+
+## Colony capacity
+
+Workers, scouts, and growing brood share one ant capacity, including ants away on
+expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
+Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
+still limits how many eggs can incubate at once. Older saves retain all capacity
+earned from their chambers.

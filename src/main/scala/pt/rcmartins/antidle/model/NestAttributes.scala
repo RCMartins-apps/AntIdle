@@ -16,7 +16,9 @@ case class NestAttributes(
 ) {
 
   def maxEggsCount: Int = (maxEggs / u).toInt
-  def maxWorkersCount: Int = (maxWorkers / u).toInt
+  // Legacy save fields now contribute to a single colony capacity.
+  def maxAnts: Long = maxWorkers + maxScouts
+  def maxAntsCount: Int = (maxAnts / u).toInt
 
 }
 

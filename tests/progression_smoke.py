@@ -82,7 +82,8 @@ def check_progression(page, width, url):
     page.clock.run_for(200)
     nursery = save_game(page)
     assert nursery["nestAttributes"]["chambers"]["nurseryChamber"]["level"] == 1
-    assert nursery["nestAttributes"]["maxScouts"] == 3 * UNIT
+    assert nursery["nestAttributes"]["maxWorkers"] == harvested["nestAttributes"]["maxWorkers"] + 3 * UNIT
+    assert nursery["nestAttributes"]["maxScouts"] == 0
     assert nursery["basicResources"]["protein"]["amount"] == 2 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_role("button", name="Raise Scout Egg", exact=True).click()
@@ -187,11 +188,51 @@ def check_limits(page):
     assert reserved["ants"]["workers"] == UNIT
     assert reserved["ants"]["scouts"] == UNIT
 
-    # Scout brood reserves scout slots before it matures.
+    # A nursery no longer imposes its own scout limit.
+    full["ants"]["scouts"] = 4 * UNIT
+    full["basicResources"]["protein"]["amount"] = 100 * UNIT
+    load_game(page, full)
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_enabled()
+
+    # Adults and all brood reserve the same colony slots, including legacy capacity.
+    full["nestAttributes"]["maxWorkers"] = 23 * UNIT
+    full["nestAttributes"]["maxEggs"] = 100 * UNIT
     full["ants"]["eggsAndLarvae"] = [{"ScoutEgg": {"initialTick": full["world"]["currentTick"]}} for _ in range(2)]
     load_game(page, full)
+    page.get_by_role("tab", name="Nest", exact=True).click()
     expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_disabled()
-    print("PASS limits: protein cap, full stores, scout reservation and brood capacity")
+    expect(page.get_by_role("button", name="Lay Egg", exact=False)).to_be_disabled()
+    population = page.locator(".resource-row").filter(has=page.get_by_text("Ants", exact=True))
+    expect(population).to_contain_text("26")
+    for name in ("Workers", "Scouts"):
+        row = page.locator(".resource-row").filter(has=page.get_by_text(name, exact=True))
+        assert "/" not in row.inner_text()
+    # A single freed colony slot can become either type; batch worker laying stops there.
+    full["ants"]["workers"] -= UNIT
+    load_game(page, full)
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_enabled()
+    page.get_by_label("Action amount").select_option("10")
+    page.get_by_role("button", name="Lay Egg", exact=False).click()
+    filled = save_game(page)
+    assert len(filled["ants"]["eggsAndLarvae"]) == 3
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    expect(page.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_disabled()
+    brood_block = page.locator(".nest-brood")
+    gather = page.get_by_role("button", name="Gather Sugar", exact=True).bounding_box()
+    brood_box = brood_block.bounding_box()
+    chambers_box = page.locator(".nest-chambers").bounding_box()
+    assert gather["y"] + gather["height"] <= brood_box["y"]
+    assert brood_box["y"] + brood_box["height"] <= chambers_box["y"]
+    page.reload(wait_until="networkidle")
+    reloaded = save_game(page)
+    assert reloaded["nestAttributes"]["maxWorkers"] + reloaded["nestAttributes"]["maxScouts"] == 26 * UNIT
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    expect(brood_block.get_by_role("button", name="Lay Egg", exact=False)).to_be_visible()
+    expect(brood_block.get_by_role("button", name="Raise Scout Egg", exact=True)).to_be_visible()
+    assert page.locator(".nest-chambers").get_by_role("button", name="Lay Egg", exact=False).count() == 0
+    print("PASS limits: protein cap, full stores, shared colony limit, legacy capacity, batch limits, grouped actions")
 
 
 if __name__ == "__main__":
