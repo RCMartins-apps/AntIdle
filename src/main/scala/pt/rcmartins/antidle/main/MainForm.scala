@@ -895,6 +895,7 @@ object MainForm {
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
+          ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
         )
       },
     )
@@ -930,8 +931,8 @@ object MainForm {
               " tunneling space per second / ant"
             )
           )
-        case AntTask.CarcassHarvester =>
-          div("0.8 food/s per ant.")
+        case AntTask.CarcassCarrier =>
+          div("Returning with a carcass.")
         case AntTask.Explorer =>
           div("Ants exploring the surroundings.")
       }
@@ -969,10 +970,7 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Assign ${antTask.name}",
             span(aria.hidden := true, "+"),
-            disabled <-- idleWorkersCountSignal.combineWith(explorationSignal).map {
-              case (idle, exploration) => idle == 0 ||
-                (antTask == AntTask.CarcassHarvester && exploration.carcasses.isEmpty)
-            },
+            disabled <-- idleWorkersCountSignal.map(_ == 0),
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
@@ -1034,7 +1032,7 @@ object MainForm {
               (!distant || scouts >= u)
           },
         descriptionSignal = Val(Some(div(if (distant)
-          "45s · 1 scout · 2× food and protein. Requires carcass storage."
+          "45s · 1 scout · Finds larger carcasses."
         else "15s · Insects, sugar, or nothing."))),
         costSignal = cost,
         bonusSignal = Val(ActionBonus.empty),
@@ -1087,28 +1085,52 @@ object MainForm {
       ),
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
-          className := "col-12 px-3 py-2",
-          h5("Carcasses", small(className := "text-body-secondary ms-2",
-            child.text <-- explorationSignal.map(e => s"${e.carcasses.size} / ${Constants.MaxStoredCarcasses}"))),
-          p("Food offsets sugar upkeep; surplus is lost."),
-          taskDiv(AntTask.CarcassHarvester, "-explore"),
-          div(
-            children <-- explorationSignal.map { exploration =>
-              if (exploration.carcasses.isEmpty) Seq(p("No carcasses."))
-              else exploration.carcasses.zipWithIndex.map { case (carcass, index) =>
-                div(
-                  className := "card p-2 my-2",
-                  b(if (index == 0) "Dead insect — ready to harvest" else "Dead insect — stored"),
-                  div(s"Food remaining: ${prettyNumberStr(carcass.foodRemaining)} / ${prettyNumberStr(carcass.totalFood)}"),
-                  div(className := "progress my-2",
-                    div(className := "progress-bar", role := "progressbar",
-                      aria.label := "Carcass food remaining",
-                      width.percent := (100.0 * carcass.foodRemaining / carcass.totalFood))),
-                  div(s"Protein on completion: ${prettyNumberStr(carcass.proteinReward)}"),
-                )
-              }
-            },
-          ),
+          className := "col-12 px-3 py-2 carcass-panel",
+          h5("Discovered"),
+          children <-- explorationSignal.map(_.discoveredCarcasses.zipWithIndex.map { case (carcass, index) =>
+            div(
+              className := "card p-2 my-2 discovered-carcass",
+              b("Dead insect"),
+              div(s"Food: ${prettyNumberStr(carcass.totalFood)} · Protein: ${prettyNumberStr(carcass.proteinReward)}"),
+              div(
+                className := "row",
+                actionButton(
+                  name = "Retrieve Carcass",
+                  enabledSignal = antsSignal.combineWith(nestSignal, explorationSignal)
+                    .map { case (ants, nest, exploration) => CarcassProgression.canRetrieve(ants, nest, exploration, carcass) },
+                  descriptionSignal = Val(Some(div(s"${prettyTimeFromTicks(carcass.retrievalTicks)} · ${prettyNumberInt(carcass.requiredWorkers)} carriers"))),
+                  costSignal = Val(ActionCost(idleWorkers = carcass.requiredWorkers)),
+                  bonusSignal = Val(ActionBonus.empty),
+                  onClickAction = _ => Actions.retrieveCarcass(index),
+                ),
+              ),
+            )
+          }),
+          children <-- explorationSignal.map(_.retrievals.map { retrieval =>
+            div(
+              className := "card p-2 my-2 carcass-retrieval",
+              b(s"Returning: ${prettyNumberInt(retrieval.carcass.requiredWorkers)} carriers"),
+              child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, retrieval.targetTick - tick))),
+            )
+          }),
+          h5("At home", small(className := "text-body-secondary ms-2 carcass-capacity",
+            child.text <-- explorationSignal.combineWith(nestSignal)
+              .map { case (exploration, nest) => s"${CarcassProgression.occupiedSlots(exploration)} / ${nest.maxCarcasses}" })),
+          small(className := "text-body-secondary", "Food feeds ants before stored sugar. Slots include returning parties."),
+          children <-- explorationSignal.map { exploration =>
+            if (exploration.carcasses.isEmpty) Seq(p("No carcasses at home."))
+            else exploration.carcasses.map { carcass =>
+              div(
+                className := "card p-2 my-2 stored-carcass",
+                b("Dead insect"),
+                div(s"Food remaining: ${prettyNumberStr(carcass.foodRemaining)} / ${prettyNumberStr(carcass.totalFood)}"),
+                div(className := "progress my-2",
+                  div(className := "progress-bar", role := "progressbar",
+                    aria.label := "Carcass food remaining",
+                    width.percent := (100.0 * carcass.foodRemaining / carcass.totalFood))),
+              )
+            }
+          },
         )
       },
     )

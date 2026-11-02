@@ -23,7 +23,7 @@ object ChamberBonuses {
       case ChamberType.FoodStorage =>
         ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar)
       case ChamberType.Nursery =>
-        ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts)
+        ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
     }
 
   def completeUpgrade(allData: AllData, chamberType: ChamberType): AllData = {

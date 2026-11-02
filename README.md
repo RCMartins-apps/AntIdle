@@ -51,45 +51,45 @@ capacity bonus or assigning it to another chamber does not require changes to
 
 ## Exploration progression prototype
 
-Your first expedition brings back a dead insect. Assign **Carcass Harvesters** in
-Tasks or directly in Explore. Each harvester consumes 0.8 food per second from
-the oldest stored insect, offsetting the colony's sugar upkeep. Surplus food is
-consumed rather than stored; assigning more workers finishes the insect sooner
-but takes those workers away from other tasks. Up to three insects can be stored.
-When the last insect is exhausted, harvesters return to the idle worker pool.
+Expeditions discover dead insects in **Explore**. Select **Retrieve Carcass** to
+send idle workers: nearby insects need 5 carriers for 10 seconds; woodland
+insects need 10 carriers for 20 seconds. Carriers return automatically and cannot
+work other jobs while away. No harvesting job is required.
 
-A nearby insect contains 120 food and yields 5 protein only when fully harvested.
-The first protein reveals the **Nursery Chamber** in Nest. Its first level costs
-100 tunneling space and 3 protein and supports three scouts; later levels cost
-more. **Raise Scout Egg** costs 50 sugar and 2 protein. The egg matures in 30
-seconds, uses normal egg/colony capacity, and becomes a scout rather than a worker.
-Scouts eat sugar at home and are reserved while guiding an expedition. Like
-expedition workers, scouts away from the nest do not consume the colony's food.
+Each returned carcass grants protein immediately (5 nearby, 10 woodland), up to
+the protein storage limit. Its food reserve then feeds the colony before stored
+sugar. Nearby insects hold 120 food; woodland insects hold 240. Reserves drain
+oldest-first, only as needed for upkeep, and their slots free when empty.
 
-One available scout unlocks a **Woodland Edge** expedition: 45 seconds instead of
-15, twice the sugar cost per worker, and a guaranteed insect with twice the food
-and protein if storage has room. Full stores produce a sugar find instead. Near
-expeditions after the first can find an insect, sugar, or nothing. Tuning values
-live in `game/Constants.scala`; harvesting, scout growth, and expedition rules live
-in their progression helpers, keeping tick processing small.
+The nest starts with one carcass slot. Each Nursery level adds one slot as well
+as its shared ant capacity bonus. Returning parties reserve a slot when sent;
+new discoveries can wait outside even when storage is full.
 
-Version-1 and version-2 saves migrate to version 3 on load. Existing capacities
-are preserved, and the prior version-1 Nest capacity bonus is applied only once.
-New fields use defaults, so old saves do not need manual editing.
+The Nursery costs 3 protein plus tunneling space. It unlocks scout eggs costing
+50 sugar and 2 protein, maturing in 30 seconds. A scout can guide a 45-second
+woodland expedition that discovers a larger carcass. Nearby expeditions take
+15 seconds; the first guarantees a carcass, while later ones can find carcasses,
+sugar, or nothing. Scouts on expeditions and workers on retrievals remain part
+of colony population but do not consume nest food while away.
 
-Run the complete progression browser checks after building:
+Balance values live in `game/Constants.scala`; retrieval, scout growth, and
+expedition rules live in `CarcassProgression`, `ScoutProgression`, and
+`ExplorationHelper`.
+
+After `sbt fastOptJS` and browser setup, run:
 
 ```sh
+python3 tests/browser_smoke.py
 python3 tests/progression_smoke.py
 ```
 
-These cover discovering and harvesting an insect, temporary food support,
-protein costs, Nursery construction, scout maturation, woodland expeditions,
-saving/reloading at intermediate stages, and phone/desktop layouts.
+These cover discovery and retrieval, carrier and slot reservation, immediate
+protein, food priority and exhaustion, Nursery/scout progression, save reloads,
+and phone/desktop layouts.
 
 ## Colony capacity
 
 Workers, scouts, and growing brood share one ant capacity, including ants away on
 expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
 Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
-still limits how many eggs can incubate at once. Save format 4 stores this as `maxAnts`; older save formats are no longer supported.
+still limits how many eggs can incubate at once. Save format 5 stores this as `maxAnts`; older save formats are no longer supported.

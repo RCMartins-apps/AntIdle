@@ -72,7 +72,7 @@ def check_nest_capacity(page, initial):
     game["basicResources"]["colonyPoints"] = {"amount": 2000 * UNIT, "maxAmount": 3500 * UNIT}
     load_game(page, game)
     restored = save_game(page)
-    assert restored["version"] == 4
+    assert restored["version"] == 5
     assert restored["basicResources"]["colonyPoints"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_text("Details: Expand Nest", exact=True).click()

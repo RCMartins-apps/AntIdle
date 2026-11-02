@@ -6,45 +6,55 @@ import pt.rcmartins.antidle.model._
 
 object CarcassProgression {
 
-  def harvesters(ants: AntsData): Long =
-    ants.tasks.find(_._1 == AntTask.CarcassHarvester).map(_._2 / u).getOrElse(0L)
+  def occupiedSlots(exploration: ExplorationData): Int =
+    exploration.carcasses.size + exploration.retrievals.size
 
-  def harvestedFood(exploration: ExplorationData, ants: AntsData): Long =
-    exploration.carcasses.headOption
-      .map(carcass => Math.min(carcass.foodRemaining, harvesters(ants) * HarvesterFoodPerTick))
-      .getOrElse(0L)
+  def canRetrieve(ants: AntsData, nest: NestAttributes, exploration: ExplorationData, carcass: Carcass): Boolean =
+    occupiedSlots(exploration) < nest.maxCarcasses && ants.idleWorkersCount >= carcass.requiredWorkers
 
-  def foodOffset(exploration: ExplorationData, ants: AntsData): Long =
-    Math.min(harvestedFood(exploration, ants), ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick)
+  def retrieve(allData: AllData, index: Int): AllData =
+    allData.exploration.discoveredCarcasses.lift(index) match {
+      case Some(carcass) if canRetrieve(allData.ants, allData.nestAttributes, allData.exploration, carcass) =>
+        allData
+          .modify(_.ants).using(_.unlockTask(AntTask.CarcassCarrier).addToTask(AntTask.CarcassCarrier, carcass.requiredWorkers))
+          .modify(_.exploration.discoveredCarcasses).using(_.patch(index, Nil, 1))
+          .modify(_.exploration.retrievals).using(_ :+ CarcassRetrieval(carcass, allData.currentTick + carcass.retrievalTicks))
+      case _ => allData
+    }
 
   def discover(allData: AllData, size: Int): AllData =
     allData
-      .modify(_.exploration.carcasses)
-      .using(_ :+ Carcass(CarcassFood * size, CarcassFood * size, CarcassProtein * size))
+      .modify(_.exploration.discoveredCarcasses)
+      .using(_ :+ Carcass(CarcassFood * size, CarcassFood * size, CarcassProtein * size,
+        CarcassCarriers * size, CarcassRetrievalTicks * size))
       .modify(_.exploration.carcassDiscovered).setTo(true)
-      .modify(_.ants).using(_.unlockTask(AntTask.CarcassHarvester))
-      .addMessage("Exploration: Brought back a dead insect! Assign carcass harvesters to feed the colony and recover protein.")
+      .addMessage("Exploration: Found a dead insect.")
 
-  // Food offsets upkeep for this tick. Surplus harvested food is consumed, not stored.
-  def harvest(allData: AllData): (AllData, Long) = {
-    val food = harvestedFood(allData.exploration, allData.ants)
-    val offset = foodOffset(allData.exploration, allData.ants)
-    allData.exploration.carcasses match {
-      case carcass :: remaining if food > 0 && food >= carcass.foodRemaining =>
-        val harvested = allData
-          .modify(_.exploration.carcasses).setTo(remaining)
-          .modify(_.exploration.proteinDiscovered).setTo(true)
-          .modify(_.basicResources.protein).using(_ + carcass.proteinReward)
-          .addMessage(s"Carcass harvested: recovered ${UINumbersUtils.prettyNumberStr(carcass.proteinReward)} protein. Protein can fund a Nursery and scout eggs.")
-        val released = if (remaining.isEmpty)
-          harvested.modify(_.ants).using(ants =>
-            ants.removeFromTask(AntTask.CarcassHarvester, harvesters(ants) * u))
-        else harvested
-        (released, offset)
-      case carcass :: remaining if food > 0 =>
-        (allData.modify(_.exploration.carcasses)
-          .setTo(carcass.copy(foodRemaining = carcass.foodRemaining - food) :: remaining), offset)
-      case _ => (allData, 0L)
+  def returnCarcasses(allData: AllData): AllData = {
+    val (finished, ongoing) = allData.exploration.retrievals.partition(_.targetTick <= allData.currentTick)
+    finished.foldLeft(allData.modify(_.exploration.retrievals).setTo(ongoing)) { (data, retrieval) =>
+      data
+        .modify(_.ants).using(_.removeFromTask(AntTask.CarcassCarrier, retrieval.carcass.requiredWorkers))
+        .modify(_.exploration.carcasses).using(_ :+ retrieval.carcass)
+        .modify(_.basicResources.protein).using(_ + retrieval.carcass.proteinReward)
+        .modify(_.exploration.proteinDiscovered).setTo(true)
+        .addMessage(s"Carcass returned: +${UINumbersUtils.prettyNumberStr(retrieval.carcass.proteinReward)} protein.")
     }
+  }
+
+  def foodOffset(exploration: ExplorationData, ants: AntsData): Long =
+    Math.min(exploration.carcasses.map(_.foodRemaining).sum,
+      ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick)
+
+  // Consume the oldest reserves first, including across carcasses within one tick.
+  def consumeFood(allData: AllData): (AllData, Long) = {
+    val offset = foodOffset(allData.exploration, allData.ants)
+    val (_, remaining) = allData.exploration.carcasses.foldLeft((offset, List.empty[Carcass])) {
+      case ((needed, kept), carcass) =>
+        val consumed = Math.min(needed, carcass.foodRemaining)
+        val food = carcass.foodRemaining - consumed
+        (needed - consumed, if (food > 0) carcass.copy(foodRemaining = food) :: kept else kept)
+    }
+    (allData.modify(_.exploration.carcasses).setTo(remaining.reverse), offset)
   }
 }
