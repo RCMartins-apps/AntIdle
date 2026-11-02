@@ -10,7 +10,7 @@ case class NestAttributes(
 //    deadAnts: Long = 0,
 //    detritus: Long = 0,
     maxEggs: Long = QueenChamberBonusMaxEggs,
-    maxWorkers: Long = NestUpgradeBonusMaxWorkers,
+    maxWorkers: Long = NestUpgradeBonusMaxAnts,
     maxBuildQueue: Int = 1,
     maxScouts: Long = 0L,
 ) {

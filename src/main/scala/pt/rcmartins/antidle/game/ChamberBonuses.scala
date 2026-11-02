@@ -12,18 +12,18 @@ object ChamberBonuses {
       case ChamberType.Nest =>
         ActionBonus(
           colonyPointsEachWorker = Constants.defaultNestLevelColonyPointsSecond,
-          maxAnts = Constants.NestUpgradeBonusMaxWorkers,
+          maxAnts = Constants.NestUpgradeBonusMaxAnts,
           maxColonyPoints = Constants.NestUpgradeBonusMaxColonyPoints,
         )
       case ChamberType.Queen =>
         ActionBonus(
           maxEggs = Constants.QueenChamberBonusMaxEggs,
-          maxAnts = Constants.QueenChamberBonusMaxWorkers,
+          maxAnts = Constants.QueenChamberBonusMaxAnts,
         )
       case ChamberType.FoodStorage =>
         ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar)
       case ChamberType.Nursery =>
-        ActionBonus(maxAnts = Constants.NurseryBonusMaxScouts)
+        ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts)
     }
 
   def completeUpgrade(allData: AllData, chamberType: ChamberType): AllData = {

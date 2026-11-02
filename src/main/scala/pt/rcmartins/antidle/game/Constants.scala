@@ -55,8 +55,8 @@ object Constants {
     tickAndSeconds(perSecondValue = (0.2 * u).toLong)
 
   val NestUpgradeBonusMaxColonyPoints: Long = 500 * u
-  val NestUpgradeBonusMaxWorkers: Long = 10 * u
-  val QueenChamberBonusMaxWorkers: Long = 5 * u
+  val NestUpgradeBonusMaxAnts: Long = 10 * u
+  val QueenChamberBonusMaxAnts: Long = 5 * u
   val QueenChamberBonusMaxEggs: Long = 2 * u
   val FoodStorageChamberBonusMaxSugar: Long = 1000 * u
 
@@ -82,7 +82,7 @@ object Constants {
   val HarvesterFoodPerTick: Long = (0.8 * u / TicksPerSecond).toLong
   val MaxStoredCarcasses: Int = 3
   val NurseryProteinCost: Long = 3 * u
-  val NurseryBonusMaxScouts: Long = 3 * u
+  val NurseryBonusMaxAnts: Long = 3 * u
   val ScoutSugarCost: Long = 50 * u
   val ScoutProteinCost: Long = 2 * u
   val ScoutGrowthTicks: Long = 30 * TicksPerSecond
