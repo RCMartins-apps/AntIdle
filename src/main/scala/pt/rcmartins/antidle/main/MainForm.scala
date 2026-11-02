@@ -606,6 +606,13 @@ object MainForm {
           ),
         ),
         child.maybe <-- createResourceDiv(
+          name = "Ants",
+          resourceSignal = populationResourceSignal,
+          resourceEstimationSignal = Val(div()),
+          showSignal = unlocksSignal.map(_.resources.showWorkers),
+          tooltipOpt = Some(div("Includes growing brood and ants on expeditions.")),
+        ),
+        child.maybe <-- createResourceDiv(
           name = "Workers",
           resourceSignal = workersResourceSignal,
           resourceEstimationSignal = Val(div()),
@@ -704,62 +711,81 @@ object MainForm {
         bonusSignal = Val(ActionBonus(sugar = 1 * u)),
         onClickAction = _ => giveResources(sugar = PlayerGatherSugarClickAmount),
       ),
-      child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
-        actionButton(
-          name = LayEggAction,
-          topLeftBadgeSignal = modifiersMultiplierSignal.map {
-            case 1    => None
-            case mult => Some(span(s"x$mult"))
+      div(
+        className := "col-12 nest-brood border-top border-bottom my-3 py-3",
+        display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
+        h5("Brood"),
+        div(
+          className := "row",
+          child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
+            actionButton(
+              name = LayEggAction,
+              topLeftBadgeSignal = modifiersMultiplierSignal.map {
+                case 1    => None
+                case mult => Some(span(s"x$mult"))
+              },
+              enabledSignal = Actions.layEggActionEnabled,
+              descriptionSignal = Val(Some(div("Ants require a constant sugar supply to stay alive."))),
+              costSignal = modifiersMultiplierSignal.map(mult =>
+                ActionCost(sugar = mult * Constants.LayEggSugarCost)
+              ),
+              bonusSignal = modifiersMultiplierSignal.map(mult => ActionBonus(eggs = mult * u)),
+              onClickAction = mult => Actions.layEggAction(mult),
+            )
           },
-          enabledSignal = Actions.layEggActionEnabled,
-          descriptionSignal = Val(Some(div("Ants require a constant sugar supply to stay alive."))),
-          costSignal = modifiersMultiplierSignal.map(mult =>
-            ActionCost(sugar = mult * Constants.LayEggSugarCost)
+          child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
+            actionButton(
+              name = "Raise Scout Egg",
+              enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
+                .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
+              descriptionSignal = Val(Some(div("Matures in 30s. Uses colony and egg capacity."))),
+              costSignal = Val(ScoutProgression.eggCost),
+              bonusSignal = Val(ActionBonus.empty),
+              onClickAction = _ => Actions.raiseScout(),
+            )
+          },
+        ),
+      ),
+      div(
+        className := "col-12 nest-chambers",
+        display <-- unlocksSignal.combineWith(nurseryUnlockedSignal).map { case (unlocks, nursery) =>
+          val actions = unlocks.actions
+          if (actions.canBuildNestUpgrade || actions.canBuildQueenChamber || actions.canBuildFoodStorageChamber || nursery) "block" else "none"
+        },
+        h5(className := "mt-3", "Chambers"),
+        div(
+          className := "row",
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Nest.name,
+            chamberType = ChamberType.Nest,
+            unlockF = _.canBuildNestUpgrade,
           ),
-          bonusSignal = modifiersMultiplierSignal.map(mult => ActionBonus(eggs = mult * u)),
-          onClickAction = mult => Actions.layEggAction(mult),
-        )
-      },
-      child.maybe <-- standardBuyChamber(
-        name = ChamberType.Nest.name,
-        chamberType = ChamberType.Nest,
-        unlockF = _.canBuildNestUpgrade,
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Queen.name,
+            chamberType = ChamberType.Queen,
+            unlockF = _.canBuildQueenChamber,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.FoodStorage.name,
+            chamberType = ChamberType.FoodStorage,
+            unlockF = _.canBuildFoodStorageChamber,
+          ),
+          child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
+            val cost = Actions.buildChamberCost(ChamberType.Nursery)
+            actionButton(
+              name = "Nursery Chamber",
+              enabledSignal = Val(true),
+              descriptionSignal = Val(None),
+              costSignal = cost,
+              bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
+              topRightBadgeSignal = chambersSignal.map(chambers =>
+                Option.when(chambers.nurseryChamber.level > 0)(span(chambers.nurseryChamber.level))),
+              onClickAction = _ => useSignalValue[ActionCost](cost,
+                cost => Actions.addBuildTask(BuildTask(ChamberType.Nursery, cost))),
+            )
+          },
+        ),
       ),
-      child.maybe <-- standardBuyChamber(
-        name = ChamberType.Queen.name,
-        chamberType = ChamberType.Queen,
-        unlockF = _.canBuildQueenChamber,
-      ),
-      child.maybe <-- standardBuyChamber(
-        name = ChamberType.FoodStorage.name,
-        chamberType = ChamberType.FoodStorage,
-        unlockF = _.canBuildFoodStorageChamber,
-      ),
-      child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
-        val cost = Actions.buildChamberCost(ChamberType.Nursery)
-        actionButton(
-          name = "Nursery Chamber",
-          enabledSignal = Val(true),
-          descriptionSignal = Val(None),
-          costSignal = cost,
-          bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
-          topRightBadgeSignal = chambersSignal.map(chambers =>
-            Option.when(chambers.nurseryChamber.level > 0)(span(chambers.nurseryChamber.level))),
-          onClickAction = _ => useSignalValue[ActionCost](cost,
-            cost => Actions.addBuildTask(BuildTask(ChamberType.Nursery, cost))),
-        )
-      },
-      child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
-        actionButton(
-          name = "Raise Scout Egg",
-          enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
-            .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-          descriptionSignal = Val(Some(div("Matures in 30s. Uses colony and egg capacity."))),
-          costSignal = Val(ScoutProgression.eggCost),
-          bonusSignal = Val(ActionBonus.empty),
-          onClickAction = _ => Actions.raiseScout(),
-        )
-      },
     )
   }
 
@@ -868,8 +894,7 @@ object MainForm {
           ifGreater0(bonus.maxColonyPoints)(prettyNumberSimple("+", _, " max colony points")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
-          ifGreater0(bonus.maxWorkers)(prettyNumberSimple("+", _, " max workers")),
-          ifGreater0(bonus.maxScouts)(prettyNumberSimple("+", _, " max scouts")),
+          ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
         )
       },
     )

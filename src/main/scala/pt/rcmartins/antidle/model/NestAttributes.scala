@@ -10,13 +10,12 @@ case class NestAttributes(
 //    deadAnts: Long = 0,
 //    detritus: Long = 0,
     maxEggs: Long = QueenChamberBonusMaxEggs,
-    maxWorkers: Long = NestUpgradeBonusMaxWorkers,
+    maxAnts: Long = NestUpgradeBonusMaxAnts,
     maxBuildQueue: Int = 1,
-    maxScouts: Long = 0L,
 ) {
 
   def maxEggsCount: Int = (maxEggs / u).toInt
-  def maxWorkersCount: Int = (maxWorkers / u).toInt
+  def maxAntsCount: Int = (maxAnts / u).toInt
 
 }
 

@@ -60,8 +60,7 @@ object Utils {
   val scoutsSignal: Signal[Long] = antsSignal.map(_.scouts).distinct
   val availableScoutsSignal: Signal[Long] = antsSignal.combineWith(explorationSignal)
     .map { case (ants, exploration) => ScoutProgression.available(ants, exploration) }.distinct
-  val scoutResourceSignal: Signal[BasicResource] = scoutsSignal.combineWith(nestSignal)
-    .map { case (amount, nest) => BasicResource(amount, nest.maxScouts) }
+  val scoutResourceSignal: Signal[BasicResource] = scoutsSignal.map(BasicResource(_, 0L))
 
   val antAndBroodCount: Signal[Long] =
     workersSignal
@@ -86,7 +85,7 @@ object Utils {
 //  val DNASignal: Signal[BasicResource] = resourcesSignal.map(_.DNA).distinct
 
   val maxEggs: Signal[Long] = nestAttributesData.signal.map(_.maxEggs).distinct
-  val maxWorkers: Signal[Long] = nestAttributesData.signal.map(_.maxWorkers).distinct
+  val maxAnts: Signal[Long] = nestAttributesData.signal.map(_.maxAnts).distinct
 
   val buildQueueSignal: Signal[List[BuildTask]] = nestSignal.map(_.buildQueue).distinct
   val maxBuildQueueSignal: Signal[Int] = nestSignal.map(_.maxBuildQueue).distinct
@@ -98,7 +97,10 @@ object Utils {
     eggsCountSignal.combineWith(maxEggs).map { case (amount, max) => BasicResource(amount, max) }
 
   val workersResourceSignal: Signal[BasicResource] =
-    workersSignal.combineWith(maxWorkers).map { case (amount, max) => BasicResource(amount, max) }
+    workersSignal.map(BasicResource(_, 0L))
+
+  val populationResourceSignal: Signal[BasicResource] =
+    antAndBroodCount.combineWith(maxAnts).map { case (amount, max) => BasicResource(amount, max) }
 
   val antTasksUnlockedSignal: Signal[Boolean] =
     unlocksSignal.map(_.tabs.antTasksUnlocked).distinct

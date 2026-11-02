@@ -58,7 +58,7 @@ def progressed_game(initial):
         [{"Tunneler": {}}, 0],
         [{"Explorer": {}}, 0],
     ]
-    game["nestAttributes"]["maxWorkers"] = 1000 * UNIT
+    game["nestAttributes"]["maxAnts"] = 1000 * UNIT
     game["nestAttributes"]["maxEggs"] = 500 * UNIT
     for upgrade in game["upgrades"]["upgrades"]:
         upgrade["show"] = True
@@ -69,16 +69,11 @@ def check_nest_capacity(page, initial):
     game = progressed_game(initial)
     game["ants"]["workers"] = 0
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
-    # A version-1 save receives its missing bonus once, during loading.
-    game["version"] = 1
-    game["basicResources"]["colonyPoints"] = {"amount": 2000 * UNIT, "maxAmount": 2000 * UNIT}
+    game["basicResources"]["colonyPoints"] = {"amount": 2000 * UNIT, "maxAmount": 3500 * UNIT}
     load_game(page, game)
-    # No tick is needed for migration.
-    migrated = save_game(page)
-    assert migrated["version"] == 3
-    assert migrated["basicResources"]["colonyPoints"] == {
-        "amount": 2000 * UNIT, "maxAmount": 3500 * UNIT
-    }
+    restored = save_game(page)
+    assert restored["version"] == 4
+    assert restored["basicResources"]["colonyPoints"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_text("Details: Expand Nest", exact=True).click()
     expect(page.locator("details[open]")).to_contain_text("+500 max colony points")
@@ -94,31 +89,30 @@ def check_nest_capacity(page, initial):
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 0
     load_game(page, game)
     page.clock.run_for(400)
-    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 2000 * UNIT
+    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 3500 * UNIT
     # Current-version saves keep their stored capacity, including other bonuses.
-    game["version"] = 2
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
     game["basicResources"]["colonyPoints"]["maxAmount"] = 7250 * UNIT
     load_game(page, game)
     page.clock.run_for(400)
     assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 7250 * UNIT
-    print("PASS nest capacity: v1 migration, v2 preservation, upgrades, stable ticks, save reload")
+    print("PASS nest capacity: current save preservation, upgrades, stable ticks, save reload")
 
 
 def check_chamber_bonuses(page, initial):
     def capacities(game):
         return {
-            "workers": game["nestAttributes"]["maxWorkers"],
+            "ants": game["nestAttributes"]["maxAnts"],
             "eggs": game["nestAttributes"]["maxEggs"],
             "sugar": game["basicResources"]["sugar"]["maxAmount"],
             "colony": game["basicResources"]["colonyPoints"]["maxAmount"],
         }
 
     for name, chamber, increases, details in (
-        ("Expand Nest", "nestChamber", {"workers": 10, "colony": 500},
-         ("+10 max workers", "+500 max colony points", "+0.01 colony points/worker/s")),
-        ("Queen's Chamber", "queenChamber", {"workers": 5, "eggs": 2},
-         ("+5 max workers", "+2 max eggs")),
+        ("Expand Nest", "nestChamber", {"ants": 10, "colony": 500},
+         ("+10 max ants", "+500 max colony points", "+0.01 colony points/worker/s")),
+        ("Queen's Chamber", "queenChamber", {"ants": 5, "eggs": 2},
+         ("+5 max ants", "+2 max eggs")),
         ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
          ("+1000 max sugar",)),
     ):
@@ -154,7 +148,7 @@ def check_chamber_bonuses(page, initial):
     page.clock.run_for(200)
     result = save_game(page)
     assert result["basicResources"]["colonyPoints"]["amount"] == 600
-    print("PASS shared chamber bonuses: displayed and applied caps, Queen worker bonus, income, save reload")
+    print("PASS shared chamber bonuses: displayed and applied caps, Queen ant capacity bonus, income, save reload")
 
 
 def run_checks(browser, url):

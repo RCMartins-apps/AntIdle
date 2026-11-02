@@ -7,8 +7,7 @@ case class ActionBonus(
     maxSugar: Long = 0L,
     maxColonyPoints: Long = 0L,
     maxEggs: Long = 0L,
-    maxWorkers: Long = 0L,
-    maxScouts: Long = 0L,
+    maxAnts: Long = 0L,
 )
 
 object ActionBonus {

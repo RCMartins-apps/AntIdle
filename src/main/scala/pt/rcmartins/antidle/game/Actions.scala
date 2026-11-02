@@ -33,7 +33,7 @@ object Actions {
 
   val layEggActionEnabled: Signal[Boolean] =
     sugarSignal
-      .combineWith(eggsCountSignal, maxEggs, antAndBroodCount, maxWorkers)
+      .combineWith(eggsCountSignal, maxEggs, antAndBroodCount, maxAnts)
       .map { case (sugar, eggsCount, maxEggs, antCount, maxAnt) =>
         sugar >= Constants.LayEggSugarCost && eggsCount < maxEggs && antCount < maxAnt
       }
@@ -43,7 +43,7 @@ object Actions {
       val maxEggs: Int =
         Math.min(
           allData.nestAttributes.maxEggsCount - allData.ants.eggsAndLarvae.count(_.isEgg),
-          allData.nestAttributes.maxWorkersCount - allData.ants.workersAndLarvaeCount,
+          allData.nestAttributes.maxAntsCount - allData.ants.populationCount,
         )
 
       val mult: Int =
