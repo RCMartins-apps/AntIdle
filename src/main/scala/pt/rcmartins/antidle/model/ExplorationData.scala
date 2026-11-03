@@ -9,6 +9,7 @@ case class ExplorationData(
     retrievals: List[CarcassRetrieval] = Nil,
     carcassDiscovered: Boolean = false,
     proteinDiscovered: Boolean = false,
+    experience: Long = 0L,
 )
 
 object ExplorationData {

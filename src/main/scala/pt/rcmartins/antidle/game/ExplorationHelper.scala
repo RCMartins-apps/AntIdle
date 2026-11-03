@@ -32,7 +32,15 @@ object ExplorationHelper {
 
   def exploreBonus(allData: AllData, exploration: ExplorationParty): AllData = {
     val random = new Random(allData.world.saveSeed + allData.world.currentTick + exploration.startingTick)
-    val returned = allData.modify(_.ants)
+    val previousXP = allData.exploration.experience
+    val xp = ExplorationProgression.earned(exploration)
+    val experience = ExplorationProgression.addExperience(previousXP, xp)
+    val withXP = allData.modify(_.exploration.experience).setTo(experience)
+      .addMessage(s"Exploration: +$xp XP.")
+    val leveled = if (ExplorationProgression.level(experience) > ExplorationProgression.level(previousXP))
+      withXP.addMessage(s"Exploration level ${ExplorationProgression.level(experience)}! Rewards increased by ${ExplorationProgression.bonusPercent(experience)}%.")
+    else withXP
+    val returned = leveled.modify(_.ants)
       .using(_.removeFromTask(AntTask.Explorer, exploration.amountWorkers))
     val findCarcass = !allData.exploration.carcassDiscovered || exploration.scouts > 0 ||
       random.nextInt(100) < 45
@@ -40,7 +48,8 @@ object ExplorationHelper {
     if (findCarcass)
       CarcassProgression.discover(returned, if (exploration.scouts > 0) 2 else 1)
     else if (random.nextInt(100) < 80) {
-      val sugarFound = dices(random, exploration.amountWorkers / u, 20).sum * u
+      val sugarFound = ExplorationProgression.reward(
+        dices(random, exploration.amountWorkers / u, 20).sum * u, experience)
       returned.giveResources(sugar = sugarFound)
         .addMessage(s"Exploration: Found ${UINumbersUtils.prettyNumberStr(sugarFound)} sugar!")
     } else returned.addMessage("Exploration: Found nothing...")
