@@ -873,9 +873,12 @@ object MainForm {
             Option.when(required > 0) {
               val missing = available < required
               span(
-                className := (if (missing) "action-cost text-danger fw-bold" else "action-cost"),
-                prettyNumberSimple("", required, s" $label"),
-                if (missing) s" (available: ${prettyNumberStr(available)})" else "",
+                className := "action-cost",
+                span(
+                  className := (if (missing) "text-danger" else "text-success"),
+                  prettyNumberStr(available),
+                ),
+                s"/${prettyNumberStr(required)} $label",
               )
             }
 
