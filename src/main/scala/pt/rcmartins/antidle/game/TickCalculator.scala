@@ -100,7 +100,7 @@ object TickCalculator {
                   -ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick,
                 )
               ),
-              Some(ResourceOrigin("Carcass food", CarcassProgression.foodOffset(exploration, ants)))
+              Some(ResourceOrigin("Carcass sugar", CarcassProgression.foodOffset(exploration, ants)))
                 .filter(_.tickResourceU > 0),
             ).flatten
         }
@@ -139,20 +139,20 @@ object TickCalculator {
         }
     )
 
-  // TODO show <diff color> when full ? -> orange maybe?
   def prettyResourceEstDiv(
       bonusGroup: BonusOriginGroup,
       resource: Signal[BasicResource],
   ): ReactiveHtmlElement[HTMLDivElement] = {
     div(
       child <--
-        bonusGroup.sum.map { sumU =>
-          val useMinutes: Boolean = Math.abs(sumU) < 20
+        bonusGroup.sum.combineWith(resource).map { case (production, current) =>
+          val sumU = if (current.maxAmount > 0 && current.amount >= current.maxAmount && production > 0) 0L else production
+          val useMinutes: Boolean = sumU != 0 && Math.abs(sumU) < 20
           val minutesMultiplier: Int = if (useMinutes) 60 else 1
 
           span(
             if (sumU > 0) "+" else if (sumU < 0) "-" else "",
-            UINumbersUtils.prettyNumberStr(minutesMultiplier * sumU * TicksPerSecond),
+            UINumbersUtils.prettyNumberStr(minutesMultiplier * Math.abs(sumU) * TicksPerSecond),
             if (useMinutes) "/m" else "/s",
           )
         }

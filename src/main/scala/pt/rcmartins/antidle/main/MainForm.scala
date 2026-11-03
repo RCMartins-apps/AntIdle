@@ -639,7 +639,9 @@ object MainForm {
               },
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
-              className := "col-3 text-end text-nowrap",
+              className := "col-3 text-end text-nowrap resource-amount",
+              className <-- resourceSignal.map(resource =>
+                if (resource.maxAmount > 0 && resource.amount >= resource.maxAmount) "text-primary fw-bold" else ""),
               child <-- amountSignal.map(prettyNumberFixedSize),
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
@@ -1120,7 +1122,7 @@ object MainForm {
             val bonus = ExplorationProgression.bonusPercent(data.experience)
             val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
               s" Next level: +${bonus + 25}%." else ""
-            s"Reward bonus: +$bonus% sugar, carcass food and protein.$next"
+            s"Reward bonus: +$bonus% sugar, carcass sugar and protein.$next"
           }),
           p("Every completed expedition earns XP, even when nothing is found. Each level requires twice as much XP."),
         ),
@@ -1155,7 +1157,7 @@ object MainForm {
             div(
               className := "card p-2 my-2 discovered-carcass",
               b("Dead insect"),
-              div(s"Food: ${prettyNumberStr(carcass.totalFood)} · Protein: ${prettyNumberStr(carcass.proteinReward)}"),
+              div(s"Sugar: ${prettyNumberStr(carcass.totalFood)} · Protein: ${prettyNumberStr(carcass.proteinReward)}"),
               div(
                 className := "carcass-workers",
                 child <-- idleWorkersCountSignal.map(available =>
@@ -1194,17 +1196,17 @@ object MainForm {
             child.text <-- explorationSignal.map(data =>
               s"${data.carcasses.size} stored · ${data.retrievals.size} returning"),
           ),
-          small(className := "text-body-secondary", "Returning parties reserve a slot. Food feeds ants before sugar."),
+          small(className := "text-body-secondary", "Returning parties reserve a slot. Carcass sugar is used before stored sugar."),
           children <-- explorationSignal.map { exploration =>
             if (exploration.carcasses.isEmpty) Seq(p("No carcasses at home."))
             else exploration.carcasses.map { carcass =>
               div(
                 className := "card p-2 my-2 stored-carcass",
                 b("Dead insect"),
-                div(s"Food remaining: ${prettyNumberStr(carcass.foodRemaining)} / ${prettyNumberStr(carcass.totalFood)}"),
+                div(s"Sugar remaining: ${prettyNumberStr(carcass.foodRemaining)} / ${prettyNumberStr(carcass.totalFood)}"),
                 div(className := "progress my-2",
                   div(className := "progress-bar", role := "progressbar",
-                    aria.label := "Carcass food remaining",
+                    aria.label := "Carcass sugar remaining",
                     width.percent := (100.0 * carcass.foodRemaining / carcass.totalFood))),
               )
             }

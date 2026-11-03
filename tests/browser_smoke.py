@@ -113,7 +113,7 @@ def check_chamber_bonuses(page, initial):
          ("+10 max ants", "+500 max colony points", "+0.01 colony points/worker/s")),
         ("Queen's Chamber", "queenChamber", {"ants": 5, "eggs": 2},
          ("+5 max ants", "+2 max eggs")),
-        ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
+        ("Sugar Storage Chamber", "foodStorageChamber", {"sugar": 1000},
          ("+1000 max sugar",)),
     ):
         game = progressed_game(initial)

@@ -35,7 +35,7 @@ object Chamber {
     }
 
     case object FoodStorage extends ChamberType {
-      val name: String = "Food Storage Chamber"
+      val name: String = "Sugar Storage Chamber"
     }
 
     case object Nursery extends ChamberType {
