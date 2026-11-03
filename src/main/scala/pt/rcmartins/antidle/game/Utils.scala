@@ -74,6 +74,7 @@ object Utils {
     antsSignal.map(_.tasks.map(_._1)).distinct
 
   val idleWorkersCountSignal: Signal[Long] = antsData.signal.map(_.idleWorkersCount).distinct
+  val availableWorkersCountSignal: Signal[Long] = antsData.signal.map(_.availableWorkersCount).distinct
 
   val sugarSignal: Signal[BasicResource] = resourcesSignal.map(_.sugar).distinct
   val proteinSignal: Signal[BasicResource] = resourcesSignal.map(_.protein).distinct

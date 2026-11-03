@@ -30,6 +30,9 @@ object Actions {
       allData.modify(_.ants).using(_.addToTask(antTask, amountU))
     }
 
+  def selectDefaultTask(task: Option[AntTask]): Unit =
+    actionUpdater.writer.onNext(DefaultWorkerAssignment.select(_, task))
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 
@@ -82,7 +85,7 @@ object Actions {
 
   def unlockUpgrade(actionCost: ActionCost, unlockAction: UpgradesData => UpgradesData): Unit =
     actionUpdater.writer.onNext(_.hasResourcesUpdate(actionCost)(allData =>
-      allData.modify(_.upgrades).using(unlockAction)))
+      UpgradeVisibility.reconcile(allData.modify(_.upgrades).using(unlockAction))))
 
   def getChamber(chamberType: ChamberType): Signal[Chamber] =
     chambersSignal.map { chambers =>

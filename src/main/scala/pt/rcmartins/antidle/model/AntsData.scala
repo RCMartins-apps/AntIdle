@@ -1,6 +1,5 @@
 package pt.rcmartins.antidle.model
 
-import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants.u
 import zio.json._
 
@@ -10,6 +9,7 @@ case class AntsData(
     tasks: Seq[(AntTask, Long)] = Seq.empty,
     sugarCumulativeDebt: Long = 0,
     scouts: Long = 0L,
+    defaultTask: Option[AntTask] = None,
 ) {
 
   lazy val idleWorkersCount: Long =
@@ -43,18 +43,55 @@ case class AntsData(
         copy(tasks = tasks.updated(index, (task, newCount)))
     }
 
-  def hasIdleWorkersForCost(cost: ActionCost): Boolean =
-    idleWorkersCount >= cost.idleWorkers
+  def defaultTaskChoices: Seq[AntTask] =
+    tasks.map(_._1).filter(task => task.showButtons && task.hasAntUpkeep)
 
-  def addToTask(antTask: AntTask, deltaAmountU: Long): AntsData =
-    this
-      .modify(_.tasks)
-      .using(_.map {
-        case (task, amount) if task == antTask =>
-          (task, Math.max(0L, amount + Math.min(idleWorkersCount, deltaAmountU)))
-        case other =>
-          other
+  def effectiveDefaultTask: Option[AntTask] = defaultTask.filter(defaultTaskChoices.contains)
+
+  def taskWorkers(task: AntTask): Long = tasks.find(_._1 == task).map(_._2).getOrElse(0L)
+
+  lazy val availableWorkersCount: Long =
+    idleWorkersCount + effectiveDefaultTask.map(taskWorkers).getOrElse(0L)
+
+  def availableWorkersLabel: String = effectiveDefaultTask.map(task => s"${task.name} workers").getOrElse("idle workers")
+
+  def assignIdleToDefault: AntsData = effectiveDefaultTask match {
+    case Some(task) if idleWorkersCount > 0 =>
+      copy(tasks = tasks.map { case (current, amount) =>
+        current -> (if (current == task) amount + idleWorkersCount else amount)
       })
+    case _ => this
+  }
+
+  def withDefaultTask(next: Option[AntTask]): AntsData = {
+    if (next.exists(task => !defaultTaskChoices.contains(task))) this
+    else {
+      val released = effectiveDefaultTask.filterNot(next.contains)
+      copy(defaultTask = next, tasks = tasks.map { case (task, amount) =>
+        task -> (if (released.contains(task)) 0L else amount)
+      }).assignIdleToDefault
+    }
+  }
+
+  def hasIdleWorkersForCost(cost: ActionCost): Boolean =
+    availableWorkersCount >= cost.idleWorkers
+
+  def addToTask(antTask: AntTask, deltaAmountU: Long): AntsData = {
+    if (!tasks.exists(_._1 == antTask)) this
+    else if (deltaAmountU < 0) {
+      copy(tasks = tasks.map { case (task, amount) =>
+        task -> (if (task == antTask) Math.max(0L, amount + deltaAmountU) else amount)
+      }).assignIdleToDefault
+    } else {
+      val available = if (effectiveDefaultTask.contains(antTask)) idleWorkersCount else availableWorkersCount
+      val moved = Math.max(0L, Math.min(available, deltaAmountU))
+      val borrowed = Math.max(0L, moved - idleWorkersCount)
+      copy(tasks = tasks.map { case (task, amount) =>
+        task -> (if (task == antTask) amount + moved
+          else if (effectiveDefaultTask.contains(task)) amount - borrowed else amount)
+      }).assignIdleToDefault
+    }
+  }
 
   def removeFromTask(antTask: AntTask, deltaAmountU: Long): AntsData =
     addToTask(antTask, -deltaAmountU)
