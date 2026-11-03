@@ -731,6 +731,7 @@ object MainForm {
               ),
               bonusSignal = modifiersMultiplierSignal.map(mult => ActionBonus(eggs = mult * u)),
               onClickAction = mult => Actions.layEggAction(mult),
+              requirementsSignal = broodRequirementsSignal,
             )
           },
           child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
@@ -742,6 +743,7 @@ object MainForm {
               costSignal = Val(ScoutProgression.eggCost),
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseScout(),
+              requirementsSignal = broodRequirementsSignal,
             )
           },
         ),
@@ -789,6 +791,26 @@ object MainForm {
     )
   }
 
+  private case class ActionRequirement(label: String, available: Long, required: Long = u)
+
+  private def requirementLabel(requirement: ActionRequirement): ReactiveHtmlElement[HTMLSpanElement] =
+    span(
+      className := "action-cost",
+      span(
+        className := (if (requirement.available < requirement.required) "text-danger" else "text-success"),
+        prettyNumberStr(requirement.available),
+      ),
+      s"/${prettyNumberStr(requirement.required)} ${requirement.label}",
+    )
+
+  private val broodRequirementsSignal: Signal[List[ActionRequirement]] =
+    antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+      List(
+        ActionRequirement("egg slots", Math.max(0L, nest.maxEggs - ants.eggsAndLarvae.count(_.isEgg) * u)),
+        ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - ants.populationCount * u)),
+      )
+    }.distinct
+
   private def actionButton(
       name: String,
       enabledSignal: Signal[Boolean],
@@ -798,6 +820,7 @@ object MainForm {
       onClickAction: Int => Unit,
       topLeftBadgeSignal: Signal[Option[ReactiveHtmlElement[HTMLElement]]] = Val(None),
       topRightBadgeSignal: Signal[Option[ReactiveHtmlElement[HTMLElement]]] = Val(None),
+      requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "col-6 px-3 py-2 d-grid action-cell",
@@ -834,12 +857,12 @@ object MainForm {
           detailsTag(
             className := "mobile-only action-details",
             summaryTag(s"Details: $name"),
-            actionDetails(descriptionSignal, costSignal, bonusSignal),
+            actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal),
           )
         }
       },
     ).amendThis(elem =>
-      createTooltipForActionButton(elem, descriptionSignal, costSignal, bonusSignal)
+      createTooltipForActionButton(elem, descriptionSignal, costSignal, bonusSignal, requirementsSignal)
     )
 
   private def createTooltipForActionButton(
@@ -847,13 +870,15 @@ object MainForm {
       descriptionSignal: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
       costSignal: Signal[ActionCost],
       bonusSignal: Signal[ActionBonus],
+      requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
   ): EventListener[MouseEvent, MouseEvent] =
-    setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal))
+    setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal))
 
   private def actionDetails(
       descriptionSignal: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
       costSignal: Signal[ActionCost],
       bonusSignal: Signal[ActionBonus],
+      requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
   ): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "p-1",
@@ -867,16 +892,24 @@ object MainForm {
           )
         }
       },
-      child <-- costSignal.map { cost =>
-        div(
-          className := "d-flex flex-column justify-content-center text-center",
-          ifGreater0(cost.protein)(prettyNumberSimple("", _, " protein")),
-          ifGreater0(cost.sugar)(prettyNumberSimple("", _, " sugar")),
-          ifGreater0(cost.tunnelingSpace)(prettyNumberSimple("", _, " tunneling space")),
-          ifGreater0(cost.colonyPoints)(prettyNumberSimple("", _, " colony points")),
-          ifGreater0(cost.idleWorkers)(prettyNumberSimple("", _, " idle workers")),
-        )
+      child <-- costSignal.combineWith(resourcesSignal, idleWorkersCountSignal).map {
+        case (cost, resources, idleWorkers) =>
+          def requirement(required: Long, available: Long, label: String): Option[ReactiveHtmlElement[HTMLSpanElement]] =
+            Option.when(required > 0)(requirementLabel(ActionRequirement(label, available, required)))
+
+          div(
+            className := "d-flex flex-column justify-content-center text-center",
+            requirement(cost.protein, resources.protein.amount, "protein"),
+            requirement(cost.sugar, resources.sugar.amount, "sugar"),
+            requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space"),
+            requirement(cost.colonyPoints, resources.colonyPoints.amount, "colony points"),
+            requirement(cost.idleWorkers, idleWorkers, "idle workers"),
+          )
       },
+      div(
+        className := "d-flex flex-column text-center action-requirements",
+        children <-- requirementsSignal.map(_.map(requirementLabel)),
+      ),
       child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
         if (cost == ActionCost.empty || bonus == ActionBonus.empty)
           None
@@ -1026,6 +1059,11 @@ object MainForm {
       val cost = amountOfExplorersVar.signal.map(ExplorationHelper.cost(_, distant))
       actionButton(
         name = name,
+        requirementsSignal = explorationSignal.combineWith(availableScoutsSignal).map { case (exploration, scouts) =>
+          val slots = ActionRequirement("expedition slots",
+            Math.max(0L, Constants.MaxExplorationParties.toLong - exploration.explorationParties.size) * u)
+          if (distant) List(slots, ActionRequirement("scouts", scouts)) else List(slots)
+        }.distinct,
         enabledSignal = hasResourcesSignal(cost).combineWith(explorationSignal, availableScoutsSignal)
           .map { case (resources, exploration, scouts) =>
             resources && exploration.explorationParties.size < Constants.MaxExplorationParties &&
@@ -1065,13 +1103,16 @@ object MainForm {
         className := "col-12 px-3 py-2 exploration-progress",
         h5("Exploration experience"),
         p(child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
-        p(child.text <-- explorationSignal.map { data =>
-          val bonus = ExplorationProgression.bonusPercent(data.experience)
-          val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
-            s" Next level: +${bonus + 25}%." else ""
-          s"Reward bonus: +$bonus% sugar, carcass food and protein.$next"
-        }),
-        p("Every completed expedition earns XP, even when nothing is found. Each level requires twice as much XP."),
+        detailsTag(
+          summaryTag("XP details"),
+          p(child.text <-- explorationSignal.map { data =>
+            val bonus = ExplorationProgression.bonusPercent(data.experience)
+            val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
+              s" Next level: +${bonus + 25}%." else ""
+            s"Reward bonus: +$bonus% sugar, carcass food and protein.$next"
+          }),
+          p("Every completed expedition earns XP, even when nothing is found. Each level requires twice as much XP."),
+        ),
       ),
       area("Explore Surroundings", distant = false),
       child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
@@ -1108,9 +1149,13 @@ object MainForm {
                 className := "row",
                 actionButton(
                   name = "Retrieve Carcass",
+                  requirementsSignal = explorationSignal.combineWith(nestSignal).map { case (exploration, nest) =>
+                    List(ActionRequirement("carcass slots",
+                      Math.max(0L, nest.maxCarcasses.toLong - CarcassProgression.occupiedSlots(exploration)) * u))
+                  }.distinct,
                   enabledSignal = antsSignal.combineWith(nestSignal, explorationSignal)
                     .map { case (ants, nest, exploration) => CarcassProgression.canRetrieve(ants, nest, exploration, carcass) },
-                  descriptionSignal = Val(Some(div(s"${prettyTimeFromTicks(carcass.retrievalTicks)} · ${prettyNumberInt(carcass.requiredWorkers)} carriers"))),
+                  descriptionSignal = Val(Some(div(s"${prettyTimeFromTicks(carcass.retrievalTicks)} · ", prettyNumberInt(carcass.requiredWorkers), " carriers"))),
                   costSignal = Val(ActionCost(idleWorkers = carcass.requiredWorkers)),
                   bonusSignal = Val(ActionBonus.empty),
                   onClickAction = _ => Actions.retrieveCarcass(index),
@@ -1121,7 +1166,7 @@ object MainForm {
           children <-- explorationSignal.map(_.retrievals.map { retrieval =>
             div(
               className := "card p-2 my-2 carcass-retrieval",
-              b(s"Returning: ${prettyNumberInt(retrieval.carcass.requiredWorkers)} carriers"),
+              b("Returning: ", prettyNumberInt(retrieval.carcass.requiredWorkers), " carriers"),
               child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, retrieval.targetTick - tick))),
             )
           }),
