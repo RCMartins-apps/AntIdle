@@ -93,3 +93,14 @@ Workers, scouts, and growing brood share one ant capacity, including ants away o
 expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
 Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
 still limits how many eggs can incubate at once. Save format 5 stores this as `maxAnts`; older save formats are no longer supported.
+
+## Exploration experience
+
+Every completed expedition earns XP, even if it finds nothing: 10 XP nearby or
+30 XP at the woodland edge, independent of party size. Exploration starts at
+level 1. Reaching level 2 costs 100 XP; each subsequent level costs twice as much
+(200, 400, 800…), up to level 20. Each level adds 25% to sugar finds and newly
+discovered carcasses' food and protein, without increasing carrier requirements
+or retrieval time. The expedition that levels up receives the new bonus.
+The Explore tab shows XP progress, current rewards, and the next bonus.
+Experience persists in saves; existing saves start at zero XP.

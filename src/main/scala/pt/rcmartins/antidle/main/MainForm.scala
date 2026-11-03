@@ -1032,8 +1032,8 @@ object MainForm {
               (!distant || scouts >= u)
           },
         descriptionSignal = Val(Some(div(if (distant)
-          "45s · 1 scout · Finds larger carcasses."
-        else "15s · Insects, sugar, or nothing."))),
+          "45s · 1 scout · 30 XP · Finds larger carcasses."
+        else "15s · 10 XP · Insects, sugar, or nothing. Always earns XP."))),
         costSignal = cost,
         bonusSignal = Val(ActionBonus.empty),
         onClickAction = _ => useSignalValue(amountOfExplorersVar.signal,
@@ -1060,6 +1060,18 @@ object MainForm {
           value <-- amountOfExplorersVar.signal.map(amount => (amount / u).toString),
           onInput.mapToValue.map(_.toLong * u) --> amountOfExplorersVar.writer,
         ),
+      ),
+      div(
+        className := "col-12 px-3 py-2 exploration-progress",
+        h5("Exploration experience"),
+        p(child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
+        p(child.text <-- explorationSignal.map { data =>
+          val bonus = ExplorationProgression.bonusPercent(data.experience)
+          val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
+            s" Next level: +${bonus + 25}%." else ""
+          s"Reward bonus: +$bonus% sugar, carcass food and protein.$next"
+        }),
+        p("Every completed expedition earns XP, even when nothing is found. Each level requires twice as much XP."),
       ),
       area("Explore Surroundings", distant = false),
       child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {

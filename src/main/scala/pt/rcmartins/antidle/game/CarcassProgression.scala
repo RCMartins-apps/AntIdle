@@ -25,7 +25,9 @@ object CarcassProgression {
   def discover(allData: AllData, size: Int): AllData =
     allData
       .modify(_.exploration.discoveredCarcasses)
-      .using(_ :+ Carcass(CarcassFood * size, CarcassFood * size, CarcassProtein * size,
+      .using(_ :+ Carcass(ExplorationProgression.reward(CarcassFood * size, allData.exploration.experience),
+        ExplorationProgression.reward(CarcassFood * size, allData.exploration.experience),
+        ExplorationProgression.reward(CarcassProtein * size, allData.exploration.experience),
         CarcassCarriers * size, CarcassRetrievalTicks * size))
       .modify(_.exploration.carcassDiscovered).setTo(true)
       .addMessage("Exploration: Found a dead insect.")

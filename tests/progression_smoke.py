@@ -53,6 +53,7 @@ def check_progression(page, width, url):
     page.get_by_role("button", name="Explore Surroundings", exact=True).click()
     page.clock.run_for(15000)
     found = save_game(page)
+    assert found["exploration"]["experience"] == 10
     assert len(found["exploration"]["discoveredCarcasses"]) == 1
     assert not found["exploration"]["carcasses"]
     assert not found["exploration"]["retrievals"]
@@ -109,6 +110,7 @@ def check_progression(page, width, url):
     page.clock.run_for(45000)
     distant = save_game(page)
     assert not distant["exploration"]["explorationParties"]
+    assert distant["exploration"]["experience"] == 40
     assert distant["ants"]["scouts"] == UNIT
     assert not distant["exploration"]["carcasses"]
     large = distant["exploration"]["discoveredCarcasses"][0]
@@ -125,6 +127,68 @@ def check_progression(page, width, url):
     assert not errors, errors
     print(f"PASS {width}px: discovery, carriers, timed retrieval, immediate protein, food upkeep, Nursery slots, scouts, save reload, layout")
     return game
+
+
+def check_experience(page, base):
+    game = copy.deepcopy(base)
+    game["exploration"] = {"experience": 90}
+    load_game(page, game)
+    explore_tab(page)
+    panel = page.locator(".exploration-progress")
+    expect(panel).to_contain_text("Level 1 · 90 / 100 XP")
+    page.get_by_role("button", name="Explore Surroundings", exact=True).click()
+    assert save_game(page)["exploration"]["experience"] == 90  # Award on return only.
+    page.clock.run_for(15000)
+    leveled = save_game(page)
+    assert leveled["exploration"]["experience"] == 100
+    reward = leveled["exploration"]["discoveredCarcasses"][0]
+    assert reward == carcass(150 * UNIT, 5 * UNIT, 50, 62500)
+    page.reload(wait_until="networkidle")
+    explore_tab(page)
+    expect(panel).to_contain_text("Level 2 · 0 / 200 XP")
+    expect(panel).to_contain_text("Reward bonus: +25%")
+    expect(panel).to_contain_text("Next level: +50%")
+    assert_fits(page, 390)
+
+    # Every possible nearby outcome earns XP; compare identical seeded trips
+    # across a level boundary to verify sugar and carcass reward scaling.
+    outcomes = set()
+    for seed in range(1, 51):
+        results = []
+        for xp in (0, 90):
+            trial = copy.deepcopy(base)
+            trial["world"]["saveSeed"] = seed
+            trial["exploration"] = {"experience": xp, "carcassDiscovered": True}
+            load_game(page, trial)
+            explore_tab(page)
+            page.get_by_role("button", name="Explore Surroundings", exact=True).click()
+            page.clock.run_for(15000)
+            result = save_game(page)
+            assert result["exploration"]["experience"] == xp + 10
+            results.append(result)
+        low, high = results
+        if low["exploration"]["discoveredCarcasses"]:
+            outcomes.add("carcass")
+            assert high["exploration"]["discoveredCarcasses"][0]["totalFood"] == 150 * UNIT
+        else:
+            difference = high["basicResources"]["sugar"]["amount"] - low["basicResources"]["sugar"]["amount"]
+            if difference > 0:
+                outcomes.add("sugar")
+                assert difference % (UNIT // 4) == 0
+                assert UNIT // 4 <= difference <= 5 * UNIT
+            else:
+                outcomes.add("nothing")
+        if len(outcomes) == 3:
+            break
+    assert outcomes == {"carcass", "sugar", "nothing"}, outcomes
+    for xp, text in ((299, "Level 2 · 199 / 200 XP"),
+                     (300, "Level 3 · 0 / 400 XP"),
+                     (52428700, "Maximum level")):
+        game["exploration"] = {"experience": xp}
+        load_game(page, game)
+        explore_tab(page)
+        expect(panel).to_contain_text(text)
+    print("PASS exploration XP: all outcomes, reward scaling, thresholds, level cap, persistence, layout")
 
 
 def check_limits(page, base):
@@ -230,6 +294,7 @@ if __name__ == "__main__":
                     base = check_progression(page, width, f"http://127.0.0.1:{server.server_port}")
                     if width == 390:
                         check_limits(page, base)
+                        check_experience(page, base)
                     context.close()
             finally:
                 browser.close()
