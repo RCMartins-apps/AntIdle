@@ -7,56 +7,77 @@ import pt.rcmartins.antidle.model._
 import scala.util.Random
 
 object ExplorationHelper {
+  def cost(workers: Long, destination: ExplorationDestination): ActionCost =
+    ActionCost(sugar = workers * destination.sugarPerWorker, idleWorkers = workers)
 
-  def cost(workers: Long, distant: Boolean): ActionCost =
-    ActionCost(sugar = workers * (if (distant) 20 else 10), idleWorkers = workers)
+  def canDepart(data: ExplorationData, ants: AntsData, workers: Long, destination: ExplorationDestination): Boolean =
+    workers >= destination.minimumWorkers && workers % u == 0 &&
+      ExplorationProgression.level(data.experience) >= destination.requiredLevel &&
+      data.explorationParties.size < ExplorationProgression.maxParties(data.experience) &&
+      ants.idleWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts
 
-  def canStart(allData: AllData, workers: Long, distant: Boolean): Boolean =
-    workers >= u && workers % u == 0 && allData.unlocks.tabs.exploreTabUnlocked &&
-      allData.exploration.explorationParties.size < MaxExplorationParties &&
-      allData.hasResources(cost(workers, distant)) &&
-      (!distant || ScoutProgression.available(allData.ants, allData.exploration) >= u)
+  def canStart(data: AllData, workers: Long, destination: ExplorationDestination): Boolean =
+    data.unlocks.tabs.exploreTabUnlocked && canDepart(data.exploration, data.ants, workers, destination) &&
+      data.hasResources(cost(workers, destination))
 
-  def start(allData: AllData, workers: Long, distant: Boolean): AllData =
-    if (!canStart(allData, workers, distant)) allData
-    else allData.spendResources(cost(workers, distant))
+  def start(data: AllData, workers: Long, destination: ExplorationDestination): AllData =
+    if (!canStart(data, workers, destination)) data
+    else data.spendResources(cost(workers, destination))
       .modify(_.ants).using(_.addToTask(AntTask.Explorer, workers))
       .modify(_.exploration.explorationParties)
       .using(ExplorationParty(
-        workers, allData.currentTick,
-        allData.currentTick + (if (distant) DistantExplorationTicks else ExplorationTimeTicks),
-        scouts = if (distant) u else 0L,
+        workers, data.currentTick, data.currentTick + destination.duration,
+        scouts = destination.scouts, destination = destination.id,
+        suppliesLevel = ExplorationProgression.suppliesRank(data.exploration),
       ) :: _)
       .modify(_.statistics.explorationsCount).using(_.addValue(1))
       .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers))
 
-  def exploreBonus(allData: AllData, exploration: ExplorationParty): AllData = {
-    val random = new Random(allData.world.saveSeed + allData.world.currentTick + exploration.startingTick)
-    val previousXP = allData.exploration.experience
-    val xp = ExplorationProgression.earned(exploration)
-    val experience = ExplorationProgression.addExperience(previousXP, xp)
-    val withXP = allData.modify(_.exploration.experience).setTo(experience)
-      .addMessage(s"Exploration: +$xp XP.")
-    val leveled = if (ExplorationProgression.level(experience) > ExplorationProgression.level(previousXP))
-      withXP.addMessage(s"Exploration level ${ExplorationProgression.level(experience)}! Rewards increased by ${ExplorationProgression.bonusPercent(experience)}%.")
-    else withXP
-    val returned = leveled.modify(_.ants)
-      .using(_.removeFromTask(AntTask.Explorer, exploration.amountWorkers))
-    val findCarcass = !allData.exploration.carcassDiscovered || exploration.scouts > 0 ||
-      random.nextInt(100) < 45
+  def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
+    val rank = ExplorationProgression.suppliesRank(data)
+    val party = ExplorationParty(workers, 0L, destination.duration,
+      scouts = destination.scouts, destination = destination.id, suppliesLevel = rank)
+    val xp = ExplorationProgression.earned(party)
+    val experience = ExplorationProgression.addExperience(data.experience, xp)
+    def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
+      ExplorationProgression.expeditionReward(base, experience, workers, rank))
+    val result = if (destination.colonyPoints > 0)
+      s"${amount(destination.colonyPoints)} colony points guaranteed"
+    else {
+      val carcass = s"${amount(CarcassProtein * destination.carcassSize)} protein + ${amount(CarcassFood * destination.carcassSize)} sugar reserve"
+      if (destination == ExplorationDestination.WoodlandEdge || !data.carcassDiscovered)
+        s"Carcass guaranteed: $carcass"
+      else s"45% carcass ($carcass); 44% sugar (${amount(u)}–${amount(20L * u)}); 11% no resources"
+    }
+    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · $result"
+  }
 
-    if (findCarcass)
-      CarcassProgression.discover(returned, if (exploration.scouts > 0) 2 else 1)
+  def exploreBonus(data: AllData, party: ExplorationParty): AllData = {
+    val random = new Random(data.world.saveSeed + data.world.currentTick + party.startingTick)
+    val destination = ExplorationDestination.forParty(party)
+    val previousXP = data.exploration.experience
+    val xp = ExplorationProgression.earned(party)
+    val experience = ExplorationProgression.addExperience(previousXP, xp)
+    val withXP = data.modify(_.exploration.experience).setTo(experience)
+    val leveled = if (ExplorationProgression.level(experience) > ExplorationProgression.level(previousXP))
+      withXP.addMessage(s"Exploration level ${ExplorationProgression.level(experience)}! ${ExplorationProgression.nextMilestone(experience)}")
+    else withXP
+    val returned = leveled.modify(_.ants).using(_.removeFromTask(AntTask.Explorer, party.amountWorkers))
+    val report = s"${destination.name}: +$xp XP."
+
+    if (destination.colonyPoints > 0) {
+      val points = ExplorationProgression.expeditionReward(destination.colonyPoints, experience, party.amountWorkers, party.suppliesLevel)
+      returned.giveResources(colonyPoints = points)
+        .addMessage(s"$report Found ${UINumbersUtils.prettyNumberStr(points)} colony points!")
+    } else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
+      CarcassProgression.discover(returned, destination.carcassSize, party.amountWorkers, party.suppliesLevel)
+        .addMessage(report)
     else if (random.nextInt(100) < 80) {
-      val sugarFound = ExplorationProgression.reward(
-        dices(random, exploration.amountWorkers / u, 20).sum * u, experience)
-      returned.giveResources(sugar = sugarFound)
-        .addMessage(s"Exploration: Found ${UINumbersUtils.prettyNumberStr(sugarFound)} sugar!")
-    } else returned.addMessage("Exploration: Found nothing...")
+      val sugar = ExplorationProgression.expeditionReward(dice(random, 20L) * u, experience, party.amountWorkers, party.suppliesLevel)
+      returned.giveResources(sugar = sugar)
+        .addMessage(s"$report Found ${UINumbersUtils.prettyNumberStr(sugar)} sugar!")
+    } else returned.addMessage(s"$report No resources found.")
   }
 
   def dice(random: Random, maxValue: Long): Long = random.nextLong(maxValue) + 1L
-
-  def dices(random: Random, amount: Long, maxValue: Long): Seq[Long] =
-    (1 to amount.toInt).map(_ => dice(random, maxValue))
 }

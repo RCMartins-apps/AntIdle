@@ -10,6 +10,7 @@ case class ExplorationData(
     carcassDiscovered: Boolean = false,
     proteinDiscovered: Boolean = false,
     experience: Long = 0L,
+    suppliesLevel: Int = 0,
 )
 
 object ExplorationData {

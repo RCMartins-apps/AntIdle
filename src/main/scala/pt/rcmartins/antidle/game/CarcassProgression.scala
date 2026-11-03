@@ -22,12 +22,12 @@ object CarcassProgression {
       case _ => allData
     }
 
-  def discover(allData: AllData, size: Int): AllData =
+  def discover(allData: AllData, size: Int, workers: Long = u, supplies: Int = 0): AllData =
     allData
       .modify(_.exploration.discoveredCarcasses)
-      .using(_ :+ Carcass(ExplorationProgression.reward(CarcassFood * size, allData.exploration.experience),
-        ExplorationProgression.reward(CarcassFood * size, allData.exploration.experience),
-        ExplorationProgression.reward(CarcassProtein * size, allData.exploration.experience),
+      .using(_ :+ Carcass(ExplorationProgression.expeditionReward(CarcassFood * size, allData.exploration.experience, workers, supplies),
+        ExplorationProgression.expeditionReward(CarcassFood * size, allData.exploration.experience, workers, supplies),
+        ExplorationProgression.expeditionReward(CarcassProtein * size, allData.exploration.experience, workers, supplies),
         CarcassCarriers * size, CarcassRetrievalTicks * size))
       .modify(_.exploration.carcassDiscovered).setTo(true)
       .addMessage("Exploration: Found a dead insect.")
