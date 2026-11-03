@@ -161,6 +161,7 @@ object UnlockUtils {
         Var.update(
           unlocksData -> ((_: Unlocks).modify(_.tabs.exploreTabUnlocked).setTo(true)),
           antsData -> ((_: AntsData).unlockTask(AntTask.Explorer)),
+          upgradesData -> ((_: UpgradesData).show(DefaultWorkers)),
         ),
       initialAllData.upgrades(UnlockExplorerTask).unlocked,
     )

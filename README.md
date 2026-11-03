@@ -134,3 +134,28 @@ and supplies fields have defaults; neither XP nor progress is reset.
 Run `sbt test` for the exploration engine tests. After `sbt fastOptJS`, run
 `python3 tests/exploration_smoke.py` for destination gating, previews, supplies,
 concurrent parties, save reloads, and phone/desktop layouts.
+
+## Default workers
+
+After exploration is unlocked, **Default Workers** becomes available in Upgrades
+for 500 sugar and 250 colony points. It unlocks a **Default task** selector in
+Tasks, with **Keep idle** and the colony's unlocked normal jobs (Sugar Collector
+and Tunneler). Expeditions and carcass carrying cannot be selected as defaults.
+
+Choosing a default assigns idle workers to it. Hatchlings, returning explorers
+and carriers, and workers removed from other jobs automatically join it.
+Its workers remain available for actions that previously required idle workers,
+including exploration, carcass retrieval, and assigning workers to another job.
+Those actions remove workers from the default task while they are occupied;
+workers assigned to other jobs are never borrowed implicitly.
+
+Changing the default moves the previous pool to the new task and leaves other
+assignments and away parties intact. **Keep idle** releases the pool back to idle.
+The default job's +/− buttons are disabled because its allocation is automatic.
+Worker costs display the active pool's name and available amount. Existing saves
+retain their behavior until the upgrade is bought and a default is selected.
+
+`DefaultWorkersSuite` covers allocation, returns, default changes, maturation,
+upkeep, starvation and save compatibility. Run `python3 tests/default_workers_smoke.py`
+after `sbt fastOptJS` to check the upgrade, selector, concurrent borrowing,
+persistence, shortage indicators, and phone/desktop layouts.

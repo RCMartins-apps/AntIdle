@@ -10,7 +10,7 @@ object CarcassProgression {
     exploration.carcasses.size + exploration.retrievals.size
 
   def canRetrieve(ants: AntsData, nest: NestAttributes, exploration: ExplorationData, carcass: Carcass): Boolean =
-    occupiedSlots(exploration) < nest.maxCarcasses && ants.idleWorkersCount >= carcass.requiredWorkers
+    occupiedSlots(exploration) < nest.maxCarcasses && ants.availableWorkersCount >= carcass.requiredWorkers
 
   def retrieve(allData: AllData, index: Int): AllData =
     allData.exploration.discoveredCarcasses.lift(index) match {

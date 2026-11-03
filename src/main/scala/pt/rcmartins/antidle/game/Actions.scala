@@ -30,6 +30,9 @@ object Actions {
       allData.modify(_.ants).using(_.addToTask(antTask, amountU))
     }
 
+  def selectDefaultTask(task: Option[AntTask]): Unit =
+    actionUpdater.writer.onNext(DefaultWorkerAssignment.select(_, task))
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 

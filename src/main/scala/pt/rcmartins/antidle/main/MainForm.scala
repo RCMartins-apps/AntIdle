@@ -248,7 +248,7 @@ object MainForm {
                 href := "#tasksContent",
                 role := "tab",
                 "Tasks",
-                child <-- idleWorkersCountSignal.map {
+                child <-- availableWorkersCountSignal.map {
                   case 0 => span()
                   case n => span(s" (", prettyNumberInt(n), ")")
                 },
@@ -904,8 +904,8 @@ object MainForm {
           )
         }
       },
-      child <-- costSignal.combineWith(resourcesSignal, idleWorkersCountSignal).map {
-        case (cost, resources, idleWorkers) =>
+      child <-- costSignal.combineWith(resourcesSignal, antsSignal).map {
+        case (cost, resources, ants) =>
           def requirement(required: Long, available: Long, label: String, maximum: Option[Long] = None): Option[ReactiveHtmlElement[HTMLSpanElement]] =
             Option.when(required > 0)(requirementLabel(ActionRequirement(label, available, required, maximum)))
 
@@ -915,7 +915,7 @@ object MainForm {
             requirement(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
             requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
             requirement(cost.colonyPoints, resources.colonyPoints.amount, "colony points", Some(resources.colonyPoints.maxAmount)),
-            requirement(cost.idleWorkers, idleWorkers, "idle workers"),
+            requirement(cost.idleWorkers, ants.availableWorkersCount, ants.availableWorkersLabel),
           )
       },
       div(
@@ -945,13 +945,34 @@ object MainForm {
       },
     )
 
-  private def tasksDiv: ReactiveHtmlElement[HTMLDivElement] =
+  private def tasksDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "d-grid gap-2",
       actionAmountControl("tasks-action-amount"),
+      child.maybe <-- upgradesSignal.map(_(UpgradeType.DefaultWorkers).unlocked).distinct.map {
+        unlocked => Option.when(unlocked) {
+          div(
+            className := "default-workers",
+            label(forId := "default-worker-task", "Default task"),
+            select(
+              idAttr := "default-worker-task",
+              className := "form-select",
+              children <-- antsSignal.map(_.defaultTaskChoices).distinct.map(choices =>
+                option(value := "idle", "Keep idle") +:
+                  choices.map(task => option(value := task.toString, task.name))),
+              value <-- antsSignal.map(_.effectiveDefaultTask.map(_.toString).getOrElse("idle")).distinct,
+              onChange.mapToValue --> { selected =>
+                useSignalValue[AntsData](antsSignal, ants =>
+                  Actions.selectDefaultTask(ants.defaultTaskChoices.find(_.toString == selected)))
+              },
+            ),
+            small("New and returning workers join this task. Its workers remain available for other actions."),
+          )
+        }
+      },
       span(
-        "Idle Ants: ",
-        b(child <-- idleWorkersCountSignal.map(prettyNumberFixedSize)),
+        "Available workers: ",
+        b(child <-- availableWorkersCountSignal.map(prettyNumberFixedSize)),
       ),
       children <-- unlockedAntTasks.map(_.map(task => taskDiv(task))),
     )
@@ -989,6 +1010,7 @@ object MainForm {
       span(
         className := "col-6",
         antTask.name,
+        child.text <-- antsSignal.map(ants => if (ants.effectiveDefaultTask.contains(antTask)) " · Default" else ""),
         nbsp,
         "(",
         child <-- amountSignal.map(prettyNumberInt),
@@ -1003,7 +1025,9 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Remove ${antTask.name}",
             span(aria.hidden := true, "−"),
-            disabled <-- amountSignal.map(_ == 0),
+            disabled <-- amountSignal.combineWith(antsSignal).map { case (amount, ants) =>
+              amount == 0 || ants.effectiveDefaultTask.contains(antTask)
+            },
             onClick --> { mouseEvent =>
               Actions.reduceAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
@@ -1016,7 +1040,9 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Assign ${antTask.name}",
             span(aria.hidden := true, "+"),
-            disabled <-- idleWorkersCountSignal.map(_ == 0),
+            disabled <-- availableWorkersCountSignal.combineWith(antsSignal).map { case (available, ants) =>
+              available < u || ants.effectiveDefaultTask.contains(antTask)
+            },
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
@@ -1127,8 +1153,8 @@ object MainForm {
           className := "form-range",
           `type` := "range",
           MinAttr := "1",
-          MaxAttr <-- idleWorkersCountSignal.map(amount => Math.max(1L, amount / u).toString),
-          disabled <-- idleWorkersCountSignal.map(_ < u),
+          MaxAttr <-- availableWorkersCountSignal.map(amount => Math.max(1L, amount / u).toString),
+          disabled <-- availableWorkersCountSignal.map(_ < u),
           value <-- amountOfExplorersVar.signal.map(amount => (amount / u).toString),
           onInput.mapToValue.map(_.toLong * u) --> amountOfExplorersVar.writer,
         ),
@@ -1203,8 +1229,8 @@ object MainForm {
               div(s"Sugar: ${prettyNumberStr(carcass.totalFood)} · Protein: ${prettyNumberStr(carcass.proteinReward)}"),
               div(
                 className := "carcass-workers",
-                child <-- idleWorkersCountSignal.map(available =>
-                  requirementLabel(ActionRequirement("idle workers", available, carcass.requiredWorkers))),
+                child <-- antsSignal.map(ants =>
+                  requirementLabel(ActionRequirement(ants.availableWorkersLabel, ants.availableWorkersCount, carcass.requiredWorkers))),
               ),
               div(
                 className := "row",

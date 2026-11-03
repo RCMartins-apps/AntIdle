@@ -1,6 +1,7 @@
 package pt.rcmartins.antidle.game.saves
 
 import pt.rcmartins.antidle.model._
+import pt.rcmartins.antidle.game.DefaultWorkerAssignment
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class AllDataForSave(
@@ -17,7 +18,7 @@ case class AllDataForSave(
 ) {
 
   def toAllData: AllData =
-    AllData(
+    DefaultWorkerAssignment.normalize(AllData(
       version = version,
       world = world,
       ants = ants,
@@ -28,7 +29,7 @@ case class AllDataForSave(
       exploration = exploration,
       statistics = statistics,
       messages = messages,
-    )
+    ))
 
   private def toUpgrades: UpgradesData = {
     UpgradesData(

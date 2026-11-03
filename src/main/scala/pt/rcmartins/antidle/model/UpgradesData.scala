@@ -80,6 +80,13 @@ object UpgradesData {
       val description: String = "Unlock the ability to send ants to explore the surroundings."
     }
 
+    case object DefaultWorkers extends UpgradeType {
+      val name: String = "DefaultWorkers"
+      val cost: ActionCost = ActionCost(sugar = 500 * u, colonyPoints = 250 * u)
+      val title: String = "Default Workers"
+      val description: String = "Choose a default task for available workers. Its workers can be used wherever idle workers are required."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -90,6 +97,7 @@ object UpgradesData {
       ImproveSugarCollectorTask3,
       UnlockFoodStorageChamber,
       UnlockExplorerTask,
+      DefaultWorkers,
     )
 
   }

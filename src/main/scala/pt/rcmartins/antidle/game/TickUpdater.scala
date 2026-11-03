@@ -146,6 +146,7 @@ object TickUpdater {
                   }
             }
         },
+        DefaultWorkerAssignment.normalize,
         // This is the last step to save data if necessary
         allData => {
           nextSaveTickOpt.foreach {

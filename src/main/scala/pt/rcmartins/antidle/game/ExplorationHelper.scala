@@ -14,7 +14,7 @@ object ExplorationHelper {
     workers >= destination.minimumWorkers && workers % u == 0 &&
       ExplorationProgression.level(data.experience) >= destination.requiredLevel &&
       data.explorationParties.size < ExplorationProgression.maxParties(data.experience) &&
-      ants.idleWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts
+      ants.availableWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts
 
   def canStart(data: AllData, workers: Long, destination: ExplorationDestination): Boolean =
     data.unlocks.tabs.exploreTabUnlocked && canDepart(data.exploration, data.ants, workers, destination) &&
@@ -23,7 +23,7 @@ object ExplorationHelper {
   def start(data: AllData, workers: Long, destination: ExplorationDestination): AllData =
     if (!canStart(data, workers, destination)) data
     else data.spendResources(cost(workers, destination))
-      .modify(_.ants).using(_.addToTask(AntTask.Explorer, workers))
+      .modify(_.ants).using(_.unlockTask(AntTask.Explorer).addToTask(AntTask.Explorer, workers))
       .modify(_.exploration.explorationParties)
       .using(ExplorationParty(
         workers, data.currentTick, data.currentTick + destination.duration,

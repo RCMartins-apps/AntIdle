@@ -45,6 +45,6 @@ object ScoutProgression {
       .modify(_.ants.scouts).using(_ + newScouts)
       .modify(_.statistics.maxAliveWorkers)
       .usingIf(newWorkers > 0)(_.max(allData.ants.workersCount + (newWorkers / u).toInt))
-    updated
+    DefaultWorkerAssignment.normalize(updated)
   }
 }
