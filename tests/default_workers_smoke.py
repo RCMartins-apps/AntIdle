@@ -46,7 +46,7 @@ def check_default_workers(page, width, url):
     purchased = save_game(page)
     assert upgrade(purchased)["unlocked"]
     assert purchased["basicResources"]["sugar"]["amount"] == before["basicResources"]["sugar"]["amount"] - 500 * UNIT
-    assert purchased["basicResources"]["colonyPoints"]["amount"] == before["basicResources"]["colonyPoints"]["amount"] - 250 * UNIT
+    assert purchased["basicResources"]["knowledge"]["amount"] == before["basicResources"]["knowledge"]["amount"] - 50 * UNIT
     page.get_by_role("tab", name="Tasks", exact=False).click()
     selector = page.get_by_label("Default task", exact=True)
     expect(selector).to_have_value("idle")

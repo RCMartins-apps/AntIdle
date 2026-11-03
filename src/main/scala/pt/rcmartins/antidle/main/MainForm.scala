@@ -551,11 +551,11 @@ object MainForm {
           showSignal = nurseryUnlockedSignal,
         ),
         child.maybe <-- createResourceDiv(
-          name = "Colony Points",
-          resourceSignal = colonyPointsSignal,
+          name = "Knowledge",
+          resourceSignal = knowledgeSignal,
           resourceEstimationSignal =
-            Val(prettyResourceEstDiv(TickCalculator.colonyPointsTickGain, colonyPointsSignal)),
-          showSignal = unlocksSignal.map(_.resources.showColonyPoints),
+            Val(div()),
+          showSignal = unlocksSignal.map(_.resources.showKnowledge),
         ),
         nbsp,
         child.maybe <-- createResourceDiv(
@@ -641,14 +641,14 @@ object MainForm {
             div(
               className := "col-3 text-end text-nowrap resource-amount",
               className <-- resourceSignal.map(resource =>
-                if (resource.maxAmount > 0 && resource.amount >= resource.maxAmount) "text-primary fw-bold" else ""),
+                if (resource.atCapacity) "text-primary fw-bold" else ""),
               child <-- amountSignal.map(prettyNumberFixedSize),
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
               className := "col-2 text-start text-body-tertiary text-nowrap ps-0",
               child <--
                 maxAmountSignal.map { maxValue =>
-                  if (maxValue == 0)
+                  if (maxValue == 0 || maxValue == Long.MaxValue)
                     nbsp
                   else
                     span("/", prettyNumberSimple(maxValue))
@@ -914,7 +914,7 @@ object MainForm {
             requirement(cost.protein, resources.protein.amount, "protein", Some(resources.protein.maxAmount)),
             requirement(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
             requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
-            requirement(cost.colonyPoints, resources.colonyPoints.amount, "colony points", Some(resources.colonyPoints.maxAmount)),
+            requirement(cost.knowledge, resources.knowledge.amount, "knowledge"),
             requirement(cost.idleWorkers, ants.availableWorkersCount, ants.availableWorkersLabel),
           )
       },
@@ -933,10 +933,7 @@ object MainForm {
           className := "d-flex flex-column justify-content-center text-center",
           ifGreater0(bonus.sugar)(prettyNumberSimple("+", _, " sugar")),
           ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
-          ifGreater0(bonus.colonyPointsEachWorker)(
-            prettyNumberSimple("+", _, " colony points/worker/s")
-          ),
-          ifGreater0(bonus.maxColonyPoints)(prettyNumberSimple("+", _, " max colony points")),
+          ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
@@ -1065,7 +1062,9 @@ object MainForm {
         actionButton(
           name = upgradeType.title,
           topRightBadgeSignal =
-            costSignal.map(actionCost => Some(prettyNumberSimple(actionCost.colonyPoints))),
+            costSignal.map(actionCost => Some(
+              if (actionCost.knowledge > 0) span(title := "Knowledge cost", prettyNumberSimple(actionCost.knowledge))
+              else span(title := "Sugar cost", prettyNumberSimple(actionCost.sugar)))),
           enabledSignal = hasResourcesSignal(costSignal),
           descriptionSignal = Val(Some(div(upgradeType.description))),
           costSignal = costSignal,

@@ -9,7 +9,7 @@ case class BasicResources(
     tunnelingSpace: BasicResource = BasicResource.initial,
     protein: BasicResource = BasicResource(0L, 100 * u),
 //    water: BasicResource = BasicResource.initial,
-    colonyPoints: BasicResource = BasicResource.initial,
+    @jsonAliases("colonyPoints") knowledge: BasicResource = BasicResource(0L, Long.MaxValue),
 //    DNA: BasicResource = BasicResource.initial,
 ) {
 
@@ -19,7 +19,7 @@ case class BasicResources(
       tunnelingSpace = tunnelingSpace - actionCost.tunnelingSpace,
       protein = protein - actionCost.protein,
 //      water = water - actionCost.water,
-      colonyPoints = colonyPoints - actionCost.colonyPoints,
+      knowledge = knowledge - actionCost.knowledge,
 //      DNA = DNA - actionCost.DNA,
     )
 
@@ -28,7 +28,7 @@ case class BasicResources(
       tunnelingSpace >= cost.tunnelingSpace &&
       protein >= cost.protein &&
 //      water >= cost.water &&
-      colonyPoints >= cost.colonyPoints
+      knowledge >= cost.knowledge
 //      DNA >= cost.DNA
 
 }
@@ -41,7 +41,7 @@ object BasicResources {
   val initial: BasicResources = BasicResources(
     sugar = BasicResource(0L, 1000 * u),
     tunnelingSpace = BasicResource(0L, 1000 * u),
-    colonyPoints = BasicResource(0L, 2000 * u),
+    knowledge = BasicResource(0L, Long.MaxValue),
   )
 
   case class BasicResource(amount: Long, maxAmount: Long) {
@@ -50,7 +50,14 @@ object BasicResources {
 
     def >=(amount: Long): Boolean = this.amount >= amount
 
-    def +(amount: Long): BasicResource = copy(amount = Math.min(maxAmount, this.amount + amount))
+    def isLimited: Boolean = maxAmount != Long.MaxValue
+
+    def atCapacity: Boolean = isLimited && maxAmount > 0 && amount >= maxAmount
+
+    def +(amount: Long): BasicResource = {
+      val total = if (amount > 0 && this.amount > Long.MaxValue - amount) Long.MaxValue else this.amount + amount
+      copy(amount = Math.min(maxAmount, total))
+    }
 
     def -(amount: Long): BasicResource = copy(amount = this.amount - amount)
 

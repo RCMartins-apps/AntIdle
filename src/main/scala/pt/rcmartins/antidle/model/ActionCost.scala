@@ -7,7 +7,7 @@ case class ActionCost(
     protein: Long = 0L,
 //    water: Long = 0L,
     tunnelingSpace: Long = 0L,
-    colonyPoints: Long = 0L,
+    @jsonAliases("colonyPoints") knowledge: Long = 0L,
 //    DNA: Long = 0L,
     idleWorkers: Long = 0L,
 )

@@ -2,18 +2,17 @@ package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.{ActionBonus, AllChamberData, AllData}
+import pt.rcmartins.antidle.model.{ActionBonus, AllData}
 
 object ChamberBonuses {
 
-  // Shared by action details, completed upgrades, and ongoing income.
+  // Shared by action details and completed upgrades.
   def forChamber(chamberType: ChamberType): ActionBonus =
     chamberType match {
       case ChamberType.Nest =>
         ActionBonus(
-          colonyPointsEachWorker = Constants.defaultNestLevelColonyPointsSecond,
           maxAnts = Constants.NestUpgradeBonusMaxAnts,
-          maxColonyPoints = Constants.NestUpgradeBonusMaxColonyPoints,
+          maxTunnelingSpace = Constants.NestUpgradeBonusMaxTunnelingSpace,
         )
       case ChamberType.Queen =>
         ActionBonus(
@@ -46,22 +45,8 @@ object ChamberBonuses {
       .using(_ + bonus.maxEggs)
       .modify(_.basicResources.sugar.maxAmount)
       .using(_ + bonus.maxSugar)
-      .modify(_.basicResources.colonyPoints.maxAmount)
-      .using(_ + bonus.maxColonyPoints)
+      .modify(_.basicResources.tunnelingSpace.maxAmount)
+      .using(_ + bonus.maxTunnelingSpace)
   }
-
-  def colonyPointsPerTick(chambers: AllChamberData, workersCount: Int): Long =
-    Seq(
-      chambers.nestChamber,
-      chambers.queenChamber,
-      chambers.foodStorageChamber,
-      chambers.nurseryChamber,
-    )
-      .map { chamber =>
-        val perWorkerTick = forChamber(chamber.chamberType).colonyPointsEachWorker /
-          Constants.TicksPerSecond
-        chamber.level.toLong * workersCount * perWorkerTick
-      }
-      .sum
 
 }

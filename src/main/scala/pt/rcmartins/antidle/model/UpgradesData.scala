@@ -39,22 +39,22 @@ object UpgradesData {
   }
 
   object UpgradeType {
-    private def colonyPointsDiscovered(data: AllData): Boolean =
-      data.unlocks.tabs.upgradesTabUnlocked || data.unlocks.resources.showColonyPoints ||
-        data.basicResources.colonyPoints.amount > 0
+    private def earlyUpgradesAvailable(data: AllData): Boolean =
+      data.nestAttributes.chambers.nestChamber.level > 0 || data.unlocks.tabs.upgradesTabUnlocked || data.unlocks.resources.showKnowledge ||
+        data.basicResources.knowledge.amount > 0
 
     case object UnlockQueensChamber extends UpgradeType {
-      def shouldShow(data: AllData): Boolean = colonyPointsDiscovered(data)
+      def shouldShow(data: AllData): Boolean = earlyUpgradesAvailable(data)
       val name: String = "UnlockQueensChamber"
-      val cost: ActionCost = ActionCost(colonyPoints = 50 * u)
+      val cost: ActionCost = ActionCost(sugar = 100 * u)
       val title: String = "Unlock Queen's Chamber"
       val description: String = "Unlock the ability to improves the queen's chamber abilities."
     }
 
     case object ImproveSugarCollectorTask1 extends UpgradeType {
-      def shouldShow(data: AllData): Boolean = colonyPointsDiscovered(data)
+      def shouldShow(data: AllData): Boolean = earlyUpgradesAvailable(data)
       val name: String = "ImproveSugarCollectorTask1"
-      val cost: ActionCost = ActionCost(sugar = 100 * u, colonyPoints = 100 * u)
+      val cost: ActionCost = ActionCost(sugar = 150 * u)
       val title: String = "Foraging Techniques 1"
       val description: String = "Improves the ants sugar collecting amount by 15%."
     }
@@ -62,7 +62,7 @@ object UpgradesData {
     case object ImproveSugarCollectorTask2 extends UpgradeType {
       def shouldShow(data: AllData): Boolean = data.upgrades(ImproveSugarCollectorTask1).unlocked
       val name: String = "ImproveSugarCollectorTask2"
-      val cost: ActionCost = ActionCost(sugar = 500 * u, colonyPoints = 500 * u)
+      val cost: ActionCost = ActionCost(sugar = 750 * u, knowledge = 75 * u)
       val title: String = "Foraging Techniques 2"
       val description: String = "Improves the ants sugar collecting amount by 15%."
     }
@@ -70,7 +70,7 @@ object UpgradesData {
     case object ImproveSugarCollectorTask3 extends UpgradeType {
       def shouldShow(data: AllData): Boolean = data.upgrades(ImproveSugarCollectorTask2).unlocked
       val name: String = "ImproveSugarCollectorTask3"
-      val cost: ActionCost = ActionCost(sugar = 2500 * u, colonyPoints = 2500 * u)
+      val cost: ActionCost = ActionCost(sugar = 2500 * u, knowledge = 300 * u)
       val title: String = "Foraging Techniques 3"
       val description: String = "Improves the ants sugar collecting amount by 15%."
     }
@@ -78,7 +78,7 @@ object UpgradesData {
     case object UnlockFoodStorageChamber extends UpgradeType {
       def shouldShow(data: AllData): Boolean = data.upgrades(UnlockQueensChamber).unlocked && data.upgrades(ImproveSugarCollectorTask1).unlocked
       val name: String = "UnlockFoodStorageChamber"
-      val cost: ActionCost = ActionCost(colonyPoints = 500 * u)
+      val cost: ActionCost = ActionCost(sugar = 400 * u)
       val title: String = "Unlock Food Storage Chamber"
       val description: String = "Unlock the ability to increase food storage capacity."
     }
@@ -86,7 +86,7 @@ object UpgradesData {
     case object UnlockExplorerTask extends UpgradeType {
       def shouldShow(data: AllData): Boolean = data.upgrades(UnlockFoodStorageChamber).unlocked
       val name: String = "UnlockExplorerTask"
-      val cost: ActionCost = ActionCost(colonyPoints = 1000 * u)
+      val cost: ActionCost = ActionCost(sugar = 750 * u)
       val title: String = "Unlock Explorer Task"
       val description: String = "Unlock the ability to send ants to explore the surroundings."
     }
@@ -94,7 +94,7 @@ object UpgradesData {
     case object DefaultWorkers extends UpgradeType {
       def shouldShow(data: AllData): Boolean = data.unlocks.tabs.exploreTabUnlocked || data.upgrades(UnlockExplorerTask).unlocked
       val name: String = "DefaultWorkers"
-      val cost: ActionCost = ActionCost(sugar = 500 * u, colonyPoints = 250 * u)
+      val cost: ActionCost = ActionCost(sugar = 500 * u, knowledge = 50 * u)
       val title: String = "Default Workers"
       val description: String = "Choose a default task for available workers. Its workers can be used wherever idle workers are required."
     }

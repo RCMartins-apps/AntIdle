@@ -24,7 +24,7 @@ def check_destinations(page, width, url):
     game["ants"]["scouts"] = 2 * UNIT
     game["nestAttributes"]["maxAnts"] = 100 * UNIT
     game["basicResources"]["sugar"] = {"amount": 10000 * UNIT, "maxAmount": 10000 * UNIT}
-    game["basicResources"]["colonyPoints"] = {"amount": 0, "maxAmount": 10000 * UNIT}
+    game["basicResources"]["knowledge"] = {"amount": 1000 * UNIT, "maxAmount": 10000 * UNIT}
     game["exploration"] = {"experience": 299}
 
     def choose_workers(amount):
@@ -47,14 +47,14 @@ def check_destinations(page, width, url):
     expect(route("Rotten Log")).to_contain_text("120 XP")
     assert_fits(page, width)
 
-    # Newly unlocked XP/colony-point route, with a smaller party blocked.
+    # Newly unlocked XP/Knowledge route, with a smaller party blocked.
     game["exploration"] = {"experience": 300}
     load_game(page, game)
     explore_tab(page)
     expect(route("Rotten Log").get_by_role("button")).to_be_disabled()
     choose_workers(5)
     expect(route("Rotten Log").get_by_role("button")).to_be_enabled()
-    expect(route("Rotten Log")).to_contain_text("60 colony points guaranteed")
+    expect(route("Rotten Log")).to_contain_text("60 knowledge")
     route("Rotten Log").get_by_role("button").click()
     sent = save_game(page)
     assert sent["exploration"]["experience"] == 300
@@ -64,8 +64,8 @@ def check_destinations(page, width, url):
     page.clock.run_for(60000)
     returned = save_game(page)
     assert returned["exploration"]["experience"] == 420
-    # Idle colony-point income also accrues, so compare the logged expedition award.
-    assert any("60 colony points" in message for message in returned["messages"])
+    # Knowledge is granted only on expedition completion.
+    assert any("60 knowledge" in message for message in returned["messages"])
     assert not returned["exploration"]["discoveredCarcasses"]
     assert not returned["exploration"]["explorationParties"]
     assert task_count(returned, "Explorer") == 0
@@ -84,7 +84,7 @@ def check_destinations(page, width, url):
     explore_tab(page)
     choose_workers(5)
     expect(route("Rotten Log")).to_contain_text("144 XP")
-    expect(route("Rotten Log")).to_contain_text("72 colony points guaranteed")
+    expect(route("Rotten Log")).to_contain_text("72 knowledge")
     page.reload(wait_until="networkidle")
     assert save_game(page)["exploration"]["suppliesLevel"] == 1
 

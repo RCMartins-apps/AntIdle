@@ -1,12 +1,12 @@
 package pt.rcmartins.antidle.model
 
 import pt.rcmartins.antidle.model.StatisticsData._
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.{jsonAliases, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class StatisticsData(
     sugarU: StatLong = StatLong(),
     tunnelingSpaceU: StatLong = StatLong(),
-    colonyPointsU: StatLong = StatLong(),
+    @jsonAliases("colonyPointsU") knowledgeU: StatLong = StatLong(),
     eggsCount: StatInt = StatInt(),
     maxAliveWorkers: StatInt = StatInt(),
     explorationsCount: StatInt = StatInt(),

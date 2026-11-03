@@ -44,7 +44,10 @@ object ExplorationProgression {
   def suppliesRequiredLevel(data: ExplorationData): Int = List(2, 5, 8)(Math.min(2, suppliesRank(data)))
 
   def suppliesCost(data: ExplorationData): ActionCost =
-    ActionCost(sugar = List(500L, 1500L, 4500L)(Math.min(2, suppliesRank(data))) * u)
+    ActionCost(
+      sugar = List(500L, 1500L, 4500L)(Math.min(2, suppliesRank(data))) * u,
+      knowledge = List(20L, 80L, 200L)(Math.min(2, suppliesRank(data))) * u,
+    )
 
   def canUpgradeSupplies(data: ExplorationData, resources: BasicResources): Boolean =
     suppliesRank(data) < MaxSuppliesLevel && level(data.experience) >= suppliesRequiredLevel(data) &&

@@ -13,9 +13,9 @@ class UpgradeVisibilitySuite extends FunSuite {
   def shown(data: AllData): Set[UpgradesData.UpgradeType] =
     data.upgrades.upgrades.collect { case (upgrade, status) if status.show => upgrade }.toSet
 
-  test("fresh colonies reveal nothing, and discovering colony points reveals both starting upgrades") {
+  test("fresh colonies reveal nothing, and discovering knowledge reveals both starting upgrades") {
     assertEquals(shown(UpgradeVisibility.reconcile(initial)), Set.empty[UpgradesData.UpgradeType])
-    val points = initial.copy(basicResources = initial.basicResources.copy(colonyPoints = BasicResource(u, 2000 * u)))
+    val points = initial.copy(basicResources = initial.basicResources.copy(knowledge = BasicResource(u, 2000 * u)))
     assertEquals(shown(UpgradeVisibility.reconcile(points)), Set[UpgradesData.UpgradeType](UnlockQueensChamber, ImproveSugarCollectorTask1))
     val spentPoints = initial.copy(unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(upgradesTabUnlocked = true)))
     assertEquals(shown(UpgradeVisibility.reconcile(spentPoints)), Set[UpgradesData.UpgradeType](UnlockQueensChamber, ImproveSugarCollectorTask1))
@@ -67,7 +67,7 @@ class UpgradeVisibilitySuite extends FunSuite {
     assertEquals(loaded.statistics, savedGame.statistics)
   }
 
-  test("normal gameplay checks the same rules after colony point income") {
+  test("normal gameplay checks the same rules after nest expansion") {
     val colony = initial.copy(
       ants = AntsData(workers = u),
       nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
@@ -75,7 +75,7 @@ class UpgradeVisibilitySuite extends FunSuite {
       basicResources = initial.basicResources.copy(sugar = BasicResource(100 * u, 1000 * u)),
     )
     val ticked = TickUpdater.updateAllData(colony, None)
-    assert(ticked.basicResources.colonyPoints.amount > 0)
+    assertEquals(ticked.basicResources.knowledge.amount, 0L)
     assert(ticked.upgrades(UnlockQueensChamber).show)
     assert(ticked.upgrades(ImproveSugarCollectorTask1).show)
   }
