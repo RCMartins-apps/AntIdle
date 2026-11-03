@@ -94,32 +94,10 @@ object UnlockUtils {
             ((_: Unlocks)
               .modifyAll(_.resources.showColonyPoints, _.tabs.upgradesTabUnlocked)
               .setTo(true)),
-          upgradesData ->
-            ((_: UpgradesData).show(UnlockQueensChamber, ImproveSugarCollectorTask1)),
         )
         addMessage("We can now upgrade our ants and our nest using colony points.")
       },
       initialAllData.unlocks.tabs.upgradesTabUnlocked,
-    )
-
-    unlockSubscription[UpgradesData](
-      upgradesSignal,
-      _(ImproveSugarCollectorTask1).unlocked,
-      _ =>
-        Var.update(
-          upgradesData -> ((_: UpgradesData).show(ImproveSugarCollectorTask2)),
-        ),
-      initialAllData.upgrades(ImproveSugarCollectorTask1).unlocked,
-    )
-
-    unlockSubscription[UpgradesData](
-      upgradesSignal,
-      _(ImproveSugarCollectorTask2).unlocked,
-      _ =>
-        Var.update(
-          upgradesData -> ((_: UpgradesData).show(ImproveSugarCollectorTask3)),
-        ),
-      initialAllData.upgrades(ImproveSugarCollectorTask2).unlocked,
     )
 
     unlockSubscription[UpgradesData](
@@ -134,22 +112,10 @@ object UnlockUtils {
 
     unlockSubscription[UpgradesData](
       upgradesSignal,
-      upgrades =>
-        upgrades(UnlockQueensChamber).unlocked && upgrades(ImproveSugarCollectorTask1).unlocked,
-      _ =>
-        Var.update(
-          upgradesData -> ((_: UpgradesData).show(UnlockFoodStorageChamber)),
-        ),
-      initialAllData.upgrades(UnlockFoodStorageChamber).show,
-    )
-
-    unlockSubscription[UpgradesData](
-      upgradesSignal,
       _(UnlockFoodStorageChamber).unlocked,
       _ =>
         Var.update(
           unlocksData -> ((_: Unlocks).modify(_.actions.canBuildFoodStorageChamber).setTo(true)),
-          upgradesData -> ((_: UpgradesData).show(UnlockExplorerTask)),
         ),
       initialAllData.upgrades(UnlockFoodStorageChamber).unlocked,
     )
@@ -161,7 +127,6 @@ object UnlockUtils {
         Var.update(
           unlocksData -> ((_: Unlocks).modify(_.tabs.exploreTabUnlocked).setTo(true)),
           antsData -> ((_: AntsData).unlockTask(AntTask.Explorer)),
-          upgradesData -> ((_: UpgradesData).show(DefaultWorkers)),
         ),
       initialAllData.upgrades(UnlockExplorerTask).unlocked,
     )

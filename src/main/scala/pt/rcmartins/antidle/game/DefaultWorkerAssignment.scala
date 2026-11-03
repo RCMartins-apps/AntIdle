@@ -10,12 +10,9 @@ object DefaultWorkerAssignment {
     else data.modify(_.ants).using(_.withDefaultTask(task))
 
   def normalize(data: AllData): AllData = {
-    val visible = if (data.unlocks.tabs.exploreTabUnlocked && !data.upgrades(UpgradeType.DefaultWorkers).show)
-      data.modify(_.upgrades).using(_.show(UpgradeType.DefaultWorkers))
+    if (data.upgrades(UpgradeType.DefaultWorkers).unlocked)
+      data.modify(_.ants).using(_.assignIdleToDefault)
+    else if (data.ants.defaultTask.nonEmpty) data.modify(_.ants.defaultTask).setTo(None)
     else data
-    if (visible.upgrades(UpgradeType.DefaultWorkers).unlocked)
-      visible.modify(_.ants).using(_.assignIdleToDefault)
-    else if (visible.ants.defaultTask.nonEmpty) visible.modify(_.ants.defaultTask).setTo(None)
-    else visible
   }
 }

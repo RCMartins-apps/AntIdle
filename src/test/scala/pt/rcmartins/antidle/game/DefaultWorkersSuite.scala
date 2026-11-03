@@ -33,9 +33,9 @@ class DefaultWorkersSuite extends FunSuite {
   test("the upgrade becomes visible once exploration is unlocked, including on old saves") {
     val hidden = colony.copy(upgrades = UpgradesData.initial,
       unlocks = colony.unlocks.copy(tabs = colony.unlocks.tabs.copy(exploreTabUnlocked = false)))
-    assert(!DefaultWorkerAssignment.normalize(hidden).upgrades(UpgradeType.DefaultWorkers).show)
+    assert(!UpgradeVisibility.reconcile(hidden).upgrades(UpgradeType.DefaultWorkers).show)
     val exploring = hidden.copy(unlocks = colony.unlocks)
-    assert(DefaultWorkerAssignment.normalize(exploring).upgrades(UpgradeType.DefaultWorkers).show)
+    assert(UpgradeVisibility.reconcile(exploring).upgrades(UpgradeType.DefaultWorkers).show)
   }
 
   test("selection requires the upgrade and only permits unlocked normal tasks") {

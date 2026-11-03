@@ -85,7 +85,7 @@ object Actions {
 
   def unlockUpgrade(actionCost: ActionCost, unlockAction: UpgradesData => UpgradesData): Unit =
     actionUpdater.writer.onNext(_.hasResourcesUpdate(actionCost)(allData =>
-      allData.modify(_.upgrades).using(unlockAction)))
+      UpgradeVisibility.reconcile(allData.modify(_.upgrades).using(unlockAction))))
 
   def getChamber(chamberType: ChamberType): Signal[Chamber] =
     chambersSignal.map { chambers =>

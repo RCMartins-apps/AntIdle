@@ -159,3 +159,12 @@ retain their behavior until the upgrade is bought and a default is selected.
 upkeep, starvation and save compatibility. Run `python3 tests/default_workers_smoke.py`
 after `sbt fastOptJS` to check the upgrade, selector, concurrent borrowing,
 persistence, shortage indicators, and phone/desktop layouts.
+
+## Upgrade visibility
+
+Every `UpgradeType` defines `shouldShow` alongside its cost and description.
+`UpgradeVisibility.reconcile` evaluates all registered upgrades on save load,
+after purchases, and during game ticks. Adding an upgrade therefore requires an
+explicit visibility rule, and existing saves can reveal it without replaying a
+past unlock event. Previously shown or purchased upgrades stay visible; the check
+never spends resources, grants purchases, or adds tutorial messages.
