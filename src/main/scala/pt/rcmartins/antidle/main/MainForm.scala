@@ -1110,7 +1110,7 @@ object MainForm {
                   name = "Retrieve Carcass",
                   enabledSignal = antsSignal.combineWith(nestSignal, explorationSignal)
                     .map { case (ants, nest, exploration) => CarcassProgression.canRetrieve(ants, nest, exploration, carcass) },
-                  descriptionSignal = Val(Some(div(s"${prettyTimeFromTicks(carcass.retrievalTicks)} · ${prettyNumberInt(carcass.requiredWorkers)} carriers"))),
+                  descriptionSignal = Val(Some(div(s"${prettyTimeFromTicks(carcass.retrievalTicks)} · ", prettyNumberInt(carcass.requiredWorkers), " carriers"))),
                   costSignal = Val(ActionCost(idleWorkers = carcass.requiredWorkers)),
                   bonusSignal = Val(ActionBonus.empty),
                   onClickAction = _ => Actions.retrieveCarcass(index),
@@ -1121,7 +1121,7 @@ object MainForm {
           children <-- explorationSignal.map(_.retrievals.map { retrieval =>
             div(
               className := "card p-2 my-2 carcass-retrieval",
-              b(s"Returning: ${prettyNumberInt(retrieval.carcass.requiredWorkers)} carriers"),
+              b("Returning: ", prettyNumberInt(retrieval.carcass.requiredWorkers), " carriers"),
               child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, retrieval.targetTick - tick))),
             )
           }),
