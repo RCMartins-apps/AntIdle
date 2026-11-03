@@ -1065,13 +1065,16 @@ object MainForm {
         className := "col-12 px-3 py-2 exploration-progress",
         h5("Exploration experience"),
         p(child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
-        p(child.text <-- explorationSignal.map { data =>
-          val bonus = ExplorationProgression.bonusPercent(data.experience)
-          val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
-            s" Next level: +${bonus + 25}%." else ""
-          s"Reward bonus: +$bonus% sugar, carcass food and protein.$next"
-        }),
-        p("Every completed expedition earns XP, even when nothing is found. Each level requires twice as much XP."),
+        detailsTag(
+          summaryTag("XP details"),
+          p(child.text <-- explorationSignal.map { data =>
+            val bonus = ExplorationProgression.bonusPercent(data.experience)
+            val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
+              s" Next level: +${bonus + 25}%." else ""
+            s"Reward bonus: +$bonus% sugar, carcass food and protein.$next"
+          }),
+          p("Every completed expedition earns XP, even when nothing is found. Each level requires twice as much XP."),
+        ),
       ),
       area("Explore Surroundings", distant = false),
       child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
