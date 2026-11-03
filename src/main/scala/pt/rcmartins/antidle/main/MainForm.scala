@@ -867,15 +867,26 @@ object MainForm {
           )
         }
       },
-      child <-- costSignal.map { cost =>
-        div(
-          className := "d-flex flex-column justify-content-center text-center",
-          ifGreater0(cost.protein)(prettyNumberSimple("", _, " protein")),
-          ifGreater0(cost.sugar)(prettyNumberSimple("", _, " sugar")),
-          ifGreater0(cost.tunnelingSpace)(prettyNumberSimple("", _, " tunneling space")),
-          ifGreater0(cost.colonyPoints)(prettyNumberSimple("", _, " colony points")),
-          ifGreater0(cost.idleWorkers)(prettyNumberSimple("", _, " idle workers")),
-        )
+      child <-- costSignal.combineWith(resourcesSignal, idleWorkersCountSignal).map {
+        case (cost, resources, idleWorkers) =>
+          def requirement(required: Long, available: Long, label: String): Option[ReactiveHtmlElement[HTMLSpanElement]] =
+            Option.when(required > 0) {
+              val missing = available < required
+              span(
+                className := (if (missing) "action-cost text-danger fw-bold" else "action-cost"),
+                prettyNumberSimple("", required, s" $label"),
+                if (missing) s" (available: ${prettyNumberStr(available)})" else "",
+              )
+            }
+
+          div(
+            className := "d-flex flex-column justify-content-center text-center",
+            requirement(cost.protein, resources.protein.amount, "protein"),
+            requirement(cost.sugar, resources.sugar.amount, "sugar"),
+            requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space"),
+            requirement(cost.colonyPoints, resources.colonyPoints.amount, "colony points"),
+            requirement(cost.idleWorkers, idleWorkers, "idle workers"),
+          )
       },
       child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
         if (cost == ActionCost.empty || bonus == ActionBonus.empty)
