@@ -7,6 +7,8 @@ case class ExplorationParty(
     startingTick: Long,
     targetTick: Long,
     scouts: Long = 0L,
+    destination: String = "",
+    suppliesLevel: Int = 0,
 )
 
 object ExplorationParty {

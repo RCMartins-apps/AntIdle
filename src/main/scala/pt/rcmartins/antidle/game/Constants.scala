@@ -89,7 +89,6 @@ object Constants {
   val ScoutGrowthTicks: Long = 30 * TicksPerSecond
   val DistantExplorationTicks: Long = 45 * TicksPerSecond
 
-  val MaxExplorationParties: Int = 1
 
   val SugarImprovementBonusPerc: Double = 1.15
 

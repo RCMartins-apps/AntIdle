@@ -182,7 +182,7 @@ def check_experience(page, base):
             break
     assert outcomes == {"carcass", "sugar", "nothing"}, outcomes
     for xp, text in ((299, "Level 2 · 199 / 200 XP"),
-                     (300, "Level 3 · 0 / 400 XP"),
+                     (300, "Level 3 · 0 / 300 XP"),
                      (52428700, "Maximum level")):
         game["exploration"] = {"experience": xp}
         load_game(page, game)

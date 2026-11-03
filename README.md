@@ -56,7 +56,8 @@ send idle workers: nearby insects need 5 carriers for 10 seconds; woodland
 insects need 10 carriers for 20 seconds. Carriers return automatically and cannot
 work other jobs while away. No harvesting job is required.
 
-Each returned carcass grants protein immediately (5 nearby, 10 woodland), up to
+At base party size and level, each returned carcass grants protein immediately
+(5 nearby, 10 woodland), up to
 the protein storage limit. Its sugar reserve then feeds the colony before stored
 sugar. Nearby insects hold 120 sugar; woodland insects hold 240. Reserves drain
 oldest-first, only as needed for upkeep, and their slots free when empty.
@@ -94,13 +95,42 @@ expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
 Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
 still limits how many eggs can incubate at once. Save format 5 stores this as `maxAnts`; older save formats are no longer supported.
 
-## Exploration experience
+## Exploration progression
 
-Every completed expedition earns XP, even if it finds nothing: 10 XP nearby or
-30 XP at the woodland edge, independent of party size. Exploration starts at
-level 1. Reaching level 2 costs 100 XP; each subsequent level costs twice as much
-(200, 400, 800…), up to level 20. Each level adds 25% to sugar finds and newly
-discovered carcasses' sugar and protein, without increasing carrier requirements
-or retrieval time. The expedition that levels up receives the new bonus.
-The Explore tab shows XP progress, current rewards, and the next bonus.
-Experience persists in saves; existing saves start at zero XP.
+Every completed expedition earns XP, even if it finds nothing. Levels cost
+100, 200, 300… XP each, with 19,000 total XP to reach the level-20 cap.
+Existing XP is preserved; levels are recalculated using the gentler curve.
+Every level adds 25% to resource rewards. The trip that levels up receives the
+new resource bonus. XP progress and the next milestone are visible in Explore;
+longer explanations stay inside **XP details**.
+
+| Destination | Duration | Base XP | Main reward | Requirements |
+| --- | --- | --- | --- | --- |
+| Surroundings | 15s | 10 | First trip guarantees a carcass; then 45% carcass, 44% sugar, 11% no resources | 1 worker |
+| Woodland Edge | 45s | 30 | Guaranteed carcass with 10 protein and 240 sugar reserve | 1 worker, 1 scout |
+| Rotten Log | 60s | 60 | Guaranteed 20 colony points; no carcass storage needed | Level 3, 5 workers, 1 scout |
+
+Carcasses still need retrieval before their protein and sugar reserve are usable.
+Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
+cards include selected workers, supplies, and the level reached on return.
+Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
+
+Party size improves both XP and all resource rewards, with diminishing returns:
+1 worker gives 1×, 5 give 2×, 17 give 3×, and 37 or more give 4×.
+Costs continue scaling with workers, so smaller parties are more sugar-efficient.
+Larger carcass rewards do not increase carrier requirements or retrieval time.
+
+Milestones unlock expedition supplies at level 2, Rotten Log at level 3, a second
+expedition slot and supplies II at level 5, and supplies III at level 8.
+Each supplies rank adds 20% XP and rewards (up to +60%), stacking with party and
+resource-level bonuses. The three ranks cost 500, 1,500, and 4,500 sugar.
+Upgrades affect future departures; trips already away retain their original supplies.
+Both workers and scouts are reserved for each expedition, independently of carcass
+retrievals and their storage reservations.
+
+Old saves and in-flight nearby/woodland trips remain compatible. New destination
+and supplies fields have defaults; neither XP nor progress is reset.
+
+Run `sbt test` for the exploration engine tests. After `sbt fastOptJS`, run
+`python3 tests/exploration_smoke.py` for destination gating, previews, supplies,
+concurrent parties, save reloads, and phone/desktop layouts.
