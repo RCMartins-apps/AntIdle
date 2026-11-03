@@ -119,12 +119,7 @@ class ExplorationSuite extends FunSuite {
     assert(ExplorationHelper.preview(ExplorationData(experience = 300), 5 * u, RottenLog).contains("60 knowledge"))
   }
 
-  test("legacy saves infer their destination and new trips round-trip") {
-    val json = """{"amountWorkers":10000,"startingTick":0,"targetTick":225,"scouts":10000}"""
-    val legacy = json.fromJson[ExplorationParty].toOption.get
-    assertEquals(ExplorationDestination.forParty(legacy), WoodlandEdge)
-    assertEquals(ExplorationProgression.earned(legacy), 30L)
-    assertEquals("{}".fromJson[ExplorationData].toOption.get.suppliesLevel, 0)
+  test("destination and supplies round-trip in current saves") {
     val party = ExplorationParty(5 * u, 0L, 300L, u, RottenLog.id, 2)
     assertEquals(party.toJson.fromJson[ExplorationParty], Right(party))
     val data = ExplorationData(explorationParties = List(party), experience = 300L, suppliesLevel = 2)

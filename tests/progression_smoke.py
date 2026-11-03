@@ -33,9 +33,9 @@ def check_progression(page, width, url):
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(url, wait_until="networkidle")
     initial = save_game(page)
-    assert initial["version"] == 5
+    assert initial["version"] == 6
     if width == 390:
-        for version in (1, 2, 3, 4, 6):
+        for version in (1, 2, 3, 4, 5, 7):
             unsupported = copy.deepcopy(initial)
             unsupported["version"] = version
             unsupported["ants"]["workers"] = 123 * UNIT

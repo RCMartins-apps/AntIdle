@@ -75,23 +75,13 @@ class KnowledgeEconomySuite extends FunSuite {
     }
   }
 
-  test("old colony-point balances, flags, statistics and queued costs migrate without data loss") {
-    val old = AllDataForSave.fromAllData(AllData.initial.copy(
-      basicResources = AllData.initial.basicResources.copy(
-        knowledge = BasicResource(3456 * u, 4000 * u), tunnelingSpace = BasicResource(100 * u, 1250 * u)),
-      nestAttributes = AllData.initial.nestAttributes.copy(chambers = AllData.initial.nestAttributes.chambers.copy(
-        nestChamber = AllData.initial.nestAttributes.chambers.nestChamber.copy(level = 3))),
-    )).copy(economyVersion = 0)
-    val legacyJson = old.toJson.replace("knowledge", "colonyPoints").replace("showKnowledge", "showColonyPoints")
-    val loaded = legacyJson.fromJson[AllDataForSave].toOption.get.toAllData
-    assertEquals(loaded.basicResources.knowledge.amount, 3456L * u)
-    assertEquals(loaded.basicResources.knowledge.maxAmount, Long.MaxValue)
-    assertEquals(loaded.basicResources.tunnelingSpace.maxAmount, 2750L * u)
-    assertEquals(loaded.basicResources.tunnelingSpace.amount, 100L * u)
-    val reloaded = AllDataForSave.fromAllData(loaded).toJson.fromJson[AllDataForSave].toOption.get.toAllData
-    assertEquals(reloaded.basicResources.tunnelingSpace.maxAmount, 2750L * u)
-    assertEquals(reloaded.basicResources.knowledge.amount, 3456L * u)
-    assertEquals("""{"colonyPoints":500}""".fromJson[ActionCost].toOption.get.knowledge, 500L)
-    assert("""{"showColonyPoints":true}""".fromJson[Unlocks.ResourceUnlocks].toOption.get.showKnowledge)
+  test("version six saves round-trip, and earlier versions are rejected without migration") {
+    val game = AllData.initial.copy(basicResources = AllData.initial.basicResources.copy(
+      knowledge = BasicResource(5000 * u, Long.MaxValue)))
+    val saved = AllDataForSave.fromAllData(game)
+    val loaded = pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.toJson).get
+    assertEquals(saved.version, 6)
+    assertEquals(loaded.basicResources, game.basicResources)
+    assertEquals(pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.copy(version = 5).toJson), None)
   }
 }

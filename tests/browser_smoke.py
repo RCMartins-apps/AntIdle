@@ -50,8 +50,9 @@ def progressed_game(initial):
         for key in game["unlocks"][group]:
             game["unlocks"][group][key] = True
     for resource in game["basicResources"].values():
-        resource["maxAmount"] = 100000 * UNIT
-        resource["amount"] = resource["maxAmount"]
+        resource["amount"] = 100000 * UNIT
+        if resource["maxAmount"] != 9223372036854775807:
+            resource["maxAmount"] = 100000 * UNIT
     game["ants"]["workers"] = 300 * UNIT
     game["ants"]["tasks"] = [
         [{"SugarCollector": {}}, 0],
@@ -72,7 +73,7 @@ def check_nest_capacity(page, initial):
     game["basicResources"]["tunnelingSpace"] = {"amount": 2000 * UNIT, "maxAmount": 3500 * UNIT}
     load_game(page, game)
     restored = save_game(page)
-    assert restored["version"] == 5
+    assert restored["version"] == 6
     assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_text("Details: Expand Nest", exact=True).click()

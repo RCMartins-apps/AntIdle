@@ -129,17 +129,17 @@ class DefaultWorkersSuite extends FunSuite {
     assertBalanced(result.ants)
   }
 
-  test("old saves default to idle and new saves preserve default choice and allocation") {
+  test("current saves preserve default choice and allocation; missing ownership clears the default") {
     assertEquals("{}".fromJson[AntsData].toOption.get.defaultTask, None)
     val saved = AllDataForSave.fromAllData(pooled)
     val loaded = saved.toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assertEquals(loaded.ants.defaultTask, Some(SugarCollector))
     assertEquals(loaded.ants.taskWorkers(SugarCollector), 20L * u)
     assertBalanced(loaded.ants)
-    val legacyUpgrades = saved.copy(upgrades = saved.upgrades.copy(
+    val withoutUpgrade = saved.copy(upgrades = saved.upgrades.copy(
       upgrades = saved.upgrades.upgrades.filterNot(_.name == "DefaultWorkers")))
-    val legacy = legacyUpgrades.toAllData
-    assert(!legacy.upgrades(UpgradeType.DefaultWorkers).unlocked)
-    assertEquals(legacy.ants.defaultTask, None)
+    val withoutOwnership = withoutUpgrade.toAllData
+    assert(!withoutOwnership.upgrades(UpgradeType.DefaultWorkers).unlocked)
+    assertEquals(withoutOwnership.ants.defaultTask, None)
   }
 }

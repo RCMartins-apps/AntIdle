@@ -1,6 +1,5 @@
-"""Knowledge economy, sugar-only exploration unlocks and legacy capacity migration."""
+"""Knowledge economy, sugar-only exploration unlocks and current save restoration."""
 
-import copy
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
@@ -26,7 +25,7 @@ def check_knowledge(page, width, url):
                               [{"Tunneler": {}}, 5 * UNIT], [{"Explorer": {}}, 0]]
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 1
     game["basicResources"]["sugar"] = {"amount": 3000 * UNIT, "maxAmount": 3000 * UNIT}
-    game["basicResources"]["knowledge"] = {"amount": 0, "maxAmount": 1}
+    game["basicResources"]["knowledge"] = {"amount": 0, "maxAmount": 9223372036854775807}
     game["unlocks"]["tabs"]["upgradesTabUnlocked"] = False
     game["unlocks"]["resources"]["showKnowledge"] = False
     for upgrade in game["upgrades"]["upgrades"]:
@@ -57,28 +56,22 @@ def check_knowledge(page, width, url):
     assert save_game(page)["basicResources"]["knowledge"]["amount"] == 4 * UNIT
     assert_fits(page, width)
 
-    # Read an old save using old field names and no migration marker.
-    legacy = copy.deepcopy(game)
-    legacy.pop("economyVersion", None)
-    legacy["basicResources"]["colonyPoints"] = legacy["basicResources"].pop("knowledge")
-    legacy["basicResources"]["colonyPoints"] = {"amount": 5000 * UNIT, "maxAmount": 2000 * UNIT}
-    legacy["unlocks"]["resources"]["showColonyPoints"] = legacy["unlocks"]["resources"].pop("showKnowledge")
-    legacy["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
-    legacy["basicResources"]["tunnelingSpace"] = {"amount": 100 * UNIT, "maxAmount": 1000 * UNIT}
-    load_game(page, legacy)
-    migrated = save_game(page)
-    assert migrated["basicResources"]["knowledge"]["amount"] == 5000 * UNIT
-    assert migrated["basicResources"]["knowledge"]["maxAmount"] == 9223372036854775807
-    assert migrated["basicResources"]["tunnelingSpace"]["maxAmount"] == 2500 * UNIT
-    assert migrated["economyVersion"] == 1
+    # Current saves retain uncapped Knowledge and exact stored capacities.
+    current = save_game(page)
+    current["basicResources"]["knowledge"] = {"amount": 5000 * UNIT, "maxAmount": 9223372036854775807}
+    current["basicResources"]["tunnelingSpace"] = {"amount": 100 * UNIT, "maxAmount": 2500 * UNIT}
+    load_game(page, current)
+    restored = save_game(page)
+    assert restored["version"] == 6
+    assert restored["basicResources"]["knowledge"]["amount"] == 5000 * UNIT
+    assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 2500 * UNIT
     page.reload(wait_until="networkidle")
     again = save_game(page)
-    assert again["basicResources"]["tunnelingSpace"]["maxAmount"] == 2500 * UNIT
-    assert again["basicResources"]["knowledge"]["amount"] == 5000 * UNIT
+    assert again["basicResources"] == restored["basicResources"]
     assert "Colony Points" not in page.locator("body").inner_text()
     assert_fits(page, width)
     assert not errors, errors
-    print(f"PASS {width}px: sugar-only unlock chain, knowledge income, no cap or passive income, migration, one-time Nest bonus, layout")
+    print(f"PASS {width}px: sugar-only unlock chain, knowledge income, no cap or passive income, save restoration, Nest capacity, layout")
 
 
 if __name__ == "__main__":

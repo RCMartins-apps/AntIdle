@@ -15,7 +15,6 @@ case class AllDataForSave(
     exploration: ExplorationData,
     statistics: StatisticsData,
     messages: Seq[String],
-    economyVersion: Int = 0,
 ) {
 
   def toAllData: AllData = {
@@ -23,17 +22,9 @@ case class AllDataForSave(
       version = version,
       world = world,
       ants = ants,
-      basicResources = basicResources.copy(
-        knowledge = basicResources.knowledge.copy(maxAmount = Long.MaxValue),
-        tunnelingSpace = basicResources.tunnelingSpace.copy(maxAmount = basicResources.tunnelingSpace.maxAmount +
-          (if (economyVersion < 1) nestAttributes.chambers.nestChamber.level.toLong *
-            pt.rcmartins.antidle.game.Constants.NestUpgradeBonusMaxTunnelingSpace else 0L)),
-      ),
+      basicResources = basicResources,
       nestAttributes = nestAttributes,
-      unlocks = unlocks.copy(
-        tabs = unlocks.tabs.copy(upgradesTabUnlocked = unlocks.tabs.upgradesTabUnlocked || nestAttributes.chambers.nestChamber.level > 0),
-        resources = unlocks.resources.copy(showKnowledge = unlocks.resources.showKnowledge || basicResources.knowledge.amount > 0),
-      ),
+      unlocks = unlocks,
       upgrades = toUpgrades,
       exploration = exploration,
       statistics = statistics,
@@ -84,7 +75,6 @@ object AllDataForSave {
       exploration = allData.exploration,
       statistics = allData.statistics,
       messages = allData.messages,
-      economyVersion = 1,
     )
 
 }

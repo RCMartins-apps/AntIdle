@@ -9,7 +9,7 @@ case class BasicResources(
     tunnelingSpace: BasicResource = BasicResource.initial,
     protein: BasicResource = BasicResource(0L, 100 * u),
 //    water: BasicResource = BasicResource.initial,
-    @jsonAliases("colonyPoints") knowledge: BasicResource = BasicResource(0L, Long.MaxValue),
+    knowledge: BasicResource = BasicResource(0L, Long.MaxValue),
 //    DNA: BasicResource = BasicResource.initial,
 ) {
 

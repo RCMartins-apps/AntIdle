@@ -26,7 +26,6 @@ object ExplorationDestination {
 
   val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog)
 
-  // Legacy saves identify woodland trips by their scout.
   def forParty(party: ExplorationParty): ExplorationDestination =
-    all.find(_.id == party.destination).getOrElse(if (party.scouts > 0) WoodlandEdge else Surroundings)
+    all.find(_.id == party.destination).getOrElse(Surroundings)
 }

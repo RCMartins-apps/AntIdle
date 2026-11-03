@@ -92,13 +92,13 @@ and phone/desktop layouts.
 Workers, scouts, and growing brood share one ant capacity, including ants away on
 expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
 Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
-still limits how many eggs can incubate at once. Save format 5 stores this as `maxAnts`; older save formats are no longer supported.
+still limits how many eggs can incubate at once. Save format 6 stores this as `maxAnts`; older save formats are no longer supported.
 
 ## Exploration progression
 
 Every completed expedition earns XP, even if it finds nothing. Levels cost
 100, 200, 300… XP each, with 19,000 total XP to reach the level-20 cap.
-Existing XP is preserved; levels are recalculated using the gentler curve.
+Levels use the gentler curve.
 Every level adds 25% to resource rewards. The trip that levels up receives the
 new resource bonus. XP progress and the next milestone are visible in Explore;
 longer explanations stay inside **XP details**.
@@ -127,8 +127,6 @@ Upgrades affect future departures; trips already away retain their original supp
 Both workers and scouts are reserved for each expedition, independently of carcass
 retrievals and their storage reservations.
 
-Old saves and in-flight nearby/woodland trips remain compatible. New destination
-and supplies fields have defaults; neither XP nor progress is reset.
 
 Run `sbt test` for the exploration engine tests. After `sbt fastOptJS`, run
 `python3 tests/exploration_smoke.py` for destination gating, previews, supplies,
@@ -151,8 +149,7 @@ workers assigned to other jobs are never borrowed implicitly.
 Changing the default moves the previous pool to the new task and leaves other
 assignments and away parties intact. **Keep idle** releases the pool back to idle.
 The default job's +/− buttons are disabled because its allocation is automatic.
-Worker costs display the active pool's name and available amount. Existing saves
-retain their behavior until the upgrade is bought and a default is selected.
+Worker costs display the active pool's name and available amount. The default remains idle until the upgrade is bought and a task is selected.
 
 `DefaultWorkersSuite` covers allocation, returns, default changes, maturation,
 upkeep, starvation and save compatibility. Run `python3 tests/default_workers_smoke.py`
@@ -191,12 +188,10 @@ exploration cost only sugar, so a colony can unlock it with zero Knowledge.
 
 Tunneling space remains capped. Every Nest level adds 500 capacity alongside its
 ant capacity bonus. Nest excavation prices taper before they exceed that capacity,
-so expansion remains possible. Existing colony-point balances become Knowledge without
-loss. Old saves receive the additional tunneling capacity for completed Nest
-levels once; an economy migration marker prevents repeated capacity grants.
-Legacy resource, statistics, visibility, and queued-cost field names remain
-readable. Purchased upgrades and all other progression are retained.
+so expansion remains possible.
+
+Save format 6 deliberately rejects earlier prototype saves. There are no legacy
+currency aliases or economy migrations; older saves start a fresh colony.
 
 Run `python3 tests/knowledge_smoke.py` after `sbt fastOptJS` to check the early
-upgrade chain, Knowledge income and display, old-save conversion, and one-time
-Nest capacity migration.
+upgrade chain, Knowledge income and display, current save restoration and Nest capacity.

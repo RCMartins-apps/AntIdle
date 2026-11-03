@@ -45,7 +45,7 @@ object Unlocks {
   case class ResourceUnlocks(
       // Resources
       showTunnelingSpace: Boolean = false,
-      @jsonAliases("showColonyPoints") showKnowledge: Boolean = false,
+      showKnowledge: Boolean = false,
       // Ants
       showEggs: Boolean = false,
       showWorkers: Boolean = false,
