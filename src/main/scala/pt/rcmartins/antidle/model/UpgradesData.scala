@@ -70,7 +70,7 @@ object UpgradesData {
       val name: String = "UnlockFoodStorageChamber"
       val cost: ActionCost = ActionCost(colonyPoints = 500 * u)
       val title: String = "Unlock Food Storage Chamber"
-      val description: String = "Unlock the ability to improves the food storage capacity."
+      val description: String = "Unlock the ability to increase food storage capacity."
     }
 
     case object UnlockExplorerTask extends UpgradeType {

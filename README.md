@@ -57,8 +57,8 @@ insects need 10 carriers for 20 seconds. Carriers return automatically and canno
 work other jobs while away. No harvesting job is required.
 
 Each returned carcass grants protein immediately (5 nearby, 10 woodland), up to
-the protein storage limit. Its food reserve then feeds the colony before stored
-sugar. Nearby insects hold 120 food; woodland insects hold 240. Reserves drain
+the protein storage limit. Its sugar reserve then feeds the colony before stored
+sugar. Nearby insects hold 120 sugar; woodland insects hold 240. Reserves drain
 oldest-first, only as needed for upkeep, and their slots free when empty.
 
 The nest starts with one carcass slot. Each Nursery level adds one slot as well
@@ -70,7 +70,7 @@ The Nursery costs 3 protein plus tunneling space. It unlocks scout eggs costing
 woodland expedition that discovers a larger carcass. Nearby expeditions take
 15 seconds; the first guarantees a carcass, while later ones can find carcasses,
 sugar, or nothing. Scouts on expeditions and workers on retrievals remain part
-of colony population but do not consume nest food while away.
+of colony population but do not consume nest sugar while away.
 
 Balance values live in `game/Constants.scala`; retrieval, scout growth, and
 expedition rules live in `CarcassProgression`, `ScoutProgression`, and
@@ -84,7 +84,7 @@ python3 tests/progression_smoke.py
 ```
 
 These cover discovery and retrieval, carrier and slot reservation, immediate
-protein, food priority and exhaustion, Nursery/scout progression, save reloads,
+protein, sugar priority and exhaustion, Nursery/scout progression, save reloads,
 and phone/desktop layouts.
 
 ## Colony capacity
@@ -100,7 +100,7 @@ Every completed expedition earns XP, even if it finds nothing: 10 XP nearby or
 30 XP at the woodland edge, independent of party size. Exploration starts at
 level 1. Reaching level 2 costs 100 XP; each subsequent level costs twice as much
 (200, 400, 800…), up to level 20. Each level adds 25% to sugar finds and newly
-discovered carcasses' food and protein, without increasing carrier requirements
+discovered carcasses' sugar and protein, without increasing carrier requirements
 or retrieval time. The expedition that levels up receives the new bonus.
 The Explore tab shows XP progress, current rewards, and the next bonus.
 Experience persists in saves; existing saves start at zero XP.
