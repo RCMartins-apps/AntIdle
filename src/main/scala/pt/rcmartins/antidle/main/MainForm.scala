@@ -297,21 +297,6 @@ object MainForm {
       div(
         className := "card-body",
         div(
-          className := "mobile-only batch-controls",
-          label(
-            forId := "mobile-action-amount",
-            "Action amount",
-          ),
-          select(
-            idAttr := "mobile-action-amount",
-            className := "form-select",
-            Seq(1, 10, 25, 250).map { amount =>
-              option(value := amount.toString, s"×$amount")
-            },
-            onChange.mapToValue.map(_.toInt) --> mobileMultiplier.writer,
-          ),
-        ),
-        div(
           className := "tab-content",
           div(
             className := "tab-pane show active",
@@ -676,6 +661,24 @@ object MainForm {
     }
   }
 
+  private def actionAmountControl(controlId: String): ReactiveHtmlElement[HTMLDivElement] =
+    div(
+      className := "mobile-only batch-controls",
+      label(
+        forId := controlId,
+        "Action amount",
+      ),
+      select(
+        idAttr := controlId,
+        className := "form-select",
+        Seq(1, 10, 25, 250).map { amount =>
+          option(value := amount.toString, s"×$amount")
+        },
+        value <-- mobileMultiplier.signal.map(_.toString),
+        onChange.mapToValue.map(_.toInt) --> mobileMultiplier.writer,
+      ),
+    )
+
   private def nestDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     def standardBuyChamber(
         name: String,
@@ -715,6 +718,7 @@ object MainForm {
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
         h5("Brood"),
+        actionAmountControl("brood-action-amount"),
         div(
           className := "row",
           child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
@@ -739,7 +743,7 @@ object MainForm {
               name = "Raise Scout Egg",
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-              descriptionSignal = Val(Some(div("Matures in 30s. Uses colony and egg capacity."))),
+              descriptionSignal = Val(Some(div("Guides woodland expeditions. Matures in 30s."))),
               costSignal = Val(ScoutProgression.eggCost),
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseScout(),
@@ -791,7 +795,7 @@ object MainForm {
     )
   }
 
-  private case class ActionRequirement(label: String, available: Long, required: Long = u)
+  private case class ActionRequirement(label: String, available: Long, required: Long = u, maximum: Option[Long] = None)
 
   private def requirementLabel(requirement: ActionRequirement): ReactiveHtmlElement[HTMLSpanElement] =
     span(
@@ -800,7 +804,13 @@ object MainForm {
         className := (if (requirement.available < requirement.required) "text-danger" else "text-success"),
         prettyNumberStr(requirement.available),
       ),
-      s"/${prettyNumberStr(requirement.required)} ${requirement.label}",
+      "/",
+      span(
+        className := (if (requirement.maximum.exists(_ < requirement.required)) "text-danger" else ""),
+        title := requirement.maximum.map(max => s"Storage capacity: ${prettyNumberStr(max)}").getOrElse(""),
+        prettyNumberStr(requirement.required),
+      ),
+      s" ${requirement.label}",
     )
 
   private val broodRequirementsSignal: Signal[List[ActionRequirement]] =
@@ -894,15 +904,15 @@ object MainForm {
       },
       child <-- costSignal.combineWith(resourcesSignal, idleWorkersCountSignal).map {
         case (cost, resources, idleWorkers) =>
-          def requirement(required: Long, available: Long, label: String): Option[ReactiveHtmlElement[HTMLSpanElement]] =
-            Option.when(required > 0)(requirementLabel(ActionRequirement(label, available, required)))
+          def requirement(required: Long, available: Long, label: String, maximum: Option[Long] = None): Option[ReactiveHtmlElement[HTMLSpanElement]] =
+            Option.when(required > 0)(requirementLabel(ActionRequirement(label, available, required, maximum)))
 
           div(
             className := "d-flex flex-column justify-content-center text-center",
-            requirement(cost.protein, resources.protein.amount, "protein"),
-            requirement(cost.sugar, resources.sugar.amount, "sugar"),
-            requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space"),
-            requirement(cost.colonyPoints, resources.colonyPoints.amount, "colony points"),
+            requirement(cost.protein, resources.protein.amount, "protein", Some(resources.protein.maxAmount)),
+            requirement(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
+            requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
+            requirement(cost.colonyPoints, resources.colonyPoints.amount, "colony points", Some(resources.colonyPoints.maxAmount)),
             requirement(cost.idleWorkers, idleWorkers, "idle workers"),
           )
       },
@@ -936,6 +946,7 @@ object MainForm {
   private def tasksDiv: ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "d-grid gap-2",
+      actionAmountControl("tasks-action-amount"),
       span(
         "Idle Ants: ",
         b(child <-- idleWorkersCountSignal.map(prettyNumberFixedSize)),
@@ -1146,6 +1157,11 @@ object MainForm {
               b("Dead insect"),
               div(s"Food: ${prettyNumberStr(carcass.totalFood)} · Protein: ${prettyNumberStr(carcass.proteinReward)}"),
               div(
+                className := "carcass-workers",
+                child <-- idleWorkersCountSignal.map(available =>
+                  requirementLabel(ActionRequirement("idle workers", available, carcass.requiredWorkers))),
+              ),
+              div(
                 className := "row",
                 actionButton(
                   name = "Retrieve Carcass",
@@ -1170,10 +1186,15 @@ object MainForm {
               child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, retrieval.targetTick - tick))),
             )
           }),
-          h5("At home", small(className := "text-body-secondary ms-2 carcass-capacity",
+          h5("Carcass storage", small(className := "text-body-secondary ms-2 carcass-capacity",
             child.text <-- explorationSignal.combineWith(nestSignal)
               .map { case (exploration, nest) => s"${CarcassProgression.occupiedSlots(exploration)} / ${nest.maxCarcasses}" })),
-          small(className := "text-body-secondary", "Food feeds ants before stored sugar. Slots include returning parties."),
+          div(
+            className := "text-body-secondary carcass-storage-summary",
+            child.text <-- explorationSignal.map(data =>
+              s"${data.carcasses.size} stored · ${data.retrievals.size} returning"),
+          ),
+          small(className := "text-body-secondary", "Returning parties reserve a slot. Food feeds ants before sugar."),
           children <-- explorationSignal.map { exploration =>
             if (exploration.carcasses.isEmpty) Seq(p("No carcasses at home."))
             else exploration.carcasses.map { carcass =>

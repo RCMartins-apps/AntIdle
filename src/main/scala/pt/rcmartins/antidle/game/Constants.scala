@@ -63,7 +63,7 @@ object Constants {
   val AntDeathRiskThreshold: Long = 10 * u
 
   val GatherSugarAction = "Gather Sugar"
-  val LayEggAction = "Lay Egg"
+  val LayEggAction = "Raise Worker Egg"
 
   def getChamberTunnelingSpaceNeeded(chamberType: ChamberType, level: Int): Long = {
     def cost(base: Long, multiplier: IndexedSeq[Double]): Long =
