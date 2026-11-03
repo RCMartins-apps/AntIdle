@@ -198,7 +198,6 @@ object TickCalculator {
             allResourcesNeeded
           )
           .map { ticksSeq =>
-            println(ticksSeq)
             if (ticksSeq.exists(_ < 0))
               -1
             else
@@ -206,11 +205,11 @@ object TickCalculator {
           }
           .map {
             case -1 =>
-              "Never"
+              span(className := "text-danger", "Never")
             case 0 =>
-              "0s"
+              span("0s")
             case ticks =>
-              s"${UINumbersUtils.prettyTimeFromTicks(ticks)}"
+              span(UINumbersUtils.prettyTimeFromTicks(ticks))
           }
     )
   }

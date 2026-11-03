@@ -45,7 +45,6 @@ object ScoutProgression {
       .modify(_.ants.scouts).using(_ + newScouts)
       .modify(_.statistics.maxAliveWorkers)
       .usingIf(newWorkers > 0)(_.max(allData.ants.workersCount + (newWorkers / u).toInt))
-    if (newScouts > 0) updated.addMessage("A scout has matured! Scouts guide longer expeditions to the woodland edge.")
-    else updated
+    updated
   }
 }

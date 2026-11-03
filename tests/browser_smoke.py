@@ -201,11 +201,11 @@ def run_checks(browser, url):
         for multiplier, modifiers in ((1, []), (10, ["Control"]), (25, ["Shift"]), (250, ["Control", "Shift"])):
             load_game(page, game)
             if width <= 767:
-                page.get_by_label("Action amount").select_option(str(multiplier))
+                page.locator(".nest-brood").get_by_label("Action amount").select_option(str(multiplier))
                 modifiers = []
-                page.get_by_text("Details: Lay Egg", exact=True).click()
+                page.get_by_text("Details: Raise Worker Egg", exact=True).click()
                 expect(page.locator("details[open]")).to_contain_text(f"+{multiplier} eggs")
-            page.get_by_role("button", name="Lay Egg", exact=False).click(modifiers=modifiers)
+            page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=modifiers)
             page.get_by_role("tab", name="Tasks").click()
             page.get_by_role("button", name="Assign Sugar Collector", exact=True).click(modifiers=modifiers)
             page.get_by_role("button", name="Remove Sugar Collector", exact=True).click(modifiers=modifiers)
@@ -222,11 +222,11 @@ def run_checks(browser, url):
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
         page.get_by_role("tab", name="Nest", exact=True).click()
-        page.get_by_role("button", name="Lay Egg", exact=False).hover()
+        page.get_by_role("button", name="Raise Worker Egg", exact=False).hover()
         expect(page.locator(".game-tooltip")).to_be_visible()
         expect(page.locator(".game-tooltip")).to_contain_text("Ants require a constant sugar supply")
         page.set_viewport_size({"width": 390, "height": 844})
-        page.get_by_text("Details: Lay Egg", exact=True).click()
+        page.get_by_text("Details: Raise Worker Egg", exact=True).click()
         expect(page.locator("details[open]")).to_contain_text("Ants require a constant sugar supply")
         assert_fits(page, 390)
         if width == 390:
