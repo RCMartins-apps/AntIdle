@@ -184,12 +184,23 @@ def run_checks(browser, url):
 
         game = progressed_game(initial)
         load_game(page, game)
+        for row in page.locator(".resource-row:visible").all():
+            expect(row.locator(".resource-name .resource-icon svg")).to_have_count(1)
+            assert row.locator(".resource-name").inner_text().strip()
+            label_box = row.locator(".resource-label").bounding_box()
+            amount_box = row.locator(".resource-amount").bounding_box()
+            assert label_box["x"] + label_box["width"] <= amount_box["x"] + 1
         for tab in ("Nest", "Tasks", "Upgrades", "Explore", "Settings"):
             page.get_by_role("tab", name=tab, exact=tab != "Tasks").click()
             assert_fits(page, width)
             for cell in page.locator(".action-cell:visible").all():
                 expect(cell.locator(".action-costs")).to_be_visible()
                 assert cell.locator(".action-costs").inner_text().strip()
+                for cost in cell.locator(".action-costs .action-cost").all():
+                    expect(cost.locator(".resource-icon svg")).to_have_count(1)
+                    assert cost.get_attribute("title")
+                    assert cost.get_attribute("aria-label")
+                    expect(cost.locator(".visually-hidden")).to_have_count(1)
 
         page.get_by_role("tab", name="Nest", exact=True).click()
         page.get_by_role("button", name="Expand Nest", exact=True).click()

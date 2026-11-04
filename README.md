@@ -211,3 +211,13 @@ Scout reservations are visible alongside expedition costs. Free actions say
 are collapsed. Costs update with resources, party size, and action amounts. Worker egg batches
 show the affordable quantity and actual price; when none can be bought, the
 minimum one-egg cost stays visible rather than appearing free.
+
+## Resource icons
+
+`game/ResourceIcons.scala` defines a consistent embedded SVG set for sugar,
+protein, Knowledge, tunneling space, eggs, colony population, workers and scouts.
+Resource rows retain icon + name. Action costs use icon + available/required,
+with a resource tooltip, accessible name and screen-reader text. SVGs are
+self-contained and decorative to assistive technology; resource identity never
+depends on color alone. Availability colors and full-storage highlights retain
+their existing meanings. No external icon files or network requests are needed.
