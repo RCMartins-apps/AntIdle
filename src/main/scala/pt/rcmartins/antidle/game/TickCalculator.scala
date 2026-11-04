@@ -109,12 +109,13 @@ object TickCalculator {
   val tunnelingSpaceTickGain: BonusOriginGroup =
     BonusOriginGroup(
       antTaskCountSignal(AntTask.Tunneler)
-        .map { tunnelersAmount =>
+        .combineWith(upgradesSignal)
+        .map { case (tunnelersAmount, upgrades) =>
           List(
             Some(
               ResourceOrigin(
                 AntTask.Tunneler.name,
-                tunnelersAmount * defaultTaskTunnelingSpaceTick,
+                tunnelersAmount * ColonyDevelopment.tunnelingPerWorkerTick(upgrades),
               )
             ),
           ).flatten

@@ -40,7 +40,11 @@ object ExplorationHelper {
     val xp = ExplorationProgression.earned(party)
     val experience = ExplorationProgression.addExperience(data.experience, xp)
     val knowledge = ExplorationProgression.expeditionReward(destination.knowledge, experience, workers, rank)
-    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge"
+    val sugar = if (destination.sugarReward > 0L) {
+      val reward = ExplorationProgression.expeditionReward(destination.sugarReward, experience, workers, rank)
+      s" · ${UINumbersUtils.prettyNumberStr(reward)} sugar"
+    } else ""
+    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar"
   }
 
   def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
@@ -51,7 +55,9 @@ object ExplorationHelper {
     val experience = ExplorationProgression.addExperience(data.experience, xp)
     def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
       ExplorationProgression.expeditionReward(base, experience, workers, rank))
-    val result = if (destination == ExplorationDestination.RottenLog)
+    val result = if (destination.sugarReward > 0L)
+      "Sugar guaranteed; no carcass storage needed"
+    else if (destination == ExplorationDestination.RottenLog)
       "Knowledge guaranteed; no carcass storage needed"
     else {
       val carcass = s"${amount(CarcassProtein * destination.carcassSize)} protein + ${amount(CarcassFood * destination.carcassSize)} sugar reserve"
@@ -77,7 +83,11 @@ object ExplorationHelper {
       .giveResources(knowledge = knowledge)
     val report = s"${destination.name}: +$xp XP · +${UINumbersUtils.prettyNumberStr(knowledge)} knowledge."
 
-    if (destination == ExplorationDestination.RottenLog) returned.addMessage(report) else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
+    if (destination.sugarReward > 0L) {
+      val sugar = ExplorationProgression.expeditionReward(destination.sugarReward, experience, party.amountWorkers, party.suppliesLevel)
+      returned.giveResources(sugar = sugar)
+        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(sugar)} sugar!")
+    } else if (destination == ExplorationDestination.RottenLog) returned.addMessage(report) else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
       CarcassProgression.discover(returned, destination.carcassSize, party.amountWorkers, party.suppliesLevel)
         .addMessage(report)
     else if (random.nextInt(100) < 80) {
