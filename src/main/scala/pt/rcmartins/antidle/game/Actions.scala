@@ -43,19 +43,14 @@ object Actions {
         sugar >= Constants.LayEggSugarCost && eggsCount < maxEggs && antCount < maxAnt
       }
 
+  def workerEggAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int = {
+    val slots = Math.min(nest.maxEggsCount - ants.eggsAndLarvae.count(_.isEgg), nest.maxAntsCount - ants.populationCount)
+    Math.max(0L, Math.min(requested.toLong, Math.min(slots.toLong, sugar / Constants.LayEggSugarCost))).toInt
+  }
+
   def layEggAction(maxMultiplierUsed: Int): Unit =
     actionUpdater.writer.onNext { allData =>
-      val maxEggs: Int =
-        Math.min(
-          allData.nestAttributes.maxEggsCount - allData.ants.eggsAndLarvae.count(_.isEgg),
-          allData.nestAttributes.maxAntsCount - allData.ants.populationCount,
-        )
-
-      val mult: Int =
-        Math.max(0, Math.min(
-          Math.min(maxMultiplierUsed, maxEggs),
-          (allData.basicResources.sugar.amount / Constants.LayEggSugarCost).toInt,
-        ))
+      val mult = workerEggAmount(allData.ants, allData.nestAttributes, allData.basicResources.sugar.amount, maxMultiplierUsed)
 
       allData
         .modify(_.basicResources.sugar)

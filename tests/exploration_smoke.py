@@ -105,7 +105,11 @@ def check_destinations(page, width, url):
     game["exploration"] = {"experience": 300}
     load_game(page, game)
     explore_tab(page)
-    page.get_by_text("Expedition supplies", exact=True).click()
+    supplies = page.locator(".expedition-supplies")
+    expect(supplies.get_by_role("button", name="Improve Expedition Supplies", exact=True)).to_be_visible()
+    expect(supplies.locator(".action-costs")).to_be_visible()
+    expect(supplies.locator(".action-costs")).to_contain_text("/500 sugar")
+    expect(supplies.locator(".action-costs")).to_contain_text("/20 knowledge")
     before = save_game(page)
     explore_tab(page)
     page.get_by_role("button", name="Improve Expedition Supplies", exact=True).click()

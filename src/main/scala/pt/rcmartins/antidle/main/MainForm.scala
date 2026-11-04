@@ -724,18 +724,19 @@ object MainForm {
         div(
           className := "row",
           child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
+            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal, sugarSignal).map {
+              case (requested, ants, nest, sugar) => Math.max(1, Actions.workerEggAmount(ants, nest, sugar.amount, requested))
+            }.distinct
             actionButton(
               name = LayEggAction,
-              topLeftBadgeSignal = modifiersMultiplierSignal.map {
+              topLeftBadgeSignal = displayedBatch.map {
                 case 1    => None
                 case mult => Some(span(s"x$mult"))
               },
               enabledSignal = Actions.layEggActionEnabled,
               descriptionSignal = Val(Some(div("Ants require a constant sugar supply to stay alive."))),
-              costSignal = modifiersMultiplierSignal.map(mult =>
-                ActionCost(sugar = mult * Constants.LayEggSugarCost)
-              ),
-              bonusSignal = modifiersMultiplierSignal.map(mult => ActionBonus(eggs = mult * u)),
+              costSignal = displayedBatch.map(mult => ActionCost(sugar = mult * Constants.LayEggSugarCost)),
+              bonusSignal = displayedBatch.map(mult => ActionBonus(eggs = mult * u)),
               onClickAction = mult => Actions.layEggAction(mult),
               requirementsSignal = broodRequirementsSignal,
             )
@@ -797,7 +798,7 @@ object MainForm {
     )
   }
 
-  private case class ActionRequirement(label: String, available: Long, required: Long = u, maximum: Option[Long] = None)
+  private case class ActionRequirement(label: String, available: Long, required: Long = u, maximum: Option[Long] = None, isCost: Boolean = false)
 
   private def requirementLabel(requirement: ActionRequirement): ReactiveHtmlElement[HTMLSpanElement] =
     span(
@@ -822,6 +823,29 @@ object MainForm {
         ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - ants.populationCount * u)),
       )
     }.distinct
+
+  private def actionCosts(
+      costSignal: Signal[ActionCost],
+      requirementsSignal: Signal[List[ActionRequirement]],
+  ): ReactiveHtmlElement[HTMLDivElement] =
+    div(
+      className := "action-costs small d-flex flex-wrap justify-content-center gap-2 pt-1",
+      aria.label := "Action costs",
+      children <-- costSignal.combineWith(resourcesSignal, antsSignal, requirementsSignal).map {
+        case (cost, resources, ants, requirements) =>
+          def costLine(required: Long, available: Long, label: String, maximum: Option[Long] = None) =
+            Option.when(required > 0)(ActionRequirement(label, available, required, maximum))
+          val costs = List(
+            costLine(cost.protein, resources.protein.amount, "protein", Some(resources.protein.maxAmount)),
+            costLine(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
+            costLine(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
+            costLine(cost.knowledge, resources.knowledge.amount, "knowledge"),
+            costLine(cost.idleWorkers, ants.availableWorkersCount, ants.availableWorkersLabel),
+          ).flatten ++ requirements.filter(_.isCost)
+          if (costs.isEmpty) Seq(span(className := "text-body-secondary", "Free"))
+          else costs.map(cost => requirementLabel(cost).amend(className := "text-nowrap"))
+      },
+    )
 
   private def actionButton(
       name: String,
@@ -864,17 +888,18 @@ object MainForm {
             }
           },
       ),
+      actionCosts(costSignal, requirementsSignal),
       child.maybe <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
         Option.when(mobile) {
           detailsTag(
             className := "mobile-only action-details",
             summaryTag(s"Details: $name"),
-            actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal),
+            actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false),
           )
         }
       },
     ).amendThis(elem =>
-      createTooltipForActionButton(elem, descriptionSignal, costSignal, bonusSignal, requirementsSignal)
+      createTooltipForActionButton(elem, descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false)
     )
 
   private def createTooltipForActionButton(
@@ -883,14 +908,16 @@ object MainForm {
       costSignal: Signal[ActionCost],
       bonusSignal: Signal[ActionBonus],
       requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
+      includeCosts: Boolean = true,
   ): EventListener[MouseEvent, MouseEvent] =
-    setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal))
+    setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts))
 
   private def actionDetails(
       descriptionSignal: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
       costSignal: Signal[ActionCost],
       bonusSignal: Signal[ActionBonus],
       requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
+      includeCosts: Boolean = true,
   ): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "p-1",
@@ -904,26 +931,13 @@ object MainForm {
           )
         }
       },
-      child <-- costSignal.combineWith(resourcesSignal, antsSignal).map {
-        case (cost, resources, ants) =>
-          def requirement(required: Long, available: Long, label: String, maximum: Option[Long] = None): Option[ReactiveHtmlElement[HTMLSpanElement]] =
-            Option.when(required > 0)(requirementLabel(ActionRequirement(label, available, required, maximum)))
-
-          div(
-            className := "d-flex flex-column justify-content-center text-center",
-            requirement(cost.protein, resources.protein.amount, "protein", Some(resources.protein.maxAmount)),
-            requirement(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
-            requirement(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
-            requirement(cost.knowledge, resources.knowledge.amount, "knowledge"),
-            requirement(cost.idleWorkers, ants.availableWorkersCount, ants.availableWorkersLabel),
-          )
-      },
+      if (includeCosts) actionCosts(costSignal, requirementsSignal) else emptyNode,
       div(
         className := "d-flex flex-column text-center action-requirements",
-        children <-- requirementsSignal.map(_.map(requirementLabel)),
+        children <-- requirementsSignal.map(_.filterNot(_.isCost).map(requirementLabel)),
       ),
       child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
-        if (cost == ActionCost.empty || bonus == ActionBonus.empty)
+        if (!includeCosts || cost == ActionCost.empty || bonus == ActionBonus.empty)
           None
         else
           Some(hr())
@@ -1061,10 +1075,6 @@ object MainForm {
       ifUpgradeReadyToBuyOpt(upgradeSignal) {
         actionButton(
           name = upgradeType.title,
-          topRightBadgeSignal =
-            costSignal.map(actionCost => Some(
-              if (actionCost.knowledge > 0) span(title := "Knowledge cost", prettyNumberSimple(actionCost.knowledge))
-              else span(title := "Sugar cost", prettyNumberSimple(actionCost.sugar)))),
           enabledSignal = hasResourcesSignal(costSignal),
           descriptionSignal = Val(Some(div(upgradeType.description))),
           costSignal = costSignal,
@@ -1113,7 +1123,7 @@ object MainForm {
                 case (data, scouts, workers) =>
                   List(ActionRequirement("expedition slots",
                     Math.max(0L, ExplorationProgression.maxParties(data.experience).toLong - data.explorationParties.size) * u)) ++
-                    Option.when(destination.scouts > 0)(ActionRequirement("scouts", scouts, destination.scouts)) ++
+                    Option.when(destination.scouts > 0)(ActionRequirement("scouts", scouts, destination.scouts, isCost = true)) ++
                     Option.when(destination.requiredLevel > 1)(ActionRequirement("exploration level",
                       ExplorationProgression.level(data.experience).toLong * u, destination.requiredLevel.toLong * u)) ++
                     Option.when(destination.minimumWorkers > u)(ActionRequirement("party workers", workers, destination.minimumWorkers))
@@ -1181,35 +1191,32 @@ object MainForm {
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
         div(
           className := "col-12 px-3 py-2 expedition-supplies",
-          detailsTag(
-            summaryTag("Expedition supplies"),
-            p(className := "mb-1", child.text <-- explorationSignal.map(data =>
-              s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel} · +${ExplorationProgression.suppliesRank(data) * 20}% XP and rewards")),
-            p("Each rank adds 20% XP and rewards to future departures."),
-            child.maybe <-- explorationSignal.map(data =>
-              ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel &&
-                ExplorationProgression.level(data.experience) >= ExplorationProgression.suppliesRequiredLevel(data)
-            ).distinct.map {
-              available => Option.when(available) {
-                div(
-                  className := "row",
-                  actionButton(
-                    name = "Improve Expedition Supplies",
-                    enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) =>
-                      ExplorationProgression.canUpgradeSupplies(data, resources)
-                    },
-                    requirementsSignal = explorationSignal.map(data => List(ActionRequirement("exploration level",
-                      ExplorationProgression.level(data.experience).toLong * u,
-                      ExplorationProgression.suppliesRequiredLevel(data).toLong * u))),
-                    descriptionSignal = Val(None),
-                    costSignal = explorationSignal.map(ExplorationProgression.suppliesCost),
-                    bonusSignal = Val(ActionBonus.empty),
-                    onClickAction = _ => Actions.upgradeExpeditionSupplies(),
-                  ),
-                )
-              }
-            },
-          ),
+          h5("Expedition supplies"),
+          p(className := "mb-1", child.text <-- explorationSignal.map(data =>
+            s"Rank ${ExplorationProgression.suppliesRank(data)} · +${ExplorationProgression.suppliesRank(data) * 20}% XP and rewards")),
+          child.maybe <-- explorationSignal.map(data =>
+            ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel &&
+              ExplorationProgression.level(data.experience) >= ExplorationProgression.suppliesRequiredLevel(data)
+          ).distinct.map {
+            available => Option.when(available) {
+              div(
+                className := "row",
+                actionButton(
+                  name = "Improve Expedition Supplies",
+                  enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) =>
+                    ExplorationProgression.canUpgradeSupplies(data, resources)
+                  },
+                  requirementsSignal = explorationSignal.map(data => List(ActionRequirement("exploration level",
+                    ExplorationProgression.level(data.experience).toLong * u,
+                    ExplorationProgression.suppliesRequiredLevel(data).toLong * u))),
+                  descriptionSignal = Val(Some(div("Permanent +20% XP and rewards for future departures."))),
+                  costSignal = explorationSignal.map(ExplorationProgression.suppliesCost),
+                  bonusSignal = Val(ActionBonus.empty),
+                  onClickAction = _ => Actions.upgradeExpeditionSupplies(),
+                ),
+              )
+            }
+          },
         )
       },
       div(
@@ -1233,11 +1240,6 @@ object MainForm {
               className := "card p-2 my-2 discovered-carcass",
               b("Dead insect"),
               div(s"Sugar: ${prettyNumberStr(carcass.totalFood)} · Protein: ${prettyNumberStr(carcass.proteinReward)}"),
-              div(
-                className := "carcass-workers",
-                child <-- antsSignal.map(ants =>
-                  requirementLabel(ActionRequirement(ants.availableWorkersLabel, ants.availableWorkersCount, carcass.requiredWorkers))),
-              ),
               div(
                 className := "row",
                 actionButton(

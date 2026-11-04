@@ -187,6 +187,9 @@ def run_checks(browser, url):
         for tab in ("Nest", "Tasks", "Upgrades", "Explore", "Settings"):
             page.get_by_role("tab", name=tab, exact=tab != "Tasks").click()
             assert_fits(page, width)
+            for cell in page.locator(".action-cell:visible").all():
+                expect(cell.locator(".action-costs")).to_be_visible()
+                assert cell.locator(".action-costs").inner_text().strip()
 
         page.get_by_role("tab", name="Nest", exact=True).click()
         page.get_by_role("button", name="Expand Nest", exact=True).click()
@@ -219,6 +222,28 @@ def run_checks(browser, url):
                 outcomes[multiplier] = actual
             assert len(result["ants"]["eggsAndLarvae"]) == multiplier
             assert result["ants"]["tasks"][1][1] == multiplier * UNIT
+
+        # Visible batch price follows what will actually be bought, including partial batches.
+        partial = progressed_game(initial)
+        partial["basicResources"]["sugar"]["amount"] = 35 * UNIT
+        load_game(page, partial)
+        if width <= 767:
+            page.locator(".nest-brood").get_by_label("Action amount").select_option("10")
+            batch_modifiers = []
+        else:
+            page.keyboard.down("Control")
+            batch_modifiers = ["Control"]
+        egg_action = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Raise Worker Egg", exact=False))
+        expect(egg_action.locator(".action-costs")).to_contain_text("35/30 sugar")
+        page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=batch_modifiers)
+        if width > 767:
+            page.keyboard.up("Control")
+        bought = save_game(page)
+        assert bought["basicResources"]["sugar"]["amount"] == 5 * UNIT
+        assert len(bought["ants"]["eggsAndLarvae"]) == 3
+        page.get_by_role("tab", name="Nest", exact=True).click()
+        expect(egg_action.locator(".action-costs")).to_contain_text("5/10 sugar")
+        load_game(page, game)
 
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
