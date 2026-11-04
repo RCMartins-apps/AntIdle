@@ -99,6 +99,15 @@ object UpgradesData {
       val description: String = "Choose a default task for available workers. Its workers can be used wherever idle workers are required."
     }
 
+    case object AdditionalExpeditionSlot extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 3
+      val name: String = "AdditionalExpeditionSlot"
+      val cost: ActionCost = ActionCost(sugar = 1000 * u, knowledge = 100 * u)
+      val title: String = "Expedition Coordination"
+      val description: String = "Adds one expedition slot, in addition to slots unlocked by exploration levels."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -110,6 +119,7 @@ object UpgradesData {
       UnlockFoodStorageChamber,
       UnlockExplorerTask,
       DefaultWorkers,
+      AdditionalExpeditionSlot,
     )
 
   }

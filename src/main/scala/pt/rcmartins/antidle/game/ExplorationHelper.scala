@@ -10,14 +10,14 @@ object ExplorationHelper {
   def cost(workers: Long, destination: ExplorationDestination): ActionCost =
     ActionCost(sugar = workers * destination.sugarPerWorker, idleWorkers = workers)
 
-  def canDepart(data: ExplorationData, ants: AntsData, workers: Long, destination: ExplorationDestination): Boolean =
+  def canDepart(data: ExplorationData, ants: AntsData, upgrades: UpgradesData, workers: Long, destination: ExplorationDestination): Boolean =
     workers >= destination.minimumWorkers && workers % u == 0 &&
       ExplorationProgression.level(data.experience) >= destination.requiredLevel &&
-      data.explorationParties.size < ExplorationProgression.maxParties(data.experience) &&
+      data.explorationParties.size < ExplorationProgression.maxParties(data.experience, upgrades) &&
       ants.availableWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts
 
   def canStart(data: AllData, workers: Long, destination: ExplorationDestination): Boolean =
-    data.unlocks.tabs.exploreTabUnlocked && canDepart(data.exploration, data.ants, workers, destination) &&
+    data.unlocks.tabs.exploreTabUnlocked && canDepart(data.exploration, data.ants, data.upgrades, workers, destination) &&
       data.hasResources(cost(workers, destination))
 
   def start(data: AllData, workers: Long, destination: ExplorationDestination): AllData =

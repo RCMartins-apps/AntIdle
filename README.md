@@ -191,6 +191,7 @@ exploration cost only sugar, so a colony can unlock it with zero Knowledge.
 | Foraging Techniques 2 | 750 | 75 |
 | Foraging Techniques 3 | 2,500 | 300 |
 | Default Workers | 500 | 50 |
+| Expedition Coordination | 1,000 | 100 |
 | Expedition supplies I / II / III | 500 / 1,500 / 4,500 | 20 / 80 / 200 |
 
 Tunneling space remains capped. Every Nest level adds 500 capacity alongside its
@@ -221,3 +222,35 @@ with a resource tooltip, accessible name and screen-reader text. SVGs are
 self-contained and decorative to assistive technology; resource identity never
 depends on color alone. Availability colors and full-storage highlights retain
 their existing meanings. No external icon files or network requests are needed.
+
+## Foraging pressure
+
+Sugar collection has diminishing marginal returns across the entire colony.
+The first collector contributes 0.4 sugar/s, the second 0.395, the third 0.390,
+and each additional collector contributes 0.005 less, stopping at zero.
+Total output never decreases when assigning another collector. Without upgrades
+it plateaus at 16.2 sugar/s: enough for about 81 workers at 0.2 upkeep each, with
+very little room for non-foraging work near that population.
+
+Foraging techniques multiply the curve and its maximum output. The three existing
+techniques raise the ideal self-supporting population from 81 to roughly 93,
+107, and 123 workers. Carcass reserves and expedition rewards are additional
+sources, so those figures describe basic collection alone.
+
+`game/Foraging.scala` supplies the production calculation used by ticks and income
+estimates. Task details show the current average sugar/s per collector, including
+upgrades, and the next collector's contribution. Small rates such as 0.005 stay
+visible. Yield depends on current total collectors, not worker identity or time
+assigned, so cycling assignments cannot refresh full-rate collection. No positive
+minimum yield is added for excess collectors.
+
+**Expedition Coordination** becomes available at exploration level 3 for 1,000
+sugar and 100 Knowledge. It permanently adds one expedition slot on top of the
+existing level-five slot, allowing up to three expeditions with both unlocks.
+Costs, availability, capacity indicators, and the engine use the same slot limit.
+The upgrade is saved and checked by the shared visibility rules.
+
+Run `python3 tests/foraging_smoke.py` after `sbt fastOptJS` to check live rates,
+actual tick income, upgrade effects, population pressure, slot purchases and
+save reloads on phone and desktop. `ForagingSuite` also tests the sustainable
+population boundaries, assignment cycling, and engine slot limits.

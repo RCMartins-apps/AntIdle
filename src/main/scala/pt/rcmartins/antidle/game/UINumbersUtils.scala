@@ -39,6 +39,11 @@ object UINumbersUtils {
     else
       prettyNumberFixedSize(prefix, num / 1000, suffixNum + 1)
 
+  def preciseRateStr(amount: Long): String = {
+    val fraction = f"${Math.abs(amount % u)}%04d".reverse.dropWhile(_ == '0').reverse
+    if (fraction.isEmpty) (amount / u).toString else s"${amount / u}.$fraction"
+  }
+
   def prettyNumberStr(num: Long): String =
     prettyNumberStr("", num, 0)
 

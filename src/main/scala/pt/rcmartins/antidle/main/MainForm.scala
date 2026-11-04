@@ -1005,11 +1005,15 @@ object MainForm {
       antsSignal.map(_.tasks.find(_._1 == antTask).map(_._2).getOrElse(0L)).distinct
     val id = s"task-${antTask.toString.toLowerCase}$idSuffix"
 
-    // TODO: Improve this, add bonuses dynamically, instead of constants
     def taskDescription: ReactiveHtmlElement[HTMLDivElement] =
       antTask match {
         case AntTask.SugarCollector =>
-          div(prettyNumberSimple("+", defaultTaskCollectSugarSecond, " sugar per second / ant"))
+          div(
+            child.text <-- amountSignal.combineWith(upgradesSignal).map { case (amount, upgrades) =>
+              val count = amount / u
+              s"${preciseRateStr(Foraging.averagePerSecond(count, upgrades))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades))}"
+            },
+          )
         case AntTask.Tunneler =>
           div(
             prettyNumberSimple(
@@ -1128,18 +1132,18 @@ object MainForm {
             className := "row",
             actionButton(
               name = s"Explore ${destination.name}",
-              requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersVar.signal).map {
-                case (data, scouts, workers) =>
+              requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersVar.signal, upgradesSignal).map {
+                case (data, scouts, workers, upgrades) =>
                   List(ActionRequirement("expedition slots",
-                    Math.max(0L, ExplorationProgression.maxParties(data.experience).toLong - data.explorationParties.size) * u)) ++
+                    Math.max(0L, ExplorationProgression.maxParties(data.experience, upgrades).toLong - data.explorationParties.size) * u)) ++
                     Option.when(destination.scouts > 0)(ActionRequirement("scouts", scouts, destination.scouts, isCost = true)) ++
                     Option.when(destination.requiredLevel > 1)(ActionRequirement("exploration level",
                       ExplorationProgression.level(data.experience).toLong * u, destination.requiredLevel.toLong * u)) ++
                     Option.when(destination.minimumWorkers > u)(ActionRequirement("party workers", workers, destination.minimumWorkers))
               }.distinct,
-              enabledSignal = amountOfExplorersVar.signal.combineWith(explorationSignal, antsSignal, resourcesSignal)
-                .map { case (workers, data, ants, resources) =>
-                  ExplorationHelper.canDepart(data, ants, workers, destination) &&
+              enabledSignal = amountOfExplorersVar.signal.combineWith(explorationSignal, antsSignal, resourcesSignal, upgradesSignal)
+                .map { case (workers, data, ants, resources, upgrades) =>
+                  ExplorationHelper.canDepart(data, ants, upgrades, workers, destination) &&
                     resources.hasResources(ExplorationHelper.cost(workers, destination))
                 },
               descriptionSignal = amountOfExplorersVar.signal.combineWith(explorationSignal).map {
@@ -1229,9 +1233,11 @@ object MainForm {
         )
       },
       div(
-        className := "col-12 px-3 py-2",
+        className := "col-12 px-3 py-2 expedition-status",
         "Expeditions: ", child.text <-- explorationSignal.map(_.explorationParties.size),
-        " / ", child.text <-- explorationSignal.map(data => ExplorationProgression.maxParties(data.experience)),
+        " / ", child.text <-- explorationSignal.combineWith(upgradesSignal).map {
+          case (data, upgrades) => ExplorationProgression.maxParties(data.experience, upgrades)
+        },
         children <-- explorationSignal.map(_.explorationParties.map { party =>
           div(
             b(s"${ExplorationDestination.forParty(party).name}: "),
