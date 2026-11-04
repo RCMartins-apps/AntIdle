@@ -21,6 +21,8 @@ object ChamberBonuses {
         )
       case ChamberType.FoodStorage =>
         ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar)
+      case ChamberType.Aphid =>
+        ActionBonus(aphidSlots = 1)
       case ChamberType.Nursery =>
         ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
     }
@@ -33,6 +35,8 @@ object ChamberBonuses {
         allData.modify(_.nestAttributes.chambers.queenChamber.level).using(_ + 1)
       case ChamberType.FoodStorage =>
         allData.modify(_.nestAttributes.chambers.foodStorageChamber.level).using(_ + 1)
+      case ChamberType.Aphid =>
+        allData.modify(_.nestAttributes.chambers.aphidChamber.level).using(_ + 1)
       case ChamberType.Nursery =>
         allData.modify(_.nestAttributes.chambers.nurseryChamber.level).using(_ + 1)
     }

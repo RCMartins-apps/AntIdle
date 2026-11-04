@@ -27,7 +27,7 @@ object Actions {
 
   def incrementAntTask(antTask: AntTask, amountU: Long): Unit =
     actionUpdater.writer.onNext { allData =>
-      allData.modify(_.ants).using(_.addToTask(antTask, amountU))
+      DefaultWorkerAssignment.assign(allData, antTask, amountU)
     }
 
   def selectDefaultTask(task: Option[AntTask]): Unit =
@@ -89,6 +89,7 @@ object Actions {
         case ChamberType.Queen       => chambers.queenChamber
         case ChamberType.FoodStorage => chambers.foodStorageChamber
         case ChamberType.Nursery     => chambers.nurseryChamber
+        case ChamberType.Aphid       => chambers.aphidChamber
       }
     }
 
@@ -101,7 +102,7 @@ object Actions {
       .distinct
       .map(level => ActionCost(
         tunnelingSpace = getChamberTunnelingSpaceNeeded(chamberType, level),
-        protein = if (chamberType == ChamberType.Nursery) NurseryProteinCost * (level + 1) else 0L,
+        protein = if (chamberType == ChamberType.Nursery) NurseryProteinCost * (level + 1) else if (chamberType == ChamberType.Aphid) 2L * u * (level + 1L) else 0L,
       ))
 
   def raiseScout(): Unit =

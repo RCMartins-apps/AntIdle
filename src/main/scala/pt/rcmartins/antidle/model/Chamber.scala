@@ -38,6 +38,10 @@ object Chamber {
       val name: String = "Food Storage Chamber"
     }
 
+    case object Aphid extends ChamberType {
+      val name: String = "Aphid Chamber"
+    }
+
     case object Nursery extends ChamberType {
       val name: String = "Nursery Chamber"
     }
@@ -90,6 +94,15 @@ object Chamber {
   object NurseryChamber {
     implicit val decoder: JsonDecoder[NurseryChamber] = DeriveJsonDecoder.gen[NurseryChamber]
     implicit val encoder: JsonEncoder[NurseryChamber] = DeriveJsonEncoder.gen[NurseryChamber]
+  }
+
+  case class AphidChamber(level: Int) extends Chamber {
+    val chamberType: ChamberType = ChamberType.Aphid
+  }
+
+  object AphidChamber {
+    implicit val decoder: JsonDecoder[AphidChamber] = DeriveJsonDecoder.gen[AphidChamber]
+    implicit val encoder: JsonEncoder[AphidChamber] = DeriveJsonEncoder.gen[AphidChamber]
   }
 
 }

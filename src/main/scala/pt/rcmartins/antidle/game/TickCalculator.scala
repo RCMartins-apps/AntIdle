@@ -73,6 +73,8 @@ object TickCalculator {
           upgradesSignal,
           antsSignal,
           explorationSignal,
+          nestSignal,
+          proteinSignal,
         )
         .map {
           case (
@@ -80,6 +82,8 @@ object TickCalculator {
                 upgrades,
                 ants,
                 exploration,
+                nest,
+                protein,
               ) =>
             List(
               Some(
@@ -94,7 +98,7 @@ object TickCalculator {
                 .filter(_ => upgrades(ImproveSugarCollectorTask2).unlocked),
               Some(PercentOrigin(ImproveSugarCollectorTask3.title, SugarImprovementBonusPerc))
                 .filter(_ => upgrades(ImproveSugarCollectorTask3).unlocked),
-              Some(ResourceOrigin("Aphid Tenders", AphidHusbandry.productionPerTick(ants.taskWorkers(AntTask.AphidTender) / u, upgrades)))
+              Some(ResourceOrigin("Aphid Tenders", AphidHusbandry.productionPerTick(ants, nest, upgrades, protein.amount)))
                 .filter(_.tickResourceU > 0),
               Some(
                 ResourceOrigin(
@@ -107,6 +111,12 @@ object TickCalculator {
             ).flatten
         }
     )
+
+  val proteinTickGain: BonusOriginGroup = BonusOriginGroup(
+    antsSignal.combineWith(nestSignal, upgradesSignal, proteinSignal).map { case (ants, nest, upgrades, protein) =>
+      List(ResourceOrigin("Aphid Tenders", -AphidHusbandry.proteinPerTick(ants, nest, upgrades, protein.amount)))
+    }
+  )
 
   val tunnelingSpaceTickGain: BonusOriginGroup =
     BonusOriginGroup(

@@ -104,24 +104,10 @@ class DiscoverySuite extends FunSuite {
     assertEquals(UpgradeVisibility.reconcile(researched).ants, researched.ants)
   }
 
-  test("aphids have a separate finite yield and locked tasks cannot produce sugar") {
-    val plain = UpgradesData.initial
-    val researched = plain.unlock(AphidTending)
-    assertEquals(AphidHusbandry.productionPerTick(20L, plain), 0L)
-    assertEquals(AphidHusbandry.productionPerTick(1L, researched) * TicksPerSecond, 8000L)
-    assertEquals(AphidHusbandry.productionPerTick(20L, researched) * TicksPerSecond, 84000L)
-    assertEquals(AphidHusbandry.productionPerTick(Long.MaxValue, researched), AphidHusbandry.productionPerTick(20L, researched))
-    assertEquals(AphidHusbandry.nextPerSecond(19L, researched), 400L)
-    assertEquals(AphidHusbandry.nextPerSecond(20L, researched), 0L)
-    assertEquals(AphidHusbandry.productionPerTick(20L, researched.unlock(ImproveSugarCollectorTask1)), AphidHusbandry.productionPerTick(20L, researched))
-    val data = colony.copy(ants = AntsData(workers = 30 * u, tasks = Seq(AntTask.SugarCollector -> (10 * u), AntTask.AphidTender -> (20 * u))), upgrades = researched)
-    val next = TickUpdater.updateAllData(data, None)
-    assertEquals(next.basicResources.sugar.amount - data.basicResources.sugar.amount,
-      Foraging.productionPerTick(10L, researched) + AphidHusbandry.productionPerTick(20L, researched) - 30L * antsSugarUpkeepTick)
-  }
-
   test("aphid workers participate in the default worker pool without duplicating ants") {
-    val ready = UpgradeVisibility.reconcile(colony.copy(upgrades = colony.upgrades.unlock(AphidTending, DefaultWorkers)))
+    val ready = UpgradeVisibility.reconcile(colony.copy(
+      nestAttributes = colony.nestAttributes.copy(chambers = colony.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(40))),
+      upgrades = colony.upgrades.unlock(AphidTending, DefaultWorkers)))
     val selected = DefaultWorkerAssignment.select(ready, Some(AntTask.AphidTender))
     assertEquals(selected.ants.taskWorkers(AntTask.AphidTender), 40L * u)
     val sent = ExplorationHelper.start(selected, 5 * u, NectarMeadow)

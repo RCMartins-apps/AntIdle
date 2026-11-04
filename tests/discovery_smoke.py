@@ -24,6 +24,7 @@ def check_discoveries(page, width, url):
     game["ants"]["workers"] = 40 * UNIT
     game["ants"]["scouts"] = 2 * UNIT
     game["ants"]["eggsAndLarvae"] = []
+    game["basicResources"]["tunnelingSpace"] = {"amount": 5000 * UNIT, "maxAmount": 10000 * UNIT}
     game["ants"]["tasks"] = [[{"SugarCollector": {}}, 0], [{"Tunneler": {}}, 0], [{"Explorer": {}}, 0]]
     game["basicResources"]["sugar"] = {"amount": 6000 * UNIT, "maxAmount": 10000 * UNIT}
     game["basicResources"]["protein"] = {"amount": 50 * UNIT, "maxAmount": 100 * UNIT}
@@ -71,20 +72,45 @@ def check_discoveries(page, width, url):
     for value, label in ((1500, "sugar"), (20, "protein"), (100, "knowledge")):
         assert after["basicResources"][label]["amount"] == before["basicResources"][label]["amount"] - value * UNIT
     page.get_by_role("tab", name="Tasks", exact=False).click()
+    expect(page.locator("#task-aphidtender")).to_contain_text("0 / 0")
+    expect(page.get_by_role("button", name="Assign Aphid Tender", exact=True)).to_be_disabled()
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    chamber = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Aphid Chamber", exact=True))
+    expect(chamber.locator(".action-costs")).to_contain_text("/75 tunneling space")
+    expect(chamber.locator(".action-costs")).to_contain_text("/2 protein")
+    chamber.get_by_role("button").click()
+    page.clock.run_for(200)
+    built = save_game(page)
+    assert built["nestAttributes"]["chambers"]["aphidChamber"]["level"] == 1
+    page.get_by_role("tab", name="Tasks", exact=False).click()
     page.get_by_role("button", name="Assign Aphid Tender", exact=True).click()
+    expect(page.locator("#task-aphidtender")).to_contain_text("1 / 1")
+    expect(page.get_by_role("button", name="Assign Aphid Tender", exact=True)).to_be_disabled()
     task = page.locator("#task-aphidtender")
-    description = "0.8 sugar/s per tender · next: 0.76"
+    description = "0.8 sugar/s · −0.01 protein/s per tender"
     if width <= 767:
         expect(task.locator(".task-description")).to_have_text(description)
     else:
         task.hover()
         expect(page.locator(".game-tooltip")).to_have_text(description)
+    expect(resource("Protein")).to_contain_text("-0.01/s")
     expect(resource("Sugar")).to_contain_text("-7.60/s")  # 40 workers + 2 scouts, one tender.
     before = save_game(page)
     page.clock.run_for(1000)
     after = save_game(page)
     ticks = after["world"]["currentTick"] - before["world"]["currentTick"]
     assert after["basicResources"]["sugar"]["amount"] - before["basicResources"]["sugar"]["amount"] == ticks * -15200
+    assert after["basicResources"]["protein"]["amount"] - before["basicResources"]["protein"]["amount"] == ticks * -20
+    # Protein shortage pauses production; feeding resumes when protein is restored.
+    empty = copy.deepcopy(after)
+    empty["basicResources"]["protein"]["amount"] = 0
+    load_game(page, empty)
+    expect(resource("Sugar")).to_contain_text("-8.40/s")
+    expect(resource("Protein")).to_contain_text("0/s")
+    page.get_by_role("tab", name="Tasks", exact=False).click()
+    if width <= 767:
+        expect(page.locator("#task-aphidtender .text-danger")).to_have_text("Needs protein")
+    load_game(page, after)
 
     # The new task can be the default pool; expeditions borrow and return its workers.
     page.get_by_role("tab", name="Tasks", exact=False).click()
@@ -97,7 +123,7 @@ def check_discoveries(page, width, url):
     page.clock.run_for(90000)
     seeded = save_game(page)
     assert seeded["exploration"]["surveys"]["nectar-meadow"] == 3
-    assert next(amount for task, amount in seeded["ants"]["tasks"] if "AphidTender" in task) == 40 * UNIT
+    assert next(amount for task, amount in seeded["ants"]["tasks"] if "AphidTender" in task) == UNIT
     explore_tab(page)
     expect(page.locator(".discovery-entry")).to_have_count(2)
     expect(route("Seed Gathering")).to_have_count(1)
@@ -118,6 +144,21 @@ def check_discoveries(page, width, url):
     assert returned["ants"]["defaultTask"] == {"AphidTender": {}}
     assert sum(m.startswith("Discovery: Wild Aphids!") for m in returned["messages"]) == 1
     assert sum(m.startswith("Discovery: Seed Cache!") for m in returned["messages"]) == 1
+    # Every revealed resource remains visible when all balances and populations reach zero.
+    depleted = copy.deepcopy(returned)
+    for value in depleted["basicResources"].values():
+        value["amount"] = 0
+    depleted["ants"]["workers"] = 0
+    depleted["ants"]["scouts"] = 0
+    depleted["ants"]["eggsAndLarvae"] = []
+    depleted["ants"]["tasks"] = [[task, 0] for task, _ in depleted["ants"]["tasks"]]
+    depleted["ants"]["defaultTask"] = None
+    load_game(page, depleted)
+    for name in ("Sugar", "Tunneling Space", "Protein", "Knowledge", "Eggs", "Ants", "Workers", "Scouts"):
+        expect(resource(name)).to_be_visible()
+    page.reload(wait_until="networkidle")
+    for name in ("Sugar", "Tunneling Space", "Protein", "Knowledge", "Eggs", "Ants", "Workers", "Scouts"):
+        expect(resource(name)).to_be_visible()
     explore_tab(page)
     assert_fits(page, width)
     assert not errors, errors

@@ -23,7 +23,7 @@ object ExplorationHelper {
 
   def start(data: AllData, workers: Long, destination: ExplorationDestination): AllData =
     if (!canStart(data, workers, destination)) data
-    else data.spendResources(cost(workers, destination))
+    else DefaultWorkerAssignment.normalize(data.spendResources(cost(workers, destination))
       .modify(_.ants).using(_.unlockTask(AntTask.Explorer).addToTask(AntTask.Explorer, workers))
       .modify(_.exploration.explorationParties)
       .using(ExplorationParty(
@@ -32,7 +32,7 @@ object ExplorationHelper {
         suppliesLevel = ExplorationProgression.suppliesRank(data.exploration),
       ) :: _)
       .modify(_.statistics.explorationsCount).using(_.addValue(1))
-      .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers))
+      .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers)))
 
   def summary(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
     val rank = ExplorationProgression.suppliesRank(data)
@@ -107,7 +107,7 @@ object ExplorationHelper {
       returned.giveResources(sugar = sugar)
         .addMessage(s"$report Found ${UINumbersUtils.prettyNumberStr(sugar)} sugar!")
     } else returned.addMessage(s"$report No resources found.")
-    DiscoveryProgression.recordReturn(rewarded, destination)
+    DefaultWorkerAssignment.normalize(DiscoveryProgression.recordReturn(rewarded, destination))
   }
 
   def dice(random: Random, maxValue: Long): Long = random.nextLong(maxValue) + 1L

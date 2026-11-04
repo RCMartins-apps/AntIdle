@@ -53,7 +53,9 @@ case class AntsData(
   lazy val availableWorkersCount: Long =
     idleWorkersCount + effectiveDefaultTask.map(taskWorkers).getOrElse(0L)
 
-  def availableWorkersLabel: String = effectiveDefaultTask.map(task => s"${task.name} workers").getOrElse("idle workers")
+  def availableWorkersLabel: String = effectiveDefaultTask.map { task =>
+    if (idleWorkersCount > 0L) "available workers" else s"${task.name} workers"
+  }.getOrElse("idle workers")
 
   def assignIdleToDefault: AntsData = effectiveDefaultTask match {
     case Some(task) if idleWorkersCount > 0 =>

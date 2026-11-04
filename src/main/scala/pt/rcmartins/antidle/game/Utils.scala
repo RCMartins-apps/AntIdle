@@ -78,8 +78,7 @@ object Utils {
 
   val sugarSignal: Signal[BasicResource] = resourcesSignal.map(_.sugar).distinct
   val proteinSignal: Signal[BasicResource] = resourcesSignal.map(_.protein).distinct
-  val nurseryUnlockedSignal: Signal[Boolean] = explorationSignal.combineWith(proteinSignal)
-    .map { case (exploration, protein) => exploration.proteinDiscovered || protein.amount > 0 }.distinct
+  val nurseryUnlockedSignal: Signal[Boolean] = explorationSignal.map(_.proteinDiscovered).distinct
 //  val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
   val tunnelingSpaceSignal: Signal[BasicResource] = resourcesSignal.map(_.tunnelingSpace).distinct
   val knowledgeSignal: Signal[BasicResource] = resourcesSignal.map(_.knowledge).distinct
@@ -238,7 +237,7 @@ object Utils {
               statistics,
               messages,
             )
-          actionFunc(allData).updateVars()
+          ResourceVisibility.reconcile(DefaultWorkerAssignment.normalize(actionFunc(allData))).updateVars()
       }
 
   def giveResources(sugar: Long): Unit =

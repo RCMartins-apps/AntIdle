@@ -8,6 +8,7 @@ case class ActionBonus(
     maxEggs: Long = 0L,
     maxAnts: Long = 0L,
     maxCarcasses: Int = 0,
+    aphidSlots: Int = 0,
 )
 
 object ActionBonus {

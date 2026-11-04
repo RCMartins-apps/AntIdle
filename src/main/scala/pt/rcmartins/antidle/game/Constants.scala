@@ -74,6 +74,7 @@ object Constants {
       case ChamberType.Queen       => cost(25 * u, exponent1_50)
       case ChamberType.FoodStorage => cost(50 * u, exponent1_14)
       case ChamberType.Nursery     => cost(100 * u, exponent1_50)
+      case ChamberType.Aphid       => cost(75 * u, exponent1_14)
     }
   }
 

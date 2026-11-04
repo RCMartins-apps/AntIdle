@@ -301,11 +301,16 @@ rewards. Departures and unrelated destinations do not advance surveys.
 
 - **Wild Aphids:** five Woodland Edge returns reveal Aphid Tending research.
   Pay 1,500 sugar, 20 protein and 100 Knowledge to unlock Aphid Tenders in Tasks.
-  This separate sugar source has diminishing marginal yields (0.8, 0.76,
-  0.72... sugar/s), capped at 8.4 sugar/s with 20 workers. Extra workers do not
-  reduce total output, and Foraging Techniques affect collectors only. Live
-  average/next rates, upkeep, income estimates, default-worker assignments and
-  saves all include the new task.
+  Research opens the Aphid Chamber in Nest. Each chamber level adds exactly
+  one tender slot. Each staffed slot produces 0.8 sugar/s and consumes 0.01
+  protein/s, independently of Foraging Techniques. Tending pauses without
+  protein; a partial final feed produces proportional sugar without debt.
+  Chamber upgrades cost tunneling space (starting at 75, growing by 14%) and
+  protein (2 per target level). Assigned/capacity counts stay visible in Tasks;
+  full chambers disable assignment. Batches, default workers, returning workers,
+  new brood and save reload all enforce capacity, leaving overflow idle when
+  Aphid Tender is the default task. Sugar and protein income estimates match
+  actual fed production.
 - **Seed Cache:** three Nectar Meadow returns reveal Seed Gathering once the
   colony reaches exploration level 5. The route needs at least ten workers and
   one scout, costs 25 sugar per worker, and takes 120 seconds. Base rewards are
@@ -320,3 +325,7 @@ task immediately, including on load.
 After `sbt fastOptJS fullOptJS test`, run `python3 tests/discovery_smoke.py` for
 phone and desktop checks of survey completion, hidden content, research costs,
 actual aphid income, default workers, seed expeditions and save/reload behavior.
+
+Resource rows remain visible permanently once unlocked, including at zero amounts.
+Visibility is reconciled on actions, ticks and save load; protein no longer depends
+on having a positive balance, and scout visibility survives losing every scout.

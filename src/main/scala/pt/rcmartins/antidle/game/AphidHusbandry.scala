@@ -1,26 +1,21 @@
 package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.game.Constants._
-import pt.rcmartins.antidle.model.UpgradesData
+import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.AphidTending
 
 object AphidHusbandry {
-  val ProductiveWorkers: Long = 20L
-  private val firstYield: Long = 8000L / TicksPerSecond
-  private val penalty: Long = 400L / TicksPerSecond
+  val SugarPerWorkerSecond: Long = 8000L
+  val ProteinPerWorkerSecond: Long = 100L
 
-  // A finite aphid colony: marginal yields decline from 0.8 to 0.04 sugar/s.
-  def productionPerTick(workers: Long, upgrades: UpgradesData): Long = {
-    val count = if (upgrades(AphidTending).unlocked) Math.max(0L, Math.min(ProductiveWorkers, workers)) else 0L
-    count * firstYield - penalty * count * (count - 1L) / 2L
-  }
+  def capacity(nest: NestAttributes): Long = Math.max(0L, nest.chambers.aphidChamber.level.toLong) * u
 
-  def averagePerSecond(workers: Long, upgrades: UpgradesData): Long =
-    productionPerTick(Math.max(1L, workers), upgrades) * TicksPerSecond / Math.max(1L, workers)
+  def workers(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData): Long =
+    if (upgrades(AphidTending).unlocked) Math.min(capacity(nest), Math.max(0L, ants.taskWorkers(AntTask.AphidTender))) / u else 0L
 
-  def nextPerSecond(workers: Long, upgrades: UpgradesData): Long = {
-    val count = Math.max(0L, workers)
-    if (count >= ProductiveWorkers) 0L
-    else (productionPerTick(count + 1L, upgrades) - productionPerTick(count, upgrades)) * TicksPerSecond
-  }
+  def proteinPerTick(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData, available: Long): Long =
+    Math.min(Math.max(0L, available), workers(ants, nest, upgrades) * ProteinPerWorkerSecond / TicksPerSecond)
+
+  def productionPerTick(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData, protein: Long): Long =
+    proteinPerTick(ants, nest, upgrades, protein) * SugarPerWorkerSecond / ProteinPerWorkerSecond
 }

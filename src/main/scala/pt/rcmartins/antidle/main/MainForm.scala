@@ -547,7 +547,7 @@ object MainForm {
         child.maybe <-- createResourceDiv(
           name = "Protein",
           resourceSignal = proteinSignal,
-          resourceEstimationSignal = Val(div()),
+          resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal)),
           showSignal = nurseryUnlockedSignal,
         ),
         child.maybe <-- createResourceDiv(
@@ -604,7 +604,7 @@ object MainForm {
           name = "Scouts",
           resourceSignal = scoutResourceSignal,
           resourceEstimationSignal = Val(div()),
-          showSignal = nestSignal.map(_.chambers.nurseryChamber.level > 0),
+          showSignal = unlocksSignal.map(_.resources.showScouts),
         ),
       )
     )
@@ -778,6 +778,20 @@ object MainForm {
             chamberType = ChamberType.FoodStorage,
             unlockF = _.canBuildFoodStorageChamber,
           ),
+          child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.AphidTending).unlocked)) {
+            val cost = Actions.buildChamberCost(ChamberType.Aphid)
+            actionButton(
+              name = ChamberType.Aphid.name,
+              enabledSignal = Val(true),
+              descriptionSignal = Val(Some(div("Each level supports one Aphid Tender: +0.8 sugar/s, −0.01 protein/s while fed."))),
+              costSignal = cost,
+              bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
+              topRightBadgeSignal = chambersSignal.map(chambers =>
+                Option.when(chambers.aphidChamber.level > 0)(span(chambers.aphidChamber.level))),
+              onClickAction = _ => useSignalValue[ActionCost](cost,
+                cost => Actions.addBuildTask(BuildTask(ChamberType.Aphid, cost))),
+            )
+          },
           child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
             val cost = Actions.buildChamberCost(ChamberType.Nursery)
             actionButton(
@@ -958,6 +972,7 @@ object MainForm {
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
+          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
         )
       },
     )
@@ -983,7 +998,7 @@ object MainForm {
                   Actions.selectDefaultTask(ants.defaultTaskChoices.find(_.toString == selected)))
               },
             ),
-            small("New and returning workers join this task. Its workers remain available for other actions."),
+            small("New and returning workers join this task when it has room. Its workers remain available for other actions."),
           )
         }
       },
@@ -1013,9 +1028,10 @@ object MainForm {
           )
         case AntTask.AphidTender =>
           div(
-            child.text <-- amountSignal.combineWith(upgradesSignal).map { case (amount, upgrades) =>
-              val count = amount / u
-              s"${preciseRateStr(AphidHusbandry.averagePerSecond(count, upgrades))} sugar/s per tender · next: ${preciseRateStr(AphidHusbandry.nextPerSecond(count, upgrades))}"
+            "0.8 sugar/s · −0.01 protein/s per tender",
+            br(),
+            child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) =>
+              Option.when(protein.amount == 0L && amount > 0L)(span(className := "text-danger", "Needs protein"))
             },
           )
         case AntTask.Tunneler =>
@@ -1039,7 +1055,10 @@ object MainForm {
         child.text <-- antsSignal.map(ants => if (ants.effectiveDefaultTask.contains(antTask)) " · Default" else ""),
         nbsp,
         "(",
-        child <-- amountSignal.map(prettyNumberInt),
+        child.text <-- amountSignal.combineWith(nestSignal).map { case (amount, nest) =>
+          if (antTask == AntTask.AphidTender) s"${amount / u} / ${AphidHusbandry.capacity(nest) / u}"
+          else prettyNumberStr(amount)
+        },
         ")",
       ),
       div(
@@ -1066,8 +1085,9 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Assign ${antTask.name}",
             span(aria.hidden := true, "+"),
-            disabled <-- availableWorkersCountSignal.combineWith(antsSignal).map { case (available, ants) =>
-              available < u || ants.effectiveDefaultTask.contains(antTask)
+            disabled <-- availableWorkersCountSignal.combineWith(antsSignal, nestSignal).map { case (available, ants, nest) =>
+              available < u || ants.effectiveDefaultTask.contains(antTask) ||
+                (antTask == AntTask.AphidTender && ants.taskWorkers(antTask) >= AphidHusbandry.capacity(nest))
             },
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
