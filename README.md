@@ -339,3 +339,39 @@ show both bonuses. Capacity is derived from research and chamber level so loadin
 or reconciling repeatedly never duplicates the bonus; research does not grant
 stored protein. Run `python3 tests/protein_storage_smoke.py` after `sbt fastOptJS`
 to check purchase costs, both chamber bonuses and saved capacity on phone/desktop.
+
+## Colony lifecycle
+
+The first Nursery activates aging. Existing workers/scouts receive a full,
+varied 45–60 minute lifespan, and newly matured adults receive their own full
+lifespan. All durations use simulated ticks: loading does not consume stored
+time or instantly age the colony. The existing catch-up multiplier advances
+aging alongside other game systems when the player enables it.
+
+`PopulationAging` stores counts in minute-sized expiration cohorts rather than
+one record per ant. Idle workers die first, then assigned home workers; scouts
+age independently. Home deaths never remove expedition workers, carriers or
+reserved scouts. Expeditions and carcass retrievals carry their cohorts with
+them, pausing aging until they return. Returned expiry buckets round upward to
+the next minute. Travel cohorts and home cohorts survive saving/loading, and
+simultaneous returns preserve both worker and scout ages. Starvation also
+respects away-worker reservations and reconciles the remaining home cohorts.
+
+Brood shows a compact forecast of home losses in the next five minutes, with
+lifespan rules under optional details. Aging deaths generate at most one summary
+per simulated minute, rather than one message per ant. Resource rows remain
+visible after the population reaches zero.
+
+**Queen's Routine** appears at exploration level 3 with a Nursery. It costs
+1,200 sugar, 20 protein and 100 Knowledge and unlocks opt-in automatic worker
+eggs in Brood. The player sets a worker target and sugar reserve; automatic eggs
+cost the same 10 sugar as manual eggs. Living workers (including those away) and
+growing worker eggs count toward the target. Scouts remain manual; both castes
+share egg/population slots. Automation runs after upkeep and never spends below
+its reserve, fills only available slots and stops when the target is covered.
+Configuration is saved; a compact status explains when it is paused, limited by
+slots, holding reserves or already meeting the target.
+
+After `sbt fastOptJS fullOptJS test`, run `python3 tests/lifecycle_smoke.py` for
+phone and desktop checks of grace periods, actual deaths, replacement, travel
+immunity, save/reload, targets/reserves and the stored-time multiplier.

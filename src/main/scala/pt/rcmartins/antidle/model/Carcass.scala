@@ -15,7 +15,7 @@ object Carcass {
   implicit val encoder: JsonEncoder[Carcass] = DeriveJsonEncoder.gen[Carcass]
 }
 
-case class CarcassRetrieval(carcass: Carcass, targetTick: Long)
+case class CarcassRetrieval(carcass: Carcass, targetTick: Long, ages: TravelAges = TravelAges())
 
 object CarcassRetrieval {
   implicit val decoder: JsonDecoder[CarcassRetrieval] = DeriveJsonDecoder.gen[CarcassRetrieval]

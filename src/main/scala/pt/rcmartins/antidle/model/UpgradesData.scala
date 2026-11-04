@@ -155,6 +155,16 @@ object UpgradesData {
       val description: String = "Each Food Storage Chamber level also adds 100 protein capacity, including levels already built."
     }
 
+    case object QueensRoutine extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && data.nestAttributes.chambers.nurseryChamber.level > 0 &&
+          pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 3
+      val name: String = "QueensRoutine"
+      val cost: ActionCost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u)
+      val title: String = "Queen's Routine"
+      val description: String = "Automatically raise worker eggs toward a population target while keeping a sugar reserve. Configure in Brood."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -172,6 +182,7 @@ object UpgradesData {
       BroodCare,
       AphidTending,
       ProteinStorage,
+      QueensRoutine,
     )
 
   }
