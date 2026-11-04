@@ -621,6 +621,8 @@ object MainForm {
   ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] = {
     val amountSignal: Signal[Long] = resourceSignal.map(_.amount).distinct
     val maxAmountSignal: Signal[Long] = resourceSignal.map(_.maxAmount).distinct
+    def resourceName: ReactiveHtmlElement[HTMLSpanElement] =
+      span(className := "resource-label", ResourceIcons.forLabel(name).map(ResourceIcons.icon), span(name))
 
     showSignal.distinct.map {
       case false =>
@@ -630,11 +632,11 @@ object MainForm {
           div(
             className := "row resource-row",
             div(
-              className := "col-4 text-nowrap",
+              className := "col-4 text-nowrap resource-name",
               child <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
                 tooltipOpt.filter(_ => mobile) match {
-                  case Some(content) => detailsTag(summaryTag(name), content)
-                  case None => span(name)
+                  case Some(content) => detailsTag(summaryTag(resourceName), content)
+                  case None => resourceName
                 }
               },
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
@@ -800,9 +802,13 @@ object MainForm {
 
   private case class ActionRequirement(label: String, available: Long, required: Long = u, maximum: Option[Long] = None, isCost: Boolean = false)
 
-  private def requirementLabel(requirement: ActionRequirement): ReactiveHtmlElement[HTMLSpanElement] =
+  private def requirementLabel(requirement: ActionRequirement, compact: Boolean = false): ReactiveHtmlElement[HTMLSpanElement] =
     span(
       className := "action-cost",
+      title := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
+      aria.label := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
+      role := "img",
+      ResourceIcons.forLabel(requirement.label).filter(_ => compact).map(ResourceIcons.icon),
       span(
         className := (if (requirement.available < requirement.required) "text-danger" else "text-success"),
         prettyNumberStr(requirement.available),
@@ -813,7 +819,10 @@ object MainForm {
         title := requirement.maximum.map(max => s"Storage capacity: ${prettyNumberStr(max)}").getOrElse(""),
         prettyNumberStr(requirement.required),
       ),
-      s" ${requirement.label}",
+      span(
+        className := (if (compact && ResourceIcons.forLabel(requirement.label).nonEmpty) "visually-hidden" else ""),
+        s" ${requirement.label}",
+      ),
     )
 
   private val broodRequirementsSignal: Signal[List[ActionRequirement]] =
@@ -843,7 +852,7 @@ object MainForm {
             costLine(cost.idleWorkers, ants.availableWorkersCount, ants.availableWorkersLabel),
           ).flatten ++ requirements.filter(_.isCost)
           if (costs.isEmpty) Seq(span(className := "text-body-secondary", "Free"))
-          else costs.map(cost => requirementLabel(cost).amend(className := "text-nowrap"))
+          else costs.map(cost => requirementLabel(cost, compact = true).amend(className := "text-nowrap"))
       },
     )
 
@@ -934,7 +943,7 @@ object MainForm {
       if (includeCosts) actionCosts(costSignal, requirementsSignal) else emptyNode,
       div(
         className := "d-flex flex-column text-center action-requirements",
-        children <-- requirementsSignal.map(_.filterNot(_.isCost).map(requirementLabel)),
+        children <-- requirementsSignal.map(_.filterNot(_.isCost).map(requirement => requirementLabel(requirement))),
       ),
       child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
         if (!includeCosts || cost == ActionCost.empty || bonus == ActionBonus.empty)
