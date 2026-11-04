@@ -44,8 +44,7 @@ network access to those assets is required for the complete interface.
 ## Chamber bonuses
 
 Define chamber effects in `game/ChamberBonuses.scala` (`forChamber`). Action details,
-completed upgrades, colony-point income, and income estimates use this shared
-source. Balance values remain in `game/Constants.scala`. Changing an existing
+completed upgrades, and capacity changes use this shared source. Balance values remain in `game/Constants.scala`. Changing an existing
 capacity bonus or assigning it to another chamber does not require changes to
 `Actions.scala` or `TickUpdater.scala`. Saved capacities stay additive.
 
@@ -93,22 +92,22 @@ and phone/desktop layouts.
 Workers, scouts, and growing brood share one ant capacity, including ants away on
 expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
 Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
-still limits how many eggs can incubate at once. Save format 5 stores this as `maxAnts`; older save formats are no longer supported.
+still limits how many eggs can incubate at once. Save format 6 stores this as `maxAnts`; older save formats are no longer supported.
 
 ## Exploration progression
 
 Every completed expedition earns XP, even if it finds nothing. Levels cost
 100, 200, 300… XP each, with 19,000 total XP to reach the level-20 cap.
-Existing XP is preserved; levels are recalculated using the gentler curve.
+Levels use the gentler curve.
 Every level adds 25% to resource rewards. The trip that levels up receives the
 new resource bonus. XP progress and the next milestone are visible in Explore;
 longer explanations stay inside **XP details**.
 
-| Destination | Duration | Base XP | Main reward | Requirements |
-| --- | --- | --- | --- | --- |
-| Surroundings | 15s | 10 | First trip guarantees a carcass; then 45% carcass, 44% sugar, 11% no resources | 1 worker |
-| Woodland Edge | 45s | 30 | Guaranteed carcass with 10 protein and 240 sugar reserve | 1 worker, 1 scout |
-| Rotten Log | 60s | 60 | Guaranteed 20 colony points; no carcass storage needed | Level 3, 5 workers, 1 scout |
+| Destination | Duration | Base XP | Base Knowledge | Main reward | Requirements |
+| --- | --- | --- | --- | --- | --- |
+| Surroundings | 15s | 10 | 2 | First trip guarantees a carcass; then 45% carcass, 44% sugar, 11% no resources | 1 worker |
+| Woodland Edge | 45s | 30 | 6 | Guaranteed carcass with 10 protein and 240 sugar reserve | 1 worker, 1 scout |
+| Rotten Log | 60s | 60 | 20 | Guaranteed 20 knowledge; no carcass storage needed | Level 3, 5 workers, 1 scout |
 
 Carcasses still need retrieval before their protein and sugar reserve are usable.
 Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
@@ -123,13 +122,11 @@ Larger carcass rewards do not increase carrier requirements or retrieval time.
 Milestones unlock expedition supplies at level 2, Rotten Log at level 3, a second
 expedition slot and supplies II at level 5, and supplies III at level 8.
 Each supplies rank adds 20% XP and rewards (up to +60%), stacking with party and
-resource-level bonuses. The three ranks cost 500, 1,500, and 4,500 sugar.
+resource-level bonuses. The three ranks cost 500/20, 1,500/80, and 4,500/200 sugar/Knowledge.
 Upgrades affect future departures; trips already away retain their original supplies.
 Both workers and scouts are reserved for each expedition, independently of carcass
 retrievals and their storage reservations.
 
-Old saves and in-flight nearby/woodland trips remain compatible. New destination
-and supplies fields have defaults; neither XP nor progress is reset.
 
 Run `sbt test` for the exploration engine tests. After `sbt fastOptJS`, run
 `python3 tests/exploration_smoke.py` for destination gating, previews, supplies,
@@ -138,7 +135,7 @@ concurrent parties, save reloads, and phone/desktop layouts.
 ## Default workers
 
 After exploration is unlocked, **Default Workers** becomes available in Upgrades
-for 500 sugar and 250 colony points. It unlocks a **Default task** selector in
+for 500 sugar and 50 knowledge. It unlocks a **Default task** selector in
 Tasks, with **Keep idle** and the colony's unlocked normal jobs (Sugar Collector
 and Tunneler). Expeditions and carcass carrying cannot be selected as defaults.
 
@@ -152,8 +149,7 @@ workers assigned to other jobs are never borrowed implicitly.
 Changing the default moves the previous pool to the new task and leaves other
 assignments and away parties intact. **Keep idle** releases the pool back to idle.
 The default job's +/− buttons are disabled because its allocation is automatic.
-Worker costs display the active pool's name and available amount. Existing saves
-retain their behavior until the upgrade is bought and a default is selected.
+Worker costs display the active pool's name and available amount. The default remains idle until the upgrade is bought and a task is selected.
 
 `DefaultWorkersSuite` covers allocation, returns, default changes, maturation,
 upkeep, starvation and save compatibility. Run `python3 tests/default_workers_smoke.py`
@@ -168,3 +164,34 @@ after purchases, and during game ticks. Adding an upgrade therefore requires an
 explicit visibility rule, and existing saves can reveal it without replaying a
 past unlock event. Previously shown or purchased upgrades stay visible; the check
 never spends resources, grants purchases, or adds tutorial messages.
+
+## Knowledge economy
+
+Knowledge replaces colony points and has no storage limit. Every expedition earns
+it, including trips that find no resources: base rewards are 2 nearby, 6 at the
+Woodland Edge, and 20 at the Rotten Log, scaled by party size, exploration level,
+and supplies. Chambers and worker population no longer generate it passively.
+
+The first Nest expansion reveals the early upgrades. All prerequisites for
+exploration cost only sugar, so a colony can unlock it with zero Knowledge.
+
+| Upgrade | Sugar | Knowledge |
+| --- | ---: | ---: |
+| Unlock Queen's Chamber | 100 | 0 |
+| Foraging Techniques 1 | 150 | 0 |
+| Unlock Food Storage Chamber | 400 | 0 |
+| Unlock Explorer Task | 750 | 0 |
+| Foraging Techniques 2 | 750 | 75 |
+| Foraging Techniques 3 | 2,500 | 300 |
+| Default Workers | 500 | 50 |
+| Expedition supplies I / II / III | 500 / 1,500 / 4,500 | 20 / 80 / 200 |
+
+Tunneling space remains capped. Every Nest level adds 500 capacity alongside its
+ant capacity bonus. Nest excavation prices taper before they exceed that capacity,
+so expansion remains possible.
+
+Save format 6 deliberately rejects earlier prototype saves. There are no legacy
+currency aliases or economy migrations; older saves start a fresh colony.
+
+Run `python3 tests/knowledge_smoke.py` after `sbt fastOptJS` to check the early
+upgrade chain, Knowledge income and display, current save restoration and Nest capacity.

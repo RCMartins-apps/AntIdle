@@ -50,8 +50,9 @@ def progressed_game(initial):
         for key in game["unlocks"][group]:
             game["unlocks"][group][key] = True
     for resource in game["basicResources"].values():
-        resource["maxAmount"] = 100000 * UNIT
-        resource["amount"] = resource["maxAmount"]
+        resource["amount"] = 100000 * UNIT
+        if resource["maxAmount"] != 9223372036854775807:
+            resource["maxAmount"] = 100000 * UNIT
     game["ants"]["workers"] = 300 * UNIT
     game["ants"]["tasks"] = [
         [{"SugarCollector": {}}, 0],
@@ -69,33 +70,33 @@ def check_nest_capacity(page, initial):
     game = progressed_game(initial)
     game["ants"]["workers"] = 0
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
-    game["basicResources"]["colonyPoints"] = {"amount": 2000 * UNIT, "maxAmount": 3500 * UNIT}
+    game["basicResources"]["tunnelingSpace"] = {"amount": 2000 * UNIT, "maxAmount": 3500 * UNIT}
     load_game(page, game)
     restored = save_game(page)
-    assert restored["version"] == 5
-    assert restored["basicResources"]["colonyPoints"]["maxAmount"] == 3500 * UNIT
+    assert restored["version"] == 6
+    assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_text("Details: Expand Nest", exact=True).click()
-    expect(page.locator("details[open]")).to_contain_text("+500 max colony points")
+    expect(page.locator("details[open]")).to_contain_text("+500 max tunneling space")
     page.get_by_role("button", name="Expand Nest", exact=False).click()
     page.clock.run_for(400)
     upgraded = save_game(page)
     assert upgraded["nestAttributes"]["chambers"]["nestChamber"]["level"] == 4
-    assert upgraded["basicResources"]["colonyPoints"]["maxAmount"] == 4000 * UNIT
+    assert upgraded["basicResources"]["tunnelingSpace"]["maxAmount"] == 4000 * UNIT
     page.clock.run_for(1000)
-    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 4000 * UNIT
+    assert save_game(page)["basicResources"]["tunnelingSpace"]["maxAmount"] == 4000 * UNIT
     page.reload(wait_until="networkidle")
-    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 4000 * UNIT
+    assert save_game(page)["basicResources"]["tunnelingSpace"]["maxAmount"] == 4000 * UNIT
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 0
     load_game(page, game)
     page.clock.run_for(400)
-    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 3500 * UNIT
+    assert save_game(page)["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
     # Current-version saves keep their stored capacity, including other bonuses.
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
-    game["basicResources"]["colonyPoints"]["maxAmount"] = 7250 * UNIT
+    game["basicResources"]["tunnelingSpace"]["maxAmount"] = 7250 * UNIT
     load_game(page, game)
     page.clock.run_for(400)
-    assert save_game(page)["basicResources"]["colonyPoints"]["maxAmount"] == 7250 * UNIT
+    assert save_game(page)["basicResources"]["tunnelingSpace"]["maxAmount"] == 7250 * UNIT
     print("PASS nest capacity: current save preservation, upgrades, stable ticks, save reload")
 
 
@@ -105,12 +106,12 @@ def check_chamber_bonuses(page, initial):
             "ants": game["nestAttributes"]["maxAnts"],
             "eggs": game["nestAttributes"]["maxEggs"],
             "sugar": game["basicResources"]["sugar"]["maxAmount"],
-            "colony": game["basicResources"]["colonyPoints"]["maxAmount"],
+            "tunneling": game["basicResources"]["tunnelingSpace"]["maxAmount"],
         }
 
     for name, chamber, increases, details in (
-        ("Expand Nest", "nestChamber", {"ants": 10, "colony": 500},
-         ("+10 max ants", "+500 max colony points", "+0.01 colony points/worker/s")),
+        ("Expand Nest", "nestChamber", {"ants": 10, "tunneling": 500},
+         ("+10 max ants", "+500 max tunneling space")),
         ("Queen's Chamber", "queenChamber", {"ants": 5, "eggs": 2},
          ("+5 max ants", "+2 max eggs")),
         ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
@@ -142,12 +143,12 @@ def check_chamber_bonuses(page, initial):
     game = progressed_game(initial)
     game["ants"]["workers"] = 10 * UNIT
     game["nestAttributes"]["chambers"]["nestChamber"]["level"] = 3
-    game["basicResources"]["colonyPoints"]["amount"] = 0
+    game["basicResources"]["knowledge"]["amount"] = 0
     game["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
     load_game(page, game)
     page.clock.run_for(200)
     result = save_game(page)
-    assert result["basicResources"]["colonyPoints"]["amount"] == 600
+    assert result["basicResources"]["knowledge"]["amount"] == 0
     print("PASS shared chamber bonuses: displayed and applied caps, Queen ant capacity bonus, income, save reload")
 
 

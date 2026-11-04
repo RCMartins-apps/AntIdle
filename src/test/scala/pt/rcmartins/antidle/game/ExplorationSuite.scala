@@ -13,7 +13,7 @@ class ExplorationSuite extends FunSuite {
     initial.copy(
       ants = AntsData(workers = 100 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
       basicResources = initial.basicResources.copy(
-        sugar = BasicResource(10000 * u, 10000 * u), colonyPoints = BasicResource(0L, 10000 * u)),
+        sugar = BasicResource(10000 * u, 10000 * u), knowledge = BasicResource(0L, 10000 * u)),
       exploration = ExplorationData(experience = xp),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
@@ -63,7 +63,7 @@ class ExplorationSuite extends FunSuite {
 
   test("supplies charge sugar, enforce level gates and never exceed rank three") {
     assertEquals(ExplorationProgression.upgradeSupplies(colony(99)).exploration.suppliesLevel, 0)
-    val first = ExplorationProgression.upgradeSupplies(colony(100))
+    val first = ExplorationProgression.upgradeSupplies(colony(100).copy(basicResources = colony().basicResources.copy(knowledge = BasicResource(1000 * u, Long.MaxValue))))
     assertEquals(first.exploration.suppliesLevel, 1)
     assertEquals(first.basicResources.sugar.amount, 9500L * u)
     assertEquals(ExplorationProgression.upgradeSupplies(first), first)
@@ -79,19 +79,19 @@ class ExplorationSuite extends FunSuite {
   test("supplies are captured on departure and do not upgrade in-flight rewards") {
     val sent = ExplorationHelper.start(colony(300), 5 * u, RottenLog)
     val party = sent.exploration.explorationParties.head
-    val improved = ExplorationProgression.upgradeSupplies(sent)
+    val improved = ExplorationProgression.upgradeSupplies(sent.copy(basicResources = sent.basicResources.copy(knowledge = BasicResource(1000 * u, Long.MaxValue))))
     assertEquals(improved.exploration.suppliesLevel, 1)
     assertEquals(ExplorationProgression.earned(party), 120L)
     val next = ExplorationHelper.start(colony(1000).copy(exploration = ExplorationData(experience = 1000, suppliesLevel = 1)), 5 * u, RottenLog)
     assertEquals(ExplorationProgression.earned(next.exploration.explorationParties.head), 144L)
   }
 
-  test("rotten log grants colony points and XP, returns workers, and never requires carcass slots") {
+  test("rotten log grants knowledge and XP, returns workers, and never requires carcass slots") {
     val sent = ExplorationHelper.start(colony(300), 5 * u, RottenLog)
     val party = sent.exploration.explorationParties.head
     val result = ExplorationHelper.exploreBonus(sent, party)
     assertEquals(result.exploration.experience, 420L)
-    assertEquals(result.basicResources.colonyPoints.amount, 60L * u)
+    assertEquals(result.basicResources.knowledge.amount, 60L * u)
     assertEquals(result.ants.idleWorkersCount, 100L * u)
     assert(result.exploration.discoveredCarcasses.isEmpty)
   }
@@ -116,15 +116,10 @@ class ExplorationSuite extends FunSuite {
 
   test("previews account for the level reached on return and match the reward") {
     assert(ExplorationHelper.preview(ExplorationData(experience = 90), u, Surroundings).contains("6.25 protein"))
-    assert(ExplorationHelper.preview(ExplorationData(experience = 300), 5 * u, RottenLog).contains("60 colony points"))
+    assert(ExplorationHelper.preview(ExplorationData(experience = 300), 5 * u, RottenLog).contains("60 knowledge"))
   }
 
-  test("legacy saves infer their destination and new trips round-trip") {
-    val json = """{"amountWorkers":10000,"startingTick":0,"targetTick":225,"scouts":10000}"""
-    val legacy = json.fromJson[ExplorationParty].toOption.get
-    assertEquals(ExplorationDestination.forParty(legacy), WoodlandEdge)
-    assertEquals(ExplorationProgression.earned(legacy), 30L)
-    assertEquals("{}".fromJson[ExplorationData].toOption.get.suppliesLevel, 0)
+  test("destination and supplies round-trip in current saves") {
     val party = ExplorationParty(5 * u, 0L, 300L, u, RottenLog.id, 2)
     assertEquals(party.toJson.fromJson[ExplorationParty], Right(party))
     val data = ExplorationData(explorationParties = List(party), experience = 300L, suppliesLevel = 2)

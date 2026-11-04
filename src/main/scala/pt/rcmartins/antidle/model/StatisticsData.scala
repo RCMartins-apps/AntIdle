@@ -6,7 +6,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 case class StatisticsData(
     sugarU: StatLong = StatLong(),
     tunnelingSpaceU: StatLong = StatLong(),
-    colonyPointsU: StatLong = StatLong(),
+    knowledgeU: StatLong = StatLong(),
     eggsCount: StatInt = StatInt(),
     maxAliveWorkers: StatInt = StatInt(),
     explorationsCount: StatInt = StatInt(),

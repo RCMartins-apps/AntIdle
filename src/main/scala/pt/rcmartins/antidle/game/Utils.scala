@@ -82,7 +82,7 @@ object Utils {
     .map { case (exploration, protein) => exploration.proteinDiscovered || protein.amount > 0 }.distinct
 //  val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
   val tunnelingSpaceSignal: Signal[BasicResource] = resourcesSignal.map(_.tunnelingSpace).distinct
-  val colonyPointsSignal: Signal[BasicResource] = resourcesSignal.map(_.colonyPoints).distinct
+  val knowledgeSignal: Signal[BasicResource] = resourcesSignal.map(_.knowledge).distinct
 //  val DNASignal: Signal[BasicResource] = resourcesSignal.map(_.DNA).distinct
 
   val maxEggs: Signal[Long] = nestAttributesData.signal.map(_.maxEggs).distinct

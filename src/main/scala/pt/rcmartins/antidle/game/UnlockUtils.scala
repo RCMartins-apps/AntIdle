@@ -85,19 +85,18 @@ object UnlockUtils {
       initialAllData.unlocks.resources.showTunnelingSpace,
     )
 
-    unlockSubscription[BasicResource](
-      colonyPointsSignal,
-      _ > 0,
-      _ => {
-        Var.update(
-          unlocksData ->
-            ((_: Unlocks)
-              .modifyAll(_.resources.showColonyPoints, _.tabs.upgradesTabUnlocked)
-              .setTo(true)),
-        )
-        addMessage("We can now upgrade our ants and our nest using colony points.")
-      },
+    unlockSubscription[Boolean](
+      nestSignal.map(_.chambers.nestChamber.level > 0),
+      identity,
+      _ => Var.update(unlocksData -> ((_: Unlocks).modify(_.tabs.upgradesTabUnlocked).setTo(true))),
       initialAllData.unlocks.tabs.upgradesTabUnlocked,
+    )
+
+    unlockSubscription[BasicResource](
+      knowledgeSignal,
+      _ > 0,
+      _ => Var.update(unlocksData -> ((_: Unlocks).modify(_.resources.showKnowledge).setTo(true))),
+      initialAllData.unlocks.resources.showKnowledge,
     )
 
     unlockSubscription[UpgradesData](

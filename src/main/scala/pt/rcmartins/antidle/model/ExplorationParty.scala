@@ -7,7 +7,7 @@ case class ExplorationParty(
     startingTick: Long,
     targetTick: Long,
     scouts: Long = 0L,
-    destination: String = "",
+    destination: String = "surroundings",
     suppliesLevel: Int = 0,
 )
 

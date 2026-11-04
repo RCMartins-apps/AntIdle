@@ -121,24 +121,6 @@ object TickCalculator {
         }
     )
 
-  val colonyPointsTickGain: BonusOriginGroup =
-    BonusOriginGroup(
-      antsSignal
-        .map(_.workersCount)
-        .distinct
-        .combineWith(chambersSignal.distinct)
-        .map { case (workersCount, chambers) =>
-          List(
-            Some(
-              ResourceOrigin(
-                "Workers",
-                ChamberBonuses.colonyPointsPerTick(chambers, workersCount),
-              )
-            ),
-          ).flatten
-        }
-    )
-
   def prettyResourceEstDiv(
       bonusGroup: BonusOriginGroup,
       resource: Signal[BasicResource],
@@ -146,7 +128,7 @@ object TickCalculator {
     div(
       child <--
         bonusGroup.sum.combineWith(resource).map { case (production, current) =>
-          val sumU = if (current.maxAmount > 0 && current.amount >= current.maxAmount && production > 0) 0L else production
+          val sumU = if (current.atCapacity && production > 0) 0L else production
           val useMinutes: Boolean = sumU != 0 && Math.abs(sumU) < 20
           val minutesMultiplier: Int = if (useMinutes) 60 else 1
 
@@ -188,7 +170,7 @@ object TickCalculator {
       Seq(
         getTicksRemaining(_.sugar, sugarSignal, sugarTickGain),
         getTicksRemaining(_.tunnelingSpace, tunnelingSpaceSignal, tunnelingSpaceTickGain),
-        getTicksRemaining(_.colonyPoints, colonyPointsSignal, colonyPointsTickGain),
+        knowledgeSignal.map(resource => if (resource.amount >= actionCost.knowledge) 0L else -1L),
       )
 
     span(

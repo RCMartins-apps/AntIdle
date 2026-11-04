@@ -48,13 +48,10 @@ object Constants {
   val (defaultTaskTunnelingSpaceTick: Long, defaultTaskTunnelingSpaceSecond: Long) =
     tickAndSeconds(perSecondValue = (1.0 * u).toLong)
 
-  val (defaultNestLevelColonyPointsTick: Long, defaultNestLevelColonyPointsSecond: Long) =
-    tickAndSeconds(perSecondValue = (0.01 * u).toLong)
-
   val (antsSugarUpkeepTick: Long, antsSugarUpkeepSecond: Long) =
     tickAndSeconds(perSecondValue = (0.2 * u).toLong)
 
-  val NestUpgradeBonusMaxColonyPoints: Long = 500 * u
+  val NestUpgradeBonusMaxTunnelingSpace: Long = 500 * u
   val NestUpgradeBonusMaxAnts: Long = 10 * u
   val QueenChamberBonusMaxAnts: Long = 5 * u
   val QueenChamberBonusMaxEggs: Long = 2 * u
@@ -67,10 +64,10 @@ object Constants {
 
   def getChamberTunnelingSpaceNeeded(chamberType: ChamberType, level: Int): Long = {
     def cost(base: Long, multiplier: IndexedSeq[Double]): Long =
-      (base * multiplier(level)).toLong
+      (base * multiplier(Math.min(level, MaxExponent))).toLong
 
     chamberType match {
-      case ChamberType.Nest        => cost(20 * u, exponent1_50)
+      case ChamberType.Nest        => Math.min(cost(20 * u, exponent1_50), (500L + 250L * level) * u)
       case ChamberType.Queen       => cost(25 * u, exponent1_50)
       case ChamberType.FoodStorage => cost(50 * u, exponent1_14)
       case ChamberType.Nursery     => cost(100 * u, exponent1_50)

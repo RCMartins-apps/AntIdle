@@ -62,15 +62,6 @@ object TickUpdater {
               allData
           }
         },
-        // Colony points update
-        allData => {
-          allData.giveResources(
-            colonyPoints = ChamberBonuses.colonyPointsPerTick(
-              allData.nestAttributes.chambers,
-              allData.ants.workersCount,
-            ),
-          )
-        },
         // Exploration parties update
         allData => {
           val (updatedExplorationParties, finishedParties) =

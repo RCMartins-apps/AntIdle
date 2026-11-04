@@ -33,7 +33,7 @@ case class AllData(
   def giveResources(
       sugar: Long = 0,
       tunnelingSpace: Long = 0,
-      colonyPoints: Long = 0,
+      knowledge: Long = 0,
   ): AllData =
     this
       // sugar
@@ -46,11 +46,11 @@ case class AllData(
       .usingIf(tunnelingSpace > 0)(_ + tunnelingSpace)
       .modify(_.statistics.tunnelingSpaceU)
       .usingIf(tunnelingSpace > 0)(_.addValue(tunnelingSpace))
-      // colonyPoints
-      .modify(_.basicResources.colonyPoints)
-      .usingIf(colonyPoints > 0)(_ + colonyPoints)
-      .modify(_.statistics.colonyPointsU)
-      .usingIf(colonyPoints > 0)(_.addValue(colonyPoints))
+      // knowledge
+      .modify(_.basicResources.knowledge)
+      .usingIf(knowledge > 0)(_ + knowledge)
+      .modify(_.statistics.knowledgeU)
+      .usingIf(knowledge > 0)(_.addValue(knowledge))
 
   def spendResources(actionCost: ActionCost): AllData =
     copy(
@@ -77,7 +77,7 @@ case class AllData(
 
 object AllData {
 
-  val CurrentVersion = 5
+  val CurrentVersion = 6
 
   private val MaxMessages = 10
 

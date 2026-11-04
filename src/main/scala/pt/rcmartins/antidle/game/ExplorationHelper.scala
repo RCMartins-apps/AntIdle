@@ -41,15 +41,15 @@ object ExplorationHelper {
     val experience = ExplorationProgression.addExperience(data.experience, xp)
     def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
       ExplorationProgression.expeditionReward(base, experience, workers, rank))
-    val result = if (destination.colonyPoints > 0)
-      s"${amount(destination.colonyPoints)} colony points guaranteed"
+    val result = if (destination == ExplorationDestination.RottenLog)
+      "Knowledge guaranteed; no carcass storage needed"
     else {
       val carcass = s"${amount(CarcassProtein * destination.carcassSize)} protein + ${amount(CarcassFood * destination.carcassSize)} sugar reserve"
       if (destination == ExplorationDestination.WoodlandEdge || !data.carcassDiscovered)
         s"Carcass guaranteed: $carcass"
       else s"45% carcass ($carcass); 44% sugar (${amount(u)}–${amount(20L * u)}); 11% no resources"
     }
-    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · $result"
+    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${amount(destination.knowledge)} knowledge · $result"
   }
 
   def exploreBonus(data: AllData, party: ExplorationParty): AllData = {
@@ -62,14 +62,12 @@ object ExplorationHelper {
     val leveled = if (ExplorationProgression.level(experience) > ExplorationProgression.level(previousXP))
       withXP.addMessage(s"Exploration level ${ExplorationProgression.level(experience)}! ${ExplorationProgression.nextMilestone(experience)}")
     else withXP
+    val knowledge = ExplorationProgression.expeditionReward(destination.knowledge, experience, party.amountWorkers, party.suppliesLevel)
     val returned = leveled.modify(_.ants).using(_.removeFromTask(AntTask.Explorer, party.amountWorkers))
-    val report = s"${destination.name}: +$xp XP."
+      .giveResources(knowledge = knowledge)
+    val report = s"${destination.name}: +$xp XP · +${UINumbersUtils.prettyNumberStr(knowledge)} knowledge."
 
-    if (destination.colonyPoints > 0) {
-      val points = ExplorationProgression.expeditionReward(destination.colonyPoints, experience, party.amountWorkers, party.suppliesLevel)
-      returned.giveResources(colonyPoints = points)
-        .addMessage(s"$report Found ${UINumbersUtils.prettyNumberStr(points)} colony points!")
-    } else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
+    if (destination == ExplorationDestination.RottenLog) returned.addMessage(report) else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
       CarcassProgression.discover(returned, destination.carcassSize, party.amountWorkers, party.suppliesLevel)
         .addMessage(report)
     else if (random.nextInt(100) < 80) {
