@@ -2,12 +2,13 @@ package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.{ActionBonus, AllData}
+import pt.rcmartins.antidle.model.{ActionBonus, AllData, BasicResources, UpgradesData}
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.ProteinStorage
 
 object ChamberBonuses {
 
   // Shared by action details and completed upgrades.
-  def forChamber(chamberType: ChamberType): ActionBonus =
+  def forChamber(chamberType: ChamberType, upgrades: UpgradesData = UpgradesData.initial): ActionBonus =
     chamberType match {
       case ChamberType.Nest =>
         ActionBonus(
@@ -20,10 +21,18 @@ object ChamberBonuses {
           maxAnts = Constants.QueenChamberBonusMaxAnts,
         )
       case ChamberType.FoodStorage =>
-        ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar)
+        ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar,
+          maxProtein = if (upgrades(ProteinStorage).unlocked) 100L * Constants.u else 0L)
+      case ChamberType.Aphid =>
+        ActionBonus(aphidSlots = 1)
       case ChamberType.Nursery =>
         ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
     }
+
+  def reconcileProteinCapacity(data: AllData): AllData =
+    if (!data.upgrades(ProteinStorage).unlocked) data
+    else data.modify(_.basicResources.protein.maxAmount).setTo(
+      BasicResources.initial.protein.maxAmount + Math.max(0, data.nestAttributes.chambers.foodStorageChamber.level).toLong * 100L * Constants.u)
 
   def completeUpgrade(allData: AllData, chamberType: ChamberType): AllData = {
     val withLevel = chamberType match {
@@ -33,12 +42,14 @@ object ChamberBonuses {
         allData.modify(_.nestAttributes.chambers.queenChamber.level).using(_ + 1)
       case ChamberType.FoodStorage =>
         allData.modify(_.nestAttributes.chambers.foodStorageChamber.level).using(_ + 1)
+      case ChamberType.Aphid =>
+        allData.modify(_.nestAttributes.chambers.aphidChamber.level).using(_ + 1)
       case ChamberType.Nursery =>
         allData.modify(_.nestAttributes.chambers.nurseryChamber.level).using(_ + 1)
     }
 
-    val bonus = forChamber(chamberType)
-    withLevel
+    val bonus = forChamber(chamberType, allData.upgrades)
+    reconcileProteinCapacity(withLevel
       .modify(_.nestAttributes.maxAnts)
       .using(_ + bonus.maxAnts)
       .modify(_.nestAttributes.maxEggs)
@@ -46,7 +57,7 @@ object ChamberBonuses {
       .modify(_.basicResources.sugar.maxAmount)
       .using(_ + bonus.maxSugar)
       .modify(_.basicResources.tunnelingSpace.maxAmount)
-      .using(_ + bonus.maxTunnelingSpace)
+      .using(_ + bonus.maxTunnelingSpace))
   }
 
 }

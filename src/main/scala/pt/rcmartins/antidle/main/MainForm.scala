@@ -547,7 +547,7 @@ object MainForm {
         child.maybe <-- createResourceDiv(
           name = "Protein",
           resourceSignal = proteinSignal,
-          resourceEstimationSignal = Val(div()),
+          resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal)),
           showSignal = nurseryUnlockedSignal,
         ),
         child.maybe <-- createResourceDiv(
@@ -604,7 +604,7 @@ object MainForm {
           name = "Scouts",
           resourceSignal = scoutResourceSignal,
           resourceEstimationSignal = Val(div()),
-          showSignal = nestSignal.map(_.chambers.nurseryChamber.level > 0),
+          showSignal = unlocksSignal.map(_.resources.showScouts),
         ),
       )
     )
@@ -778,6 +778,20 @@ object MainForm {
             chamberType = ChamberType.FoodStorage,
             unlockF = _.canBuildFoodStorageChamber,
           ),
+          child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.AphidTending).unlocked)) {
+            val cost = Actions.buildChamberCost(ChamberType.Aphid)
+            actionButton(
+              name = ChamberType.Aphid.name,
+              enabledSignal = Val(true),
+              descriptionSignal = Val(Some(div("Each level supports one Aphid Tender: +0.8 sugar/s, −0.01 protein/s while fed."))),
+              costSignal = cost,
+              bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
+              topRightBadgeSignal = chambersSignal.map(chambers =>
+                Option.when(chambers.aphidChamber.level > 0)(span(chambers.aphidChamber.level))),
+              onClickAction = _ => useSignalValue[ActionCost](cost,
+                cost => Actions.addBuildTask(BuildTask(ChamberType.Aphid, cost))),
+            )
+          },
           child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
             val cost = Actions.buildChamberCost(ChamberType.Nursery)
             actionButton(
@@ -955,9 +969,11 @@ object MainForm {
           ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
           ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
+          ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
+          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
         )
       },
     )
@@ -983,7 +999,7 @@ object MainForm {
                   Actions.selectDefaultTask(ants.defaultTaskChoices.find(_.toString == selected)))
               },
             ),
-            small("New and returning workers join this task. Its workers remain available for other actions."),
+            small("New and returning workers join this task when it has room. Its workers remain available for other actions."),
           )
         }
       },
@@ -1011,6 +1027,14 @@ object MainForm {
               s"${preciseRateStr(Foraging.averagePerSecond(count, upgrades))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades))}"
             },
           )
+        case AntTask.AphidTender =>
+          div(
+            "0.8 sugar/s · −0.01 protein/s per tender",
+            br(),
+            child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) =>
+              Option.when(protein.amount == 0L && amount > 0L)(span(className := "text-danger", "Needs protein"))
+            },
+          )
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1032,7 +1056,10 @@ object MainForm {
         child.text <-- antsSignal.map(ants => if (ants.effectiveDefaultTask.contains(antTask)) " · Default" else ""),
         nbsp,
         "(",
-        child <-- amountSignal.map(prettyNumberInt),
+        child.text <-- amountSignal.combineWith(nestSignal).map { case (amount, nest) =>
+          if (antTask == AntTask.AphidTender) s"${amount / u} / ${AphidHusbandry.capacity(nest) / u}"
+          else prettyNumberStr(amount)
+        },
         ")",
       ),
       div(
@@ -1059,8 +1086,9 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Assign ${antTask.name}",
             span(aria.hidden := true, "+"),
-            disabled <-- availableWorkersCountSignal.combineWith(antsSignal).map { case (available, ants) =>
-              available < u || ants.effectiveDefaultTask.contains(antTask)
+            disabled <-- availableWorkersCountSignal.combineWith(antsSignal, nestSignal).map { case (available, ants, nest) =>
+              available < u || ants.effectiveDefaultTask.contains(antTask) ||
+                (antTask == AntTask.AphidTender && ants.taskWorkers(antTask) >= AphidHusbandry.capacity(nest))
             },
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
@@ -1123,6 +1151,10 @@ object MainForm {
               case (workers, data) => ExplorationHelper.summary(data, workers, destination)
             },
           ),
+          child.maybe <-- explorationSignal.map { data =>
+            DiscoveryProgression.all.find(d => d.destination == destination.id && !d.found(data))
+              .map(d => p(className := "mb-1 small destination-survey", s"Survey ${d.progress(data)} / ${d.trips}"))
+          },
           div(
             className := "row",
             actionButton(
@@ -1195,6 +1227,19 @@ object MainForm {
         child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
           case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
         }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
+      },
+      child.maybe <-- explorationSignal.map(data => DiscoveryProgression.all.filter(_.found(data))).distinct.map {
+        found => Option.when(found.nonEmpty) {
+          div(
+            className := "col-12 px-3 py-2 exploration-discoveries",
+            h5("Discoveries"),
+            found.map(discovery => div(
+              className := "card p-2 my-2 discovery-entry",
+              b(discovery.title),
+              span(discovery.description),
+            )),
+          )
+        }
       },
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
         div(

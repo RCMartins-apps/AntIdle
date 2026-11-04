@@ -49,6 +49,7 @@ object Unlocks {
       // Ants
       showEggs: Boolean = false,
       showWorkers: Boolean = false,
+      showScouts: Boolean = false,
   )
 
   object ResourceUnlocks {

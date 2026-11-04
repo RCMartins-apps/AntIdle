@@ -15,9 +15,12 @@ sealed abstract class ExplorationDestination(
     val carcassSize: Int,
     val knowledge: Long = 0L,
     val sugarReward: Long = 0L,
+    val proteinReward: Long = 0L,
+    val requiredDiscovery: Option[String] = None,
 ) {
   def isUnlocked(data: ExplorationData, ants: AntsData, nest: NestAttributes): Boolean =
     ExplorationProgression.level(data.experience) >= requiredLevel &&
+      requiredDiscovery.forall(DiscoveryProgression.has(data, _)) &&
       (scouts == 0 || nest.chambers.nurseryChamber.level > 0 || ants.scouts >= scouts)
 }
 
@@ -32,7 +35,11 @@ object ExplorationDestination {
   case object NectarMeadow extends ExplorationDestination(
     "nectar-meadow", "Nectar Meadow", 90L * TicksPerSecond, 45L, 40L, 4, 5L * u, u, 0, 8L * u, 300L * u)
 
-  val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow)
+  case object SeedGathering extends ExplorationDestination(
+    "seed-gathering", "Seed Gathering", 120L * TicksPerSecond, 60L, 25L, 5, 10L * u, u, 0,
+    knowledge = 12L * u, proteinReward = 10L * u, requiredDiscovery = Some("seed-cache"))
+
+  lazy val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow, SeedGathering)
 
   def forParty(party: ExplorationParty): ExplorationDestination =
     all.find(_.id == party.destination).getOrElse(Surroundings)

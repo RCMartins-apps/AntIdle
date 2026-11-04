@@ -26,7 +26,8 @@ object TickUpdater {
           val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades)
+          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades) +
+            AphidHusbandry.productionPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount)
 
           val sugarToGive: Long =
             Math.min(allData.basicResources.sugar.freeSpace, totalSugarToGain)
@@ -36,7 +37,8 @@ object TickUpdater {
           val tunnelingSpaceToGive: Long =
             tunnelerWorkers * ColonyDevelopment.tunnelingPerWorkerTick(allData.upgrades)
 
-          allData.giveResources(
+          val proteinUsed = AphidHusbandry.proteinPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount)
+          allData.modify(_.basicResources.protein).using(_ - proteinUsed).giveResources(
             sugar = sugarToGive,
             tunnelingSpace = tunnelingSpaceToGive,
           )
@@ -132,6 +134,7 @@ object TickUpdater {
         },
         UpgradeVisibility.reconcile,
         DefaultWorkerAssignment.normalize,
+        ResourceVisibility.reconcile,
         // This is the last step to save data if necessary
         allData => {
           nextSaveTickOpt.foreach {

@@ -15,10 +15,10 @@ object CarcassProgression {
   def retrieve(allData: AllData, index: Int): AllData =
     allData.exploration.discoveredCarcasses.lift(index) match {
       case Some(carcass) if canRetrieve(allData.ants, allData.nestAttributes, allData.exploration, carcass) =>
-        allData
+        DefaultWorkerAssignment.normalize(allData
           .modify(_.ants).using(_.unlockTask(AntTask.CarcassCarrier).addToTask(AntTask.CarcassCarrier, carcass.requiredWorkers))
           .modify(_.exploration.discoveredCarcasses).using(_.patch(index, Nil, 1))
-          .modify(_.exploration.retrievals).using(_ :+ CarcassRetrieval(carcass, allData.currentTick + carcass.retrievalTicks))
+          .modify(_.exploration.retrievals).using(_ :+ CarcassRetrieval(carcass, allData.currentTick + carcass.retrievalTicks)))
       case _ => allData
     }
 
@@ -34,14 +34,14 @@ object CarcassProgression {
 
   def returnCarcasses(allData: AllData): AllData = {
     val (finished, ongoing) = allData.exploration.retrievals.partition(_.targetTick <= allData.currentTick)
-    finished.foldLeft(allData.modify(_.exploration.retrievals).setTo(ongoing)) { (data, retrieval) =>
+    DefaultWorkerAssignment.normalize(finished.foldLeft(allData.modify(_.exploration.retrievals).setTo(ongoing)) { (data, retrieval) =>
       data
         .modify(_.ants).using(_.removeFromTask(AntTask.CarcassCarrier, retrieval.carcass.requiredWorkers))
         .modify(_.exploration.carcasses).using(_ :+ retrieval.carcass)
         .modify(_.basicResources.protein).using(_ + retrieval.carcass.proteinReward)
         .modify(_.exploration.proteinDiscovered).setTo(true)
         .addMessage(s"Carcass returned: +${UINumbersUtils.prettyNumberStr(retrieval.carcass.proteinReward)} protein.")
-    }
+    })
   }
 
   def foodOffset(exploration: ExplorationData, ants: AntsData): Long =

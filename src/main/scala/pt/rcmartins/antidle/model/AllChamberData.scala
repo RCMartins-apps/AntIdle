@@ -8,6 +8,7 @@ case class AllChamberData(
     queenChamber: QueenChamber = QueenChamber(1),
     foodStorageChamber: FoodStorageChamber = FoodStorageChamber(1),
     nurseryChamber: NurseryChamber = NurseryChamber(0),
+    aphidChamber: AphidChamber = AphidChamber(0),
 )
 
 object AllChamberData {
