@@ -8,7 +8,7 @@ object AgeCohort {
   implicit val encoder: JsonEncoder[AgeCohort] = DeriveJsonEncoder.gen[AgeCohort]
 }
 
-case class TravelAges(departedAt: Long = 0L, workers: List[AgeCohort] = Nil, scouts: List[AgeCohort] = Nil)
+case class TravelAges(workers: List[AgeCohort] = Nil, scouts: List[AgeCohort] = Nil)
 object TravelAges {
   implicit val decoder: JsonDecoder[TravelAges] = DeriveJsonDecoder.gen[TravelAges]
   implicit val encoder: JsonEncoder[TravelAges] = DeriveJsonEncoder.gen[TravelAges]

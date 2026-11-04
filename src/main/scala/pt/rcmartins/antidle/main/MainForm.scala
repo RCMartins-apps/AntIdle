@@ -765,7 +765,7 @@ object MainForm {
             summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
               case (ants, tick) => PopulationAging.forecast(ants, tick)
             }),
-            p("Ants live 45–60 minutes of simulated time. Aging pauses on expeditions and carcass retrievals. Stored-time multipliers advance aging with the rest of the colony."),
+            p("Ants live 45–60 minutes of simulated time. Aging continues during expeditions and carcass retrievals. Ants cannot die while away; overdue ants die when they return. Stored-time multipliers advance aging with the rest of the colony."),
             p("Losses use idle workers first, then assigned workers. Deaths are summarized once per minute."),
           )
         }),

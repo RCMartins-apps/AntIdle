@@ -352,8 +352,10 @@ aging alongside other game systems when the player enables it.
 one record per ant. Idle workers die first, then assigned home workers; scouts
 age independently. Home deaths never remove expedition workers, carriers or
 reserved scouts. Expeditions and carcass retrievals carry their cohorts with
-them, pausing aging until they return. Returned expiry buckets round upward to
-the next minute. Travel cohorts and home cohorts survive saving/loading, and
+them with unchanged expiry ticks. Aging continues while away, but deaths are
+deferred until return: overdue ants complete the trip and die immediately on
+arrival. Non-expired ants keep their original expiry, so repeated expeditions
+cannot make them immortal. Travel cohorts and home cohorts survive saving/loading, and
 simultaneous returns preserve both worker and scout ages. Starvation also
 respects away-worker reservations and reconciles the remaining home cohorts.
 
@@ -374,4 +376,4 @@ slots, holding reserves or already meeting the target.
 
 After `sbt fastOptJS fullOptJS test`, run `python3 tests/lifecycle_smoke.py` for
 phone and desktop checks of grace periods, actual deaths, replacement, travel
-immunity, save/reload, targets/reserves and the stored-time multiplier.
+death deferral, save/reload, targets/reserves and the stored-time multiplier.

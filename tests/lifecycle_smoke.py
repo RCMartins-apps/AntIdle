@@ -102,7 +102,7 @@ def check_lifecycle(page, width, url):
     assert restored["ants"]["tasks"][0][1] == 14 * UNIT
     assert not restored["ants"]["eggsAndLarvae"]
 
-    # Only the adults remaining home age; the expedition carries protected lifespans.
+    # Adults continue aging, but the expedition defers deaths until its return.
     traveling = copy.deepcopy(restored)
     traveling["world"]["currentTick"] = traveling["world"]["targetTick"] = 599
     traveling["ants"]["queenRoutine"]["enabled"] = False
@@ -122,13 +122,13 @@ def check_lifecycle(page, width, url):
     page.clock.run_for(89800)
     returned = save_game(page)
     assert not returned["exploration"]["explorationParties"]
-    assert returned["ants"]["workers"] == 5 * UNIT
-    assert returned["ants"]["scouts"] == UNIT
-    assert returned["ants"]["ages"]["workers"][0]["expiresAt"] > returned["world"]["currentTick"]
-    page.clock.run_for(31000)
-    expired = save_game(page)
-    assert expired["ants"]["workers"] == 0
-    assert expired["ants"]["scouts"] == 0
+    assert returned["ants"]["workers"] == 0
+    assert returned["ants"]["scouts"] == 0
+    assert not returned["ants"]["ages"]["workers"]
+    assert not returned["ants"]["ages"]["scouts"]
+    assert returned["basicResources"]["knowledge"]["amount"] > losses["basicResources"]["knowledge"]["amount"]
+    explore_tab(page)
+    expect(page.get_by_role("button", name="Explore Nectar Meadow", exact=True)).to_be_disabled()
 
     # Stored time does not instantly age ants on load; the multiplier advances normal ticks.
     stored = copy.deepcopy(game)
@@ -151,7 +151,7 @@ def check_lifecycle(page, width, url):
     page.get_by_role("tab", name="Nest", exact=True).click()
     assert_fits(page, width)
     assert not errors, errors
-    print(f"PASS {width}px: aging grace, grouped losses, research and automation, reserves and targets, saved immunity, replacement, stored-time multiplier, layout")
+    print(f"PASS {width}px: aging grace, grouped losses, research and automation, reserves and targets, saved expiry and deaths on return, replacement, stored-time multiplier, layout")
 
 
 if __name__ == "__main__":

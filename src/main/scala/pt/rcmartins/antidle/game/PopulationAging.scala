@@ -8,7 +8,7 @@ object PopulationAging {
   val Minute: Long = 60L * TicksPerSecond
 
   private def grouped(cohorts: List[AgeCohort]): List[AgeCohort] =
-    cohorts.filter(_.count > 0L).groupBy(c => (c.expiresAt + Minute - 1L) / Minute * Minute)
+    cohorts.filter(_.count > 0L).groupBy(_.expiresAt)
       .toList.sortBy(_._1).map { case (tick, entries) => AgeCohort(tick, entries.map(_.count).sum) }
 
   // Split a population across fifteen minute buckets; no per-ant records or loops.
@@ -46,7 +46,7 @@ object PopulationAging {
         workers = fit(ages.workers, homeWorkers(data.ants), data.world.saveSeed + data.currentTick),
         scouts = fit(ages.scouts, ScoutProgression.available(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L)))
       if (ages.active) updated
-      else updated.addMessage("Colony aging has begun: ants live 45–60 minutes of simulated time. Aging pauses while they are away.")
+      else updated.addMessage("Colony aging has begun: ants live 45–60 minutes of simulated time. Aging continues while away; overdue ants die on return.")
     }
   }
 
@@ -57,16 +57,13 @@ object PopulationAging {
       val (homeWorkers, awayWorkers) = take(ready.ants.ages.workers, workers / u)
       val (homeScouts, awayScouts) = take(ready.ants.ages.scouts, scouts / u)
       ready.modify(_.ants.ages).using(_.copy(workers = homeWorkers, scouts = homeScouts)) ->
-        TravelAges(data.currentTick, awayWorkers, awayScouts)
+        TravelAges(awayWorkers, awayScouts)
     }
   }
 
-  def returnHome(data: AllData, ages: TravelAges): AllData = {
-    val elapsed = Math.max(0L, data.currentTick - ages.departedAt)
-    def shifted(cohorts: List[AgeCohort]): List[AgeCohort] = cohorts.map(c => c.copy(expiresAt = c.expiresAt + elapsed))
-    reconcile(data.modify(_.ants.ages).using(a => a.copy(
-      workers = grouped(a.workers ++ shifted(ages.workers)), scouts = grouped(a.scouts ++ shifted(ages.scouts)))))
-  }
+  def returnHome(data: AllData, ages: TravelAges): AllData =
+    applyDeaths(data.modify(_.ants.ages).using(a => a.copy(
+      workers = grouped(a.workers ++ ages.workers), scouts = grouped(a.scouts ++ ages.scouts))), summarize = false)
 
   private def loseWorkers(ants: AntsData, requested: Long): AntsData = {
     val deaths = Math.min(requested, homeWorkers(ants))
@@ -86,7 +83,9 @@ object PopulationAging {
     ants.copy(sugarCumulativeDebt = Math.max(0L, ants.sugarCumulativeDebt - AntDeathRiskThreshold))
   }
 
-  def tick(data: AllData): AllData = {
+  def tick(data: AllData): AllData = applyDeaths(data, summarize = true)
+
+  private def applyDeaths(data: AllData, summarize: Boolean): AllData = {
     val ready = reconcile(data)
     if (!ready.ants.ages.active) ready
     else {
@@ -99,7 +98,7 @@ object PopulationAging {
         pendingWorkers = ages.pendingWorkers + workerLosses, pendingScouts = ages.pendingScouts + scoutLosses)
       val updated = ready.modify(_.ants).using(a => loseWorkers(a, workerLosses)
         .copy(scouts = a.scouts - scoutLosses * u, ages = nextAges))
-      if (ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L)) {
+      if (summarize && ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L)) {
         val losses = List(Option.when(nextAges.pendingWorkers > 0L)(s"${nextAges.pendingWorkers} workers"),
           Option.when(nextAges.pendingScouts > 0L)(s"${nextAges.pendingScouts} scouts")).flatten.mkString(" and ")
         updated.addMessage(s"Aging: $losses lost in the last minute.")
