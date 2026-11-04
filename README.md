@@ -262,3 +262,31 @@ sugar/s), expanding productive collectors from 80 to 100. Base output reaches
 effect stacks with all three techniques and updates live rates and predictions.
 Knowledge-priced upgrades stay hidden until exploration is unlocked, including
 unpurchased upgrades revealed prematurely in an existing save.
+
+## Colony development
+
+Exploration opens additional colony goals. All new content remains hidden until
+its level and colony prerequisites are met:
+
+| Unlock | Requirement | Cost | Effect |
+| --- | --- | --- | --- |
+| Reinforced Mandibles | Exploration level 3 | 1,200 sugar, 20 protein, 100 Knowledge | Tunnelers produce 50% more space |
+| Nectar Meadow | Exploration level 4 and scout training | 40 sugar per worker; at least 5 workers and 1 scout | 90-second expedition with guaranteed sugar and Knowledge |
+| Brood Care | Exploration level 4 and a Nursery | 2,000 sugar, 40 protein, 180 Knowledge | Worker and scout eggs mature in 20% less time |
+
+Nectar Meadow trades workers, a scout, sugar supplies and an expedition slot for
+a predictable sugar return without carcass storage. Base rewards are 300 sugar,
+8 Knowledge and 45 XP; party size, supplies and exploration level scale these
+using the existing expedition rules. A five-worker party at level 4 costs 200
+sugar and returns 1,050 sugar plus 28 Knowledge before any supplies bonus. The
+compact route summary shows the sugar return; costs stay visible on the action.
+Rewards obey normal storage caps, and in-flight expeditions survive save reload.
+
+Reinforced Mandibles updates task descriptions, resource income estimates and
+actual tick production together. Brood Care affects existing eggs as well as new
+ones: workers grow in 8 seconds and scouts in 24 seconds. Egg countdowns use the
+same calculation as maturation. Both upgrades are permanent and saved.
+
+Run `sbt fastOptJS fullOptJS test`, then `python3 tests/colony_smoke.py` to verify
+hidden content, purchase costs, tunneling production, maturation times, meadow
+returns and save persistence on phone and desktop.

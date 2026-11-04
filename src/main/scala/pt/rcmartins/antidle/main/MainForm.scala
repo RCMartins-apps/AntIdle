@@ -574,12 +574,9 @@ object MainForm {
                       seq.map { antBlood =>
                         div(
                           b(antBlood.name + ": "),
-                          child <-- currentTickSignal.map { currentTick =>
+                          child <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
                             prettyTimeFromTicks(
-                              (antBlood.initialTick + (antBlood match {
-                              case _: AntBrood.ScoutEgg => Constants.ScoutGrowthTicks
-                              case _ => AntBrood.defaultTicksToGrow
-                            })) - currentTick
+                              Math.max(0L, antBlood.initialTick + ColonyDevelopment.growthTicks(antBlood, upgrades) - currentTick)
                             )
                           },
                           " to grow to next stage."
@@ -1016,11 +1013,9 @@ object MainForm {
           )
         case AntTask.Tunneler =>
           div(
-            prettyNumberSimple(
-              "+",
-              defaultTaskTunnelingSpaceSecond,
-              " tunneling space per second / ant"
-            )
+            child.text <-- upgradesSignal.map { upgrades =>
+              s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} tunneling space per second / ant"
+            }
           )
         case AntTask.CarcassCarrier =>
           div("Returning with a carcass.")

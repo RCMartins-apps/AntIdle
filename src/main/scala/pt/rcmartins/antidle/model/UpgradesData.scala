@@ -118,6 +118,25 @@ object UpgradesData {
       val description: String = "Reduces the loss in sugar yield per additional collector by 20%, allowing more productive collectors."
     }
 
+    case object ReinforcedMandibles extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 3
+      val name: String = "ReinforcedMandibles"
+      val cost: ActionCost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u)
+      val title: String = "Reinforced Mandibles"
+      val description: String = "Tunnelers produce 50% more tunneling space."
+    }
+
+    case object BroodCare extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && data.nestAttributes.chambers.nurseryChamber.level > 0 &&
+          pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 4
+      val name: String = "BroodCare"
+      val cost: ActionCost = ActionCost(sugar = 2000 * u, protein = 40 * u, knowledge = 180 * u)
+      val title: String = "Brood Care"
+      val description: String = "Worker and scout eggs mature in 20% less time, including growing eggs."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -131,6 +150,8 @@ object UpgradesData {
       DefaultWorkers,
       AdditionalExpeditionSlot,
       EstablishedTrails,
+      ReinforcedMandibles,
+      BroodCare,
     )
 
   }

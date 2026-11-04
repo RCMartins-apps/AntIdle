@@ -33,8 +33,8 @@ object ScoutProgression {
 
   def growBrood(allData: AllData): AllData = {
     val (grown, growing) = allData.ants.eggsAndLarvae.partition {
-      case AntBrood.Egg(tick) => allData.currentTick >= tick + AntBrood.defaultTicksToGrow
-      case AntBrood.ScoutEgg(tick) => allData.currentTick >= tick + ScoutGrowthTicks
+      case brood: AntBrood.Egg => allData.currentTick >= brood.initialTick + ColonyDevelopment.growthTicks(brood, allData.upgrades)
+      case brood: AntBrood.ScoutEgg => allData.currentTick >= brood.initialTick + ColonyDevelopment.growthTicks(brood, allData.upgrades)
       case _ => false
     }
     val newWorkers = grown.count(_.isInstanceOf[AntBrood.Egg]) * u

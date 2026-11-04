@@ -34,7 +34,7 @@ object TickUpdater {
           surplusSugarU += totalSugarToGain - sugarToGive
 
           val tunnelingSpaceToGive: Long =
-            tunnelerWorkers * Constants.defaultTaskTunnelingSpaceTick
+            tunnelerWorkers * ColonyDevelopment.tunnelingPerWorkerTick(allData.upgrades)
 
           allData.giveResources(
             sugar = sugarToGive,
