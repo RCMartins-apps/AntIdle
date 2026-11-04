@@ -94,7 +94,7 @@ object Actions {
     }
 
   def getActionBonus(chamberType: ChamberType): Signal[ActionBonus] =
-    Val(ChamberBonuses.forChamber(chamberType))
+    upgradesSignal.map(upgrades => ChamberBonuses.forChamber(chamberType, upgrades)).distinct
 
   def buildChamberCost(chamberType: ChamberType): Signal[ActionCost] =
     getChamber(chamberType)

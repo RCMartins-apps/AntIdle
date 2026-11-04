@@ -969,6 +969,7 @@ object MainForm {
           ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
           ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
+          ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),

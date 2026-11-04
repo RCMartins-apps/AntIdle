@@ -30,7 +30,7 @@ case class AllDataForSave(
       statistics = statistics,
       messages = messages,
     )
-    ResourceVisibility.reconcile(DefaultWorkerAssignment.normalize(UpgradeVisibility.reconcile(loaded)))
+    DefaultWorkerAssignment.normalize(UpgradeVisibility.reconcile(ResourceVisibility.reconcile(loaded)))
   }
 
   private def toUpgrades: UpgradesData = {

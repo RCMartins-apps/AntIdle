@@ -329,3 +329,13 @@ actual aphid income, default workers, seed expeditions and save/reload behavior.
 Resource rows remain visible permanently once unlocked, including at zero amounts.
 Visibility is reconciled on actions, ticks and save load; protein no longer depends
 on having a positive balance, and scout visibility survives losing every scout.
+
+**Protein Storage** becomes available after exploration, protein discovery and
+unlocking Food Storage. It costs 1,000 sugar, 25 protein and 75 Knowledge. Research
+makes every Food Storage Chamber level add 100 protein capacity alongside its
+sugar capacity. Existing levels count immediately: level 3 gives a 400 total
+protein cap (100 base + 300 from chambers), and level 4 gives 500. Chamber details
+show both bonuses. Capacity is derived from research and chamber level so loading
+or reconciling repeatedly never duplicates the bonus; research does not grant
+stored protein. Run `python3 tests/protein_storage_smoke.py` after `sbt fastOptJS`
+to check purchase costs, both chamber bonuses and saved capacity on phone/desktop.
