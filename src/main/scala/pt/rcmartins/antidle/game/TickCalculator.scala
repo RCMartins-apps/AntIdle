@@ -54,7 +54,7 @@ object TickCalculator {
               case ResourceOrigin(_, resourceTickU) =>
                 calcLoop(tail, sum + resourceTickU)
               case PercentOrigin(_, percent) =>
-                calcLoop(tail, (sum * percent).toLong)
+                calcLoop(tail, (BigDecimal(sum) * BigDecimal.decimal(percent)).toLong)
             }
         }
 
@@ -85,7 +85,7 @@ object TickCalculator {
               Some(
                 ResourceOrigin(
                   AntTask.SugarCollector.name,
-                  sugarCollectorAmount * defaultTaskCollectSugarTick,
+                  Foraging.basePerTick(sugarCollectorAmount, upgrades),
                 )
               ),
               Some(PercentOrigin(ImproveSugarCollectorTask1.title, SugarImprovementBonusPerc))

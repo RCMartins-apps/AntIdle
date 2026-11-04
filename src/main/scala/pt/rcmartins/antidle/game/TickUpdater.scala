@@ -1,9 +1,8 @@
 package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
-import pt.rcmartins.antidle.game.Constants.{SugarImprovementBonusPerc, u}
+import pt.rcmartins.antidle.game.Constants.u
 import pt.rcmartins.antidle.game.saves.SaveLoad
-import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 import pt.rcmartins.antidle.model.{AllData, AntTask, BuildTask}
 
 import scala.util.chaining.scalaUtilChainingOps
@@ -27,13 +26,7 @@ object TickUpdater {
           val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val sugarBonusMultiplier: Double =
-            (if (allData.upgrades(ImproveSugarCollectorTask1).unlocked) SugarImprovementBonusPerc else 1.0) *
-              (if (allData.upgrades(ImproveSugarCollectorTask2).unlocked) SugarImprovementBonusPerc else 1.0) *
-              (if (allData.upgrades(ImproveSugarCollectorTask3).unlocked) SugarImprovementBonusPerc else 1.0)
-
-          val totalSugarToGain: Long =
-            (sugarWorkers * Constants.defaultTaskCollectSugarTick * sugarBonusMultiplier).toLong
+          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades)
 
           val sugarToGive: Long =
             Math.min(allData.basicResources.sugar.freeSpace, totalSugarToGain)

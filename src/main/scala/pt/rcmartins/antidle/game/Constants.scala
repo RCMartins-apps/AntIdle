@@ -45,6 +45,9 @@ object Constants {
   val (defaultTaskCollectSugarTick: Long, defaultTaskCollectSugarSecond: Long) =
     tickAndSeconds(perSecondValue = (0.4 * u).toLong)
 
+  val (sugarCollectorPenaltyTick: Long, sugarCollectorPenaltySecond: Long) =
+    tickAndSeconds(perSecondValue = (0.005 * u).toLong)
+
   val (defaultTaskTunnelingSpaceTick: Long, defaultTaskTunnelingSpaceSecond: Long) =
     tickAndSeconds(perSecondValue = (1.0 * u).toLong)
 

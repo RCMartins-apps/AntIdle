@@ -14,7 +14,9 @@ object ExplorationProgression {
   def level(experience: Long): Int =
     (1 to MaxLevel).reverse.find(threshold(_) <= experience).getOrElse(1)
 
-  def maxParties(experience: Long): Int = if (level(experience) >= 5) 2 else 1
+  def maxParties(experience: Long, upgrades: UpgradesData): Int =
+    (if (level(experience) >= 5) 2 else 1) +
+      (if (upgrades(UpgradesData.UpgradeType.AdditionalExpeditionSlot).unlocked) 1 else 0)
 
   // 1 worker: 100%, 5: 200%, 17: 300%, 37+: 400%.
   def partyPercent(workers: Long): Long =

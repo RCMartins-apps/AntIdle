@@ -30,7 +30,7 @@ class UpgradeVisibilitySuite extends FunSuite {
       (initial.upgrades.unlock(UnlockExplorerTask), DefaultWorkers),
     )
     cases.foreach { case (upgrades, expected) =>
-      assert(UpgradeVisibility.reconcile(initial.copy(upgrades = upgrades)).upgrades(expected).show, expected.name)
+      assert(UpgradeVisibility.reconcile(initial.copy(upgrades = upgrades.unlock(UnlockExplorerTask))).upgrades(expected).show, expected.name)
     }
   }
 
@@ -38,14 +38,14 @@ class UpgradeVisibilitySuite extends FunSuite {
     List(UnlockQueensChamber, ImproveSugarCollectorTask1).foreach { only =>
       assert(!UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(only))).upgrades(UnlockFoodStorageChamber).show)
     }
-    val revealed = UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1)))
+    val revealed = UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1, UnlockExplorerTask)))
     assert(revealed.upgrades(ImproveSugarCollectorTask2).show)
     assert(!revealed.upgrades(ImproveSugarCollectorTask2).unlocked)
     assert(!revealed.upgrades(ImproveSugarCollectorTask3).show)
   }
 
   test("previously revealed or purchased upgrades remain visible and the check is idempotent") {
-    val existing = initial.copy(upgrades = initial.upgrades.show(DefaultWorkers).unlock(UnlockFoodStorageChamber))
+    val existing = initial.copy(upgrades = initial.upgrades.show(DefaultWorkers).unlock(UnlockFoodStorageChamber, UnlockExplorerTask))
     val first = UpgradeVisibility.reconcile(existing)
     assert(first.upgrades(DefaultWorkers).show)
     assert(first.upgrades(UnlockFoodStorageChamber).show)
@@ -65,6 +65,17 @@ class UpgradeVisibilitySuite extends FunSuite {
     assertEquals(loaded.world, savedGame.world)
     assertEquals(loaded.basicResources, savedGame.basicResources)
     assertEquals(loaded.statistics, savedGame.statistics)
+  }
+
+  test("Knowledge upgrades stay hidden before exploration, including stale saved visibility") {
+    val before = initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1).show(ImproveSugarCollectorTask2))
+    assert(!ImproveSugarCollectorTask2.shouldShow(before))
+    val hidden = UpgradeVisibility.reconcile(before)
+    assert(!hidden.upgrades(ImproveSugarCollectorTask2).show)
+    assert(!AllDataForSave.fromAllData(before).toAllData.upgrades(ImproveSugarCollectorTask2).show)
+    val exploring = before.copy(upgrades = before.upgrades.unlock(UnlockExplorerTask))
+    assert(UpgradeVisibility.reconcile(exploring).upgrades(ImproveSugarCollectorTask2).show)
+    assert(UpgradeVisibility.reconcile(before.copy(upgrades = before.upgrades.unlock(ImproveSugarCollectorTask2))).upgrades(ImproveSugarCollectorTask2).unlocked)
   }
 
   test("normal gameplay checks the same rules after nest expansion") {

@@ -48,8 +48,8 @@ class ExplorationSuite extends FunSuite {
     assertEquals(ExplorationProgression.level(999L), 4)
     assertEquals(ExplorationProgression.level(1000L), 5)
     assertEquals(ExplorationProgression.level(52428700L), 20)
-    assertEquals(ExplorationProgression.maxParties(999L), 1)
-    assertEquals(ExplorationProgression.maxParties(1000L), 2)
+    assertEquals(ExplorationProgression.maxParties(999L, UpgradesData.initial), 1)
+    assertEquals(ExplorationProgression.maxParties(1000L, UpgradesData.initial), 2)
   }
 
   test("party bonuses grow with diminishing returns and cap at 37 workers") {
