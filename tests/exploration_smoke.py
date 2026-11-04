@@ -1,5 +1,6 @@
 """Exploration destinations, party rewards, milestone slots and supplies regressions."""
 
+import copy
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
@@ -34,18 +35,48 @@ def check_destinations(page, width, url):
         return page.locator(".exploration-destination").filter(
             has=page.get_by_role("button", name="Explore " + name, exact=True))
 
+    # New explorers see one simple action, with no locked destinations or supplies.
+    early = copy.deepcopy(game)
+    early["ants"]["scouts"] = 0
+    early["exploration"] = {}
+    early["nestAttributes"]["chambers"]["nurseryChamber"]["level"] = 0
+    load_game(page, early)
+    explore_tab(page)
+    expect(page.locator(".exploration-destination")).to_have_count(1)
+    expect(route("Woodland Edge")).to_have_count(0)
+    expect(route("Rotten Log")).to_have_count(0)
+    expect(page.locator(".expedition-supplies")).to_have_count(0)
+    preview = route("Surroundings").locator(".destination-preview")
+    expect(preview).to_have_text("15.0s · 10 XP · 2 knowledge")
+    assert "carcass" not in preview.inner_text().lower()
+    if width <= 767:
+        page.get_by_text("Details: Explore Surroundings", exact=True).click()
+        expect(route("Surroundings").locator("details[open]")).to_contain_text("Carcass guaranteed")
+    assert_fits(page, width)
+    # Building the Nursery reveals the woodland route before the first scout matures.
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    page.get_by_role("button", name="Nursery Chamber", exact=True).click()
+    page.clock.run_for(200)
+    explore_tab(page)
+    expect(route("Woodland Edge")).to_have_count(1)
+    expect(route("Woodland Edge").get_by_role("button")).to_be_disabled()
+    expect(route("Rotten Log")).to_have_count(0)
+
     load_game(page, game)
     explore_tab(page)
-    expect(route("Rotten Log").get_by_role("button")).to_be_disabled()
-    expect(route("Rotten Log")).to_contain_text("Level 3")
-    expect(page.locator(".exploration-milestone")).to_contain_text("Level 3: Rotten Log")
+    expect(route("Rotten Log")).to_have_count(0)
+    expect(page.locator(".exploration-milestone")).not_to_be_visible()
     # Existing XP is retained; only the derived level/threshold changes.
     assert save_game(page)["exploration"]["experience"] == 299
     explore_tab(page)
     choose_workers(5)
     expect(route("Woodland Edge").locator(".destination-preview")).to_contain_text("60 XP")
-    expect(route("Rotten Log")).to_contain_text("120 XP")
+    expect(route("Rotten Log")).to_have_count(0)
     assert_fits(page, width)
+
+    route("Surroundings").get_by_role("button").click()
+    page.clock.run_for(15000)
+    expect(route("Rotten Log")).to_have_count(1)
 
     # Newly unlocked XP/Knowledge route, with a smaller party blocked.
     game["exploration"] = {"experience": 300}
@@ -80,6 +111,8 @@ def check_destinations(page, width, url):
     page.get_by_role("button", name="Improve Expedition Supplies", exact=True).click()
     improved = save_game(page)
     assert improved["exploration"]["suppliesLevel"] == 1
+    explore_tab(page)
+    expect(page.get_by_role("button", name="Improve Expedition Supplies", exact=True)).to_have_count(0)
     assert improved["basicResources"]["sugar"]["amount"] == before["basicResources"]["sugar"]["amount"] - 500 * UNIT
     explore_tab(page)
     choose_workers(5)

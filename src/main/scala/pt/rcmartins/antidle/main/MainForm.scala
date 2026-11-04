@@ -1102,13 +1102,9 @@ object MainForm {
           p(
             className := "mb-1 destination-preview",
             child.text <-- amountOfExplorersVar.signal.combineWith(explorationSignal).map {
-              case (workers, data) => ExplorationHelper.preview(data, workers, destination)
+              case (workers, data) => ExplorationHelper.summary(data, workers, destination)
             },
           ),
-          if (destination.requiredLevel > 1)
-            p(className := "mb-1", s"Level ${destination.requiredLevel} · ${destination.minimumWorkers / u}+ workers · 1 scout")
-          else if (destination.scouts > 0) p(className := "mb-1", "1 scout · Raised in the Nursery")
-          else emptyNode,
           div(
             className := "row",
             actionButton(
@@ -1127,7 +1123,9 @@ object MainForm {
                   ExplorationHelper.canDepart(data, ants, workers, destination) &&
                     resources.hasResources(ExplorationHelper.cost(workers, destination))
                 },
-              descriptionSignal = Val(None),
+              descriptionSignal = amountOfExplorersVar.signal.combineWith(explorationSignal).map {
+                case (workers, data) => Some(div(ExplorationHelper.preview(data, workers, destination)))
+              },
               costSignal = cost,
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => useSignalValue(amountOfExplorersVar.signal,
@@ -1162,10 +1160,10 @@ object MainForm {
         className := "col-12 px-3 py-2 exploration-progress",
         h5("Exploration experience"),
         p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
-        p(className := "mb-1 exploration-milestone",
-          child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
         detailsTag(
           summaryTag("XP details"),
+          p(className := "mb-1 exploration-milestone",
+            child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
           p(child.text <-- explorationSignal.map { data =>
             val bonus = ExplorationProgression.bonusPercent(data.experience)
             val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
@@ -1175,36 +1173,45 @@ object MainForm {
           p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at 37 workers; extra workers have diminishing returns."),
         ),
       ),
-      ExplorationDestination.all.map(area),
-      div(
-        className := "col-12 px-3 py-2 expedition-supplies",
-        detailsTag(
-          summaryTag("Expedition supplies"),
-          p(className := "mb-1", child.text <-- explorationSignal.map(data =>
-            s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel} · +${ExplorationProgression.suppliesRank(data) * 20}% XP and rewards")),
-          p("Permanent bonuses for future departures. Each rank adds 20%; unlocks at levels 2, 5 and 8."),
-          child.maybe <-- explorationSignal.map(data => ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel).distinct.map {
-            available => Option.when(available) {
-              div(
-                className := "row",
-                actionButton(
-                  name = "Improve Expedition Supplies",
-                  enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) =>
-                    ExplorationProgression.canUpgradeSupplies(data, resources)
-                  },
-                  requirementsSignal = explorationSignal.map(data => List(ActionRequirement("exploration level",
-                    ExplorationProgression.level(data.experience).toLong * u,
-                    ExplorationProgression.suppliesRequiredLevel(data).toLong * u))),
-                  descriptionSignal = Val(None),
-                  costSignal = explorationSignal.map(ExplorationProgression.suppliesCost),
-                  bonusSignal = Val(ActionBonus.empty),
-                  onClickAction = _ => Actions.upgradeExpeditionSupplies(),
-                ),
-              )
-            }
-          },
-        ),
-      ),
+      ExplorationDestination.all.map { destination =>
+        child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
+          case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
+        }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
+      },
+      child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
+        div(
+          className := "col-12 px-3 py-2 expedition-supplies",
+          detailsTag(
+            summaryTag("Expedition supplies"),
+            p(className := "mb-1", child.text <-- explorationSignal.map(data =>
+              s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel} · +${ExplorationProgression.suppliesRank(data) * 20}% XP and rewards")),
+            p("Each rank adds 20% XP and rewards to future departures."),
+            child.maybe <-- explorationSignal.map(data =>
+              ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel &&
+                ExplorationProgression.level(data.experience) >= ExplorationProgression.suppliesRequiredLevel(data)
+            ).distinct.map {
+              available => Option.when(available) {
+                div(
+                  className := "row",
+                  actionButton(
+                    name = "Improve Expedition Supplies",
+                    enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) =>
+                      ExplorationProgression.canUpgradeSupplies(data, resources)
+                    },
+                    requirementsSignal = explorationSignal.map(data => List(ActionRequirement("exploration level",
+                      ExplorationProgression.level(data.experience).toLong * u,
+                      ExplorationProgression.suppliesRequiredLevel(data).toLong * u))),
+                    descriptionSignal = Val(None),
+                    costSignal = explorationSignal.map(ExplorationProgression.suppliesCost),
+                    bonusSignal = Val(ActionBonus.empty),
+                    onClickAction = _ => Actions.upgradeExpeditionSupplies(),
+                  ),
+                )
+              }
+            },
+          ),
+        )
+      },
       div(
         className := "col-12 px-3 py-2",
         "Expeditions: ", child.text <-- explorationSignal.map(_.explorationParties.size),

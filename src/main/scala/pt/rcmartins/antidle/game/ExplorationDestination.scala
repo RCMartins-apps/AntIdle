@@ -1,7 +1,7 @@
 package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.game.Constants._
-import pt.rcmartins.antidle.model.ExplorationParty
+import pt.rcmartins.antidle.model.{AntsData, ExplorationData, ExplorationParty, NestAttributes}
 
 sealed abstract class ExplorationDestination(
     val id: String,
@@ -14,7 +14,11 @@ sealed abstract class ExplorationDestination(
     val scouts: Long,
     val carcassSize: Int,
     val knowledge: Long = 0L,
-)
+) {
+  def isUnlocked(data: ExplorationData, ants: AntsData, nest: NestAttributes): Boolean =
+    ExplorationProgression.level(data.experience) >= requiredLevel &&
+      (scouts == 0 || nest.chambers.nurseryChamber.level > 0 || ants.scouts >= scouts)
+}
 
 object ExplorationDestination {
   case object Surroundings extends ExplorationDestination(

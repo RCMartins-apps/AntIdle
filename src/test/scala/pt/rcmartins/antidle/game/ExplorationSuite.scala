@@ -19,6 +19,29 @@ class ExplorationSuite extends FunSuite {
     )
   }
 
+  test("locked routes are undiscovered until their level and scout training unlocks") {
+    val ants = AntsData(workers = u)
+    val nest = NestAttributes.initial
+    assert(Surroundings.isUnlocked(ExplorationData(), ants, nest))
+    assert(!WoodlandEdge.isUnlocked(ExplorationData(), ants, nest))
+    assert(!RottenLog.isUnlocked(ExplorationData(experience = 300L), ants, nest))
+    val nursery = nest.copy(chambers = nest.chambers.copy(nurseryChamber = nest.chambers.nurseryChamber.copy(level = 1)))
+    assert(WoodlandEdge.isUnlocked(ExplorationData(), ants, nursery))
+    assert(!RottenLog.isUnlocked(ExplorationData(experience = 299L), ants, nursery))
+    assert(RottenLog.isUnlocked(ExplorationData(experience = 300L), ants, nursery))
+    val away = ExplorationData(experience = 300L, explorationParties = List(ExplorationParty(u, 0L, 225L, u, WoodlandEdge.id)))
+    val trained = ants.copy(scouts = u)
+    assertEquals(ScoutProgression.available(trained, away), 0L)
+    assert(WoodlandEdge.isUnlocked(away, trained, nursery))
+    assert(RottenLog.isUnlocked(away, trained, nursery))
+  }
+
+  test("compact summaries show only duration, XP and Knowledge; forecasts keep reward explanations") {
+    assertEquals(ExplorationHelper.summary(ExplorationData(), u, Surroundings), "15.0s · 10 XP · 2 knowledge")
+    assert(ExplorationHelper.preview(ExplorationData(), u, Surroundings).contains("Carcass guaranteed"))
+    assert(!ExplorationHelper.summary(ExplorationData(carcassDiscovered = true), u, Surroundings).contains("45%"))
+  }
+
   test("gentle thresholds retain total XP and unlock milestones") {
     assertEquals((1 to 5).map(ExplorationProgression.threshold), Seq(0L, 100L, 300L, 600L, 1000L))
     assertEquals(ExplorationProgression.threshold(20), 19000L)

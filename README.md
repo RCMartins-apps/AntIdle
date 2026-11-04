@@ -100,8 +100,8 @@ Every completed expedition earns XP, even if it finds nothing. Levels cost
 100, 200, 300… XP each, with 19,000 total XP to reach the level-20 cap.
 Levels use the gentler curve.
 Every level adds 25% to resource rewards. The trip that levels up receives the
-new resource bonus. XP progress and the next milestone are visible in Explore;
-longer explanations stay inside **XP details**.
+new resource bonus. XP progress is visible in Explore; milestone hints and longer explanations stay
+inside **XP details**.
 
 | Destination | Duration | Base XP | Base Knowledge | Main reward | Requirements |
 | --- | --- | --- | --- | --- | --- |
@@ -111,7 +111,13 @@ longer explanations stay inside **XP details**.
 
 Carcasses still need retrieval before their protein and sugar reserve are usable.
 Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
-cards include selected workers, supplies, and the level reached on return.
+details include selected workers, supplies, and the level reached on return.
+Cards show only duration, XP, and Knowledge. Reward odds and requirements are
+available in mobile **Details** and desktop tooltips. Locked destinations are
+hidden: scout routes appear after Nursery/scout training, and Rotten Log also
+requires level 3. Unlocked routes remain visible when scouts are away or resources
+are insufficient. Supplies appear at level 2; later ranks appear at their unlock
+levels rather than as locked actions.
 Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
 
 Party size improves both XP and all resource rewards, with diminishing returns:
