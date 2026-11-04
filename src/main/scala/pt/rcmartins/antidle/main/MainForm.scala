@@ -1011,6 +1011,13 @@ object MainForm {
               s"${preciseRateStr(Foraging.averagePerSecond(count, upgrades))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades))}"
             },
           )
+        case AntTask.AphidTender =>
+          div(
+            child.text <-- amountSignal.combineWith(upgradesSignal).map { case (amount, upgrades) =>
+              val count = amount / u
+              s"${preciseRateStr(AphidHusbandry.averagePerSecond(count, upgrades))} sugar/s per tender · next: ${preciseRateStr(AphidHusbandry.nextPerSecond(count, upgrades))}"
+            },
+          )
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1123,6 +1130,10 @@ object MainForm {
               case (workers, data) => ExplorationHelper.summary(data, workers, destination)
             },
           ),
+          child.maybe <-- explorationSignal.map { data =>
+            DiscoveryProgression.all.find(d => d.destination == destination.id && !d.found(data))
+              .map(d => p(className := "mb-1 small destination-survey", s"Survey ${d.progress(data)} / ${d.trips}"))
+          },
           div(
             className := "row",
             actionButton(
@@ -1195,6 +1206,19 @@ object MainForm {
         child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
           case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
         }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
+      },
+      child.maybe <-- explorationSignal.map(data => DiscoveryProgression.all.filter(_.found(data))).distinct.map {
+        found => Option.when(found.nonEmpty) {
+          div(
+            className := "col-12 px-3 py-2 exploration-discoveries",
+            h5("Discoveries"),
+            found.map(discovery => div(
+              className := "card p-2 my-2 discovery-entry",
+              b(discovery.title),
+              span(discovery.description),
+            )),
+          )
+        }
       },
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
         div(

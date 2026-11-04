@@ -11,6 +11,7 @@ case class ExplorationData(
     proteinDiscovered: Boolean = false,
     experience: Long = 0L,
     suppliesLevel: Int = 0,
+    surveys: Map[String, Int] = Map.empty,
 )
 
 object ExplorationData {

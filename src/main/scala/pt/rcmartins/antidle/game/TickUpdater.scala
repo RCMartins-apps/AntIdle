@@ -26,7 +26,8 @@ object TickUpdater {
           val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades)
+          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades) +
+            AphidHusbandry.productionPerTick(countWorkers(AntTask.AphidTender), allData.upgrades)
 
           val sugarToGive: Long =
             Math.min(allData.basicResources.sugar.freeSpace, totalSugarToGain)

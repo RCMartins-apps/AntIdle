@@ -1,0 +1,36 @@
+package pt.rcmartins.antidle.game
+
+import com.softwaremill.quicklens.ModifyPimp
+import pt.rcmartins.antidle.model._
+
+object DiscoveryProgression {
+  case class Discovery(id: String, title: String, destination: String, trips: Int, description: String) {
+    def progress(data: ExplorationData): Int = Math.max(0, Math.min(trips, data.surveys.getOrElse(destination, 0)))
+    def found(data: ExplorationData): Boolean = progress(data) >= trips
+  }
+
+  val WildAphids = Discovery("wild-aphids", "Wild Aphids", "woodland-edge", 5,
+    "Research Aphid Tending in Upgrades to unlock a new sugar-producing worker task.")
+  val SeedCache = Discovery("seed-cache", "Seed Cache", "nectar-meadow", 3,
+    "Reveals Seed Gathering at exploration level 5: guaranteed protein without carcass retrieval.")
+  val all: List[Discovery] = List(WildAphids, SeedCache)
+
+  def has(data: ExplorationData, id: String): Boolean = all.exists(d => d.id == id && d.found(data))
+
+  def recordReturn(data: AllData, destination: ExplorationDestination): AllData =
+    all.filter(_.destination == destination.id).foldLeft(data) { (current, discovery) =>
+      if (discovery.found(current.exploration)) current
+      else {
+        val progress = discovery.progress(current.exploration) + 1
+        val updated = current.modify(_.exploration.surveys).using(_.updated(destination.id, progress))
+        if (progress == discovery.trips)
+          updated.addMessage(s"Discovery: ${discovery.title}! ${discovery.description}")
+        else updated
+      }
+    }
+
+  def unlockTasks(data: AllData): AllData =
+    if (data.upgrades(UpgradesData.UpgradeType.AphidTending).unlocked)
+      data.modify(_.ants).using(_.unlockTask(AntTask.AphidTender))
+    else data
+}

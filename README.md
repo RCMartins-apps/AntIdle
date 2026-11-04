@@ -290,3 +290,33 @@ same calculation as maturation. Both upgrades are permanent and saved.
 Run `sbt fastOptJS fullOptJS test`, then `python3 tests/colony_smoke.py` to verify
 hidden content, purchase costs, tunneling production, maturation times, meadow
 returns and save persistence on phone and desktop.
+
+## Exploration discoveries
+
+Completed expeditions now survey their destination. Survey progress appears as
+one compact line on the relevant route; discovery names and rewards are hidden
+until found. Each discovery is guaranteed after a fixed number of returns,
+announced once, and saved. There are no random discovery rolls or duplicate
+rewards. Departures and unrelated destinations do not advance surveys.
+
+- **Wild Aphids:** five Woodland Edge returns reveal Aphid Tending research.
+  Pay 1,500 sugar, 20 protein and 100 Knowledge to unlock Aphid Tenders in Tasks.
+  This separate sugar source has diminishing marginal yields (0.8, 0.76,
+  0.72... sugar/s), capped at 8.4 sugar/s with 20 workers. Extra workers do not
+  reduce total output, and Foraging Techniques affect collectors only. Live
+  average/next rates, upkeep, income estimates, default-worker assignments and
+  saves all include the new task.
+- **Seed Cache:** three Nectar Meadow returns reveal Seed Gathering once the
+  colony reaches exploration level 5. The route needs at least ten workers and
+  one scout, costs 25 sugar per worker, and takes 120 seconds. Base rewards are
+  10 protein, 12 Knowledge and 60 XP, scaled by the existing expedition rules.
+  Protein is guaranteed, obeys its storage cap and needs no carcass retrieval.
+
+Known discoveries stay listed in Explore, with a short description of what each
+unlocks. Survey counts default to empty for saves that do not contain them;
+existing XP does not automatically grant discoveries. Research restores the new
+task immediately, including on load.
+
+After `sbt fastOptJS fullOptJS test`, run `python3 tests/discovery_smoke.py` for
+phone and desktop checks of survey completion, hidden content, research costs,
+actual aphid income, default workers, seed expeditions and save/reload behavior.

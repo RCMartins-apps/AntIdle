@@ -94,6 +94,8 @@ object TickCalculator {
                 .filter(_ => upgrades(ImproveSugarCollectorTask2).unlocked),
               Some(PercentOrigin(ImproveSugarCollectorTask3.title, SugarImprovementBonusPerc))
                 .filter(_ => upgrades(ImproveSugarCollectorTask3).unlocked),
+              Some(ResourceOrigin("Aphid Tenders", AphidHusbandry.productionPerTick(ants.taskWorkers(AntTask.AphidTender) / u, upgrades)))
+                .filter(_.tickResourceU > 0),
               Some(
                 ResourceOrigin(
                   "Ants Demand",

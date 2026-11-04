@@ -137,6 +137,15 @@ object UpgradesData {
       val description: String = "Worker and scout eggs mature in 20% less time, including growing eggs."
     }
 
+    case object AphidTending extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && pt.rcmartins.antidle.game.DiscoveryProgression.WildAphids.found(data.exploration)
+      val name: String = "AphidTending"
+      val cost: ActionCost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 100 * u)
+      val title: String = "Aphid Tending"
+      val description: String = "Unlock Aphid Tenders: a separate sugar source with diminishing returns, reaching 8.4 sugar/s at 20 workers."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -152,6 +161,7 @@ object UpgradesData {
       EstablishedTrails,
       ReinforcedMandibles,
       BroodCare,
+      AphidTending,
     )
 
   }

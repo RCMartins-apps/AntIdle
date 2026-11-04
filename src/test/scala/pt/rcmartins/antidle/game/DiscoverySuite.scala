@@ -1,0 +1,145 @@
+package pt.rcmartins.antidle.game
+
+import munit.FunSuite
+import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.game.DiscoveryProgression._
+import pt.rcmartins.antidle.game.ExplorationDestination._
+import pt.rcmartins.antidle.game.saves.AllDataForSave
+import pt.rcmartins.antidle.model._
+import pt.rcmartins.antidle.model.BasicResources.BasicResource
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
+import zio.json._
+
+class DiscoverySuite extends FunSuite {
+  def colony: AllData = {
+    val initial = AllData.initial
+    initial.copy(
+      ants = AntsData(workers = 40 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
+      exploration = ExplorationData(experience = 1000L),
+      basicResources = initial.basicResources.copy(sugar = BasicResource(5000 * u, 10000 * u)),
+      unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
+    )
+  }
+
+  def complete(data: AllData, destination: ExplorationDestination, workers: Long = 5 * u): AllData = {
+    val sent = ExplorationHelper.start(data, workers, destination)
+    assert(sent.exploration.explorationParties.nonEmpty)
+    val party = sent.exploration.explorationParties.head
+    ExplorationHelper.exploreBonus(sent.copy(exploration = sent.exploration.copy(explorationParties = Nil)), party)
+  }
+
+  test("discoveries require completed trips to the correct destination and announce only once") {
+    val initial = colony
+    assert(!WildAphids.found(initial.exploration))
+    assert(!AphidTending.shouldShow(initial))
+    val departed = ExplorationHelper.start(initial, u, WoodlandEdge)
+    assertEquals(WildAphids.progress(departed.exploration), 0)
+    val elsewhere = complete(initial, RottenLog)
+    assertEquals(WildAphids.progress(elsewhere.exploration), 0)
+    val fourth = (1 to 4).foldLeft(initial)((data, _) => complete(data, WoodlandEdge, u))
+    assertEquals(WildAphids.progress(fourth.exploration), 4)
+    assert(!AphidTending.shouldShow(fourth))
+    val fifth = complete(fourth, WoodlandEdge, u)
+    assert(WildAphids.found(fifth.exploration))
+    assert(AphidTending.shouldShow(fifth))
+    assertEquals(fifth.messages.count(_.startsWith("Discovery: Wild Aphids!")), 1)
+    val sixth = complete(fifth, WoodlandEdge, u)
+    assertEquals(WildAphids.progress(sixth.exploration), 5)
+    assertEquals(sixth.messages.count(_.startsWith("Discovery: Wild Aphids!")), 1)
+  }
+
+  test("simultaneous returns complete a survey once while both parties receive rewards") {
+    val initial = colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 4)))
+    val first = ExplorationHelper.start(initial, u, WoodlandEdge)
+    val second = ExplorationHelper.start(first, u, WoodlandEdge)
+    val result = TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = WoodlandEdge.duration - 1L)), None)
+    assertEquals(result.exploration.surveys(WoodlandEdge.id), 5)
+    assertEquals(result.messages.count(_.startsWith("Discovery: Wild Aphids!")), 1)
+    assertEquals(result.exploration.discoveredCarcasses.size, 2)
+    assert(result.upgrades(AphidTending).show)
+    assert(result.exploration.explorationParties.isEmpty)
+    assertEquals(result.ants.idleWorkersCount, 40L * u)
+  }
+
+  test("seed route is gated by both the discovery and level, including engine calls") {
+    val initial = colony
+    assert(!SeedGathering.isUnlocked(initial.exploration, initial.ants, initial.nestAttributes))
+    assertEquals(ExplorationHelper.start(initial, 10 * u, SeedGathering), initial)
+    val second = (1 to 2).foldLeft(initial)((data, _) => complete(data, NectarMeadow))
+    assert(!SeedCache.found(second.exploration))
+    val third = complete(second, NectarMeadow)
+    assert(SeedCache.found(third.exploration))
+    assert(SeedGathering.isUnlocked(third.exploration, third.ants, third.nestAttributes))
+    assert(ExplorationHelper.canStart(third, 10 * u, SeedGathering))
+    assert(!ExplorationHelper.canStart(third, 9 * u, SeedGathering))
+    val low = third.copy(exploration = third.exploration.copy(experience = 999L))
+    assert(!ExplorationHelper.canStart(low, 10 * u, SeedGathering))
+    assert(!SeedGathering.isUnlocked(low.exploration, low.ants, low.nestAttributes))
+  }
+
+  test("seed gathering preview matches guaranteed protein without requiring carcass slots") {
+    val initial = colony.copy(exploration = ExplorationData(experience = 1000L, surveys = Map(NectarMeadow.id -> 3)))
+    val sent = ExplorationHelper.start(initial, 10 * u, SeedGathering)
+    val party = sent.exploration.explorationParties.head
+    val xp = ExplorationProgression.earned(party)
+    val expected = ExplorationProgression.expeditionReward(10 * u, 1000L + xp, 10 * u, 0)
+    val result = ExplorationHelper.exploreBonus(sent, party)
+    assertEquals(result.basicResources.protein.amount, expected)
+    assert(result.exploration.proteinDiscovered)
+    assert(result.exploration.discoveredCarcasses.isEmpty && result.exploration.carcasses.isEmpty)
+    assert(ExplorationHelper.summary(initial.exploration, 10 * u, SeedGathering).contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein"))
+    assert(ExplorationHelper.preview(initial.exploration, 10 * u, SeedGathering).contains("Protein guaranteed"))
+    val nearlyFull = sent.copy(basicResources = sent.basicResources.copy(protein = BasicResource(99 * u, 100 * u)))
+    assertEquals(ExplorationHelper.exploreBonus(nearlyFull, party).basicResources.protein.amount, 100L * u)
+  }
+
+  test("aphid task is restored immediately on research and reload, but never before research") {
+    val discovered = colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 5)))
+    assert(!UpgradeVisibility.reconcile(discovered).ants.tasks.exists(_._1 == AntTask.AphidTender))
+    val researched = UpgradeVisibility.reconcile(discovered.copy(upgrades = discovered.upgrades.unlock(AphidTending)))
+    assertEquals(researched.ants.taskWorkers(AntTask.AphidTender), 0L)
+    assert(researched.ants.defaultTaskChoices.contains(AntTask.AphidTender))
+    val loaded = AllDataForSave.fromAllData(researched.copy(ants = discovered.ants)).toAllData
+    assert(loaded.ants.defaultTaskChoices.contains(AntTask.AphidTender))
+    assertEquals(UpgradeVisibility.reconcile(researched).ants, researched.ants)
+  }
+
+  test("aphids have a separate finite yield and locked tasks cannot produce sugar") {
+    val plain = UpgradesData.initial
+    val researched = plain.unlock(AphidTending)
+    assertEquals(AphidHusbandry.productionPerTick(20L, plain), 0L)
+    assertEquals(AphidHusbandry.productionPerTick(1L, researched) * TicksPerSecond, 8000L)
+    assertEquals(AphidHusbandry.productionPerTick(20L, researched) * TicksPerSecond, 84000L)
+    assertEquals(AphidHusbandry.productionPerTick(Long.MaxValue, researched), AphidHusbandry.productionPerTick(20L, researched))
+    assertEquals(AphidHusbandry.nextPerSecond(19L, researched), 400L)
+    assertEquals(AphidHusbandry.nextPerSecond(20L, researched), 0L)
+    assertEquals(AphidHusbandry.productionPerTick(20L, researched.unlock(ImproveSugarCollectorTask1)), AphidHusbandry.productionPerTick(20L, researched))
+    val data = colony.copy(ants = AntsData(workers = 30 * u, tasks = Seq(AntTask.SugarCollector -> (10 * u), AntTask.AphidTender -> (20 * u))), upgrades = researched)
+    val next = TickUpdater.updateAllData(data, None)
+    assertEquals(next.basicResources.sugar.amount - data.basicResources.sugar.amount,
+      Foraging.productionPerTick(10L, researched) + AphidHusbandry.productionPerTick(20L, researched) - 30L * antsSugarUpkeepTick)
+  }
+
+  test("aphid workers participate in the default worker pool without duplicating ants") {
+    val ready = UpgradeVisibility.reconcile(colony.copy(upgrades = colony.upgrades.unlock(AphidTending, DefaultWorkers)))
+    val selected = DefaultWorkerAssignment.select(ready, Some(AntTask.AphidTender))
+    assertEquals(selected.ants.taskWorkers(AntTask.AphidTender), 40L * u)
+    val sent = ExplorationHelper.start(selected, 5 * u, NectarMeadow)
+    assertEquals(sent.ants.taskWorkers(AntTask.AphidTender), 35L * u)
+    assertEquals(sent.ants.availableWorkersCount, 35L * u)
+    val returned = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
+    assertEquals(returned.ants.taskWorkers(AntTask.AphidTender), 40L * u)
+    assertEquals(returned.ants.idleWorkersCount, 0L)
+  }
+
+  test("survey progress, research and assignments persist; saves without surveys start undiscovered") {
+    val data = UpgradeVisibility.reconcile(colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 4, NectarMeadow.id -> 2))))
+    val loaded = AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+    assertEquals(loaded.exploration, data.exploration)
+    val discovered = complete(loaded, WoodlandEdge, u)
+    assert(WildAphids.found(discovered.exploration))
+    assertEquals("{}".fromJson[ExplorationData].toOption.get.surveys, Map.empty[String, Int])
+    val task = AntTask.AphidTender: AntTask
+    assertEquals(task.toJson.fromJson[AntTask], Right(task))
+  }
+}
