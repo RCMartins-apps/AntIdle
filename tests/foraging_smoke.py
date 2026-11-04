@@ -16,7 +16,7 @@ from progression_smoke import explore_tab
 def check_foraging(page, width, url):
     now = datetime(2026, 11, 4, tzinfo=timezone.utc)
     page.clock.install(time=now)
-    page.clock.pause_at(now + timedelta(milliseconds=100))
+    page.clock.pause_at(now + timedelta(seconds=1))
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(url, wait_until="networkidle")
@@ -80,6 +80,50 @@ def check_foraging(page, width, url):
     after = save_game(page)
     ticks = after["world"]["currentTick"] - before["world"]["currentTick"]
     assert after["basicResources"]["sugar"]["amount"] - before["basicResources"]["sugar"]["amount"] == -ticks * 400
+
+    # Knowledge upgrades are hidden before exploration, even with stale saved flags.
+    early = copy.deepcopy(game)
+    early["unlocks"]["tabs"]["exploreTabUnlocked"] = False
+    for upgrade in early["upgrades"]["upgrades"]:
+        if upgrade["name"] == "ImproveSugarCollectorTask1":
+            upgrade["unlocked"] = True
+        if upgrade["name"] == "ImproveSugarCollectorTask2":
+            upgrade["show"] = True
+    load_game(page, early)
+    page.get_by_role("tab", name="Upgrades", exact=True).click()
+    expect(page.get_by_role("button", name="Foraging Techniques 2", exact=True)).to_have_count(0)
+    expect(page.get_by_role("button", name="Established Trails", exact=True)).to_have_count(0)
+    early["unlocks"]["tabs"]["exploreTabUnlocked"] = True
+    load_game(page, early)
+    page.get_by_role("tab", name="Upgrades", exact=True).click()
+    expect(page.get_by_role("button", name="Foraging Techniques 2", exact=True)).to_have_count(1)
+
+    trails = copy.deepcopy(game)
+    trails["exploration"]["experience"] = 99
+    trails["basicResources"]["sugar"]["amount"] = 1000 * UNIT
+    load_game(page, trails)
+    page.get_by_role("tab", name="Upgrades", exact=True).click()
+    expect(page.get_by_role("button", name="Established Trails", exact=True)).to_have_count(0)
+    trails["exploration"]["experience"] = 100
+    load_game(page, trails)
+    before = save_game(page)
+    page.get_by_role("tab", name="Upgrades", exact=True).click()
+    action = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Established Trails", exact=True))
+    expect(action.locator(".action-costs")).to_contain_text("/600 sugar")
+    expect(action.locator(".action-costs")).to_contain_text("/60 knowledge")
+    action.get_by_role("button").click()
+    purchased = save_game(page)
+    assert purchased["basicResources"]["sugar"]["amount"] == before["basicResources"]["sugar"]["amount"] - 600 * UNIT
+    assert purchased["basicResources"]["knowledge"]["amount"] == before["basicResources"]["knowledge"]["amount"] - 60 * UNIT
+    collector_description("0.242 sugar/s per collector · next: 0.08")
+    expect(sugar_row()).to_contain_text("+3.36/s")
+    before = save_game(page)
+    page.clock.run_for(1000)
+    after = save_game(page)
+    ticks = after["world"]["currentTick"] - before["world"]["currentTick"]
+    assert after["basicResources"]["sugar"]["amount"] - before["basicResources"]["sugar"]["amount"] == ticks * 6720
+    page.reload(wait_until="networkidle")
+    collector_description("0.242 sugar/s per collector · next: 0.08")
 
     # The paid slot is a permanent upgrade, revealed at level three.
     slots = copy.deepcopy(game)

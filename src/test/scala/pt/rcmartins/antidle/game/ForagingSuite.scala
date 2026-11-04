@@ -20,7 +20,7 @@ class ForagingSuite extends FunSuite {
     assertEquals(Foraging.basePerTick(40L) * TicksPerSecond, 121000L)
     assertEquals(Foraging.basePerTick(80L) * TicksPerSecond, 162000L)
     assertEquals(Foraging.basePerTick(Long.MaxValue), Foraging.basePerTick(80L))
-    val totals = (0L to 200L).map(Foraging.basePerTick)
+    val totals = (0L to 200L).map(n => Foraging.basePerTick(n))
     assert(totals.sliding(2).forall { case Seq(a, b) => b >= a; case _ => true })
   }
 
@@ -48,7 +48,7 @@ class ForagingSuite extends FunSuite {
 
   test("actual tick income uses the same production curve and upgrade rounding") {
     List(0L, 1L, 20L, 40L, 60L, 80L, 81L, 100L, 10000L).foreach { count =>
-      List(plain, improved, advanced).foreach { upgrades =>
+      List(plain, improved, advanced, plain.unlock(EstablishedTrails), advanced.unlock(EstablishedTrails)).foreach { upgrades =>
         val initial = AllData.initial.copy(
           ants = AntsData(workers = count * u, tasks = Seq(AntTask.SugarCollector -> (count * u))),
           upgrades = upgrades,
@@ -67,6 +67,22 @@ class ForagingSuite extends FunSuite {
     val restored = sent.removeFromTask(AntTask.Tunneler, 5 * u)
     assertEquals(restored.taskWorkers(AntTask.SugarCollector), 80L * u)
     assertEquals(Foraging.productionPerTick(restored.taskWorkers(AntTask.SugarCollector) / u, plain), Foraging.productionPerTick(80L, plain))
+  }
+
+  test("Established Trails expands productive collectors and raises the sustainable ceiling") {
+    val trails = plain.unlock(EstablishedTrails)
+    assertEquals(Foraging.productiveCollectors(trails), 100L)
+    assertEquals(Foraging.productionPerTick(100L, trails) * TicksPerSecond, 202000L)
+    assertEquals(Foraging.nextPerSecond(80L, trails), 800L)
+    assertEquals(Foraging.nextPerSecond(99L, trails), 40L)
+    assertEquals(Foraging.nextPerSecond(100L, trails), 0L)
+    assertEquals(Foraging.productionPerTick(Long.MaxValue, trails), Foraging.productionPerTick(100L, trails))
+    assertEquals((1L to 200L).filter(n => Foraging.productionPerTick(n, trails) >= n * antsSugarUpkeepTick).last, 101L)
+    val colony = AllData.initial.copy(unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
+    assert(!EstablishedTrails.shouldShow(colony.copy(exploration = ExplorationData(experience = 99L))))
+    assert(EstablishedTrails.shouldShow(colony.copy(exploration = ExplorationData(experience = 100L))))
+    assertEquals(EstablishedTrails.cost, ActionCost(sugar = 600 * u, knowledge = 60 * u))
+    assert(AllDataForSave.fromAllData(colony.copy(upgrades = trails)).toAllData.upgrades(EstablishedTrails).unlocked)
   }
 
   test("paid expedition slot is revealed at level three and stacks with the level-five slot") {

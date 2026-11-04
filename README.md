@@ -254,3 +254,11 @@ Run `python3 tests/foraging_smoke.py` after `sbt fastOptJS` to check live rates,
 actual tick income, upgrade effects, population pressure, slot purchases and
 save reloads on phone and desktop. `ForagingSuite` also tests the sustainable
 population boundaries, assignment cycling, and engine slot limits.
+
+**Established Trails** unlocks at exploration level 2 for 600 sugar and 60
+Knowledge. It reduces the marginal collector penalty by 20% (0.005 to 0.004
+sugar/s), expanding productive collectors from 80 to 100. Base output reaches
+20.2 sugar/s, enough for 101 workers before Foraging Techniques bonuses. Its
+effect stacks with all three techniques and updates live rates and predictions.
+Knowledge-priced upgrades stay hidden until exploration is unlocked, including
+unpurchased upgrades revealed prematurely in an existing save.

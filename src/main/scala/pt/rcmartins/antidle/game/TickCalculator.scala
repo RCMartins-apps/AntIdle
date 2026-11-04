@@ -85,7 +85,7 @@ object TickCalculator {
               Some(
                 ResourceOrigin(
                   AntTask.SugarCollector.name,
-                  Foraging.basePerTick(sugarCollectorAmount),
+                  Foraging.basePerTick(sugarCollectorAmount, upgrades),
                 )
               ),
               Some(PercentOrigin(ImproveSugarCollectorTask1.title, SugarImprovementBonusPerc))

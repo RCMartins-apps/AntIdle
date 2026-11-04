@@ -60,7 +60,8 @@ object UpgradesData {
     }
 
     case object ImproveSugarCollectorTask2 extends UpgradeType {
-      def shouldShow(data: AllData): Boolean = data.upgrades(ImproveSugarCollectorTask1).unlocked
+      def shouldShow(data: AllData): Boolean =
+        (data.unlocks.tabs.exploreTabUnlocked || data.upgrades(UnlockExplorerTask).unlocked) && data.upgrades(ImproveSugarCollectorTask1).unlocked
       val name: String = "ImproveSugarCollectorTask2"
       val cost: ActionCost = ActionCost(sugar = 750 * u, knowledge = 75 * u)
       val title: String = "Foraging Techniques 2"
@@ -108,6 +109,15 @@ object UpgradesData {
       val description: String = "Adds one expedition slot, in addition to slots unlocked by exploration levels."
     }
 
+    case object EstablishedTrails extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 2
+      val name: String = "EstablishedTrails"
+      val cost: ActionCost = ActionCost(sugar = 600 * u, knowledge = 60 * u)
+      val title: String = "Established Trails"
+      val description: String = "Reduces the loss in sugar yield per additional collector by 20%, allowing more productive collectors."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -120,6 +130,7 @@ object UpgradesData {
       UnlockExplorerTask,
       DefaultWorkers,
       AdditionalExpeditionSlot,
+      EstablishedTrails,
     )
 
   }
