@@ -4,6 +4,8 @@ import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.model._
 
+import scala.util.Random
+
 object PopulationAging {
   val Minute: Long = 60L * TicksPerSecond
 
@@ -11,12 +13,14 @@ object PopulationAging {
     cohorts.filter(_.count > 0L).groupBy(_.expiresAt)
       .toList.sortBy(_._1).map { case (tick, entries) => AgeCohort(tick, entries.map(_.count).sum) }
 
-  // Split a population across fifteen minute buckets; no per-ant records or loops.
+  // Seeded jitter spreads each batch across ten-second buckets, without per-ant records.
   private def newborn(count: Long, now: Long, seed: Long): List[AgeCohort] = {
-    val first = (now + 45L * Minute + Minute - 1L) / Minute * Minute
-    (0 until 15).toList.map { i =>
-      val extra = if (Math.floorMod(i.toLong - seed, 15L) < count % 15L) 1L else 0L
-      AgeCohort(first + i * Minute, count / 15L + extra)
+    val bucket = 10L * TicksPerSecond
+    val slots = 90
+    val first = (now + 45L * Minute + bucket - 1L) / bucket * bucket
+    val extras = new Random(seed).shuffle((0 until slots).toList).take((count % slots).toInt).toSet
+    (0 until slots).toList.map { i =>
+      AgeCohort(first + i * bucket, count / slots + (if (extras.contains(i)) 1L else 0L))
     }.filter(_.count > 0L)
   }
 

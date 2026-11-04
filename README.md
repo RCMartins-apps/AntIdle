@@ -348,8 +348,10 @@ lifespan. All durations use simulated ticks: loading does not consume stored
 time or instantly age the colony. The existing catch-up multiplier advances
 aging alongside other game systems when the player enables it.
 
-`PopulationAging` stores counts in minute-sized expiration cohorts rather than
-one record per ant. Idle workers die first, then assigned home workers; scouts
+`PopulationAging` stores counts in ten-second expiration cohorts rather than
+one record per ant. Seeded random placement spreads a birth batch across the
+45–60 minute range; expiry ticks are assigned once and never rerolled on load.
+Idle workers die first, then assigned home workers; scouts
 age independently. Home deaths never remove expedition workers, carriers or
 reserved scouts. Expeditions and carcass retrievals carry their cohorts with
 them with unchanged expiry ticks. Aging continues while away, but deaths are

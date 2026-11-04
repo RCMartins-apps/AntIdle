@@ -35,10 +35,25 @@ class ColonyLifecycleSuite extends FunSuite {
     assert(started.ants.ages.active)
     assertEquals(started.ants.ages.workers.map(_.count).sum, 10000L)
     assertEquals(started.ants.ages.scouts.map(_.count).sum, 20L)
-    assert(started.ants.ages.workers.size <= 15)
+    assert(started.ants.ages.workers.size <= 90)
     assert(started.ants.ages.workers.forall(c => c.expiresAt >= 45L * Minute && c.expiresAt <= 60L * Minute))
     assertEquals(PopulationAging.reconcile(started), started)
     assertEquals(started.messages.count(_.startsWith("Colony aging has begun")), 1)
+  }
+
+  test("a birth batch gets seeded jitter across distinct expiry buckets and never rerolls on reload") {
+    val initial = colony(12).copy(world = colony().world.copy(currentTick = 123L, saveSeed = 42L))
+    val first = PopulationAging.reconcile(initial)
+    val cohorts = first.ants.ages.workers
+    assertEquals(cohorts.size, 12)
+    assert(cohorts.forall(_.count == 1L))
+    assert(cohorts.forall(c => c.expiresAt >= 123L + 45L * Minute && c.expiresAt <= 123L + 60L * Minute))
+    assert(cohorts.exists(_.expiresAt % Minute != 0L))
+    assertEquals(PopulationAging.reconcile(initial).ants.ages.workers, cohorts)
+    assertNotEquals(PopulationAging.reconcile(initial.copy(world = initial.world.copy(saveSeed = 43L))).ants.ages.workers, cohorts)
+    val loaded = AllDataForSave.fromAllData(first).toAllData
+    assertEquals(loaded.ants.ages.workers, cohorts)
+    assertEquals(PopulationAging.reconcile(loaded).ants.ages.workers, cohorts)
   }
 
   test("aging takes idle workers first, then assigned workers, with safe scout counts and grouped reports") {
