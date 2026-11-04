@@ -33,6 +33,16 @@ object ExplorationHelper {
       .modify(_.statistics.explorationsCount).using(_.addValue(1))
       .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers))
 
+  def summary(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
+    val rank = ExplorationProgression.suppliesRank(data)
+    val party = ExplorationParty(workers, 0L, destination.duration,
+      scouts = destination.scouts, destination = destination.id, suppliesLevel = rank)
+    val xp = ExplorationProgression.earned(party)
+    val experience = ExplorationProgression.addExperience(data.experience, xp)
+    val knowledge = ExplorationProgression.expeditionReward(destination.knowledge, experience, workers, rank)
+    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge"
+  }
+
   def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
     val rank = ExplorationProgression.suppliesRank(data)
     val party = ExplorationParty(workers, 0L, destination.duration,
@@ -49,7 +59,7 @@ object ExplorationHelper {
         s"Carcass guaranteed: $carcass"
       else s"45% carcass ($carcass); 44% sugar (${amount(u)}–${amount(20L * u)}); 11% no resources"
     }
-    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${amount(destination.knowledge)} knowledge · $result"
+    s"${summary(data, workers, destination)} · $result"
   }
 
   def exploreBonus(data: AllData, party: ExplorationParty): AllData = {

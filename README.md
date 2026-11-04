@@ -13,7 +13,7 @@ Production validation follows CI: `sbt fullOptJS test`.
 
 On phones (up to 767 CSS pixels), panels fit the screen, tabs scroll horizontally,
 and actions use full-width touch targets. Expand **Details** to see an action's
-existing costs and effects. **Action amount** provides the same ×1, ×10, ×25, and
+explanations and effects. Costs remain visible beside every action. **Action amount** provides the same ×1, ×10, ×25, and
 ×250 options as desktop Ctrl/Shift shortcuts for laying eggs and assigning workers.
 Resource limits and game rules are shared across both layouts. Game saves remain
 in the browser's local storage.
@@ -100,8 +100,8 @@ Every completed expedition earns XP, even if it finds nothing. Levels cost
 100, 200, 300… XP each, with 19,000 total XP to reach the level-20 cap.
 Levels use the gentler curve.
 Every level adds 25% to resource rewards. The trip that levels up receives the
-new resource bonus. XP progress and the next milestone are visible in Explore;
-longer explanations stay inside **XP details**.
+new resource bonus. XP progress is visible in Explore; milestone hints and longer explanations stay
+inside **XP details**.
 
 | Destination | Duration | Base XP | Base Knowledge | Main reward | Requirements |
 | --- | --- | --- | --- | --- | --- |
@@ -111,7 +111,14 @@ longer explanations stay inside **XP details**.
 
 Carcasses still need retrieval before their protein and sugar reserve are usable.
 Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
-cards include selected workers, supplies, and the level reached on return.
+details include selected workers, supplies, and the level reached on return.
+Cards show duration, XP, and Knowledge, with live resource and worker costs beside
+the action. Reward odds and capacity requirements are available in mobile
+**Details** and desktop tooltips. Locked destinations are
+hidden: scout routes appear after Nursery/scout training, and Rotten Log also
+requires level 3. Unlocked routes remain visible when scouts are away or resources
+are insufficient. Supplies appear at level 2; later ranks appear at their unlock
+levels rather than as locked actions.
 Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
 
 Party size improves both XP and all resource rewards, with diminishing returns:
@@ -195,3 +202,12 @@ currency aliases or economy migrations; older saves start a fresh colony.
 
 Run `python3 tests/knowledge_smoke.py` after `sbt fastOptJS` to check the early
 upgrade chain, Knowledge income and display, current save restoration and Nest capacity.
+
+Action costs use the shared compact available/required display on every action
+card, including supplies, brood, chambers, upgrades, exploration, and retrieval.
+Only the available number is green/red; requirements above a storage cap are red.
+Scout reservations are visible alongside expedition costs. Free actions say
+**Free**. Supplies purchases are visible once unlocked; only their explanations
+are collapsed. Costs update with resources, party size, and action amounts. Worker egg batches
+show the affordable quantity and actual price; when none can be bought, the
+minimum one-egg cost stays visible rather than appearing free.
