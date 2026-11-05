@@ -44,20 +44,7 @@ object TickUpdater {
             tunnelingSpace = tunnelingSpaceToGive,
           )
         },
-        // Build Queue update
-        allData => {
-          allData.nestAttributes.buildQueue match {
-            case finishBuilding :: otherBuildings
-                if allData.hasResources(finishBuilding.actionCost) =>
-              allData
-                .spendResources(finishBuilding.actionCost)
-                .modify(_.nestAttributes.buildQueue)
-                .setTo(otherBuildings)
-                .pipe(ChamberBonuses.completeUpgrade(_, finishBuilding.chamberType))
-            case _ =>
-              allData
-          }
-        },
+        Construction.tick,
         // Exploration parties update
         allData => {
           val finishedParties = allData.exploration.explorationParties.filter(_.targetTick <= allData.currentTick)

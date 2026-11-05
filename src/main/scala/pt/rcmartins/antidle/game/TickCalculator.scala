@@ -167,13 +167,7 @@ object TickCalculator {
       val targetValue: Long = filter(actionCost)
       if (targetValue > 0)
         currentResource.combineWith(resourceGainTickSignal.sum).map { case (resource, valueTick) =>
-          val remaining: Long = targetValue - resource.amount
-          if (remaining <= 0)
-            0
-          else if (valueTick <= 0 || targetValue > resource.maxAmount)
-            -1
-          else
-            remaining / valueTick
+          ResourceWait.ticks(targetValue, resource, valueTick)
         }
       else
         Val(0)
@@ -183,6 +177,7 @@ object TickCalculator {
       Seq(
         getTicksRemaining(_.sugar, sugarSignal, sugarTickGain),
         getTicksRemaining(_.tunnelingSpace, tunnelingSpaceSignal, tunnelingSpaceTickGain),
+        getTicksRemaining(_.protein, proteinSignal, proteinTickGain),
         knowledgeSignal.map(resource => if (resource.amount >= actionCost.knowledge) 0L else -1L),
       )
 

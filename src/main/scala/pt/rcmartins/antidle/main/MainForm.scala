@@ -431,31 +431,31 @@ object MainForm {
   }
 
   private def buildQueueDiv: ReactiveHtmlElement[HTMLDivElement] = {
-    def buildTaskName(buildTask: BuildTask, index: Int): ReactiveHtmlElement[HTMLSpanElement] = {
-      span(
-        className := "build-task",
-        role := "button",
-        tabIndex := 0,
-        buildTask.chamberType.name,
-        " [",
-        TickCalculator.calculateTicksToResources(buildTask.actionCost),
-        "]",
-        onClick --> { _ => Actions.removeBuildTask(index) },
-        onKeyDown --> { event =>
-          if (event.key == "Enter" || event.key == " ") {
-            event.preventDefault()
-            Actions.removeBuildTask(index)
-          }
-        },
-      ).amendThis(elem =>
-        createTooltipForActionButton(
-          elem = elem,
-          descriptionSignal = Val(None),
-          costSignal = Val(buildTask.actionCost),
+    def buildTaskName(buildTask: BuildTask, index: Int): ReactiveHtmlElement[HTMLDivElement] =
+      div(
+        className := "queued-building border-bottom pb-2 mb-2",
+        span(
+          className := "build-task",
+          role := "button", tabIndex := 0,
+          title := "Select to cancel this planned upgrade",
+          aria.label := s"Cancel ${buildTask.chamberType.name}",
+          buildTask.chamberType.name,
+          " → ", child.text <-- nestSignal.map(nest =>
+            Construction.level(nest.chambers, buildTask.chamberType) + nest.buildQueue.take(index + 1).count(_.chamberType == buildTask.chamberType)),
+          " [", if (index == 0) TickCalculator.calculateTicksToResources(buildTask.actionCost) else span("Queued"), "] ×",
+          onClick --> { _ => Actions.removeBuildTask(index) },
+          onKeyDown --> { event =>
+            if (event.key == "Enter" || event.key == " ") {
+              event.preventDefault()
+              Actions.removeBuildTask(index)
+            }
+          },
+        ).amendThis(elem => createTooltipForActionButton(
+          elem = elem, descriptionSignal = Val(None), costSignal = Val(buildTask.actionCost),
           bonusSignal = Actions.getActionBonus(buildTask.chamberType),
-        )
+        )),
+        actionCosts(Val(buildTask.actionCost), Val(Nil)),
       )
-    }
 
     div(
       className := "m-1",
@@ -483,7 +483,7 @@ object MainForm {
             case Seq() =>
               span(nbsp)
             case seq =>
-              span(seq.zipWithIndex.map { case (buildTask, index) =>
+              div(seq.zipWithIndex.map { case (buildTask, index) =>
                 buildTaskName(buildTask, index)
               })
           }
@@ -733,7 +733,7 @@ object MainForm {
           name = name,
           topRightBadgeSignal =
             chamberSignal.map(_.level).distinct.map(Some(_).filter(_ > 0).map(span(_))),
-          enabledSignal = Val(true),
+          enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
           descriptionSignal = Val(None),
           costSignal = actionCost,
           bonusSignal = Actions.getActionBonus(chamberType),
@@ -765,7 +765,8 @@ object MainForm {
             summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
               case (ants, tick) => PopulationAging.forecast(ants, tick)
             }),
-            p("Ants live 45–60 minutes of simulated time. Aging continues during expeditions and carcass retrievals. Ants cannot die while away; overdue ants die when they return. Stored-time multipliers advance aging with the rest of the colony."),
+            p(child.text <-- upgradesSignal.map(upgrades =>
+              s"New adults live ${PopulationAging.lifespanText(upgrades)} minutes of simulated time. Aging continues during expeditions and carcass retrievals. Overdue ants die on return. Stored-time multipliers advance aging with the colony.")),
             p("Losses use idle workers first, then assigned workers. Deaths are summarized once per minute."),
           )
         }),
@@ -835,7 +836,7 @@ object MainForm {
             val cost = Actions.buildChamberCost(ChamberType.Aphid)
             actionButton(
               name = ChamberType.Aphid.name,
-              enabledSignal = Val(true),
+              enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
               descriptionSignal = Val(Some(div("Each level supports one Aphid Tender: +0.8 sugar/s, −0.01 protein/s while fed."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
@@ -849,7 +850,7 @@ object MainForm {
             val cost = Actions.buildChamberCost(ChamberType.Nursery)
             actionButton(
               name = "Nursery Chamber",
-              enabledSignal = Val(true),
+              enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
               descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
