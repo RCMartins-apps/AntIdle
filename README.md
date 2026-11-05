@@ -122,7 +122,7 @@ levels rather than as locked actions.
 Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
 
 Party size improves both XP and all resource rewards, with diminishing returns:
-1 worker gives 1×, 5 give 2×, 17 give 3×, and 37 or more give 4×.
+1 worker gives 1×, 5 give 2×, 17 give 3×, and 37 give 4×. New parties cap at 37 workers.
 Costs continue scaling with workers, so smaller parties are more sugar-efficient.
 Larger carcass rewards do not increase carrier requirements or retrieval time.
 
@@ -294,7 +294,7 @@ returns and save persistence on phone and desktop.
 ## Exploration discoveries
 
 Completed expeditions now survey their destination. Survey progress appears as
-one compact line on the relevant route; discovery names and rewards are hidden
+one compact line in the Discoveries tab; discovery names and rewards are hidden
 until found. Each discovery is guaranteed after a fixed number of returns,
 announced once, and saved. There are no random discovery rolls or duplicate
 rewards. Departures and unrelated destinations do not advance surveys.
@@ -317,7 +317,7 @@ rewards. Departures and unrelated destinations do not advance surveys.
   10 protein, 12 Knowledge and 60 XP, scaled by the existing expedition rules.
   Protein is guaranteed, obeys its storage cap and needs no carcass retrieval.
 
-Known discoveries stay listed in Explore, with a short description of what each
+Known discoveries stay listed in the Discoveries tab, with a short description of what each
 unlocks. Survey counts default to empty for saves that do not contain them;
 existing XP does not automatically grant discoveries. Research restores the new
 task immediately, including on load.
@@ -434,3 +434,37 @@ invented or reconstructed from current resource balances.
 Run `sbt fastOptJS fullOptJS test`, then `python3 tests/water_smoke.py` for the
 complete discovery chain, water collection/caps, permanent visibility and saved
 statistics on phone and desktop.
+
+## Expedition staffing and discovery navigation
+
+Discoveries and survey progress now live in their own **Discoveries** tab, which
+appears after the first survey progress is earned. Only unlocked areas appear as
+survey targets; discovery names stay hidden until found. Explore contains the
+party planner, route actions, supplies and active/retrieving parties.
+
+New parties are limited to 37 workers, the existing 4x reward ceiling. The numeric stepper
+and engine enforce this limit; quick picks expose the useful 1/5/17/37 worker
+reward milestones. Selection clamps to remaining available workers after a
+launch or population change, so displayed costs always match the actual party.
+Existing saved parties still return their full worker count.
+
+Players may add up to three **extra scouts**, beyond each route's required
+scouts. Each adds 25% travel speed and costs 10 sugar in expedition supplies.
+Travel time is rounded up to whole ticks: a Woodland Edge trip with its required
+scout plus three extras takes 25.8s instead of 45s. The same per-trip rewards and
+XP arrive sooner, freeing slots and advancing surveys more often. Route previews
+show the real duration and sugar cost; scout requirements show the total needed.
+The planner hides extra-scout controls until scouts are unlocked. Active trips
+show reserved scout counts; saved parties retain their speed, supplies, ages and
+reservations. Expiry ticks remain fixed and overdue ants still die on return.
+
+After `sbt fastOptJS fullOptJS test`, run `python3 tests/staffing_smoke.py` and
+`python3 tests/discovery_smoke.py` for mobile/desktop navigation, caps, costs,
+reservations, saved timing and discovery progression checks.
+
+Expedition worker selection uses a numeric field with 48px minus/plus buttons
+instead of a slider. Mobile browsers show a numeric keyboard; direct typing,
+presets and button taps update costs immediately. Invalid/out-of-range values
+clamp to available workers and the reward limit; an empty edit restores the
+current selection on blur. Buttons disable at either boundary, and the field
+disables when no workers are available.

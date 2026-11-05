@@ -7,6 +7,18 @@ import pt.rcmartins.antidle.model._
 object ExplorationProgression {
   val MaxLevel: Int = 20
   val MaxSuppliesLevel: Int = 3
+  val MaxWorkers: Long = 37L * u
+  val MaxExtraScouts: Int = 3
+  val ExtraScoutSugar: Long = 10L * u
+
+  def duration(destination: ExplorationDestination, extraScouts: Int): Long = {
+    val speed = 100L + 25L * Math.max(0, Math.min(MaxExtraScouts, extraScouts))
+    (destination.duration * 100L + speed - 1L) / speed
+  }
+
+  def selectedWorkers(requested: Long, available: Long): Long =
+    Math.max(u, Math.min(MaxWorkers, Math.min(requested, Math.max(u, available / u * u))))
+
 
   // Each new level costs 100 XP more: 100, 200, 300... Total to level 20: 19,000.
   def threshold(level: Int): Long = 50L * (level - 1) * level

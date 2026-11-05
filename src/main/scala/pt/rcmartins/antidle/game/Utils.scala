@@ -42,6 +42,7 @@ object Utils {
   val upgradesSignal: Signal[UpgradesData] = upgradesData.signal.distinct
   val explorationData: Var[ExplorationData] = Var(AllData.initial.exploration)
   val explorationSignal: Signal[ExplorationData] = explorationData.signal.distinct
+  val discoveriesVisibleSignal: Signal[Boolean] = explorationSignal.map(data => data.surveys.values.exists(_ > 0)).distinct
   val statisticsData: Var[StatisticsData] = Var(AllData.initial.statistics)
 
   val currentTickSignal: Signal[Long] = worldData.signal.map(_.currentTick).distinct
