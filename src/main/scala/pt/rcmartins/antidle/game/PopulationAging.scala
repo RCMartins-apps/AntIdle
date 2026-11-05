@@ -9,15 +9,20 @@ import scala.util.Random
 object PopulationAging {
   val Minute: Long = 60L * TicksPerSecond
 
+  def lifespanText(upgrades: UpgradesData): String =
+    if (upgrades(UpgradesData.UpgradeType.ColonyNutrition).unlocked) "54–72" else "45–60"
+
   private def grouped(cohorts: List[AgeCohort]): List[AgeCohort] =
     cohorts.filter(_.count > 0L).groupBy(_.expiresAt)
       .toList.sortBy(_._1).map { case (tick, entries) => AgeCohort(tick, entries.map(_.count).sum) }
 
   // Seeded jitter spreads each batch across ten-second buckets, without per-ant records.
-  private def newborn(count: Long, now: Long, seed: Long): List[AgeCohort] = {
+  private def newborn(count: Long, now: Long, seed: Long, upgrades: UpgradesData): List[AgeCohort] = {
     val bucket = 10L * TicksPerSecond
-    val slots = 90
-    val first = (now + 45L * Minute + bucket - 1L) / bucket * bucket
+    val improved = upgrades(UpgradesData.UpgradeType.ColonyNutrition).unlocked
+    val slots = if (improved) 108 else 90
+    val minimum = if (improved) 54L else 45L
+    val first = (now + minimum * Minute + bucket - 1L) / bucket * bucket
     val extras = new Random(seed).shuffle((0 until slots).toList).take((count % slots).toInt).toSet
     (0 until slots).toList.map { i =>
       AgeCohort(first + i * bucket, count / slots + (if (extras.contains(i)) 1L else 0L))
@@ -43,14 +48,14 @@ object PopulationAging {
         val total = cohorts.map(_.count).sum
         if (total > count) take(cohorts, total - count)._1
         else if (total == count) cohorts
-        else grouped(cohorts ++ newborn(count - total, data.currentTick, seed))
+        else grouped(cohorts ++ newborn(count - total, data.currentTick, seed, data.upgrades))
       }
       val ages = data.ants.ages
       val updated = data.modify(_.ants.ages).setTo(ages.copy(active = true,
         workers = fit(ages.workers, homeWorkers(data.ants), data.world.saveSeed + data.currentTick),
         scouts = fit(ages.scouts, ScoutProgression.available(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L)))
       if (ages.active) updated
-      else updated.addMessage("Colony aging has begun: ants live 45–60 minutes of simulated time. Aging continues while away; overdue ants die on return.")
+      else updated.addMessage(s"Colony aging has begun: new adults live ${lifespanText(data.upgrades)} minutes of simulated time. Aging continues while away; overdue ants die on return.")
     }
   }
 

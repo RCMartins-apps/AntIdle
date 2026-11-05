@@ -379,3 +379,25 @@ slots, holding reserves or already meeting the target.
 After `sbt fastOptJS fullOptJS test`, run `python3 tests/lifecycle_smoke.py` for
 phone and desktop checks of grace periods, actual deaths, replacement, travel
 death deferral, save/reload, targets/reserves and the stored-time multiplier.
+
+## Construction planning and colony nutrition
+
+**Construction Planning** unlocks at exploration level 2 for 500 sugar and 50
+Knowledge, increasing construction queue capacity from one to three. Planned
+upgrades use the chamber level after earlier plans of the same type. Cancelling
+an entry reprices later entries, and completing construction charges the proper
+next-level cost. Loading repairs stale queued prices. Queued upgrades show their
+target level and resource costs; select the title or press Enter/Space to cancel.
+A full queue disables further chamber plans. Only the first entry shows a wait
+estimate; later entries say Queued. Protein shortages now correctly show Never
+until supplies arrive, and estimates round up rather than showing zero too soon.
+
+**Colony Nutrition** unlocks at exploration level 5 once aging is active. It costs
+2,500 sugar, 60 protein and 200 Knowledge. New adults live 20% longer (54–72
+simulated minutes), with the same seeded lifespan jitter. Existing expiry ticks
+stay fixed, including while traveling. Aging details show the current lifespan
+range. Research and construction planning survive saving/loading.
+
+Run `sbt fastOptJS fullOptJS test`, then `python3 tests/management_smoke.py` for
+phone/desktop checks of upgrade gates, queue pricing/cancellation, protein waits,
+actual spending, nutrition and saved lifespans.

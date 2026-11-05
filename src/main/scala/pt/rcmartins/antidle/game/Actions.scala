@@ -65,21 +65,10 @@ object Actions {
     }
 
   def addBuildTask(buildTask: BuildTask): Unit =
-    actionUpdater.writer.onNext { allData =>
-      if (allData.nestAttributes.buildQueue.sizeIs < allData.nestAttributes.maxBuildQueue)
-        allData
-          .modify(_.nestAttributes.buildQueue)
-          .using(_ :+ buildTask)
-      else
-        allData
-    }
+    actionUpdater.writer.onNext(Construction.enqueue(_, buildTask.chamberType))
 
   def removeBuildTask(index: Int): Unit =
-    actionUpdater.writer.onNext { allData =>
-      allData
-        .modify(_.nestAttributes.buildQueue)
-        .using(_.patch(index, Nil, 1))
-    }
+    actionUpdater.writer.onNext(Construction.cancel(_, index))
 
   def unlockUpgrade(actionCost: ActionCost, unlockAction: UpgradesData => UpgradesData): Unit =
     actionUpdater.writer.onNext(_.hasResourcesUpdate(actionCost)(allData =>
@@ -100,13 +89,7 @@ object Actions {
     upgradesSignal.map(upgrades => ChamberBonuses.forChamber(chamberType, upgrades)).distinct
 
   def buildChamberCost(chamberType: ChamberType): Signal[ActionCost] =
-    getChamber(chamberType)
-      .map(_.level)
-      .distinct
-      .map(level => ActionCost(
-        tunnelingSpace = getChamberTunnelingSpaceNeeded(chamberType, level),
-        protein = if (chamberType == ChamberType.Nursery) NurseryProteinCost * (level + 1) else if (chamberType == ChamberType.Aphid) 2L * u * (level + 1L) else 0L,
-      ))
+    nestSignal.map(nest => Construction.nextCost(nest, chamberType)).distinct
 
   def raiseScout(): Unit =
     actionUpdater.writer.onNext(ScoutProgression.raise)

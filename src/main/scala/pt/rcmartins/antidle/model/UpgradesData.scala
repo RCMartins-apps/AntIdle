@@ -165,6 +165,25 @@ object UpgradesData {
       val description: String = "Automatically raise worker eggs toward a population target while keeping a sugar reserve. Configure in Brood."
     }
 
+    case object ConstructionPlanning extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 2
+      val name: String = "ConstructionPlanning"
+      val cost: ActionCost = ActionCost(sugar = 500 * u, knowledge = 50 * u)
+      val title: String = "Construction Planning"
+      val description: String = "Expand the construction queue from one to three chamber upgrades."
+    }
+
+    case object ColonyNutrition extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.ants.ages.active && data.unlocks.tabs.exploreTabUnlocked &&
+          pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 5
+      val name: String = "ColonyNutrition"
+      val cost: ActionCost = ActionCost(sugar = 2500 * u, protein = 60 * u, knowledge = 200 * u)
+      val title: String = "Colony Nutrition"
+      val description: String = "New workers and scouts live 20% longer: 54–72 minutes."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -183,6 +202,8 @@ object UpgradesData {
       AphidTending,
       ProteinStorage,
       QueensRoutine,
+      ConstructionPlanning,
+      ColonyNutrition,
     )
 
   }
