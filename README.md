@@ -1,5 +1,11 @@
 # Ant Idle
 
+For development context, start with [AGENTS.md](AGENTS.md). The repository keeps
+the [game vision](docs/VISION.md), [agreed design decisions](docs/DECISIONS.md)
+and [latest handoff](docs/HANDOFF.md) so work can continue across Codex sessions.
+These distinguish implemented behavior, approved direction and tentative ideas;
+the sections below document existing mechanics and setup.
+
 A Scala.js incremental game. Build with Java and the sbt version pinned in
 `project/build.properties`:
 
