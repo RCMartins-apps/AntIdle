@@ -338,6 +338,35 @@ object MainForm {
       )
     )
 
+  private def statisticsDiv: ReactiveHtmlElement[HTMLElement] =
+    detailsTag(
+      className := "col-12 colony-statistics mb-3",
+      summaryTag("Colony statistics"),
+      small("Collected resources exclude overflow discarded at full storage."),
+      children <-- statisticsData.signal.combineWith(unlocksSignal, explorationSignal).map { case (stats, unlocks, exploration) =>
+        val rows = List(
+          Some("Sugar collected" -> prettyNumberStr(stats.sugarU.thisRun)),
+          Option.when(unlocks.resources.showTunnelingSpace)("Tunneling space dug" -> prettyNumberStr(stats.tunnelingSpaceU.thisRun)),
+          Option.when(exploration.proteinDiscovered)("Protein collected" -> prettyNumberStr(stats.proteinU.thisRun)),
+          Option.when(unlocks.resources.showWater)("Water collected" -> prettyNumberStr(stats.waterU.thisRun)),
+          Option.when(unlocks.resources.showKnowledge)("Knowledge earned" -> prettyNumberStr(stats.knowledgeU.thisRun)),
+          Option.when(unlocks.tabs.exploreTabUnlocked)("Expeditions launched" -> stats.explorationsCount.thisRun.toString),
+          Option.when(unlocks.tabs.exploreTabUnlocked)("Expeditions completed" -> stats.explorationsCompleted.thisRun.toString),
+          Option.when(unlocks.tabs.exploreTabUnlocked)("Workers sent" -> prettyNumberStr(stats.explorationsWorkersSentU.thisRun)),
+          Option.when(unlocks.resources.showEggs)("Eggs raised" -> stats.eggsCount.thisRun.toString),
+          Option.when(unlocks.resources.showWorkers)("Workers matured" -> stats.workersMatured.thisRun.toString),
+          Option.when(unlocks.resources.showScouts)("Scouts matured" -> stats.scoutsMatured.thisRun.toString),
+          Option.when(unlocks.resources.showWorkers)("Peak workers" -> stats.maxAliveWorkers.thisRun.toString),
+          Option.when(exploration.proteinDiscovered)("Carcasses retrieved" -> stats.carcassesRetrieved.thisRun.toString),
+          Option.when(unlocks.resources.showWorkers)("Aging losses" -> (stats.workersLostToAging.thisRun.toLong + stats.scoutsLostToAging.thisRun).toString),
+          Option.when(unlocks.resources.showWorkers)("Starvation losses" -> stats.starvationDeaths.thisRun.toString),
+        ).flatten
+        rows.map { case (label, value) =>
+          div(className := "statistic-row d-flex flex-wrap justify-content-between gap-3 py-1", span(label), b(value))
+        }
+      },
+    )
+
   private def settingsDiv: ReactiveHtmlElement[HTMLDivElement] = {
     def settingsButton(
         name: String,
@@ -357,6 +386,7 @@ object MainForm {
 
     div(
       className := "row",
+      statisticsDiv,
       settingsButton(
         "Manual Save",
         () =>
@@ -549,6 +579,13 @@ object MainForm {
           resourceSignal = proteinSignal,
           resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal)),
           showSignal = nurseryUnlockedSignal,
+        ),
+        child.maybe <-- createResourceDiv(
+          name = "Water",
+          resourceSignal = waterSignal,
+          resourceEstimationSignal = Val(div("0/s")),
+          showSignal = unlocksSignal.map(_.resources.showWater),
+          tooltipOpt = Some(div("Water supplies gathered from discovered sources in the dry area.")),
         ),
         child.maybe <-- createResourceDiv(
           name = "Knowledge",
@@ -911,6 +948,7 @@ object MainForm {
             Option.when(required > 0)(ActionRequirement(label, available, required, maximum))
           val costs = List(
             costLine(cost.protein, resources.protein.amount, "protein", Some(resources.protein.maxAmount)),
+            costLine(cost.water, resources.water.amount, "water", Some(resources.water.maxAmount)),
             costLine(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
             costLine(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
             costLine(cost.knowledge, resources.knowledge.amount, "knowledge"),

@@ -5,7 +5,7 @@ import zio.json._
 case class ActionCost(
     sugar: Long = 0L,
     protein: Long = 0L,
-//    water: Long = 0L,
+    water: Long = 0L,
     tunnelingSpace: Long = 0L,
     knowledge: Long = 0L,
 //    DNA: Long = 0L,

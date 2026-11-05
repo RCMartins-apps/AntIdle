@@ -30,27 +30,30 @@ case class AllData(
     else
       this
 
+  // Count resources actually retained; wasted production at a full store is not gathered.
   def giveResources(
-      sugar: Long = 0,
-      tunnelingSpace: Long = 0,
-      knowledge: Long = 0,
-  ): AllData =
-    this
-      // sugar
-      .modify(_.basicResources.sugar)
-      .usingIf(sugar > 0)(_ + sugar)
-      .modify(_.statistics.sugarU)
-      .usingIf(sugar > 0)(_.addValue(sugar))
-      // tunnelingSpace
-      .modify(_.basicResources.tunnelingSpace)
-      .usingIf(tunnelingSpace > 0)(_ + tunnelingSpace)
-      .modify(_.statistics.tunnelingSpaceU)
-      .usingIf(tunnelingSpace > 0)(_.addValue(tunnelingSpace))
-      // knowledge
-      .modify(_.basicResources.knowledge)
-      .usingIf(knowledge > 0)(_ + knowledge)
-      .modify(_.statistics.knowledgeU)
-      .usingIf(knowledge > 0)(_.addValue(knowledge))
+      sugar: Long = 0L,
+      tunnelingSpace: Long = 0L,
+      knowledge: Long = 0L,
+      protein: Long = 0L,
+      water: Long = 0L,
+  ): AllData = {
+    def received(resource: BasicResources.BasicResource, requested: Long): Long =
+      Math.min(Math.max(0L, requested), Math.max(0L, resource.freeSpace))
+    val gainedSugar = received(basicResources.sugar, sugar)
+    val gainedSpace = received(basicResources.tunnelingSpace, tunnelingSpace)
+    val gainedKnowledge = received(basicResources.knowledge, knowledge)
+    val gainedProtein = received(basicResources.protein, protein)
+    val gainedWater = received(basicResources.water, water)
+    copy(
+      basicResources = basicResources.copy(sugar = basicResources.sugar + gainedSugar,
+        tunnelingSpace = basicResources.tunnelingSpace + gainedSpace, knowledge = basicResources.knowledge + gainedKnowledge,
+        protein = basicResources.protein + gainedProtein, water = basicResources.water + gainedWater),
+      statistics = statistics.copy(sugarU = statistics.sugarU.addValue(gainedSugar),
+        tunnelingSpaceU = statistics.tunnelingSpaceU.addValue(gainedSpace), knowledgeU = statistics.knowledgeU.addValue(gainedKnowledge),
+        proteinU = statistics.proteinU.addValue(gainedProtein), waterU = statistics.waterU.addValue(gainedWater)),
+    )
+  }
 
   def spendResources(actionCost: ActionCost): AllData =
     copy(

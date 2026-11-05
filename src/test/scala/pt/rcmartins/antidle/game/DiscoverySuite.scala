@@ -25,7 +25,7 @@ class DiscoverySuite extends FunSuite {
     val sent = ExplorationHelper.start(data, workers, destination)
     assert(sent.exploration.explorationParties.nonEmpty)
     val party = sent.exploration.explorationParties.head
-    ExplorationHelper.exploreBonus(sent.copy(exploration = sent.exploration.copy(explorationParties = Nil)), party)
+    ExplorationHelper.exploreBonus(sent, party)
   }
 
   test("discoveries require completed trips to the correct destination and announce only once") {

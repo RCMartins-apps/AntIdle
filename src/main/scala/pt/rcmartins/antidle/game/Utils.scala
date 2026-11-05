@@ -79,7 +79,7 @@ object Utils {
   val sugarSignal: Signal[BasicResource] = resourcesSignal.map(_.sugar).distinct
   val proteinSignal: Signal[BasicResource] = resourcesSignal.map(_.protein).distinct
   val nurseryUnlockedSignal: Signal[Boolean] = explorationSignal.map(_.proteinDiscovered).distinct
-//  val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
+  val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
   val tunnelingSpaceSignal: Signal[BasicResource] = resourcesSignal.map(_.tunnelingSpace).distinct
   val knowledgeSignal: Signal[BasicResource] = resourcesSignal.map(_.knowledge).distinct
 //  val DNASignal: Signal[BasicResource] = resourcesSignal.map(_.DNA).distinct

@@ -107,6 +107,8 @@ object PopulationAging {
         pendingWorkers = ages.pendingWorkers + workerLosses, pendingScouts = ages.pendingScouts + scoutLosses)
       val updated = ready.modify(_.ants).using(a => loseWorkers(a, workerLosses)
         .copy(scouts = a.scouts - scoutLosses * u, ages = nextAges))
+        .modify(_.statistics.workersLostToAging).using(_.addValue(workerLosses))
+        .modify(_.statistics.scoutsLostToAging).using(_.addValue(scoutLosses))
       if (summarize && ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L)) {
         val losses = List(Option.when(nextAges.pendingWorkers > 0L)(s"${nextAges.pendingWorkers} workers"),
           Option.when(nextAges.pendingScouts > 0L)(s"${nextAges.pendingScouts} scouts")).flatten.mkString(" and ")

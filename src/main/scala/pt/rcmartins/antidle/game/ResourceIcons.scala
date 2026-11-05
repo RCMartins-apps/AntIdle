@@ -11,6 +11,8 @@ object ResourceIcons {
     "M12 2 21 7v10l-9 5-9-5V7l9-5ZM3 7l9 5 9-5M12 12v10M7.5 4.5l9 5")
   case object Protein extends ResourceIcon("protein",
     "M8 4C3 5 2 10 4 15s7 7 12 4 7-9 3-13-7-4-11-2ZM14 8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z")
+  case object Water extends ResourceIcon("water",
+    "M12 2C10 6 5 11 5 16a7 7 0 0 0 14 0c0-5-5-10-7-14ZM8 16a4 4 0 0 0 4 4")
   case object Knowledge extends ResourceIcon("knowledge",
     "M12 6C9 4 6 4 3 5v15c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1ZM12 6v15M6 9h3M15 9h3M6 12h3M15 12h3")
   case object Tunneling extends ResourceIcon("tunneling",
@@ -27,6 +29,7 @@ object ResourceIcons {
   def forLabel(label: String): Option[ResourceIcon] = label.toLowerCase match {
     case "sugar" => Some(Sugar)
     case "protein" => Some(Protein)
+    case "water" => Some(Water)
     case "knowledge" => Some(Knowledge)
     case "tunneling space" => Some(Tunneling)
     case "scouts" => Some(Scouts)

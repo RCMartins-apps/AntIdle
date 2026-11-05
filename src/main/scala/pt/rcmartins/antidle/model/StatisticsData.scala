@@ -7,6 +7,15 @@ case class StatisticsData(
     sugarU: StatLong = StatLong(),
     tunnelingSpaceU: StatLong = StatLong(),
     knowledgeU: StatLong = StatLong(),
+    proteinU: StatLong = StatLong(),
+    waterU: StatLong = StatLong(),
+    explorationsCompleted: StatInt = StatInt(),
+    carcassesRetrieved: StatInt = StatInt(),
+    workersMatured: StatInt = StatInt(),
+    scoutsMatured: StatInt = StatInt(),
+    workersLostToAging: StatInt = StatInt(),
+    scoutsLostToAging: StatInt = StatInt(),
+    starvationDeaths: StatInt = StatInt(),
     eggsCount: StatInt = StatInt(),
     maxAliveWorkers: StatInt = StatInt(),
     explorationsCount: StatInt = StatInt(),
@@ -20,8 +29,10 @@ object StatisticsData {
 
   case class StatInt(thisRun: Int = 0, total: Int = 0) {
 
-    def addValue(value: Int): StatInt =
-      copy(thisRun = thisRun + value, total = total + value)
+    def addValue(value: Long): StatInt = {
+      def add(current: Int): Int = (current.toLong + Math.min(Int.MaxValue.toLong, Math.max(0L, value))).min(Int.MaxValue.toLong).toInt
+      copy(thisRun = add(thisRun), total = add(total))
+    }
 
     def max(value: Int): StatInt =
       copy(thisRun = Math.max(thisRun, value), total = Math.max(total, value))
@@ -35,8 +46,10 @@ object StatisticsData {
 
   case class StatLong(thisRun: Long = 0, total: Long = 0) {
 
-    def addValue(sugarGained: Long): StatLong =
-      copy(thisRun = thisRun + sugarGained, total = total + sugarGained)
+    def addValue(value: Long): StatLong = {
+      def add(current: Long): Long = current + Math.min(Math.max(0L, value), Long.MaxValue - current)
+      copy(thisRun = add(thisRun), total = add(total))
+    }
 
   }
 

@@ -91,10 +91,12 @@ object TickUpdater {
                         allData.ants.sugarCumulativeDebt,
                       )
                     )
-                      allData
-                        .addMessage("An ant died of starvation.")
-                        .modify(_.ants)
-                        .using(_ => PopulationAging.starveOne(allData))
+                      {
+                        val survivors = PopulationAging.starveOne(allData)
+                        val losses = (allData.ants.workers - survivors.workers + allData.ants.scouts - survivors.scouts) / u
+                        val updated = allData.copy(ants = survivors).modify(_.statistics.starvationDeaths).using(_.addValue(losses))
+                        if (losses > 0L) updated.addMessage("An ant died of starvation.") else updated
+                      }
                     else
                       allData
                   }

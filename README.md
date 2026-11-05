@@ -401,3 +401,36 @@ range. Research and construction planning survive saving/loading.
 Run `sbt fastOptJS fullOptJS test`, then `python3 tests/management_smoke.py` for
 phone/desktop checks of upgrade gates, queue pricing/cancellation, protein waits,
 actual spending, nutrition and saved lifespans.
+
+## Dry Clearing foundations and statistics
+
+Four Rotten Log returns discover the **Dry Trail**. It reveals **Dry Clearing**
+at exploration level 6: a 120-second survey expedition needing ten workers and
+two scouts, costing 35 sugar per worker, with 75 base XP and 25 base Knowledge.
+Three clearing surveys discover **Dew-covered Plants**, unlocking **Scavenge
+Water**. That 90-second route needs five workers and one scout, costs 25 sugar
+per worker and grants 20 base water, 5 Knowledge and 30 XP. Party size, supplies
+and exploration level scale rewards using the existing rules. Neither new route
+creates carcasses. Names and routes stay hidden until their discovery gates.
+
+Water starts with 100 storage capacity and a local droplet SVG. Its resource row
+appears on first collection and never disappears, including at zero after a
+reload. Water is saved, storage-capped, supported by resource costs/affordability,
+and ready for future outpost projects. This step provides exploration and water
+supplies; outpost construction and water-dependent production follow separately.
+
+Settings has a collapsed **Colony statistics** view. Both current-colony and
+lifetime counters are persisted for future milestones. Resource gains count what
+was actually collected, excluding discarded overflow at full stores; passive
+sugar used directly for upkeep is counted once. Spending never reduces collection
+progress. Protein from retrievals and seed missions and water from scavenging use
+the same award path as other resources. Launched and completed expeditions are
+separate counters; duplicate completion attempts cannot award progress twice.
+Maturation, retrievals, aging losses, starvation losses and observed peak workers
+are tracked as well. Counters saturate rather than wrap when reaching integer
+limits. Existing statistics are retained; missing historical events are not
+invented or reconstructed from current resource balances.
+
+Run `sbt fastOptJS fullOptJS test`, then `python3 tests/water_smoke.py` for the
+complete discovery chain, water collection/caps, permanent visibility and saved
+statistics on phone and desktop.
