@@ -33,6 +33,9 @@ object Actions {
   def selectDefaultTask(task: Option[AntTask]): Unit =
     actionUpdater.writer.onNext(DefaultWorkerAssignment.select(_, task))
 
+  def configureQueenRoutine(enabled: Boolean, target: Int, reserve: Long): Unit =
+    actionUpdater.writer.onNext(AutomaticBrood.configure(_, enabled, target, reserve))
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 

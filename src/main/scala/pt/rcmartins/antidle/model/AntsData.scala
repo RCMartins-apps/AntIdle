@@ -10,6 +10,8 @@ case class AntsData(
     sugarCumulativeDebt: Long = 0,
     scouts: Long = 0L,
     defaultTask: Option[AntTask] = None,
+    ages: ColonyAges = ColonyAges(),
+    queenRoutine: QueenRoutine = QueenRoutine(),
 ) {
 
   lazy val idleWorkersCount: Long =

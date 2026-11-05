@@ -237,7 +237,7 @@ object Utils {
               statistics,
               messages,
             )
-          ResourceVisibility.reconcile(DefaultWorkerAssignment.normalize(actionFunc(allData))).updateVars()
+          ResourceVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.reconcile(actionFunc(allData)))).updateVars()
       }
 
   def giveResources(sugar: Long): Unit =

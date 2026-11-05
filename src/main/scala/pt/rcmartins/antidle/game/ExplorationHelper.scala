@@ -23,16 +23,19 @@ object ExplorationHelper {
 
   def start(data: AllData, workers: Long, destination: ExplorationDestination): AllData =
     if (!canStart(data, workers, destination)) data
-    else DefaultWorkerAssignment.normalize(data.spendResources(cost(workers, destination))
-      .modify(_.ants).using(_.unlockTask(AntTask.Explorer).addToTask(AntTask.Explorer, workers))
-      .modify(_.exploration.explorationParties)
-      .using(ExplorationParty(
-        workers, data.currentTick, data.currentTick + destination.duration,
-        scouts = destination.scouts, destination = destination.id,
-        suppliesLevel = ExplorationProgression.suppliesRank(data.exploration),
-      ) :: _)
-      .modify(_.statistics.explorationsCount).using(_.addValue(1))
-      .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers)))
+    else {
+      val (ready, ages) = PopulationAging.depart(data, workers, destination.scouts)
+      DefaultWorkerAssignment.normalize(ready.spendResources(cost(workers, destination))
+        .modify(_.ants).using(_.unlockTask(AntTask.Explorer).addToTask(AntTask.Explorer, workers))
+        .modify(_.exploration.explorationParties)
+        .using(ExplorationParty(
+          workers, data.currentTick, data.currentTick + destination.duration,
+          scouts = destination.scouts, destination = destination.id,
+          suppliesLevel = ExplorationProgression.suppliesRank(data.exploration), ages = ages,
+        ) :: _)
+        .modify(_.statistics.explorationsCount).using(_.addValue(1))
+        .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers)))
+    }
 
   def summary(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
     val rank = ExplorationProgression.suppliesRank(data)
@@ -75,7 +78,11 @@ object ExplorationHelper {
     s"${summary(data, workers, destination)} · $result"
   }
 
-  def exploreBonus(data: AllData, party: ExplorationParty): AllData = {
+  def exploreBonus(initial: AllData, party: ExplorationParty): AllData = {
+    val data = initial.modify(_.exploration.explorationParties).using { parties =>
+      val index = parties.indexOf(party)
+      if (index < 0) parties else parties.patch(index, Nil, 1)
+    }
     val random = new Random(data.world.saveSeed + data.world.currentTick + party.startingTick)
     val destination = ExplorationDestination.forParty(party)
     val previousXP = data.exploration.experience
@@ -107,7 +114,7 @@ object ExplorationHelper {
       returned.giveResources(sugar = sugar)
         .addMessage(s"$report Found ${UINumbersUtils.prettyNumberStr(sugar)} sugar!")
     } else returned.addMessage(s"$report No resources found.")
-    DefaultWorkerAssignment.normalize(DiscoveryProgression.recordReturn(rewarded, destination))
+    DefaultWorkerAssignment.normalize(PopulationAging.returnHome(DiscoveryProgression.recordReturn(rewarded, destination), party.ages))
   }
 
   def dice(random: Random, maxValue: Long): Long = random.nextLong(maxValue) + 1L

@@ -680,6 +680,46 @@ object MainForm {
       ),
     )
 
+  private def queenRoutineControls(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
+    def update(change: QueenRoutine => QueenRoutine): Unit =
+      useSignalValue[AntsData](antsSignal, ants => {
+        val next = change(ants.queenRoutine)
+        Actions.configureQueenRoutine(next.enabled, next.targetWorkers, next.sugarReserve)
+      })
+    div(
+      className := "queen-routine mb-3",
+      h6("Queen's Routine"),
+      label(
+        input(
+          idAttr := "queen-routine-enabled", typ := "checkbox", className := "form-check-input me-2",
+          checked <-- antsSignal.map(_.queenRoutine.enabled).distinct,
+          onChange.mapToChecked --> (enabled => update(_.copy(enabled = enabled))),
+        ),
+        "Automatic worker eggs",
+      ),
+      div(className := "row g-2 mt-1",
+        div(className := "col-6",
+          label(forId := "queen-routine-target", "Target workers"),
+          input(idAttr := "queen-routine-target", typ := "number", minAttr := "0", maxAttr := "1000000", className := "form-control",
+            value <-- antsSignal.map(_.queenRoutine.targetWorkers.toString).distinct,
+            onChange.mapToValue --> (value => update(_.copy(targetWorkers = value.toIntOption.getOrElse(0)))),
+          ),
+        ),
+        div(className := "col-6",
+          label(forId := "queen-routine-reserve", "Sugar reserve"),
+          input(idAttr := "queen-routine-reserve", typ := "number", minAttr := "0", maxAttr := "1000000000", className := "form-control",
+            value <-- antsSignal.map(a => (a.queenRoutine.sugarReserve / u).toString).distinct,
+            onChange.mapToValue --> (value => update(_.copy(sugarReserve = Math.max(0L, Math.min(1000000000L, value.toLongOption.getOrElse(0L))) * u))),
+          ),
+        ),
+      ),
+      div(className := "queen-routine-status small", child.text <-- antsSignal.combineWith(nestSignal, sugarSignal).map {
+        case (ants, nest, sugar) => AutomaticBrood.status(ants, nest, sugar.amount)
+      }),
+      small("10 sugar / worker egg · Growing eggs count toward the target. Scouts remain manual."),
+    )
+  }
+
   private def nestDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     def standardBuyChamber(
         name: String,
@@ -719,6 +759,19 @@ object MainForm {
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
         h5("Brood"),
+        child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
+          detailsTag(
+            className := "colony-aging mb-2",
+            summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
+              case (ants, tick) => PopulationAging.forecast(ants, tick)
+            }),
+            p("Ants live 45–60 minutes of simulated time. Aging continues during expeditions and carcass retrievals. Ants cannot die while away; overdue ants die when they return. Stored-time multipliers advance aging with the rest of the colony."),
+            p("Losses use idle workers first, then assigned workers. Deaths are summarized once per minute."),
+          )
+        }),
+        child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked)) {
+          queenRoutineControls
+        },
         actionAmountControl("brood-action-amount"),
         div(
           className := "row",

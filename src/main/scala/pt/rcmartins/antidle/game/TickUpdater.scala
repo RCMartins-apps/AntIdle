@@ -16,6 +16,7 @@ object TickUpdater {
       Seq[AllData => AllData](
         // Tick update
         allData => allData.modify(_.world.currentTick).using(_ + 1),
+        PopulationAging.tick,
         // Brood maturation is shared by workers and the new scout caste.
         ScoutProgression.growBrood,
         // Ants income from tasks
@@ -59,20 +60,13 @@ object TickUpdater {
         },
         // Exploration parties update
         allData => {
-          val (updatedExplorationParties, finishedParties) =
-            allData.exploration.explorationParties.partition(_.targetTick > allData.currentTick)
-
-          allData
-            .modify(_.exploration.explorationParties)
-            .setTo(updatedExplorationParties)
-            .pipe { allData =>
-              finishedParties.foldLeft(allData) { case (allData, party) =>
-                ExplorationHelper.exploreBonus(allData, party)
-              }
-            }
+          val finishedParties = allData.exploration.explorationParties.filter(_.targetTick <= allData.currentTick)
+          finishedParties.foldLeft(allData) { case (current, party) =>
+            ExplorationHelper.exploreBonus(current, party)
+          }
         },
         CarcassProgression.returnCarcasses,
-        // Sugar upkeep + death ants by starving (should be the last data update)
+        // Charge upkeep before automatic brood can spend the remaining sugar.
         beforeUpkeep => {
           val (allData, foodOffset) = CarcassProgression.consumeFood(beforeUpkeep)
           val sugarUpkeep = ScoutProgression.upkeepCount(allData.ants, allData.exploration) *
@@ -113,25 +107,14 @@ object TickUpdater {
                       allData
                         .addMessage("An ant died of starvation.")
                         .modify(_.ants)
-                        .using { antsData =>
-                          (
-                            if (antsData.idleWorkersCount == 0)
-                              antsData.remove1WorkerFromLastUpkeepTask
-                            else
-                              antsData
-                          )
-                            .modify(_.workers)
-                            .using(workers => Math.max(0L, workers - u))
-                            .modify(_.scouts)
-                            .usingIf(antsData.workers == 0)(scouts => Math.max(0L, scouts - u))
-                            .modify(_.sugarCumulativeDebt)
-                            .using(debt => Math.max(0, debt - Constants.AntDeathRiskThreshold))
-                        }
+                        .using(_ => PopulationAging.starveOne(allData))
                     else
                       allData
                   }
             }
         },
+        AutomaticBrood.tick,
+        PopulationAging.reconcile,
         UpgradeVisibility.reconcile,
         DefaultWorkerAssignment.normalize,
         ResourceVisibility.reconcile,
