@@ -91,3 +91,16 @@ than adding migration complexity. Do not assume backward compatibility is
 required for every model change. Version incompatible formats deliberately and
 report the impact. Revisit this policy if the project gains real players or the
 owner changes it; do not treat it as a permanent production policy.
+
+## D9: Branch, commit and push development work by default — standing authorization
+
+The owner wants progress preserved remotely without needing to request a push
+each time. Each distinct development task or lasting design decision starts on
+a descriptive branch from current `origin/main`; related follow-ups stay on that
+branch. Record lasting discussion decisions even when there is no code change.
+After appropriate checks, commit and push before handing off changed work.
+
+This includes documentation-only branches and does not require a PR. PR creation,
+merging and deployment remain separate user requests. Ordinary branch pushes are
+authorized; destructive Git operations and direct pushes to `main` are not.
+See [AGENTS.md](../AGENTS.md#branch-and-push-by-default) for the operational rules.

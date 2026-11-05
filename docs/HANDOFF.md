@@ -5,8 +5,9 @@ Verify it against Git and PR state at the next session's start.
 
 ## Last verified: 2026-11-05
 
-- `origin/main` at `2bd9d10` includes repletes, merged in
-  [PR #29](https://github.com/RCMartins-apps/AntIdle/pull/29).
+- `origin/main` at `f431eb8` includes repletes in
+  [PR #29](https://github.com/RCMartins-apps/AntIdle/pull/29) and the durable
+  context files in [PR #30](https://github.com/RCMartins-apps/AntIdle/pull/30).
 - Implemented foundations include exploration destinations/discoveries, SVG
   resources, diminishing sugar collection, default worker allocation, aphid
   chambers, protein storage, aging, queen brood automation, construction
@@ -18,10 +19,16 @@ Verify it against Git and PR state at the next session's start.
 
 ## Current work
 
-The owner asked for durable context so Codex restarts do not lose the game's
-direction. This documentation branch adds the startup guide, agreed vision,
-decision record and this handoff; it changes no gameplay. Documentation checks
-cover local links/source paths and `git diff --check`.
+Branch `docs/automatic-branch-push` records new standing authorization: each
+distinct task or lasting design decision gets a branch, and changed work is
+committed and pushed by default, including documentation-only work without a PR.
+Related follow-ups continue that branch. PRs, merges and deployments still need
+separate authorization. See AGENTS and decision D9 for the full policy.
+
+This work changes no gameplay. Validation is local Markdown link/file-target
+checking and `git diff --check`; game builds/tests are not rerun for it. The
+completion message reports the actual push result. Until merged, this policy is
+on the named remote branch rather than `main`.
 
 ## Next work and unknowns
 
