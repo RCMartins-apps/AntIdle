@@ -7,37 +7,39 @@ import pt.rcmartins.antidle.model._
 import scala.util.Random
 
 object ExplorationHelper {
-  def cost(workers: Long, destination: ExplorationDestination): ActionCost =
-    ActionCost(sugar = workers * destination.sugarPerWorker, idleWorkers = workers)
+  def cost(workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): ActionCost =
+    ActionCost(sugar = workers * destination.sugarPerWorker + Math.max(0, Math.min(ExplorationProgression.MaxExtraScouts, extraScouts)) * ExplorationProgression.ExtraScoutSugar, idleWorkers = workers)
 
-  def canDepart(data: ExplorationData, ants: AntsData, upgrades: UpgradesData, workers: Long, destination: ExplorationDestination): Boolean =
-    workers >= destination.minimumWorkers && workers % u == 0 &&
+  def canDepart(data: ExplorationData, ants: AntsData, upgrades: UpgradesData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Boolean =
+    workers >= destination.minimumWorkers && workers <= ExplorationProgression.MaxWorkers && workers % u == 0 &&
+      extraScouts >= 0 && extraScouts <= ExplorationProgression.MaxExtraScouts &&
       ExplorationProgression.level(data.experience) >= destination.requiredLevel &&
       destination.requiredDiscovery.forall(DiscoveryProgression.has(data, _)) &&
       data.explorationParties.size < ExplorationProgression.maxParties(data.experience, upgrades) &&
-      ants.availableWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts
+      ants.availableWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts + extraScouts.toLong * u
 
-  def canStart(data: AllData, workers: Long, destination: ExplorationDestination): Boolean =
-    data.unlocks.tabs.exploreTabUnlocked && canDepart(data.exploration, data.ants, data.upgrades, workers, destination) &&
-      data.hasResources(cost(workers, destination))
+  def canStart(data: AllData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Boolean =
+    data.unlocks.tabs.exploreTabUnlocked && canDepart(data.exploration, data.ants, data.upgrades, workers, destination, extraScouts) &&
+      data.hasResources(cost(workers, destination, extraScouts))
 
-  def start(data: AllData, workers: Long, destination: ExplorationDestination): AllData =
-    if (!canStart(data, workers, destination)) data
+  def start(data: AllData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): AllData =
+    if (!canStart(data, workers, destination, extraScouts)) data
     else {
-      val (ready, ages) = PopulationAging.depart(data, workers, destination.scouts)
-      DefaultWorkerAssignment.normalize(ready.spendResources(cost(workers, destination))
+      val scouts = destination.scouts + extraScouts.toLong * u
+      val (ready, ages) = PopulationAging.depart(data, workers, scouts)
+      DefaultWorkerAssignment.normalize(ready.spendResources(cost(workers, destination, extraScouts))
         .modify(_.ants).using(_.unlockTask(AntTask.Explorer).addToTask(AntTask.Explorer, workers))
         .modify(_.exploration.explorationParties)
         .using(ExplorationParty(
-          workers, data.currentTick, data.currentTick + destination.duration,
-          scouts = destination.scouts, destination = destination.id,
-          suppliesLevel = ExplorationProgression.suppliesRank(data.exploration), ages = ages,
+          workers, data.currentTick, data.currentTick + ExplorationProgression.duration(destination, extraScouts),
+          scouts = scouts, destination = destination.id,
+          suppliesLevel = ExplorationProgression.suppliesRank(data.exploration), ages = ages, extraScouts = extraScouts,
         ) :: _)
         .modify(_.statistics.explorationsCount).using(_.addValue(1))
         .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers)))
     }
 
-  def summary(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
+  def summary(data: ExplorationData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String = {
     val rank = ExplorationProgression.suppliesRank(data)
     val party = ExplorationParty(workers, 0L, destination.duration,
       scouts = destination.scouts, destination = destination.id, suppliesLevel = rank)
@@ -56,10 +58,10 @@ object ExplorationHelper {
       val reward = ExplorationProgression.expeditionReward(destination.waterReward, experience, workers, rank)
       s" · ${UINumbersUtils.prettyNumberStr(reward)} water"
     } else ""
-    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein$water"
+    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein$water"
   }
 
-  def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
+  def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String = {
     val rank = ExplorationProgression.suppliesRank(data)
     val party = ExplorationParty(workers, 0L, destination.duration,
       scouts = destination.scouts, destination = destination.id, suppliesLevel = rank)
@@ -81,7 +83,7 @@ object ExplorationHelper {
         s"Carcass guaranteed: $carcass"
       else s"45% carcass ($carcass); 44% sugar (${amount(u)}–${amount(20L * u)}); 11% no resources"
     }
-    s"${summary(data, workers, destination)} · $result"
+    s"${summary(data, workers, destination, extraScouts)} · $result"
   }
 
   def exploreBonus(initial: AllData, party: ExplorationParty): AllData =

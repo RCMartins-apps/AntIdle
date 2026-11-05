@@ -10,6 +10,7 @@ case class ExplorationParty(
     destination: String = "surroundings",
     suppliesLevel: Int = 0,
     ages: TravelAges = TravelAges(),
+    extraScouts: Int = 0,
 )
 
 object ExplorationParty {

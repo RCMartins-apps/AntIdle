@@ -281,6 +281,11 @@ object MainForm {
               )
             )
           ),
+          child.maybe <-- ifUnlockedOpt(discoveriesVisibleSignal)(
+            li(className := "nav-item",
+              a(className := "nav-link", idAttr := "discoveries-tab", dataAttr("bs-toggle") := "tab",
+                href := "#discoveriesContent", role := "tab", "Discoveries")),
+          ),
           li(
             className := "nav-item",
             a(
@@ -327,6 +332,9 @@ object MainForm {
               role := "tabpanel",
               exploreDiv,
             )
+          ),
+          child.maybe <-- ifUnlockedOpt(discoveriesVisibleSignal)(
+            div(className := "tab-pane", idAttr := "discoveriesContent", role := "tabpanel", discoveriesDiv),
           ),
           div(
             className := "tab-pane",
@@ -1228,50 +1236,72 @@ object MainForm {
     )
   }
 
+  private def discoveriesDiv: ReactiveHtmlElement[HTMLDivElement] =
+    div(className := "discoveries-panel",
+      children <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
+        val found = DiscoveryProgression.all.filter(_.found(data))
+        val surveys = DiscoveryProgression.all.filterNot(_.found(data)).flatMap { discovery =>
+          ExplorationDestination.all.find(d => d.id == discovery.destination && d.isUnlocked(data, ants, nest)).map { destination =>
+            div(className := "card p-2 my-2 survey-entry", dataAttr("destination") := destination.id,
+              b(destination.name), span(className := "destination-survey", s"Survey ${discovery.progress(data)} / ${discovery.trips}"))
+          }
+        }
+        List(
+          div(h5("Surveys"), if (surveys.isEmpty) p("All known areas surveyed.") else div(surveys)),
+          div(className := "exploration-discoveries", h5("Discoveries"),
+            if (found.isEmpty) p("Complete surveys to uncover discoveries.") else div(found.map(discovery =>
+              div(className := "card p-2 my-2 discovery-entry", b(discovery.title), span(discovery.description)))),
+          ),
+        )
+      },
+    )
+
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val amountOfExplorersVar = Var(1L * u)
+    val amountOfExplorersSignal = amountOfExplorersVar.signal.combineWith(availableWorkersCountSignal)
+      .map { case (requested, available) => ExplorationProgression.selectedWorkers(requested, available) }.distinct
+    val extraScoutsVar = Var(0)
+    val extraScoutsSignal = extraScoutsVar.signal.combineWith(availableScoutsSignal).map {
+      case (requested, available) => Math.max(0, Math.min(ExplorationProgression.MaxExtraScouts, Math.min(requested, (available / u).toInt)))
+    }.distinct
 
     def area(destination: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = {
-      val cost = amountOfExplorersVar.signal.map(ExplorationHelper.cost(_, destination))
+      val cost = amountOfExplorersSignal.combineWith(extraScoutsSignal).map { case (workers, extra) => ExplorationHelper.cost(workers, destination, extra) }
       div(
         className := "col-12 col-md-6 px-3 py-2 exploration-destination",
         div(
           className := "card p-2 h-100",
           p(
             className := "mb-1 destination-preview",
-            child.text <-- amountOfExplorersVar.signal.combineWith(explorationSignal).map {
-              case (workers, data) => ExplorationHelper.summary(data, workers, destination)
+            child.text <-- amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
+              case (workers, data, extra) => ExplorationHelper.summary(data, workers, destination, extra)
             },
           ),
-          child.maybe <-- explorationSignal.map { data =>
-            DiscoveryProgression.all.find(d => d.destination == destination.id && !d.found(data))
-              .map(d => p(className := "mb-1 small destination-survey", s"Survey ${d.progress(data)} / ${d.trips}"))
-          },
           div(
             className := "row",
             actionButton(
               name = s"Explore ${destination.name}",
-              requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersVar.signal, upgradesSignal).map {
-                case (data, scouts, workers, upgrades) =>
+              requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersSignal, upgradesSignal, extraScoutsSignal).map {
+                case (data, scouts, workers, upgrades, extra) =>
                   List(ActionRequirement("expedition slots",
                     Math.max(0L, ExplorationProgression.maxParties(data.experience, upgrades).toLong - data.explorationParties.size) * u)) ++
-                    Option.when(destination.scouts > 0)(ActionRequirement("scouts", scouts, destination.scouts, isCost = true)) ++
+                    Option.when(destination.scouts + extra.toLong * u > 0)(ActionRequirement("scouts", scouts, destination.scouts + extra.toLong * u, isCost = true)) ++
                     Option.when(destination.requiredLevel > 1)(ActionRequirement("exploration level",
                       ExplorationProgression.level(data.experience).toLong * u, destination.requiredLevel.toLong * u)) ++
                     Option.when(destination.minimumWorkers > u)(ActionRequirement("party workers", workers, destination.minimumWorkers))
               }.distinct,
-              enabledSignal = amountOfExplorersVar.signal.combineWith(explorationSignal, antsSignal, resourcesSignal, upgradesSignal)
-                .map { case (workers, data, ants, resources, upgrades) =>
-                  ExplorationHelper.canDepart(data, ants, upgrades, workers, destination) &&
-                    resources.hasResources(ExplorationHelper.cost(workers, destination))
+              enabledSignal = amountOfExplorersSignal.combineWith(explorationSignal, antsSignal, resourcesSignal, upgradesSignal, extraScoutsSignal)
+                .map { case (workers, data, ants, resources, upgrades, extra) =>
+                  ExplorationHelper.canDepart(data, ants, upgrades, workers, destination, extra) &&
+                    resources.hasResources(ExplorationHelper.cost(workers, destination, extra))
                 },
-              descriptionSignal = amountOfExplorersVar.signal.combineWith(explorationSignal).map {
-                case (workers, data) => Some(div(ExplorationHelper.preview(data, workers, destination)))
+              descriptionSignal = amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
+                case (workers, data, extra) => Some(div(ExplorationHelper.preview(data, workers, destination, extra)))
               },
               costSignal = cost,
               bonusSignal = Val(ActionBonus.empty),
-              onClickAction = _ => useSignalValue(amountOfExplorersVar.signal,
-                workers => Actions.explore(workers, destination)),
+              onClickAction = _ => useSignalValue[(Long, Int)](amountOfExplorersSignal.combineWith(extraScoutsSignal),
+                selection => Actions.explore(selection._1, destination, selection._2)),
             ).amend(className := "col-12"),
           ),
         ),
@@ -1284,19 +1314,40 @@ object MainForm {
         className := "col-12 px-3 py-2",
         label(
           forId := "explorer-count",
-          "Workers to send: ",
-          b(child <-- amountOfExplorersVar.signal.map(prettyNumberInt)),
+          "Workers: ",
+          b(child <-- amountOfExplorersSignal.map(prettyNumberInt)),
         ),
         input(
           idAttr := "explorer-count",
           className := "form-range",
           `type` := "range",
           MinAttr := "1",
-          MaxAttr <-- availableWorkersCountSignal.map(amount => Math.max(1L, amount / u).toString),
+          MaxAttr <-- availableWorkersCountSignal.map(amount => Math.max(1L, Math.min(37L, amount / u)).toString),
           disabled <-- availableWorkersCountSignal.map(_ < u),
-          value <-- amountOfExplorersVar.signal.map(amount => (amount / u).toString),
+          value <-- amountOfExplorersSignal.map(amount => (amount / u).toString),
           onInput.mapToValue.map(_.toLong * u) --> amountOfExplorersVar.writer,
         ),
+        div(className := "d-flex gap-2 flex-wrap worker-presets",
+          List(1, 5, 17, 37).zipWithIndex.map { case (workers, index) =>
+            button(className := "btn btn-outline-secondary", aria.label := s"Send $workers workers",
+              s"$workers · ${index + 1}×",
+              disabled <-- availableWorkersCountSignal.map(_ < workers.toLong * u),
+              onClick --> (_ => amountOfExplorersVar.set(workers.toLong * u)),
+            )
+          },
+        ),
+        child.maybe <-- ifUnlockedOpt(unlocksSignal.map(_.resources.showScouts)) {
+          div(className := "mt-2 expedition-scouts",
+            label(forId := "extra-scouts", "Extra scouts (+10 sugar each)"),
+            select(idAttr := "extra-scouts", className := "form-select",
+              (0 to ExplorationProgression.MaxExtraScouts).map(extra =>
+                option(value := extra.toString, if (extra == 0) "0" else s"$extra · +${extra * 25}% speed",
+                  disabled <-- availableScoutsSignal.map(_ < extra.toLong * u))),
+              value <-- extraScoutsSignal.map(_.toString),
+              onChange.mapToValue.map(_.toInt) --> extraScoutsVar.writer,
+            ),
+          )
+        },
       ),
       div(
         className := "col-12 px-3 py-2 exploration-progress",
@@ -1312,26 +1363,13 @@ object MainForm {
               s" Next level: +${bonus + 25}%." else ""
             s"Reward bonus: +$bonus% sugar, carcass sugar and protein.$next"
           }),
-          p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at 37 workers; extra workers have diminishing returns."),
+          p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at the 37-worker party limit. Extra scouts add 25% travel speed each, up to three."),
         ),
       ),
       ExplorationDestination.all.map { destination =>
         child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
           case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
         }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
-      },
-      child.maybe <-- explorationSignal.map(data => DiscoveryProgression.all.filter(_.found(data))).distinct.map {
-        found => Option.when(found.nonEmpty) {
-          div(
-            className := "col-12 px-3 py-2 exploration-discoveries",
-            h5("Discoveries"),
-            found.map(discovery => div(
-              className := "card p-2 my-2 discovery-entry",
-              b(discovery.title),
-              span(discovery.description),
-            )),
-          )
-        }
       },
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
         div(
@@ -1373,7 +1411,8 @@ object MainForm {
         children <-- explorationSignal.map(_.explorationParties.map { party =>
           div(
             b(s"${ExplorationDestination.forParty(party).name}: "),
-            s"${prettyNumberStr(party.amountWorkers)} workers", ", ",
+            s"${prettyNumberStr(party.amountWorkers)} workers",
+            if (party.scouts > 0L) s" · ${prettyNumberStr(party.scouts)} scouts" else "", ", ",
             child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))),
           )
         }),

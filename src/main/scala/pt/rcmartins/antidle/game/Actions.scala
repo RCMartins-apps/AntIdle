@@ -94,8 +94,8 @@ object Actions {
   def raiseScout(): Unit =
     actionUpdater.writer.onNext(ScoutProgression.raise)
 
-  def explore(workers: Long, destination: ExplorationDestination): Unit =
-    actionUpdater.writer.onNext(ExplorationHelper.start(_, workers, destination))
+  def explore(workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Unit =
+    actionUpdater.writer.onNext(ExplorationHelper.start(_, workers, destination, extraScouts))
 
   def upgradeExpeditionSupplies(): Unit =
     actionUpdater.writer.onNext(ExplorationProgression.upgradeSupplies)
