@@ -14,6 +14,7 @@ object ResourceVisibility {
       .modify(_.unlocks.resources.showEggs).setTo(known.showEggs || data.unlocks.actions.canLayEggs || data.ants.eggsAndLarvae.nonEmpty)
       .modify(_.statistics.maxAliveWorkers).using(_.max(data.ants.workersCount))
       .modify(_.unlocks.resources.showWorkers).setTo(known.showWorkers || data.ants.workers > 0L)
+      .modify(_.unlocks.resources.showRepletes).setTo(known.showRepletes || data.ants.repletes > 0L || data.upgrades(UpgradesData.UpgradeType.RepleteStorage).unlocked)
       .modify(_.unlocks.resources.showScouts).setTo(known.showScouts || data.ants.scouts > 0L || data.nestAttributes.chambers.nurseryChamber.level > 0)
       .modify(_.exploration.proteinDiscovered).setTo(data.exploration.proteinDiscovered || data.basicResources.protein.amount > 0L ||
         data.nestAttributes.chambers.nurseryChamber.level > 0 || data.upgrades(UpgradesData.UpgradeType.AphidTending).unlocked)

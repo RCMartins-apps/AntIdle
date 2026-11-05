@@ -51,6 +51,7 @@ object Unlocks {
       showEggs: Boolean = false,
       showWorkers: Boolean = false,
       showScouts: Boolean = false,
+      showRepletes: Boolean = false,
   )
 
   object ResourceUnlocks {

@@ -54,14 +54,13 @@ object BasicResources {
 
     def atCapacity: Boolean = isLimited && maxAmount > 0 && amount >= maxAmount
 
-    def +(amount: Long): BasicResource = {
-      val total = if (amount > 0 && this.amount > Long.MaxValue - amount) Long.MaxValue else this.amount + amount
-      copy(amount = Math.min(maxAmount, total))
-    }
+    // A capacity loss blocks new collection; it never discards existing inventory.
+    def +(amount: Long): BasicResource =
+      copy(amount = this.amount + Math.min(Math.max(0L, amount), freeSpace))
 
     def -(amount: Long): BasicResource = copy(amount = this.amount - amount)
 
-    def freeSpace: Long = maxAmount - amount
+    def freeSpace: Long = Math.max(0L, maxAmount - amount)
 
   }
 

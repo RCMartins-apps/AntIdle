@@ -9,6 +9,7 @@ case class AntsData(
     tasks: Seq[(AntTask, Long)] = Seq.empty,
     sugarCumulativeDebt: Long = 0,
     scouts: Long = 0L,
+    repletes: Long = 0L,
     defaultTask: Option[AntTask] = None,
     ages: ColonyAges = ColonyAges(),
     queenRoutine: QueenRoutine = QueenRoutine(),
@@ -19,10 +20,10 @@ case class AntsData(
 
   lazy val workersCount: Int = (workers / u).toInt
 
-  lazy val populationCount: Int = workersCount + (scouts / u).toInt + eggsAndLarvae.length
+  lazy val populationCount: Int = workersCount + (scouts / u).toInt + (repletes / u).toInt + eggsAndLarvae.length
 
   lazy val upkeepWorkersCount: Long =
-    (scouts + idleWorkersCount +
+    (scouts + repletes + idleWorkersCount +
       tasks.map { case (task, amount) => if (task.hasAntUpkeep) amount else 0 }.sum) / u
 
   def unlockTask(antTask: AntTask): AntsData =

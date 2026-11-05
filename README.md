@@ -468,3 +468,34 @@ presets and button taps update costs immediately. Invalid/out-of-range values
 clamp to available workers and the reward limit; an empty edit restores the
 current selection on blur. Buttons disable at either boundary, and the field
 disables when no workers are available.
+
+## Repletes: living water storage
+
+Discovering Dew-covered Plants reveals **Replete Storage** research (1,500 sugar,
+20 protein, 150 Knowledge). It unlocks the **Replete Chamber** and **Promote
+Replete** in Nest. Each chamber level houses one replete; building housing alone
+does not create storage ants or fill water. Chamber construction starts at 100
+tunneling space and 5 protein, with space costs growing by 25% and protein costs
+by 5 per target level.
+
+Promotion costs 100 sugar, 5 protein and one available worker. The oldest living
+home worker is removed from worker age cohorts and converted into a replete,
+with a fresh randomized 90–120 minute lifespan from promotion (108–144 minutes
+with Colony Nutrition). It is a worker conversion, not an egg: population stays
+the same, and normal sugar upkeep continues. The idle/default worker pool is
+used; other assigned jobs and away ants are not borrowed. Repletes cannot take
+worker tasks or join expeditions. Promotion is irreversible, and its fresh
+expiry is saved rather than rerolled on load.
+
+Water capacity is 100 base plus 100 per living replete. Repletes have their own
+age cohorts, housing counter, permanent resource row and promotion/aging
+statistics. Their deaths reduce capacity and free housing. Existing water is
+never truncated when capacity falls, during later resource awards/ticks, or on
+load. Over-capacity water remains spendable, while collection pauses until the
+amount is below the new cap or another replete restores enough capacity. New
+storage capacity never grants free water.
+
+Run `sbt fastOptJS fullOptJS test`, then `python3 tests/replete_smoke.py` to check
+research, construction, promotion costs, oldest-worker selection, fresh life,
+conserved population/upkeep, housing limits, saved cohorts and loss-free water
+capacity changes on phone and desktop.

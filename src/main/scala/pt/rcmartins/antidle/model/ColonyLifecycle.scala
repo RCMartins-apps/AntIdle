@@ -15,7 +15,7 @@ object TravelAges {
 }
 
 case class ColonyAges(active: Boolean = false, workers: List[AgeCohort] = Nil, scouts: List[AgeCohort] = Nil,
-    pendingWorkers: Long = 0L, pendingScouts: Long = 0L)
+    pendingWorkers: Long = 0L, pendingScouts: Long = 0L, repletes: List[AgeCohort] = Nil, pendingRepletes: Long = 0L)
 object ColonyAges {
   implicit val decoder: JsonDecoder[ColonyAges] = DeriveJsonDecoder.gen[ColonyAges]
   implicit val encoder: JsonEncoder[ColonyAges] = DeriveJsonEncoder.gen[ColonyAges]

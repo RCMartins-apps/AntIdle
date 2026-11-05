@@ -36,6 +36,8 @@ object Actions {
   def configureQueenRoutine(enabled: Boolean, target: Int, reserve: Long): Unit =
     actionUpdater.writer.onNext(AutomaticBrood.configure(_, enabled, target, reserve))
 
+  def promoteReplete(): Unit = actionUpdater.writer.onNext(RepleteProgression.promote)
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 
@@ -82,6 +84,7 @@ object Actions {
         case ChamberType.FoodStorage => chambers.foodStorageChamber
         case ChamberType.Nursery     => chambers.nurseryChamber
         case ChamberType.Aphid       => chambers.aphidChamber
+        case ChamberType.Replete     => chambers.repleteChamber
       }
     }
 

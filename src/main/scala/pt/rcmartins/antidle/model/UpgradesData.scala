@@ -184,6 +184,15 @@ object UpgradesData {
       val description: String = "New workers and scouts live 20% longer: 54–72 minutes."
     }
 
+    case object RepleteStorage extends UpgradeType {
+      def shouldShow(data: AllData): Boolean =
+        data.unlocks.tabs.exploreTabUnlocked && pt.rcmartins.antidle.game.DiscoveryProgression.DewPlants.found(data.exploration)
+      val name: String = "RepleteStorage"
+      val cost: ActionCost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 150 * u)
+      val title: String = "Replete Storage"
+      val description: String = "Unlock the Replete Chamber and promote workers into living water storage."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -204,6 +213,7 @@ object UpgradesData {
       QueensRoutine,
       ConstructionPlanning,
       ColonyNutrition,
+      RepleteStorage,
     )
 
   }

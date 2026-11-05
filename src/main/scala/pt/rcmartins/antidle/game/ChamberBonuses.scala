@@ -23,6 +23,8 @@ object ChamberBonuses {
       case ChamberType.FoodStorage =>
         ActionBonus(maxSugar = Constants.FoodStorageChamberBonusMaxSugar,
           maxProtein = if (upgrades(ProteinStorage).unlocked) 100L * Constants.u else 0L)
+      case ChamberType.Replete =>
+        ActionBonus(repleteSlots = 1)
       case ChamberType.Aphid =>
         ActionBonus(aphidSlots = 1)
       case ChamberType.Nursery =>
@@ -42,6 +44,8 @@ object ChamberBonuses {
         allData.modify(_.nestAttributes.chambers.queenChamber.level).using(_ + 1)
       case ChamberType.FoodStorage =>
         allData.modify(_.nestAttributes.chambers.foodStorageChamber.level).using(_ + 1)
+      case ChamberType.Replete =>
+        allData.modify(_.nestAttributes.chambers.repleteChamber.level).using(_ + 1)
       case ChamberType.Aphid =>
         allData.modify(_.nestAttributes.chambers.aphidChamber.level).using(_ + 1)
       case ChamberType.Nursery =>
