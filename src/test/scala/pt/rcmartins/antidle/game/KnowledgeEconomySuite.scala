@@ -70,7 +70,7 @@ class KnowledgeEconomySuite extends FunSuite {
       val ants = AntsData(workers = 20 * u, scouts = u, tasks = Seq(AntTask.Explorer -> 0L))
       val initial = AllData.initial.copy(ants = ants, exploration = ExplorationData(experience = 300L))
       val party = ExplorationParty(5 * u, 0L, destination.duration, destination.scouts, destination.id)
-      val returned = ExplorationHelper.exploreBonus(initial.copy(ants = ants.addToTask(AntTask.Explorer, 5 * u)), party)
+      val returned = ExplorationHelper.exploreBonus(initial.copy(ants = ants.addToTask(AntTask.Explorer, 5 * u), exploration = initial.exploration.copy(explorationParties = List(party))), party)
       assert(returned.basicResources.knowledge.amount > 0)
     }
   }

@@ -36,12 +36,14 @@ object CarcassProgression {
   def returnCarcasses(allData: AllData): AllData = {
     val (finished, ongoing) = allData.exploration.retrievals.partition(_.targetTick <= allData.currentTick)
     DefaultWorkerAssignment.normalize(finished.foldLeft(allData.modify(_.exploration.retrievals).setTo(ongoing)) { (data, retrieval) =>
+      val collected = Math.min(retrieval.carcass.proteinReward, data.basicResources.protein.freeSpace)
       val returned = data
         .modify(_.ants).using(_.removeFromTask(AntTask.CarcassCarrier, retrieval.carcass.requiredWorkers))
         .modify(_.exploration.carcasses).using(_ :+ retrieval.carcass)
-        .modify(_.basicResources.protein).using(_ + retrieval.carcass.proteinReward)
+        .giveResources(protein = retrieval.carcass.proteinReward)
+        .modify(_.statistics.carcassesRetrieved).using(_.addValue(1))
         .modify(_.exploration.proteinDiscovered).setTo(true)
-        .addMessage(s"Carcass returned: +${UINumbersUtils.prettyNumberStr(retrieval.carcass.proteinReward)} protein.")
+        .addMessage(s"Carcass returned: +${UINumbersUtils.prettyNumberStr(collected)} protein.")
       PopulationAging.returnHome(returned, retrieval.ages)
     })
   }

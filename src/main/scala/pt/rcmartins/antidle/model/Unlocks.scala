@@ -46,6 +46,7 @@ object Unlocks {
       // Resources
       showTunnelingSpace: Boolean = false,
       showKnowledge: Boolean = false,
+      showWater: Boolean = false,
       // Ants
       showEggs: Boolean = false,
       showWorkers: Boolean = false,

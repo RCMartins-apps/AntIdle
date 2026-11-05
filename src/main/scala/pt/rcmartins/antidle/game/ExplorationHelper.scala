@@ -52,7 +52,11 @@ object ExplorationHelper {
       val reward = ExplorationProgression.expeditionReward(destination.proteinReward, experience, workers, rank)
       s" · ${UINumbersUtils.prettyNumberStr(reward)} protein"
     } else ""
-    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein"
+    val water = if (destination.waterReward > 0L) {
+      val reward = ExplorationProgression.expeditionReward(destination.waterReward, experience, workers, rank)
+      s" · ${UINumbersUtils.prettyNumberStr(reward)} water"
+    } else ""
+    s"${UINumbersUtils.prettyTimeFromTicks(destination.duration)} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein$water"
   }
 
   def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
@@ -63,11 +67,13 @@ object ExplorationHelper {
     val experience = ExplorationProgression.addExperience(data.experience, xp)
     def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
       ExplorationProgression.expeditionReward(base, experience, workers, rank))
-    val result = if (destination.proteinReward > 0L)
+    val result = if (destination.waterReward > 0L)
+      "Water guaranteed; stored up to water capacity"
+    else if (destination.proteinReward > 0L)
       "Protein guaranteed; no carcass storage needed"
     else if (destination.sugarReward > 0L)
       "Sugar guaranteed; no carcass storage needed"
-    else if (destination == ExplorationDestination.RottenLog)
+    else if (destination.carcassSize == 0)
       "Knowledge guaranteed; no carcass storage needed"
     else {
       val carcass = s"${amount(CarcassProtein * destination.carcassSize)} protein + ${amount(CarcassFood * destination.carcassSize)} sugar reserve"
@@ -78,7 +84,11 @@ object ExplorationHelper {
     s"${summary(data, workers, destination)} · $result"
   }
 
-  def exploreBonus(initial: AllData, party: ExplorationParty): AllData = {
+  def exploreBonus(initial: AllData, party: ExplorationParty): AllData =
+    if (!initial.exploration.explorationParties.contains(party)) initial
+    else finish(initial, party)
+
+  private def finish(initial: AllData, party: ExplorationParty): AllData = {
     val data = initial.modify(_.exploration.explorationParties).using { parties =>
       val index = parties.indexOf(party)
       if (index < 0) parties else parties.patch(index, Nil, 1)
@@ -89,6 +99,7 @@ object ExplorationHelper {
     val xp = ExplorationProgression.earned(party)
     val experience = ExplorationProgression.addExperience(previousXP, xp)
     val withXP = data.modify(_.exploration.experience).setTo(experience)
+      .modify(_.statistics.explorationsCompleted).using(_.addValue(1))
     val leveled = if (ExplorationProgression.level(experience) > ExplorationProgression.level(previousXP))
       withXP.addMessage(s"Exploration level ${ExplorationProgression.level(experience)}! ${ExplorationProgression.nextMilestone(experience)}")
     else withXP
@@ -97,22 +108,29 @@ object ExplorationHelper {
       .giveResources(knowledge = knowledge)
     val report = s"${destination.name}: +$xp XP · +${UINumbersUtils.prettyNumberStr(knowledge)} knowledge."
 
-    val rewarded = if (destination.proteinReward > 0L) {
+    val rewarded = if (destination.waterReward > 0L) {
+      val water = ExplorationProgression.expeditionReward(destination.waterReward, experience, party.amountWorkers, party.suppliesLevel)
+      val collected = Math.min(water, returned.basicResources.water.freeSpace)
+      returned.giveResources(water = water).addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} water!")
+    } else if (destination.proteinReward > 0L) {
       val protein = ExplorationProgression.expeditionReward(destination.proteinReward, experience, party.amountWorkers, party.suppliesLevel)
-      returned.modify(_.basicResources.protein).using(_ + protein)
+      val collected = Math.min(protein, returned.basicResources.protein.freeSpace)
+      returned.giveResources(protein = protein)
         .modify(_.exploration.proteinDiscovered).setTo(true)
-        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(protein)} protein!")
+        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} protein!")
     } else if (destination.sugarReward > 0L) {
       val sugar = ExplorationProgression.expeditionReward(destination.sugarReward, experience, party.amountWorkers, party.suppliesLevel)
+      val collected = Math.min(sugar, returned.basicResources.sugar.freeSpace)
       returned.giveResources(sugar = sugar)
-        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(sugar)} sugar!")
-    } else if (destination == ExplorationDestination.RottenLog) returned.addMessage(report) else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
+        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} sugar!")
+    } else if (destination.carcassSize == 0) returned.addMessage(report) else if (!data.exploration.carcassDiscovered || destination == ExplorationDestination.WoodlandEdge || random.nextInt(100) < 45)
       CarcassProgression.discover(returned, destination.carcassSize, party.amountWorkers, party.suppliesLevel)
         .addMessage(report)
     else if (random.nextInt(100) < 80) {
       val sugar = ExplorationProgression.expeditionReward(dice(random, 20L) * u, experience, party.amountWorkers, party.suppliesLevel)
+      val collected = Math.min(sugar, returned.basicResources.sugar.freeSpace)
       returned.giveResources(sugar = sugar)
-        .addMessage(s"$report Found ${UINumbersUtils.prettyNumberStr(sugar)} sugar!")
+        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} sugar!")
     } else returned.addMessage(s"$report No resources found.")
     DefaultWorkerAssignment.normalize(PopulationAging.returnHome(DiscoveryProgression.recordReturn(rewarded, destination), party.ages))
   }

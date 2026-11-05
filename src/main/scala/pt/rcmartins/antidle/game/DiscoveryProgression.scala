@@ -13,7 +13,11 @@ object DiscoveryProgression {
     "Research Aphid Tending in Upgrades to unlock a new sugar-producing worker task.")
   val SeedCache = Discovery("seed-cache", "Seed Cache", "nectar-meadow", 3,
     "Reveals Seed Gathering at exploration level 5: guaranteed protein without carcass retrieval.")
-  val all: List[Discovery] = List(WildAphids, SeedCache)
+  val DryTrail = Discovery("dry-trail", "Dry Trail", "rotten-log", 4,
+    "Reveals the Dry Clearing at exploration level 6. Survey it to locate water sources.")
+  val DewPlants = Discovery("dew-plants", "Dew-covered Plants", "dry-clearing", 3,
+    "Unlocks Scavenge Water: collect water supplies for the dry area.")
+  val all: List[Discovery] = List(WildAphids, SeedCache, DryTrail, DewPlants)
 
   def has(data: ExplorationData, id: String): Boolean = all.exists(d => d.id == id && d.found(data))
 

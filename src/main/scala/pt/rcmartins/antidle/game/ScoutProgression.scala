@@ -43,6 +43,8 @@ object ScoutProgression {
       .modify(_.ants.eggsAndLarvae).setTo(growing)
       .modify(_.ants.workers).using(_ + newWorkers)
       .modify(_.ants.scouts).using(_ + newScouts)
+      .modify(_.statistics.workersMatured).using(_.addValue(newWorkers / u))
+      .modify(_.statistics.scoutsMatured).using(_.addValue(newScouts / u))
       .modify(_.statistics.maxAliveWorkers)
       .usingIf(newWorkers > 0)(_.max(allData.ants.workersCount + (newWorkers / u).toInt))
     DefaultWorkerAssignment.normalize(PopulationAging.reconcile(updated))

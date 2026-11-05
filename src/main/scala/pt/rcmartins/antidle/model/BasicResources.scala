@@ -8,7 +8,7 @@ case class BasicResources(
     sugar: BasicResource = BasicResource.initial,
     tunnelingSpace: BasicResource = BasicResource.initial,
     protein: BasicResource = BasicResource(0L, 100 * u),
-//    water: BasicResource = BasicResource.initial,
+    water: BasicResource = BasicResource(0L, 100 * u),
     knowledge: BasicResource = BasicResource(0L, Long.MaxValue),
 //    DNA: BasicResource = BasicResource.initial,
 ) {
@@ -18,7 +18,7 @@ case class BasicResources(
       sugar = sugar - actionCost.sugar,
       tunnelingSpace = tunnelingSpace - actionCost.tunnelingSpace,
       protein = protein - actionCost.protein,
-//      water = water - actionCost.water,
+      water = water - actionCost.water,
       knowledge = knowledge - actionCost.knowledge,
 //      DNA = DNA - actionCost.DNA,
     )
@@ -27,7 +27,7 @@ case class BasicResources(
     sugar >= cost.sugar &&
       tunnelingSpace >= cost.tunnelingSpace &&
       protein >= cost.protein &&
-//      water >= cost.water &&
+      water >= cost.water &&
       knowledge >= cost.knowledge
 //      DNA >= cost.DNA
 
