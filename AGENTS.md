@@ -79,6 +79,12 @@ project changes to `origin`, including documentation-only design decisions.
   context, run appropriate checks, commit the intended changes and push the
   branch. Push subsequent commits on continuing work too. Do not wait for a
   separate "push" request. Preserve unrelated local work and exclude artifacts.
+- Completion is not required for a backup: if work is unfinished, commit and
+  push a clearly labeled checkpoint on the task branch before handing back.
+  Record what remains, known failures and checks not yet run in HANDOFF; do not
+  present a checkpoint as tested or ready to merge. For long tasks, also push
+  meaningful intermediate checkpoints when practical. Continue toward completion
+  after saving; checkpointing is not a reason to stop an actionable task early.
 - Report the branch and push result. If blocked, identify what remains local;
   never describe an unpushed commit as remotely preserved.
 - This authorizes ordinary pushes to work branches. It does not authorize
