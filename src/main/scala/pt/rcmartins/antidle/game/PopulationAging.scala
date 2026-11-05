@@ -44,19 +44,30 @@ object PopulationAging {
   def reconcile(data: AllData): AllData = {
     if (!data.ants.ages.active && data.nestAttributes.chambers.nurseryChamber.level == 0) data
     else {
-      def fit(cohorts: List[AgeCohort], count: Long, seed: Long): List[AgeCohort] = {
+      def fit(cohorts: List[AgeCohort], count: Long, seed: Long, longLived: Boolean = false): List[AgeCohort] = {
         val total = cohorts.map(_.count).sum
         if (total > count) take(cohorts, total - count)._1
         else if (total == count) cohorts
-        else grouped(cohorts ++ newborn(count - total, data.currentTick, seed, data.upgrades))
+        else {
+          val created = newborn(count - total, data.currentTick, seed, data.upgrades)
+          grouped(cohorts ++ (if (longLived) created.map(c => c.copy(expiresAt = data.currentTick + 2L * (c.expiresAt - data.currentTick))) else created))
+        }
       }
       val ages = data.ants.ages
       val updated = data.modify(_.ants.ages).setTo(ages.copy(active = true,
         workers = fit(ages.workers, homeWorkers(data.ants), data.world.saveSeed + data.currentTick),
-        scouts = fit(ages.scouts, ScoutProgression.available(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L)))
+        scouts = fit(ages.scouts, ScoutProgression.available(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L),
+        repletes = fit(ages.repletes, data.ants.repletes / u, data.world.saveSeed + data.currentTick + 13L, longLived = true)))
       if (ages.active) updated
       else updated.addMessage(s"Colony aging has begun: new adults live ${lifespanText(data.upgrades)} minutes of simulated time. Aging continues while away; overdue ants die on return.")
     }
+  }
+
+  def promoteReplete(data: AllData): AllData = {
+    val (workers, converted) = take(data.ants.ages.workers, 1L)
+    val fresh = newborn(converted.map(_.count).sum, data.currentTick, data.world.saveSeed + data.currentTick + 13L + data.statistics.repletesPromoted.total.toLong, data.upgrades)
+    val extended = fresh.map(c => c.copy(expiresAt = data.currentTick + 2L * (c.expiresAt - data.currentTick)))
+    data.modify(_.ants.ages).using(a => a.copy(workers = workers, repletes = grouped(a.repletes ++ extended)))
   }
 
   def depart(data: AllData, workers: Long, scouts: Long = 0L): (AllData, TravelAges) = {
@@ -88,6 +99,7 @@ object PopulationAging {
   def starveOne(data: AllData): AntsData = {
     val ants = if (homeWorkers(data.ants) > 0L) loseWorkers(data.ants, 1L)
     else if (ScoutProgression.available(data.ants, data.exploration) >= u) data.ants.copy(scouts = data.ants.scouts - u)
+    else if (data.ants.repletes >= u) data.ants.copy(repletes = data.ants.repletes - u)
     else data.ants
     ants.copy(sugarCumulativeDebt = Math.max(0L, ants.sugarCumulativeDebt - AntDeathRiskThreshold))
   }
@@ -101,25 +113,30 @@ object PopulationAging {
       val ages = ready.ants.ages
       val (deadWorkers, workers) = ages.workers.partition(_.expiresAt <= ready.currentTick)
       val (deadScouts, scouts) = ages.scouts.partition(_.expiresAt <= ready.currentTick)
+      val (deadRepletes, repletes) = ages.repletes.partition(_.expiresAt <= ready.currentTick)
+      val repleteLosses = deadRepletes.map(_.count).sum
       val workerLosses = deadWorkers.map(_.count).sum
       val scoutLosses = deadScouts.map(_.count).sum
-      val nextAges = ages.copy(workers = workers, scouts = scouts,
+      val nextAges = ages.copy(workers = workers, scouts = scouts, repletes = repletes, pendingRepletes = ages.pendingRepletes + repleteLosses,
         pendingWorkers = ages.pendingWorkers + workerLosses, pendingScouts = ages.pendingScouts + scoutLosses)
-      val updated = ready.modify(_.ants).using(a => loseWorkers(a, workerLosses)
-        .copy(scouts = a.scouts - scoutLosses * u, ages = nextAges))
+      val updated = RepleteProgression.reconcile(ready.modify(_.ants).using(a => loseWorkers(a, workerLosses)
+        .copy(scouts = a.scouts - scoutLosses * u, repletes = a.repletes - repleteLosses * u, ages = nextAges))
         .modify(_.statistics.workersLostToAging).using(_.addValue(workerLosses))
         .modify(_.statistics.scoutsLostToAging).using(_.addValue(scoutLosses))
-      if (summarize && ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L)) {
+        .modify(_.statistics.repletesLostToAging).using(_.addValue(repleteLosses)))
+      if (summarize && ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L || nextAges.pendingRepletes > 0L)) {
         val losses = List(Option.when(nextAges.pendingWorkers > 0L)(s"${nextAges.pendingWorkers} workers"),
-          Option.when(nextAges.pendingScouts > 0L)(s"${nextAges.pendingScouts} scouts")).flatten.mkString(" and ")
+          Option.when(nextAges.pendingScouts > 0L)(s"${nextAges.pendingScouts} scouts"),
+          Option.when(nextAges.pendingRepletes > 0L)(s"${nextAges.pendingRepletes} repletes")).flatten.mkString(" and ")
         updated.addMessage(s"Aging: $losses lost in the last minute.")
-          .modify(_.ants.ages).using(_.copy(pendingWorkers = 0L, pendingScouts = 0L))
+          .modify(_.ants.ages).using(_.copy(pendingWorkers = 0L, pendingScouts = 0L, pendingRepletes = 0L))
       } else updated
     }
   }
 
   def forecast(data: AntsData, tick: Long): String = {
     def count(cohorts: List[AgeCohort]): Long = cohorts.filter(_.expiresAt <= tick + 5L * Minute).map(_.count).sum
-    s"Aging · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts"
+    val storage = if (data.repletes > 0L) s" · ${count(data.ages.repletes)} repletes" else ""
+    s"Aging · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts$storage"
   }
 }

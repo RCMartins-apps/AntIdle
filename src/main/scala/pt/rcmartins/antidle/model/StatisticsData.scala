@@ -16,6 +16,8 @@ case class StatisticsData(
     workersLostToAging: StatInt = StatInt(),
     scoutsLostToAging: StatInt = StatInt(),
     starvationDeaths: StatInt = StatInt(),
+    repletesPromoted: StatInt = StatInt(),
+    repletesLostToAging: StatInt = StatInt(),
     eggsCount: StatInt = StatInt(),
     maxAliveWorkers: StatInt = StatInt(),
     explorationsCount: StatInt = StatInt(),

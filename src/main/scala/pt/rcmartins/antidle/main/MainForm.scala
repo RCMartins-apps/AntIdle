@@ -364,9 +364,11 @@ object MainForm {
           Option.when(unlocks.resources.showEggs)("Eggs raised" -> stats.eggsCount.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Workers matured" -> stats.workersMatured.thisRun.toString),
           Option.when(unlocks.resources.showScouts)("Scouts matured" -> stats.scoutsMatured.thisRun.toString),
+          Option.when(unlocks.resources.showRepletes)("Repletes promoted" -> stats.repletesPromoted.thisRun.toString),
+          Option.when(unlocks.resources.showRepletes)("Repletes lost to aging" -> stats.repletesLostToAging.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Peak workers" -> stats.maxAliveWorkers.thisRun.toString),
           Option.when(exploration.proteinDiscovered)("Carcasses retrieved" -> stats.carcassesRetrieved.thisRun.toString),
-          Option.when(unlocks.resources.showWorkers)("Aging losses" -> (stats.workersLostToAging.thisRun.toLong + stats.scoutsLostToAging.thisRun).toString),
+          Option.when(unlocks.resources.showWorkers)("Aging losses" -> (stats.workersLostToAging.thisRun.toLong + stats.scoutsLostToAging.thisRun + stats.repletesLostToAging.thisRun).toString),
           Option.when(unlocks.resources.showWorkers)("Starvation losses" -> stats.starvationDeaths.thisRun.toString),
         ).flatten
         rows.map { case (label, value) =>
@@ -591,7 +593,8 @@ object MainForm {
         child.maybe <-- createResourceDiv(
           name = "Water",
           resourceSignal = waterSignal,
-          resourceEstimationSignal = Val(div("0/s")),
+          resourceEstimationSignal = Val(div(child.text <-- waterSignal.map(w => if (w.amount > w.maxAmount) "Collection paused" else "0/s"),
+            className := "small", title := "Stored water is retained above capacity. Collect again once there is free space.")),
           showSignal = unlocksSignal.map(_.resources.showWater),
           tooltipOpt = Some(div("Water supplies gathered from discovered sources in the dry area.")),
         ),
@@ -644,6 +647,15 @@ object MainForm {
           resourceSignal = workersResourceSignal,
           resourceEstimationSignal = Val(div()),
           showSignal = unlocksSignal.map(_.resources.showWorkers)
+        ),
+        child.maybe <-- createResourceDiv(
+          name = "Repletes",
+          resourceSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+            BasicResource(ants.repletes, nest.chambers.repleteChamber.level.toLong * u)
+          },
+          resourceEstimationSignal = Val(div()),
+          showSignal = unlocksSignal.map(_.resources.showRepletes),
+          tooltipOpt = Some(div("Promoted workers store 100 extra water each and consume normal ant sugar upkeep.")),
         ),
         child.maybe <-- createResourceDiv(
           name = "Scouts",
@@ -853,6 +865,26 @@ object MainForm {
           },
         ),
       ),
+      child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)) {
+        div(className := "col-12 nest-repletes border-top my-2 py-2",
+          h5("Living water storage"),
+          div(className := "row",
+            actionButton(
+              name = "Promote Replete",
+              enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal).map { case (ants, nest, resources) =>
+                ants.availableWorkersCount >= u && ants.repletes / u < nest.chambers.repleteChamber.level && resources.hasResources(RepleteProgression.cost)
+              },
+              costSignal = Val(RepleteProgression.cost),
+              bonusSignal = Val(ActionBonus(maxWater = RepleteProgression.WaterPerReplete)),
+              requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+                List(ActionRequirement("replete slots", Math.max(0L, nest.chambers.repleteChamber.level.toLong * u - ants.repletes)))
+              },
+              descriptionSignal = Val(Some(div("Promote the oldest home worker into a replete with a fresh 90–120 minute lifespan, improved by Colony Nutrition. It consumes normal sugar upkeep and cannot perform worker tasks. Stored water is retained if capacity later falls."))),
+              onClickAction = _ => Actions.promoteReplete(),
+            ),
+          ),
+        )
+      },
       div(
         className := "col-12 nest-chambers",
         display <-- unlocksSignal.combineWith(nurseryUnlockedSignal).map { case (unlocks, nursery) =>
@@ -877,6 +909,18 @@ object MainForm {
             chamberType = ChamberType.FoodStorage,
             unlockF = _.canBuildFoodStorageChamber,
           ),
+          child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)) {
+            val cost = Actions.buildChamberCost(ChamberType.Replete)
+            actionButton(
+              name = ChamberType.Replete.name,
+              enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
+              descriptionSignal = Val(Some(div("Each level houses one replete. Promote a worker to add water capacity."))),
+              costSignal = cost,
+              bonusSignal = Actions.getActionBonus(ChamberType.Replete),
+              topRightBadgeSignal = chambersSignal.map(c => Option.when(c.repleteChamber.level > 0)(span(c.repleteChamber.level))),
+              onClickAction = _ => useSignalValue[ActionCost](cost, c => Actions.addBuildTask(BuildTask(ChamberType.Replete, c))),
+            )
+          },
           child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.AphidTending).unlocked)) {
             val cost = Actions.buildChamberCost(ChamberType.Aphid)
             actionButton(
@@ -1070,6 +1114,8 @@ object MainForm {
           ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),
+          ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " max water")),
+          ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete slot"),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),

@@ -13,12 +13,14 @@ object Construction {
     case ChamberType.FoodStorage => chambers.foodStorageChamber.level
     case ChamberType.Nursery => chambers.nurseryChamber.level
     case ChamberType.Aphid => chambers.aphidChamber.level
+    case ChamberType.Replete => chambers.repleteChamber.level
   }
 
   def cost(kind: ChamberType, level: Int): ActionCost = ActionCost(
     tunnelingSpace = getChamberTunnelingSpaceNeeded(kind, level),
     protein = if (kind == ChamberType.Nursery) NurseryProteinCost * (level + 1L)
-      else if (kind == ChamberType.Aphid) 2L * u * (level + 1L) else 0L,
+      else if (kind == ChamberType.Aphid) 2L * u * (level + 1L)
+      else if (kind == ChamberType.Replete) 5L * u * (level + 1L) else 0L,
   )
 
   def nextCost(nest: NestAttributes, kind: ChamberType): ActionCost =

@@ -64,12 +64,7 @@ object Utils {
   val scoutResourceSignal: Signal[BasicResource] = scoutsSignal.map(BasicResource(_, 0L))
 
   val antAndBroodCount: Signal[Long] =
-    workersSignal
-      .combineWith(eggsCountSignal, larvaeCountSignal, pupaeCountSignal, scoutsSignal)
-      .map { case (workers, eggs, larvae, pupae, scouts) =>
-        workers + eggs + larvae + pupae + scouts
-      }
-      .distinct
+    antsSignal.map(_.populationCount.toLong * u).distinct
 
   val unlockedAntTasks: Signal[Seq[AntTask]] =
     antsSignal.map(_.tasks.map(_._1)).distinct
