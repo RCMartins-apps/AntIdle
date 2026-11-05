@@ -22,8 +22,10 @@ Verify it against Git and PR state at the next session's start.
 Branch `docs/automatic-branch-push` records new standing authorization: each
 distinct task or lasting design decision gets a branch, and changed work is
 committed and pushed by default, including documentation-only work without a PR.
-Related follow-ups continue that branch. PRs, merges and deployments still need
-separate authorization. See AGENTS and decision D9 for the full policy.
+The latest clarification also requires pushing unfinished work as labeled
+checkpoints, with incomplete work and validation gaps recorded. Related follow-ups
+continue that branch. PRs, merges and deployments still need separate
+authorization. See AGENTS and decision D9 for the full policy.
 
 This work changes no gameplay. Validation is local Markdown link/file-target
 checking and `git diff --check`; game builds/tests are not rerun for it. The

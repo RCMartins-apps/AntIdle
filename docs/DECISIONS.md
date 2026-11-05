@@ -99,6 +99,10 @@ each time. Each distinct development task or lasting design decision starts on
 a descriptive branch from current `origin/main`; related follow-ups stay on that
 branch. Record lasting discussion decisions even when there is no code change.
 After appropriate checks, commit and push before handing off changed work.
+Unfinished work must also be saved as clearly labeled checkpoint commits on the
+same branch, with remaining work, failures and missing checks in the handoff.
+Push useful intermediate checkpoints during long tasks when practical; a backup
+does not imply completion, passing tests or readiness to merge.
 
 This includes documentation-only branches and does not require a PR. PR creation,
 merging and deployment remain separate user requests. Ordinary branch pushes are
