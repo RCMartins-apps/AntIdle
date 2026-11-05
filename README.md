@@ -442,7 +442,7 @@ appears after the first survey progress is earned. Only unlocked areas appear as
 survey targets; discovery names stay hidden until found. Explore contains the
 party planner, route actions, supplies and active/retrieving parties.
 
-New parties are limited to 37 workers, the existing 4x reward ceiling. The slider
+New parties are limited to 37 workers, the existing 4x reward ceiling. The numeric stepper
 and engine enforce this limit; quick picks expose the useful 1/5/17/37 worker
 reward milestones. Selection clamps to remaining available workers after a
 launch or population change, so displayed costs always match the actual party.
@@ -461,3 +461,10 @@ reservations. Expiry ticks remain fixed and overdue ants still die on return.
 After `sbt fastOptJS fullOptJS test`, run `python3 tests/staffing_smoke.py` and
 `python3 tests/discovery_smoke.py` for mobile/desktop navigation, caps, costs,
 reservations, saved timing and discovery progression checks.
+
+Expedition worker selection uses a numeric field with 48px minus/plus buttons
+instead of a slider. Mobile browsers show a numeric keyboard; direct typing,
+presets and button taps update costs immediately. Invalid/out-of-range values
+clamp to available workers and the reward limit; an empty edit restores the
+current selection on blur. Buttons disable at either boundary, and the field
+disables when no workers are available.

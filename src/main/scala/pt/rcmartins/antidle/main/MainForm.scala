@@ -1265,6 +1265,19 @@ object MainForm {
       case (requested, available) => Math.max(0, Math.min(ExplorationProgression.MaxExtraScouts, Math.min(requested, (available / u).toInt)))
     }.distinct
 
+    def editWorkers(field: HTMLInputElement, commitEmpty: Boolean): Unit = {
+      val parsed = field.value.toLongOption
+      if (parsed.nonEmpty || commitEmpty) {
+        val requested = parsed.map(n => Math.max(1L, Math.min(ExplorationProgression.MaxWorkers / u, n)) * u)
+          .getOrElse(amountOfExplorersVar.now())
+        useSignalValue[Long](availableWorkersCountSignal, available => {
+          val selected = ExplorationProgression.selectedWorkers(requested, available)
+          amountOfExplorersVar.set(selected)
+          field.value = (selected / u).toString
+        })
+      }
+    }
+
     def area(destination: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = {
       val cost = amountOfExplorersSignal.combineWith(extraScoutsSignal).map { case (workers, extra) => ExplorationHelper.cost(workers, destination, extra) }
       div(
@@ -1312,20 +1325,29 @@ object MainForm {
       className := "row",
       div(
         className := "col-12 px-3 py-2",
-        label(
-          forId := "explorer-count",
-          "Workers: ",
-          b(child <-- amountOfExplorersSignal.map(prettyNumberInt)),
-        ),
-        input(
-          idAttr := "explorer-count",
-          className := "form-range",
-          `type` := "range",
-          MinAttr := "1",
-          MaxAttr <-- availableWorkersCountSignal.map(amount => Math.max(1L, Math.min(37L, amount / u)).toString),
-          disabled <-- availableWorkersCountSignal.map(_ < u),
-          value <-- amountOfExplorersSignal.map(amount => (amount / u).toString),
-          onInput.mapToValue.map(_.toLong * u) --> amountOfExplorersVar.writer,
+        label(forId := "explorer-count", "Workers"),
+        div(className := "expedition-worker-stepper",
+          button(className := "btn btn-outline-secondary", typ := "button",
+            aria.label := "Decrease expedition workers", "−",
+            disabled <-- amountOfExplorersSignal.map(_ <= u),
+            onClick --> (_ => useSignalValue[Long](amountOfExplorersSignal, n => amountOfExplorersVar.set(n - u))),
+          ),
+          input(
+            idAttr := "explorer-count", className := "form-control text-center", typ := "number",
+            inputMode := "numeric", minAttr := "1", stepAttr := "1",
+            maxAttr <-- availableWorkersCountSignal.map(amount => Math.max(1L, Math.min(ExplorationProgression.MaxWorkers / u, amount / u)).toString),
+            disabled <-- availableWorkersCountSignal.map(_ < u),
+            value <-- amountOfExplorersSignal.map(amount => (amount / u).toString),
+            onInput --> (event => editWorkers(event.target.asInstanceOf[HTMLInputElement], commitEmpty = false)),
+            onBlur --> (event => editWorkers(event.target.asInstanceOf[HTMLInputElement], commitEmpty = true)),
+          ),
+          button(className := "btn btn-outline-secondary", typ := "button",
+            aria.label := "Increase expedition workers", "+",
+            disabled <-- amountOfExplorersSignal.combineWith(availableWorkersCountSignal).map {
+              case (amount, available) => amount >= Math.min(ExplorationProgression.MaxWorkers, available / u * u)
+            },
+            onClick --> (_ => useSignalValue[Long](amountOfExplorersSignal, n => amountOfExplorersVar.set(n + u))),
+          ),
         ),
         div(className := "d-flex gap-2 flex-wrap worker-presets",
           List(1, 5, 17, 37).zipWithIndex.map { case (workers, index) =>
