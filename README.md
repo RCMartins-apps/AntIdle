@@ -120,8 +120,8 @@ Carcasses still need retrieval before their protein and sugar reserve are usable
 Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
 details include selected workers, supplies, and the level reached on return.
 Cards show duration, XP, and Knowledge, with live resource and worker costs beside
-the action. Reward odds and capacity requirements are available in mobile
-**Details** and desktop tooltips. Locked destinations are
+the action. Reward odds and capacity requirements are available through mobile
+**info icons** and desktop tooltips. Locked destinations are
 hidden: scout routes appear after Nursery/scout training, and Rotten Log also
 requires level 3. Unlocked routes remain visible when scouts are away or resources
 are insufficient. Supplies appear at level 2; later ranks appear at their unlock

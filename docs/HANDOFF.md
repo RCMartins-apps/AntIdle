@@ -17,19 +17,25 @@ Branch `fix/compact-action-details` starts from that main commit. The owner aske
 for more compact mobile action cards: replace the tall Details disclosure label
 with an info icon that expands the existing content.
 
-Checkpoint: shared action cards now use a labeled inline SVG summary beside the
+Shared action cards now use a labeled inline SVG summary beside the
 primary button, with a 44px touch target. Native details preserve keyboard and
 open/closed behavior; disabled actions still allow viewing details. Closed
 panels add no extra row, costs stay visible, and desktop tooltips remain.
 
-Browser checks have been updated to use accessible info labels and check compact
-height, independent activation, keyboard toggle and disabled actions. Final
-build/engine/browser verification is in progress; this checkpoint is not yet
-ready for merge. Relevant README text and decision D4 are updated.
+Validation completed:
+- `sbt fastOptJS fullOptJS test`: 120 tests passed; Closure reported no errors or warnings.
+- `tests/browser_smoke.py`: passed at 320, 390, 767, 768, 844, 1024 and 1920px,
+  including compact height, 44px targets, independent activation, native keyboard
+  toggle, disabled actions and resizing across the mobile breakpoint.
+- `tests/exploration_smoke.py` and `tests/protein_storage_smoke.py`: passed at
+  320, 390 and 1920px; forecasts, purchases and chamber effects remain accessible.
+- Closed and expanded 390px layouts visually inspected. Documentation links and
+  `git diff --check` pass. README and decision D4 describe the new control.
 
 ## Next work and unknowns
 
-- Complete UI validation and push the final result. No PR is requested yet.
+- Implementation and validation are complete. No PR is requested yet; the
+  final response reports the actual branch push result.
 - No next gameplay task is selected. Further outpost levels and specialization
   remain future design choices.
 - Understandings and queen inheritance are agreed prestige foundations, but
