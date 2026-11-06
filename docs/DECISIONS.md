@@ -38,7 +38,10 @@ level adds 500 to that cap.
 
 - Hide advanced exploration actions until unlocked; discoveries have their own tab.
 - Show action costs beside the action, not only inside Details. Keep lengthy
-  explanations, forecasts and XP descriptions tucked away.
+  explanations, forecasts and XP descriptions tucked away. Mobile action cards
+  use a compact info icon beside the action to expand details, with a 44px touch
+  target and native keyboard support. Closed details must not add a separate row;
+  the info control stays usable when the action is disabled.
 - Show worker availability compactly: colored `available` followed by standard
   `/required workers`. Use green when sufficient, red when insufficient.
 - Make impossible requirements, including costs above storage maximum, visibly

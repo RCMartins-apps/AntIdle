@@ -6,7 +6,7 @@ import com.raquo.laminar.modifiers.EventListener
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.querki.jquery
 import org.scalajs.dom
-import org.scalajs.dom._
+import org.scalajs.dom.{svg => _, _}
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.game.TickCalculator.prettyResourceEstDiv
 import pt.rcmartins.antidle.game.UINumbersUtils._
@@ -1086,7 +1086,14 @@ object MainForm {
         Option.when(mobile) {
           detailsTag(
             className := "mobile-only action-details",
-            summaryTag(s"Details: $name"),
+            summaryTag(
+              aria.label := s"Details for $name",
+              title := s"Details for $name",
+              span(aria.hidden := true,
+                svg.svg(svg.viewBox := "0 0 24 24",
+                  svg.path(svg.d := "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 11v6M12 7h.01")),
+              ),
+            ),
             actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false),
           )
         }

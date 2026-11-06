@@ -50,7 +50,7 @@ def check_destinations(page, width, url):
     expect(preview).to_have_text("15.0s · 10 XP · 2 knowledge")
     assert "carcass" not in preview.inner_text().lower()
     if width <= 767:
-        page.get_by_text("Details: Explore Surroundings", exact=True).click()
+        page.get_by_label("Details for Explore Surroundings", exact=True).click()
         expect(route("Surroundings").locator("details[open]")).to_contain_text("Carcass guaranteed")
     assert_fits(page, width)
     # Building the Nursery reveals the woodland route before the first scout matures.

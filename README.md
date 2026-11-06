@@ -18,8 +18,9 @@ Open the served `index.html`. Use `sbt '~fastOptJS'` to rebuild while developing
 Production validation follows CI: `sbt fullOptJS test`.
 
 On phones (up to 767 CSS pixels), panels fit the screen, tabs scroll horizontally,
-and actions use full-width touch targets. Expand **Details** to see an action's
-explanations and effects. Costs remain visible beside every action. **Action amount** provides the same ×1, ×10, ×25, and
+and actions use full-width touch targets. Tap the **info icon** beside an action to expand its
+explanations and effects. The icon has a 44px touch target and also supports
+keyboard activation; closed details add no extra row, even for disabled actions. Costs remain visible beside every action. **Action amount** provides the same ×1, ×10, ×25, and
 ×250 options as desktop Ctrl/Shift shortcuts for laying eggs and assigning workers.
 Resource limits and game rules are shared across both layouts. Game saves remain
 in the browser's local storage.
