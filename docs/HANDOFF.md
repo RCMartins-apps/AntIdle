@@ -40,8 +40,9 @@ Validation:
 
 ## Next work and unknowns
 
-- Implementation and validation are complete. No PR is requested yet; the
-  final response reports the actual branch push result.
+- Implementation and validation are complete.
+  [PR #33](https://github.com/RCMartins-apps/AntIdle/pull/33) is open against
+  `main` for this branch; merging remains the owner's decision.
 - No next gameplay task is selected. Further outpost levels and specialization
   remain future design choices.
 - Understandings and queen inheritance are agreed prestige foundations, but
