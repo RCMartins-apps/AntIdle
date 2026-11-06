@@ -699,7 +699,7 @@ object MainForm {
               className := "col-3 text-end text-nowrap resource-amount",
               className <-- resourceSignal.map(resource =>
                 if (resource.atCapacity) "text-primary fw-bold" else ""),
-              child <-- amountSignal.map(prettyNumberFixedSize),
+              child.text <-- amountSignal.map(prettyNumberStr),
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
               className := "col-2 text-start text-body-tertiary text-nowrap ps-0",
@@ -1187,7 +1187,7 @@ object MainForm {
       },
       span(
         "Available workers: ",
-        b(child <-- availableWorkersCountSignal.map(prettyNumberFixedSize)),
+        b(child.text <-- availableWorkersCountSignal.map(prettyNumberStr)),
       ),
       children <-- unlockedAntTasks.map(_.map(task => taskDiv(task))),
     )
@@ -1295,36 +1295,29 @@ object MainForm {
   }
 
   private def upgradesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
-    def createUpgrade(
-        upgradeType: UpgradeType,
-        unlockFunc: UpgradesData => UpgradesData = identity,
-    ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] = {
+    def createUpgrade(upgradeType: UpgradeType): ReactiveHtmlElement[HTMLDivElement] = {
       val costSignal: Signal[ActionCost] = Val(upgradeType.cost)
-      val upgradeSignal: Signal[UpgradeData] = upgradesSignal.map(_(upgradeType))
-      ifUpgradeReadyToBuyOpt(upgradeSignal) {
-        actionButton(
-          name = upgradeType.title,
-          enabledSignal = hasResourcesSignal(costSignal),
-          descriptionSignal = Val(Some(div(upgradeType.description))),
-          costSignal = costSignal,
-          bonusSignal = Val(ActionBonus.empty),
-          onClickAction = _ =>
-            useSignalValue[ActionCost](
-              costSignal,
-              actionCost =>
-                Actions.unlockUpgrade(actionCost, _.unlock(upgradeType).pipe(unlockFunc)),
-            ),
-        )
-      }
+      actionButton(
+        name = upgradeType.title,
+        enabledSignal = hasResourcesSignal(costSignal),
+        descriptionSignal = Val(Some(div(upgradeType.description))),
+        costSignal = costSignal,
+        bonusSignal = Val(ActionBonus.empty),
+        onClickAction = _ =>
+          useSignalValue[ActionCost](costSignal, cost => Actions.unlockUpgrade(cost, _.unlock(upgradeType))),
+      )
     }
 
     div(
-      className := "row",
-      UpgradeType.all.map { upgradeType =>
-        div(
-          child.maybe <--
-            createUpgrade(upgradeType)
-        )
+      className := "row upgrades-grid",
+      children <-- upgradesSignal.map { upgrades =>
+        val available = UpgradeType.all.filter(t => upgrades(t).show && !upgrades(t).unlocked)
+        if (available.isEmpty) Seq(div(className := "col-12 py-3 upgrades-empty text-body-secondary",
+          if (UpgradeType.all.forall(t => upgrades(t).unlocked))
+            p(className := "mb-0", "All current upgrades researched.")
+          else div(p(className := "mb-1", "No upgrades available right now."),
+            small("Grow the colony and explore to discover more research."))))
+        else available.map(t => createUpgrade(t))
       },
     )
   }
@@ -1383,6 +1376,10 @@ object MainForm {
               case (workers, data, extra) => ExplorationHelper.summary(data, workers, destination, extra)
             },
           ),
+          child.maybe <-- amountOfExplorersSignal.map(workers =>
+            Option.when(workers < destination.minimumWorkers)(
+              small(className := "text-danger destination-minimum mb-1",
+                s"${destination.minimumWorkers / u} workers minimum"))),
           div(
             className := "row",
             actionButton(
@@ -1479,6 +1476,30 @@ object MainForm {
           p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at the 37-worker party limit. Extra scouts add 25% travel speed each, up to three."),
         ),
       ),
+      div(
+        className := "col-12 px-3 py-2 expedition-status",
+        div(
+          className <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) =>
+            if (data.explorationParties.size >= ExplorationProgression.maxParties(data.experience, upgrades)) "text-danger" else ""
+          },
+          "Expeditions: ", child.text <-- explorationSignal.map(_.explorationParties.size),
+          " / ", child.text <-- explorationSignal.combineWith(upgradesSignal).map {
+            case (data, upgrades) => ExplorationProgression.maxParties(data.experience, upgrades)
+          },
+          child.maybe <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) =>
+            Option.when(data.explorationParties.size >= ExplorationProgression.maxParties(data.experience, upgrades))(
+              small(" · All slots in use"))
+          },
+        ),
+        children <-- explorationSignal.map(_.explorationParties.map { party =>
+          div(
+            b(s"${ExplorationDestination.forParty(party).name}: "),
+            s"${prettyNumberStr(party.amountWorkers)} workers",
+            if (party.scouts > 0L) s" · ${prettyNumberStr(party.scouts)} scouts" else "", ", ",
+            child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))),
+          )
+        }),
+      ),
       ExplorationDestination.all.map { destination =>
         child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
           case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
@@ -1512,21 +1533,6 @@ object MainForm {
           },
         )
       },
-      div(
-        className := "col-12 px-3 py-2 expedition-status",
-        "Expeditions: ", child.text <-- explorationSignal.map(_.explorationParties.size),
-        " / ", child.text <-- explorationSignal.combineWith(upgradesSignal).map {
-          case (data, upgrades) => ExplorationProgression.maxParties(data.experience, upgrades)
-        },
-        children <-- explorationSignal.map(_.explorationParties.map { party =>
-          div(
-            b(s"${ExplorationDestination.forParty(party).name}: "),
-            s"${prettyNumberStr(party.amountWorkers)} workers",
-            if (party.scouts > 0L) s" · ${prettyNumberStr(party.scouts)} scouts" else "", ", ",
-            child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))),
-          )
-        }),
-      ),
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
           className := "col-12 px-3 py-2 carcass-panel",

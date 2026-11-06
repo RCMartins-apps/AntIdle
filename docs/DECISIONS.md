@@ -45,6 +45,11 @@ level adds 500 to that cap.
   use a compact info icon beside the action to expand details, with a 44px touch
   target and native keyboard support. Closed details must not add a separate row;
   the info control stays usable when the action is disabled.
+- Resource totals use compact, readable numbers without invisible suffix padding;
+  negative income is red. Upgrades use the available grid width and distinguish
+  future-research gaps from finishing the current catalog without spoiling locks.
+- Show unmet expedition party minimums beside disabled actions and fleet capacity
+  above destinations, so a hidden detail is not needed to explain a blocked trip.
 - Show worker availability compactly: colored `available` followed by standard
   `/required workers`. Use green when sufficient, red when insufficient.
 - Make impossible requirements, including costs above storage maximum, visibly

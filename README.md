@@ -22,6 +22,10 @@ and actions use full-width touch targets. Tap the **info icon** beside an action
 explanations and effects. The icon has a 44px touch target and also supports
 keyboard activation; closed details add no extra row, even for disabled actions. Costs remain visible beside every action. **Action amount** provides the same ×1, ×10, ×25, and
 ×250 options as desktop Ctrl/Shift shortcuts for laying eggs and assigning workers.
+Resource totals use compact numbers and negative income is red. Upgrades use
+one column on phones and two on larger screens, with a short empty state when
+there is no research to buy. Explore shows unmet party minimums beside routes
+and fleet availability above destinations.
 Resource limits and game rules are shared across both layouts. Game saves remain
 in the browser's local storage.
 
@@ -47,6 +51,8 @@ An inherited HTTPS proxy is supported, with localhost bypassed.
 
 The page loads Bootstrap, jQuery, Font Awesome, and Popper from external CDNs;
 network access to those assets is required for the complete interface.
+Run `python3 tests/ui_polish_smoke.py` for focused checks of readable totals,
+research layout and empty states, and expedition availability feedback.
 
 ## Chamber bonuses
 
