@@ -108,3 +108,15 @@ This includes documentation-only branches and does not require a PR. PR creation
 merging and deployment remain separate user requests. Ordinary branch pushes are
 authorized; destructive Git operations and direct pushes to `main` are not.
 See [AGENTS.md](../AGENTS.md#branch-and-push-by-default) for the operational rules.
+
+## D10: Dry Clearing outpost extends the current colony — approved scope
+
+The owner approved implementing the Dry Clearing outpost with a water
+requirement and an ongoing benefit. It is an extension of the current colony;
+queen-founded prestige and Understandings remain separate future work.
+
+The implemented first version provides extra shared housing and a capped Seed
+Forager task that consumes water to gather protein. Dry or full storage pauses
+foraging without removing housing, killing ants or discarding stored resources.
+Exact founding costs, rates and staffing limits are current balance choices,
+documented in README and defined in `OutpostProgression.scala`.

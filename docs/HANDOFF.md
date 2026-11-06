@@ -13,9 +13,9 @@ Verify it against Git and PR state at the next session's start.
   chambers, protein storage, aging, queen brood automation, construction
   planning, Dry Clearing/water, statistics and expedition staffing controls.
   README describes behavior; source and tests define exact rules and balance.
-- The replete implementation was checked with `fastOptJS fullOptJS test`
-  (111 tests passed) and `tests/replete_smoke.py` at 320, 390 and 1920px.
-  Those are prior feature checks, not tests rerun for this documentation change.
+- Final outpost production build and all 120 engine tests pass. Browser checks
+  in `tests/outpost_smoke.py` and existing `tests/replete_smoke.py` pass at
+  320, 390 and 1920px. Local Markdown links and whitespace checks pass.
 
 ## Current work
 
@@ -24,15 +24,16 @@ Branch `feature/second-colony-expansion` starts from current `origin/main`
 extension of the current colony, with a water requirement and an ongoing benefit.
 This is separate from queen-founded prestige and Understandings.
 
-Checkpoint: outpost establishment, five capped Seed Forager slots, water-funded
-protein production, pause/resume behavior, save restoration and UI rates are
-implemented. Added nine engine cases and a phone/desktop browser regression.
+Implemented a one-time Nest → Outposts establishment action, gated by level 6
+and Dew-covered Plants. It costs 3,000 sugar, 40 protein, 300 Knowledge, 750
+space and 150 water, adding 50 shared colony capacity and five Seed Forager
+slots. Each forager produces 0.04 protein/s for 0.02 water/s plus normal sugar
+upkeep. Empty water or full protein pauses production without losing housing.
 
-The development build compiles. Initial engine run passed 119/120; the remaining
-case used a fixture without exploration unlocked, now corrected. The first
-browser run also required correcting the Tasks-tab locator. Final production
-build, engine tests and browser checks are in progress; this checkpoint is not
-yet ready for merge. No gameplay validation is claimed complete here.
+The engine enforces costs/one-time founding, staffing caps, partial water and
+storage, aphid-feeding integration, defaults, save restoration and statistics.
+UI costs, rates, shortage states and phone/desktop layouts are verified. README,
+VISION and decision D10 record the feature and distinguish it from prestige.
 
 The branch carries forward the two automatic-push policy commits: despite the
 owner reporting a merge, fetched main does not yet include them. This preserves
@@ -40,12 +41,13 @@ the standing authorization and checkpoint instructions without relying on chat.
 
 ## Next work and unknowns
 
-- Complete and validate the approved Dry Clearing outpost on this branch.
+- The approved Dry Clearing outpost is implemented; no next gameplay task is
+  chosen. No PR has been requested for this branch.
 - Understandings and queen inheritance are agreed prestige foundations, but
   prestige is not implemented. First rewards, costs, reset rules and founding
   conditions remain to be designed with the owner.
-- Outpost construction and water-dependent operations are the active task;
-  Dry Clearing exploration, water and repletes are already implemented.
+- Further outpost expansion levels, additional staffing or environmental
+  mechanics are future design choices, not approved follow-up work.
 - Suggested nurse care, pheromone trails, injuries and waste are possibilities,
   not approved features. See VISION for the distinction.
 - Local `work/` screenshots and `tests/__pycache__/` are untracked artifacts;

@@ -66,7 +66,7 @@ def check_outpost(page, width, url):
     nest()
     expect(build).to_be_disabled()
     action = page.locator(".action-cell").filter(has=build)
-    expect(action.locator(".action-costs .text-danger")).to_contain_text("/150 water")
+    expect(action.locator(".action-cost").filter(has_text="water").locator(".text-danger")).to_have_count(2)
     load_game(page, game)
     nest()
     expect(build).to_be_enabled()
@@ -94,8 +94,8 @@ def check_outpost(page, width, url):
     working = save_game(page)
     assert working["basicResources"]["protein"]["amount"] - before["basicResources"]["protein"]["amount"] == 2000
     assert before["basicResources"]["water"]["amount"] - working["basicResources"]["water"]["amount"] == 1000
-    expect(resource("Protein")).to_contain_text("+0.2/s")
-    expect(resource("Water")).to_contain_text("-0.1/s")
+    expect(resource("Protein")).to_contain_text("+0.20/s")
+    expect(resource("Water")).to_contain_text("-0.10/s")
     dry = copy.deepcopy(working)
     dry["basicResources"]["water"]["amount"] = 0
     load_game(page, dry)
