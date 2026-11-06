@@ -593,8 +593,9 @@ object MainForm {
         child.maybe <-- createResourceDiv(
           name = "Water",
           resourceSignal = waterSignal,
-          resourceEstimationSignal = Val(div(child.text <-- waterSignal.map(w => if (w.amount > w.maxAmount) "Collection paused" else "0/s"),
-            className := "small", title := "Stored water is retained above capacity. Collect again once there is free space.")),
+          resourceEstimationSignal = Val(div(prettyResourceEstDiv(TickCalculator.waterTickGain, waterSignal),
+            child.maybe <-- waterSignal.map(w => Option.when(w.amount > w.maxAmount)(
+              div(className := "small", "Collection paused", title := "Stored water is retained above capacity. Collect again once there is free space."))))),
           showSignal = unlocksSignal.map(_.resources.showWater),
           tooltipOpt = Some(div("Water supplies gathered from discovered sources in the dry area.")),
         ),
@@ -884,6 +885,34 @@ object MainForm {
             ),
           ),
         )
+      },
+      child.maybe <-- nestSignal.combineWith(explorationSignal).map { case (nest, exploration) =>
+        Option.when(nest.dryClearingOutpost || OutpostProgression.visible(exploration)) {
+          div(className := "col-12 nest-outposts border-top my-2 py-2",
+            h5("Outposts"),
+            if (nest.dryClearingOutpost) div(className := "dry-clearing-outpost",
+              b("Dry Clearing Outpost"),
+              div("+50 colony capacity · 5 Seed Forager slots"),
+              div(child.text <-- antsSignal.combineWith(resourcesSignal, upgradesSignal, nestSignal).map { case (ants, resources, upgrades, currentNest) =>
+                val harvest = OutpostProgression.harvestPerTick(ants, currentNest, upgrades, resources)
+                val state = if (ants.taskWorkers(AntTask.SeedForager) == 0L) "Assign Seed Foragers in Tasks"
+                  else if (resources.protein.atCapacity && harvest.protein == 0L) "Protein full · water use paused"
+                  else if (resources.water.amount == 0L) "Needs water · foraging paused"
+                  else s"+${preciseRateStr(harvest.protein * TicksPerSecond)} protein/s · −${preciseRateStr(harvest.water * TicksPerSecond)} water/s"
+                state
+              }),
+            ) else div(className := "row",
+              actionButton(
+                name = "Establish Dry Clearing Outpost",
+                enabledSignal = nestSignal.combineWith(explorationSignal, resourcesSignal).map { case (n, e, r) => OutpostProgression.canEstablish(n, e, r) },
+                costSignal = Val(OutpostProgression.cost),
+                bonusSignal = Val(ActionBonus(maxAnts = OutpostProgression.Housing)),
+                descriptionSignal = Val(Some(div("Adds 5 Seed Forager slots. Each worker gathers 0.04 protein/s and drinks 0.02 water/s, with normal sugar upkeep. Foraging pauses without water or when protein storage is full. No population reset."))),
+                onClickAction = _ => Actions.establishDryClearingOutpost(),
+              ),
+            ),
+          )
+        }
       },
       div(
         className := "col-12 nest-chambers",
@@ -1187,6 +1216,17 @@ object MainForm {
               s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} tunneling space per second / ant"
             }
           )
+        case AntTask.SeedForager =>
+          div(
+            "0.04 protein/s · −0.02 water/s per forager",
+            br(),
+            child.maybe <-- antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal).map { case (ants, nest, upgrades, resources) =>
+              val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, resources)
+              if (ants.taskWorkers(AntTask.SeedForager) == 0L) None
+              else if (resources.protein.atCapacity && harvest.protein == 0L) Some(span("Protein full · water use paused"))
+              else Option.when(resources.water.amount == 0L)(span(className := "text-danger", "Needs water"))
+            },
+          )
         case AntTask.CarcassCarrier =>
           div("Returning with a carcass.")
         case AntTask.Explorer =>
@@ -1203,7 +1243,7 @@ object MainForm {
         nbsp,
         "(",
         child.text <-- amountSignal.combineWith(nestSignal).map { case (amount, nest) =>
-          if (antTask == AntTask.AphidTender) s"${amount / u} / ${AphidHusbandry.capacity(nest) / u}"
+          if (DefaultWorkerAssignment.capacity(antTask, nest) != Long.MaxValue) s"${amount / u} / ${DefaultWorkerAssignment.capacity(antTask, nest) / u}"
           else prettyNumberStr(amount)
         },
         ")",
@@ -1234,7 +1274,7 @@ object MainForm {
             span(aria.hidden := true, "+"),
             disabled <-- availableWorkersCountSignal.combineWith(antsSignal, nestSignal).map { case (available, ants, nest) =>
               available < u || ants.effectiveDefaultTask.contains(antTask) ||
-                (antTask == AntTask.AphidTender && ants.taskWorkers(antTask) >= AphidHusbandry.capacity(nest))
+                ants.taskWorkers(antTask) >= DefaultWorkerAssignment.capacity(antTask, nest)
             },
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)

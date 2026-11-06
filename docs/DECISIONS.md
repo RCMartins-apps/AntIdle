@@ -91,3 +91,32 @@ than adding migration complexity. Do not assume backward compatibility is
 required for every model change. Version incompatible formats deliberately and
 report the impact. Revisit this policy if the project gains real players or the
 owner changes it; do not treat it as a permanent production policy.
+
+## D9: Branch, commit and push development work by default — standing authorization
+
+The owner wants progress preserved remotely without needing to request a push
+each time. Each distinct development task or lasting design decision starts on
+a descriptive branch from current `origin/main`; related follow-ups stay on that
+branch. Record lasting discussion decisions even when there is no code change.
+After appropriate checks, commit and push before handing off changed work.
+Unfinished work must also be saved as clearly labeled checkpoint commits on the
+same branch, with remaining work, failures and missing checks in the handoff.
+Push useful intermediate checkpoints during long tasks when practical; a backup
+does not imply completion, passing tests or readiness to merge.
+
+This includes documentation-only branches and does not require a PR. PR creation,
+merging and deployment remain separate user requests. Ordinary branch pushes are
+authorized; destructive Git operations and direct pushes to `main` are not.
+See [AGENTS.md](../AGENTS.md#branch-and-push-by-default) for the operational rules.
+
+## D10: Dry Clearing outpost extends the current colony — approved scope
+
+The owner approved implementing the Dry Clearing outpost with a water
+requirement and an ongoing benefit. It is an extension of the current colony;
+queen-founded prestige and Understandings remain separate future work.
+
+The implemented first version provides extra shared housing and a capped Seed
+Forager task that consumes water to gather protein. Dry or full storage pauses
+foraging without removing housing, killing ants or discarding stored resources.
+Exact founding costs, rates and staffing limits are current balance choices,
+documented in README and defined in `OutpostProgression.scala`.

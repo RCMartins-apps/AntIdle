@@ -423,7 +423,7 @@ Water starts with 100 storage capacity and a local droplet SVG. Its resource row
 appears on first collection and never disappears, including at zero after a
 reload. Water is saved, storage-capped, supported by resource costs/affordability,
 and ready for future outpost projects. This step provides exploration and water
-supplies; outpost construction and water-dependent production follow separately.
+supplies; the Dry Clearing outpost below adds water-dependent production.
 
 Settings has a collapsed **Colony statistics** view. Both current-colony and
 lifetime counters are persisted for future milestones. Resource gains count what
@@ -505,3 +505,37 @@ Run `sbt fastOptJS fullOptJS test`, then `python3 tests/replete_smoke.py` to che
 research, construction, promotion costs, oldest-worker selection, fresh life,
 conserved population/upkeep, housing limits, saved cohorts and loss-free water
 capacity changes on phone and desktop.
+
+## Dry Clearing Outpost
+
+After reaching exploration level 6 and discovering Dew-covered Plants, **Nest →
+Outposts** reveals **Establish Dry Clearing Outpost**. Establishment costs 3,000
+sugar, 40 protein, 300 Knowledge, 750 tunneling space and 150 water. The base
+water cap is only 100, so living water storage is useful preparation. All costs
+stay visible, including a red requirement when it exceeds current storage.
+
+Establishing the outpost is a one-time purchase. It adds 50 shared colony
+capacity and five **Seed Forager** slots in Tasks. It extends the current colony,
+without a prestige reset, a new queen or a separate population to manage.
+
+Each forager gathers 0.04 protein/s and consumes 0.02 water/s, plus normal ant
+sugar upkeep. Five staffed slots produce 0.2 protein/s for 0.1 water/s. The
+protein represents edible seeds gathered near the satellite nest; water supports
+foraging in the dry area. Production pauses when water runs out or protein
+storage is full. Partial water and remaining protein storage allow proportional
+production; no water is spent on overflow. Aphid feeding frees storage before
+that tick's harvest, so foragers can replace protein used by tenders.
+
+Housing remains available when water runs out. Repletes losing water capacity
+still do not discard stored water, which remains available to the outpost.
+Assignment, batches, the default-worker pool, expedition departures/returns,
+aging and save restoration use the same rules as other normal tasks. Foragers
+cannot exceed five even if an imported save over-assigns them. Establishment,
+assignments and existing colony totals persist without granting housing twice;
+older saves default to an unestablished outpost. Resource rates and collected
+protein statistics follow actual tick production.
+
+`OutpostProgression.scala` defines the founding cost, housing, staffing and
+production rules. Run `sbt fastOptJS fullOptJS test`, followed by
+`python3 tests/outpost_smoke.py` for phone/desktop establishment, costs,
+water/storage shortages, production, pause/resume, defaults and save checks.

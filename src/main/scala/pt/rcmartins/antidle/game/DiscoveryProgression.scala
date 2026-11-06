@@ -16,7 +16,7 @@ object DiscoveryProgression {
   val DryTrail = Discovery("dry-trail", "Dry Trail", "rotten-log", 4,
     "Reveals the Dry Clearing at exploration level 6. Survey it to locate water sources.")
   val DewPlants = Discovery("dew-plants", "Dew-covered Plants", "dry-clearing", 3,
-    "Unlocks water scavenging and Replete Storage research for living water reserves.")
+    "Unlocks water scavenging, Replete Storage research and establishing the Dry Clearing Outpost in Nest.")
   val all: List[Discovery] = List(WildAphids, SeedCache, DryTrail, DewPlants)
 
   def has(data: ExplorationData, id: String): Boolean = all.exists(d => d.id == id && d.found(data))

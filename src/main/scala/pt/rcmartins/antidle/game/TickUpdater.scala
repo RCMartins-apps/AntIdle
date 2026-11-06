@@ -39,9 +39,12 @@ object TickUpdater {
             tunnelerWorkers * ColonyDevelopment.tunnelingPerWorkerTick(allData.upgrades)
 
           val proteinUsed = AphidHusbandry.proteinPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount)
-          allData.modify(_.basicResources.protein).using(_ - proteinUsed).giveResources(
+          val harvest = OutpostProgression.harvestPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources)
+          allData.modify(_.basicResources.protein).using(_ - proteinUsed)
+            .modify(_.basicResources.water).using(_ - harvest.water).giveResources(
             sugar = sugarToGive,
             tunnelingSpace = tunnelingSpaceToGive,
+            protein = harvest.protein,
           )
         },
         Construction.tick,

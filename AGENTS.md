@@ -63,6 +63,35 @@ and do not promise a local file link will work on the user's device.
   unchanged handoff or append tool transcripts.
 - Keep suggestions explicitly tentative. If intent is missing, inspect these
   files and related code first, then ask only if the missing choice matters.
-- Use feature branches from current `main` for new work unless continuing an
-  existing branch. Push, open PRs, merge or deploy when authorized; do not infer
-  that authorization from a previous unrelated task.
+
+## Branch and push by default
+
+The owner has given standing authorization to create branches, commit and push
+project changes to `origin`, including documentation-only design decisions.
+
+- Start each distinct development task or lasting design decision on a new,
+  descriptive branch from up-to-date `origin/main`. Continue its existing branch
+  for related follow-ups; do not create a branch per message, file or tool call.
+- Discussion that establishes or changes a lasting decision is work: record it
+  in the appropriate context file, even when no gameplay code changes. Casual
+  conversation and unadopted suggestions do not require empty commits or branches.
+- Before ending a turn that changes tracked project files, update relevant
+  context, run appropriate checks, commit the intended changes and push the
+  branch. Push subsequent commits on continuing work too. Do not wait for a
+  separate "push" request. Preserve unrelated local work and exclude artifacts.
+- Completion is not required for a backup: if work is unfinished, commit and
+  push a clearly labeled checkpoint on the task branch before handing back.
+  Record what remains, known failures and checks not yet run in HANDOFF; do not
+  present a checkpoint as tested or ready to merge. For long tasks, also push
+  meaningful intermediate checkpoints when practical. Continue toward completion
+  after saving; checkpointing is not a reason to stop an actionable task early.
+- Report the branch and push result. If blocked, identify what remains local;
+  never describe an unpushed commit as remotely preserved.
+- This authorizes ordinary pushes to work branches. It does not authorize
+  force-pushes, direct pushes to `main`, branch deletion, PR creation, merging or
+  deployment; those still need user authorization. Avoid `debug*` names unless
+  deployment is intended: such branches deploy when in a same-repository PR.
+- A pushed branch is remotely saved, but new checkouts of `main` receive its
+  context only after merge. Keep pending work discoverable in the handoff and
+  inspect relevant remote branches when resuming unfinished work. Once the owner
+  requests a PR, open it; push-only work does not need one automatically.

@@ -5,19 +5,26 @@ import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 
 object DefaultWorkerAssignment {
+  def capacity(task: AntTask, nest: NestAttributes): Long = task match {
+    case AntTask.AphidTender => AphidHusbandry.capacity(nest)
+    case AntTask.SeedForager => OutpostProgression.capacity(nest)
+    case _ => Long.MaxValue
+  }
+
   def select(data: AllData, task: Option[AntTask]): AllData =
     if (!data.upgrades(UpgradeType.DefaultWorkers).unlocked) data
     else normalize(data.modify(_.ants).using(_.withDefaultTask(task)))
 
   def assign(data: AllData, task: AntTask, amount: Long): AllData = {
-    val room = if (task == AntTask.AphidTender) Math.max(0L, AphidHusbandry.capacity(data.nestAttributes) - data.ants.taskWorkers(task)) else Long.MaxValue
+    val room = Math.max(0L, capacity(task, data.nestAttributes) - data.ants.taskWorkers(task))
     normalize(data.modify(_.ants).using(_.addToTask(task, Math.max(0L, Math.min(amount, room)))))
   }
 
   private def clamp(data: AllData): AllData = {
     val limit = if (data.upgrades(UpgradeType.AphidTending).unlocked) AphidHusbandry.capacity(data.nestAttributes) else 0L
     data.modify(_.ants.tasks).using(_.map { case (task, amount) =>
-      task -> (if (task == AntTask.AphidTender) Math.min(amount, limit) else amount)
+      task -> (if (task == AntTask.AphidTender) Math.min(amount, limit)
+        else if (task == AntTask.SeedForager) Math.min(amount, OutpostProgression.capacity(data.nestAttributes)) else amount)
     })
   }
 
