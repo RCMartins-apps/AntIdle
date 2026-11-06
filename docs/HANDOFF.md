@@ -42,7 +42,7 @@ the standing authorization and checkpoint instructions without relying on chat.
 ## Next work and unknowns
 
 - The approved Dry Clearing outpost is implemented; no next gameplay task is
-  chosen. No PR has been requested for this branch.
+  chosen. The owner has requested pushing and opening a PR against `main`.
 - Understandings and queen inheritance are agreed prestige foundations, but
   prestige is not implemented. First rewards, costs, reset rules and founding
   conditions remain to be designed with the owner.
