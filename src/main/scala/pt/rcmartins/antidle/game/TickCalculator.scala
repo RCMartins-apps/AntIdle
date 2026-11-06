@@ -153,6 +153,7 @@ object TickCalculator {
           val minutesMultiplier: Int = if (useMinutes) 60 else 1
 
           span(
+            className := (if (sumU < 0L) "text-danger" else ""),
             if (sumU > 0) "+" else if (sumU < 0) "-" else "",
             UINumbersUtils.prettyNumberStr(minutesMultiplier * Math.abs(sumU) * TicksPerSecond),
             if (useMinutes) "/m" else "/s",
