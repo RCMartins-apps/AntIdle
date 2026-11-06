@@ -37,6 +37,9 @@ level adds 500 to that cap.
 ## D4: Reveal progression gradually and show costs — implemented UI rules
 
 - Hide advanced exploration actions until unlocked; discoveries have their own tab.
+  Once an action is visible, omit its already-satisfied unlock-level requirement
+  from details, including expedition supplies. Retain actionable resource,
+  staffing and slot requirements.
 - Show action costs beside the action, not only inside Details. Keep lengthy
   explanations, forecasts and XP descriptions tucked away. Mobile action cards
   use a compact info icon beside the action to expand details, with a 44px touch

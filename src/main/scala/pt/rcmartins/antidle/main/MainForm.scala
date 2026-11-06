@@ -1392,8 +1392,6 @@ object MainForm {
                   List(ActionRequirement("expedition slots",
                     Math.max(0L, ExplorationProgression.maxParties(data.experience, upgrades).toLong - data.explorationParties.size) * u)) ++
                     Option.when(destination.scouts + extra.toLong * u > 0)(ActionRequirement("scouts", scouts, destination.scouts + extra.toLong * u, isCost = true)) ++
-                    Option.when(destination.requiredLevel > 1)(ActionRequirement("exploration level",
-                      ExplorationProgression.level(data.experience).toLong * u, destination.requiredLevel.toLong * u)) ++
                     Option.when(destination.minimumWorkers > u)(ActionRequirement("party workers", workers, destination.minimumWorkers))
               }.distinct,
               enabledSignal = amountOfExplorersSignal.combineWith(explorationSignal, antsSignal, resourcesSignal, upgradesSignal, extraScoutsSignal)
@@ -1504,9 +1502,6 @@ object MainForm {
                   enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) =>
                     ExplorationProgression.canUpgradeSupplies(data, resources)
                   },
-                  requirementsSignal = explorationSignal.map(data => List(ActionRequirement("exploration level",
-                    ExplorationProgression.level(data.experience).toLong * u,
-                    ExplorationProgression.suppliesRequiredLevel(data).toLong * u))),
                   descriptionSignal = Val(Some(div("Permanent +20% XP and rewards for future departures."))),
                   costSignal = explorationSignal.map(ExplorationProgression.suppliesCost),
                   bonusSignal = Val(ActionBonus.empty),

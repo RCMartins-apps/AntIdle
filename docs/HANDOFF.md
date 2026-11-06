@@ -15,14 +15,16 @@ Verify it against Git and PR state at the next session's start.
 
 Branch `fix/compact-action-details` starts from that main commit. The owner asked
 for more compact mobile action cards: replace the tall Details disclosure label
-with an info icon that expands the existing content.
+with an info icon that expands the existing content. A related follow-up removes
+already-satisfied unlock-level rows from destination and expedition-supplies
+details; visibility gates and actionable costs/requirements are unchanged.
 
 Shared action cards now use a labeled inline SVG summary beside the
 primary button, with a 44px touch target. Native details preserve keyboard and
 open/closed behavior; disabled actions still allow viewing details. Closed
 panels add no extra row, costs stay visible, and desktop tooltips remain.
 
-Validation completed:
+The compact-icon implementation was validated as follows:
 - `sbt fastOptJS fullOptJS test`: 120 tests passed; Closure reported no errors or warnings.
 - `tests/browser_smoke.py`: passed at 320, 390, 767, 768, 844, 1024 and 1920px,
   including compact height, 44px targets, independent activation, native keyboard
@@ -32,10 +34,14 @@ Validation completed:
 - Closed and expanded 390px layouts visually inspected. Documentation links and
   `git diff --check` pass. README and decision D4 describe the new control.
 
+Follow-up validation of the unlock-level removal is in progress: the source
+change is limited to presentation in MainForm. Builds, existing engine tests
+and exploration browser regression are being checked before the next push.
+
 ## Next work and unknowns
 
-- Implementation and validation are complete. No PR is requested yet; the
-  final response reports the actual branch push result.
+- Complete follow-up validation and push the updated branch. No PR is
+  requested yet; the final response reports the actual branch push result.
 - No next gameplay task is selected. Further outpost levels and specialization
   remain future design choices.
 - Understandings and queen inheritance are agreed prestige foundations, but

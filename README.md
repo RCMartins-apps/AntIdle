@@ -124,7 +124,8 @@ the action. Reward odds and capacity requirements are available through mobile
 **info icons** and desktop tooltips. Locked destinations are
 hidden: scout routes appear after Nursery/scout training, and Rotten Log also
 requires level 3. Unlocked routes remain visible when scouts are away or resources
-are insufficient. Supplies appear at level 2; later ranks appear at their unlock
+are insufficient. Details omit already-satisfied unlock levels and focus on
+current costs, staffing and slots. Supplies appear at level 2; later ranks appear at their unlock
 levels rather than as locked actions.
 Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
 
