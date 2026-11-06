@@ -526,7 +526,7 @@ Establishing the outpost is a one-time purchase. It adds 50 shared colony
 capacity and five **Seed Forager** slots in Tasks. It extends the current colony,
 without a prestige reset, a new queen or a separate population to manage.
 
-Each forager gathers 0.04 protein/s and consumes 0.02 water/s, plus normal ant
+Before further research, each forager gathers 0.04 protein/s and consumes 0.02 water/s, plus normal ant
 sugar upkeep. Five staffed slots produce 0.2 protein/s for 0.1 water/s. The
 protein represents edible seeds gathered near the satellite nest; water supports
 foraging in the dry area. Production pauses when water runs out or protein
@@ -538,12 +538,57 @@ Housing remains available when water runs out. Repletes losing water capacity
 still do not discard stored water, which remains available to the outpost.
 Assignment, batches, the default-worker pool, expedition departures/returns,
 aging and save restoration use the same rules as other normal tasks. Foragers
-cannot exceed five even if an imported save over-assigns them. Establishment,
+cannot exceed the current outpost staffing limit even if an imported save over-assigns them. Establishment,
 assignments and existing colony totals persist without granting housing twice;
-older saves default to an unestablished outpost. Resource rates and collected
+saves without outpost ownership default to an unestablished outpost. Resource rates and collected
 protein statistics follow actual tick production.
 
 `OutpostProgression.scala` defines the founding cost, housing, staffing and
 production rules. Run `sbt fastOptJS fullOptJS test`, followed by
 `python3 tests/outpost_smoke.py` for phone/desktop establishment, costs,
 water/storage shortages, production, pause/resume, defaults and save checks.
+
+## Outpost growth and specialization
+
+The Dry Clearing Outpost can grow from level 1 to level 3. Expansion actions
+stay hidden until their exploration-level gate is met. Each paid expansion adds
+25 shared colony capacity and five Seed Forager slots without creating workers.
+At level 3 the outpost contributes 100 housing and supports 15 foragers in total.
+
+| Target outpost level | Exploration level | Sugar | Protein | Knowledge | Tunneling space | Water |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 2 | 7 | 5,000 | 75 | 500 | 1,000 | 250 |
+| 3 | 8 | 8,000 | 125 | 800 | 1,500 | 350 |
+
+The water costs make larger living reserves useful: collecting 250 water needs
+capacity from at least two repletes above the base 100, and 350 needs three.
+Existing water retained above a reduced cap remains spendable. The second expansion's
+125 protein also exceeds the initial protein cap, giving Protein Storage a
+practical role. All costs stay visible, with over-cap requirements shown in red.
+Housing survives dry periods, and default Seed Foragers fill new slots only from
+existing available workers. The engine prevents repeat purchases beyond level 3.
+
+Two research upgrades extend this path; both require an established outpost and
+remain hidden before their exploration-level gates:
+
+| Research | Level | Sugar | Protein | Knowledge | Water | Effect |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| Covered Trails | 7 | 3,000 | 60 | 300 | 100 | Sheltered routes reduce water use by 25%, to 0.015 water/s per forager |
+| Seed Processing | 8 | 6,000 | 100 | 700 | 150 | Husking and processing yields 50% more protein, to 0.06 protein/s per forager |
+
+Both effects stack with expanded staffing. Fifteen foragers with both upgrades
+produce 0.9 protein/s and use 0.225 water/s, plus normal sugar upkeep. Partial
+water and free protein storage limit actual production; water spending rounds
+up to the smallest fixed-point unit needed for the protein retained. Full stores
+or empty water still pause production. Aphid feeding and gathered-protein
+statistics use the same shared tick calculation.
+
+Task descriptions, resource estimates/tooltips and outpost summaries show the
+upgraded values. Small rates such as 0.075 water/s retain their precision;
+negative tooltip rates retain their minus sign. Expansion counts and research
+are saved without reapplying housing bonuses. Existing outpost saves missing the
+extension field load as level 1, and imported extension counts cannot exceed two.
+
+Run `sbt fastOptJS fullOptJS test`, then
+`python3 tests/outpost_progression_smoke.py` for level gates, purchases, staffing,
+actual upgraded production, rates, old/current saves and phone/desktop layouts.

@@ -14,7 +14,7 @@ Verify it against Git and PR state at the next session's start.
 Branch `feature/outpost-progression` starts from that main commit. The owner
 requested additional content and updates, delegating feature selection.
 
-Checkpoint implemented:
+Implemented:
 - Dry Clearing Outpost extensions at exploration levels 7 and 8. Each adds 25
   shared colony housing and five Seed Forager slots, for level 3 totals of 100
   housing and 15 slots. Each expansion has visible, escalating multi-resource costs.
@@ -26,15 +26,23 @@ Checkpoint implemented:
 - Existing saves default to an unexpanded level-1 outpost. Imported extension
   counts are bounded and loading does not grant housing again.
 
-The first development build and existing 120 tests pass. Ten new engine tests
-have been added but not yet run. Final production build and phone/desktop
-checks are pending; this is a remotely preserved checkpoint, not a merge-ready
-validation claim. Exact costs and ongoing documentation are being finalized.
+Validation:
+- `sbt fastOptJS fullOptJS test`: all 130 tests pass; Closure reports no errors or warnings.
+- `tests/outpost_progression_smoke.py`: passes at 320, 390 and 1920px for staged
+  reveals, exact costs, storage shortages, staffing, upgraded rates/ticks,
+  level limits, old/current saves and dry pauses; rerun passed with both
+  expansion purchase layouts explicitly checked at narrow widths.
+- Existing `tests/outpost_smoke.py` passes at 320, 390 and 1920px.
+- `tests/foraging_smoke.py` passes at 390 and 1920px, including actual income,
+  upgrades and expedition slot limits.
+- README contains costs, effects and save behavior; decision D10 and the vision
+  reflect the outpost progression. Mobile expansion/research cards are visually
+  inspected; local documentation links and whitespace checks pass.
 
 ## Next work and unknowns
 
-- Finish validating the new content, document it and push the final result.
-  No PR has been requested for this branch.
+- Implementation and validation are complete. No PR has been requested; the
+  final response reports the actual branch push result.
 - Understandings and queen inheritance remain agreed future prestige foundations;
   effects, costs and reset rules still need design. These are ordinary colony
   expansions and research, not inherited Understandings.

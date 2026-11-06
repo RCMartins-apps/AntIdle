@@ -131,3 +131,9 @@ Forager task that consumes water to gather protein. Dry or full storage pauses
 foraging without removing housing, killing ants or discarding stored resources.
 Exact founding costs, rates and staffing limits are current balance choices,
 documented in README and defined in `OutpostProgression.scala`.
+
+The subsequent delegated content update extends this outpost to three levels,
+with a capped workforce and water-dependent research for sheltered routes and
+seed processing. These are current-colony expansions and research, not inherited
+Understandings. Existing outposts begin at level 1 when the saved extension count
+is absent; loading preserves paid housing rather than granting it again.
