@@ -38,6 +38,8 @@ object Actions {
 
   def promoteReplete(): Unit = actionUpdater.writer.onNext(RepleteProgression.promote)
 
+  def establishDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.establish)
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 

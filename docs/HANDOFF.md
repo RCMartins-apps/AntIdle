@@ -24,10 +24,15 @@ Branch `feature/second-colony-expansion` starts from current `origin/main`
 extension of the current colony, with a water requirement and an ongoing benefit.
 This is separate from queen-founded prestige and Understandings.
 
-Checkpoint: the existing construction, worker assignment, aging, resource and
-save paths have been reviewed. Implementation will connect an outpost to
-water-dependent seed foraging for protein and extra shared colony housing.
-Gameplay changes and their tests are not implemented yet at this checkpoint.
+Checkpoint: outpost establishment, five capped Seed Forager slots, water-funded
+protein production, pause/resume behavior, save restoration and UI rates are
+implemented. Added nine engine cases and a phone/desktop browser regression.
+
+The development build compiles. Initial engine run passed 119/120; the remaining
+case used a fixture without exploration unlocked, now corrected. The first
+browser run also required correcting the Tasks-tab locator. Final production
+build, engine tests and browser checks are in progress; this checkpoint is not
+yet ready for merge. No gameplay validation is claimed complete here.
 
 The branch carries forward the two automatic-push policy commits: despite the
 owner reporting a merge, fetched main does not yet include them. This preserves
