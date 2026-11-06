@@ -3,7 +3,7 @@
 This is a short replaceable snapshot, not a task queue or a permanent change log.
 Verify it against Git and PR state at the next session's start.
 
-## Last verified: 2026-11-05
+## Last verified: 2026-11-06
 
 - `origin/main` at `f431eb8` includes repletes in
   [PR #29](https://github.com/RCMartins-apps/AntIdle/pull/29) and the durable
@@ -19,27 +19,28 @@ Verify it against Git and PR state at the next session's start.
 
 ## Current work
 
-Branch `docs/automatic-branch-push` records new standing authorization: each
-distinct task or lasting design decision gets a branch, and changed work is
-committed and pushed by default, including documentation-only work without a PR.
-The latest clarification also requires pushing unfinished work as labeled
-checkpoints, with incomplete work and validation gaps recorded. Related follow-ups
-continue that branch. PRs, merges and deployments still need separate
-authorization. See AGENTS and decision D9 for the full policy.
+Branch `feature/second-colony-expansion` starts from current `origin/main`
+(`f431eb8`). The owner approved implementing the Dry Clearing outpost as an
+extension of the current colony, with a water requirement and an ongoing benefit.
+This is separate from queen-founded prestige and Understandings.
 
-This work changes no gameplay. Validation is local Markdown link/file-target
-checking and `git diff --check`; game builds/tests are not rerun for it. The
-completion message reports the actual push result. Until merged, this policy is
-on the named remote branch rather than `main`.
+Checkpoint: the existing construction, worker assignment, aging, resource and
+save paths have been reviewed. Implementation will connect an outpost to
+water-dependent seed foraging for protein and extra shared colony housing.
+Gameplay changes and their tests are not implemented yet at this checkpoint.
+
+The branch carries forward the two automatic-push policy commits: despite the
+owner reporting a merge, fetched main does not yet include them. This preserves
+the standing authorization and checkpoint instructions without relying on chat.
 
 ## Next work and unknowns
 
-- No next gameplay implementation is authorized by this snapshot.
+- Complete and validate the approved Dry Clearing outpost on this branch.
 - Understandings and queen inheritance are agreed prestige foundations, but
   prestige is not implemented. First rewards, costs, reset rules and founding
   conditions remain to be designed with the owner.
-- Outpost construction and water-dependent operations are not implemented;
-  Dry Clearing exploration, water and repletes are their foundations.
+- Outpost construction and water-dependent operations are the active task;
+  Dry Clearing exploration, water and repletes are already implemented.
 - Suggested nurse care, pheromone trails, injuries and waste are possibilities,
   not approved features. See VISION for the distinction.
 - Local `work/` screenshots and `tests/__pycache__/` are untracked artifacts;
