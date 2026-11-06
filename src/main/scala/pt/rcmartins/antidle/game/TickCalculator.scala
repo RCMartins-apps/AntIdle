@@ -155,7 +155,7 @@ object TickCalculator {
           span(
             className := (if (sumU < 0L) "text-danger" else ""),
             if (sumU > 0) "+" else if (sumU < 0) "-" else "",
-            UINumbersUtils.prettyNumberStr(minutesMultiplier * Math.abs(sumU) * TicksPerSecond),
+            UINumbersUtils.resourceRateStr(minutesMultiplier * Math.abs(sumU) * TicksPerSecond),
             if (useMinutes) "/m" else "/s",
           )
         }
@@ -232,9 +232,9 @@ object TickCalculator {
               // TODO deal this small numbers in minutes
               bonusOrigin match {
                 case resource @ ResourceOrigin(_, _) if resource.resourceUSec > 0 =>
-                  s"+${UINumbersUtils.prettyNumberStr(resource.resourceUSec)}/sec"
+                  s"+${UINumbersUtils.resourceRateStr(resource.resourceUSec)}/sec"
                 case resource @ ResourceOrigin(_, _) if resource.resourceUSec < 0 =>
-                  s"${UINumbersUtils.prettyNumberStr(resource.resourceUSec)}/sec"
+                  s"${UINumbersUtils.resourceRateStr(resource.resourceUSec)}/sec"
                 case ResourceOrigin(_, _) =>
                   s"0/sec"
                 case PercentOrigin(_, percent) if percent > 0 =>

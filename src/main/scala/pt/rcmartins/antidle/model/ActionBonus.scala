@@ -12,6 +12,7 @@ case class ActionBonus(
     maxAnts: Long = 0L,
     maxCarcasses: Int = 0,
     aphidSlots: Int = 0,
+    seedForagerSlots: Int = 0,
 )
 
 object ActionBonus {

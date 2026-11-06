@@ -891,8 +891,8 @@ object MainForm {
           div(className := "col-12 nest-outposts border-top my-2 py-2",
             h5("Outposts"),
             if (nest.dryClearingOutpost) div(className := "dry-clearing-outpost",
-              b("Dry Clearing Outpost"),
-              div("+50 colony capacity · 5 Seed Forager slots"),
+              b(s"Dry Clearing Outpost · Level ${OutpostProgression.level(nest)}"),
+              div(s"+${OutpostProgression.housing(nest) / u} colony capacity · ${OutpostProgression.capacity(nest) / u} Seed Forager slots"),
               div(child.text <-- antsSignal.combineWith(resourcesSignal, upgradesSignal, nestSignal).map { case (ants, resources, upgrades, currentNest) =>
                 val harvest = OutpostProgression.harvestPerTick(ants, currentNest, upgrades, resources)
                 val state = if (ants.taskWorkers(AntTask.SeedForager) == 0L) "Assign Seed Foragers in Tasks"
@@ -901,6 +901,16 @@ object MainForm {
                   else s"+${preciseRateStr(harvest.protein * TicksPerSecond)} protein/s · −${preciseRateStr(harvest.water * TicksPerSecond)} water/s"
                 state
               }),
+              if (OutpostProgression.expansionVisible(nest, exploration)) div(className := "row mt-2",
+                actionButton(
+                  name = "Expand Dry Clearing Outpost",
+                  enabledSignal = nestSignal.combineWith(explorationSignal, resourcesSignal).map { case (n, e, r) => OutpostProgression.canExpand(n, e, r) },
+                  costSignal = nestSignal.map(OutpostProgression.expansionCost),
+                  bonusSignal = Val(ActionBonus(maxAnts = OutpostProgression.ExpansionHousing, seedForagerSlots = 5)),
+                  descriptionSignal = Val(Some(div("Excavate more sheltered nest space near the seed patches."))),
+                  onClickAction = _ => Actions.expandDryClearingOutpost(),
+                ),
+              ) else emptyNode,
             ) else div(className := "row",
               actionButton(
                 name = "Establish Dry Clearing Outpost",
@@ -1156,6 +1166,7 @@ object MainForm {
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
           ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
+          ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager slots"),
         )
       },
     )
@@ -1225,7 +1236,8 @@ object MainForm {
           )
         case AntTask.SeedForager =>
           div(
-            "0.04 protein/s · −0.02 water/s per forager",
+            child.text <-- upgradesSignal.map(upgrades =>
+              s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"),
             br(),
             child.maybe <-- antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal).map { case (ants, nest, upgrades, resources) =>
               val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, resources)

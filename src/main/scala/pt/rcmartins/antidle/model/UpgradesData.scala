@@ -193,6 +193,24 @@ object UpgradesData {
       val description: String = "Unlock the Replete Chamber and promote workers into living water storage."
     }
 
+    case object CoveredTrails extends UpgradeType {
+      def shouldShow(data: AllData): Boolean = data.nestAttributes.dryClearingOutpost &&
+        pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 7
+      val name: String = "CoveredTrails"
+      val cost: ActionCost = ActionCost(sugar = 3000 * u, protein = 60 * u, knowledge = 300 * u, water = 100 * u)
+      val title: String = "Covered Trails"
+      val description: String = "Shelter outpost foraging routes from the dry air. Seed Foragers use 25% less water: 0.015 water/s each."
+    }
+
+    case object SeedProcessing extends UpgradeType {
+      def shouldShow(data: AllData): Boolean = data.nestAttributes.dryClearingOutpost &&
+        pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 8
+      val name: String = "SeedProcessing"
+      val cost: ActionCost = ActionCost(sugar = 6000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u)
+      val title: String = "Seed Processing"
+      val description: String = "Specialize workers in husking and processing gathered seeds. Seed Foragers yield 50% more protein: 0.06 protein/s each."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -214,6 +232,8 @@ object UpgradesData {
       ConstructionPlanning,
       ColonyNutrition,
       RepleteStorage,
+      CoveredTrails,
+      SeedProcessing,
     )
 
   }
