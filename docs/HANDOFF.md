@@ -34,14 +34,15 @@ The compact-icon implementation was validated as follows:
 - Closed and expanded 390px layouts visually inspected. Documentation links and
   `git diff --check` pass. README and decision D4 describe the new control.
 
-Follow-up validation of the unlock-level removal is in progress: the source
-change is limited to presentation in MainForm. Builds, existing engine tests
-and exploration browser regression are being checked before the next push.
+Unlock-level cleanup validation also passes: `sbt fastOptJS fullOptJS test`
+completed with 120 passing tests and no Closure errors/warnings. Exploration
+browser regression passes at 320, 390 and 1920px, covering hidden routes, previews,
+costs, supplies and saves. The source change only removes presentation rows.
 
 ## Next work and unknowns
 
-- Complete follow-up validation and push the updated branch. No PR is
-  requested yet; the final response reports the actual branch push result.
+- Implementation and validation are complete. No PR is requested yet; the
+  final response reports the actual branch push result.
 - No next gameplay task is selected. Further outpost levels and specialization
   remain future design choices.
 - Understandings and queen inheritance are agreed prestige foundations, but
