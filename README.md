@@ -51,6 +51,8 @@ An inherited HTTPS proxy is supported, with localhost bypassed.
 
 The page loads Bootstrap, jQuery, Font Awesome, and Popper from external CDNs;
 network access to those assets is required for the complete interface.
+Run `python3 tests/ui_polish_smoke.py` for focused checks of readable totals,
+research layout and empty states, and expedition availability feedback.
 
 ## Chamber bonuses
 

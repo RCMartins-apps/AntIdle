@@ -16,24 +16,32 @@ Branch `fix/mobile-ui-polish` starts from that main commit. The owner requested
 finding and improving other UI issues. Phone screenshots of all six tabs were
 reviewed before choosing the changes.
 
-Checkpoint implemented:
+Implemented:
 - Compact resource/available-worker totals without invisible suffix padding,
   using tabular digits for alignment; negative resource income is red.
 - Direct upgrade-card grid instead of full-width wrappers containing half-width
-  cards. Mobile has one column; desktop has two. Empty states distinguish
+  cards. Mobile has one column; desktop has two, with controls aligned at the
+  top rather than stretched to match neighboring costs. Empty states distinguish
   temporarily unavailable research from completing the catalog, without spoilers.
 - Unmet party minimums are visible beside exploration actions. Fleet status sits
   above destinations and highlights full slots, explaining otherwise affordable
   but disabled trips.
 
-A targeted browser script covers formatting, resource deficits, upgrade layout,
-empty states and purchases, party minimums, full fleets and return recovery.
-Final builds, engine tests and phone/desktop checks are in progress. This
-checkpoint is not yet declared ready for merge. README and decision D4 are updated.
+Validation:
+- `sbt fastOptJS fullOptJS test`: 120 tests passed; Closure reported no errors or warnings.
+- `tests/ui_polish_smoke.py`: passed at 320, 390 and 1920px, covering formatting,
+  deficits, upgrade layout/empty states/purchases, party minimums, full fleets
+  and return recovery; passed again after the final CSS alignment adjustment.
+- `tests/browser_smoke.py`: passed at 320, 390, 767, 768, 844, 1024 and 1920px.
+- `tests/exploration_smoke.py`: passed at 320, 390 and 1920px.
+- Resource and expedition phone layouts and desktop research grid visually
+  inspected. Documentation links and `git diff --check` pass. README and D4
+  describe the UI conventions. No gameplay balance or save format changed.
 
 ## Next work and unknowns
 
-- Complete validation and push the finished result. No PR is requested yet.
+- Implementation and validation are complete. No PR is requested yet; the
+  final response reports the actual branch push result.
 - No next gameplay task is selected. Further outpost levels and specialization
   remain future design choices.
 - Understandings and queen inheritance are agreed prestige foundations, but
