@@ -57,7 +57,7 @@ def check_storage(page, width, url):
     page.get_by_role("tab", name="Nest", exact=True).click()
     chamber = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Food Storage Chamber 3", exact=True))
     if width <= 767:
-        chamber.get_by_text("Details: Food Storage Chamber", exact=True).click()
+        chamber.get_by_label("Details for Food Storage Chamber", exact=True).click()
         expect(chamber.locator("details[open]")).to_contain_text("+100 max protein")
         expect(chamber.locator("details[open]")).to_contain_text("+1000 max sugar")
     else:

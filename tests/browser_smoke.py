@@ -76,7 +76,7 @@ def check_nest_capacity(page, initial):
     assert restored["version"] == 6
     assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
-    page.get_by_text("Details: Expand Nest", exact=True).click()
+    page.get_by_label("Details for Expand Nest", exact=True).click()
     expect(page.locator("details[open]")).to_contain_text("+500 max tunneling space")
     page.get_by_role("button", name="Expand Nest", exact=False).click()
     page.clock.run_for(400)
@@ -100,6 +100,35 @@ def check_nest_capacity(page, initial):
     print("PASS nest capacity: current save preservation, upgrades, stable ticks, save reload")
 
 
+def check_compact_details(page):
+    before = save_game(page)
+    page.get_by_role("tab", name="Nest", exact=True).click()
+    action = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Raise Worker Egg", exact=True))
+    primary = action.get_by_role("button", name="Raise Worker Egg", exact=True)
+    toggle = action.get_by_label("Details for Raise Worker Egg", exact=True)
+    panel = action.locator(".action-details")
+    assert panel.get_attribute("open") is None
+    expect(toggle.locator("svg")).to_have_count(1)
+    icon_box, button_box = toggle.bounding_box(), primary.bounding_box()
+    assert icon_box["width"] >= 44 and icon_box["height"] >= 44
+    assert button_box["x"] + button_box["width"] <= icon_box["x"]
+    assert abs(icon_box["y"] - button_box["y"]) <= 1
+    closed_height = action.bounding_box()["height"]
+    # The closed disclosure adds no row below the action and its visible costs.
+    assert closed_height <= button_box["height"] + action.locator(".action-costs").bounding_box()["height"] + 18
+    toggle.focus()
+    toggle.press("Space")
+    expect(panel).to_have_attribute("open", "")
+    expect(panel).to_contain_text("Ants require a constant sugar supply")
+    assert action.bounding_box()["height"] > closed_height
+    expect(action.locator(".action-costs")).to_be_visible()
+    toggle.press("Enter")
+    assert panel.get_attribute("open") is None
+    assert abs(action.bounding_box()["height"] - closed_height) <= 1
+    after = save_game(page)
+    assert (after["ants"], after["basicResources"]) == (before["ants"], before["basicResources"])
+
+
 def check_chamber_bonuses(page, initial):
     def capacities(game):
         return {
@@ -121,7 +150,7 @@ def check_chamber_bonuses(page, initial):
         game["ants"]["workers"] = 0
         game["world"]["lastUpdateTime"] = page.evaluate("Date.now()")
         load_game(page, game)
-        page.get_by_text(f"Details: {name}", exact=True).click()
+        page.get_by_label(f"Details for {name}", exact=True).click()
         for text in details:
             expect(page.locator("details[open]")).to_contain_text(text)
         page.get_by_role("button", name=name, exact=False).click()
@@ -174,7 +203,7 @@ def run_checks(browser, url):
         )
         page.get_by_role("button", name="Gather Sugar", exact=True).click()
         if width <= 767:
-            page.get_by_text("Details: Gather Sugar", exact=True).click()
+            page.get_by_label("Details for Gather Sugar", exact=True).click()
             expect(page.locator("details[open]")).to_contain_text("+1 sugar")
         initial = save_game(page)
         assert initial["basicResources"]["sugar"]["amount"] == UNIT
@@ -184,6 +213,8 @@ def run_checks(browser, url):
 
         game = progressed_game(initial)
         load_game(page, game)
+        if width <= 767:
+            check_compact_details(page)
         for row in page.locator(".resource-row:visible").all():
             expect(row.locator(".resource-name .resource-icon svg")).to_have_count(1)
             assert row.locator(".resource-name").inner_text().strip()
@@ -218,7 +249,7 @@ def run_checks(browser, url):
             if width <= 767:
                 page.locator(".nest-brood").get_by_label("Action amount").select_option(str(multiplier))
                 modifiers = []
-                page.get_by_text("Details: Raise Worker Egg", exact=True).click()
+                page.get_by_label("Details for Raise Worker Egg", exact=True).click()
                 expect(page.locator("details[open]")).to_contain_text(f"+{multiplier} eggs")
             page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=modifiers)
             page.get_by_role("tab", name="Tasks").click()
@@ -256,6 +287,15 @@ def run_checks(browser, url):
         expect(egg_action.locator(".action-costs")).to_contain_text("5/10 sugar")
         load_game(page, game)
 
+        if width <= 767:
+            blocked = copy.deepcopy(game)
+            blocked["basicResources"]["sugar"]["amount"] = 0
+            load_game(page, blocked)
+            expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_disabled()
+            page.get_by_label("Details for Raise Worker Egg", exact=True).click()
+            expect(page.locator(".action-details[open]")).to_contain_text("Ants require a constant sugar supply")
+            load_game(page, game)
+
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
         page.get_by_role("tab", name="Nest", exact=True).click()
@@ -263,7 +303,7 @@ def run_checks(browser, url):
         expect(page.locator(".game-tooltip")).to_be_visible()
         expect(page.locator(".game-tooltip")).to_contain_text("Ants require a constant sugar supply")
         page.set_viewport_size({"width": 390, "height": 844})
-        page.get_by_text("Details: Raise Worker Egg", exact=True).click()
+        page.get_by_label("Details for Raise Worker Egg", exact=True).click()
         expect(page.locator("details[open]")).to_contain_text("Ants require a constant sugar supply")
         assert_fits(page, 390)
         if width == 390:

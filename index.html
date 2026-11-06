@@ -68,9 +68,16 @@
             .antidle-app .action-cell,
             .antidle-app #settingsContent .col-6 { width: 100%; padding: .5rem .75rem !important; }
             .antidle-app #settingsContent .justify-content-between { flex-wrap: wrap; gap: .5rem; }
-            .antidle-app .action-details { margin-top: .375rem; border: 1px solid var(--bs-border-color); border-radius: .375rem; }
-            .antidle-app .action-details summary { padding: .625rem; font-size: .875rem; cursor: pointer; }
-            .antidle-app .action-details > div { font-size: .875rem; }
+            .antidle-app .action-cell { position: relative; }
+            .antidle-app .action-cell:has(> .action-details) > button { margin-right: 3.5rem; }
+            .antidle-app .action-details { margin: 0; }
+            .antidle-app .action-details > summary { position: absolute; top: .5rem; right: .75rem; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--bs-border-color); border-radius: .375rem; color: var(--bs-primary); background: var(--bs-body-bg); cursor: pointer; list-style: none; touch-action: manipulation; }
+            .antidle-app .action-details > summary::-webkit-details-marker { display: none; }
+            .antidle-app .action-details > summary:hover,
+            .antidle-app .action-details[open] > summary { background: var(--bs-primary-bg-subtle); }
+            .antidle-app .action-details > summary:focus-visible { outline: 3px solid var(--bs-primary); outline-offset: 2px; }
+            .antidle-app .action-details > summary svg { display: block; width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+            .antidle-app .action-details > div { margin-top: .375rem; padding: .5rem !important; border: 1px solid var(--bs-border-color); border-radius: .375rem; font-size: .875rem; }
             .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
             .antidle-app .resource-row > div { width: auto; padding: 0; }
             .antidle-app .resource-row > div:first-child { white-space: normal !important; overflow-wrap: anywhere; }

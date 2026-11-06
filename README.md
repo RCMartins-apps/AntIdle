@@ -18,8 +18,9 @@ Open the served `index.html`. Use `sbt '~fastOptJS'` to rebuild while developing
 Production validation follows CI: `sbt fullOptJS test`.
 
 On phones (up to 767 CSS pixels), panels fit the screen, tabs scroll horizontally,
-and actions use full-width touch targets. Expand **Details** to see an action's
-explanations and effects. Costs remain visible beside every action. **Action amount** provides the same ×1, ×10, ×25, and
+and actions use full-width touch targets. Tap the **info icon** beside an action to expand its
+explanations and effects. The icon has a 44px touch target and also supports
+keyboard activation; closed details add no extra row, even for disabled actions. Costs remain visible beside every action. **Action amount** provides the same ×1, ×10, ×25, and
 ×250 options as desktop Ctrl/Shift shortcuts for laying eggs and assigning workers.
 Resource limits and game rules are shared across both layouts. Game saves remain
 in the browser's local storage.
@@ -119,11 +120,12 @@ Carcasses still need retrieval before their protein and sugar reserve are usable
 Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
 details include selected workers, supplies, and the level reached on return.
 Cards show duration, XP, and Knowledge, with live resource and worker costs beside
-the action. Reward odds and capacity requirements are available in mobile
-**Details** and desktop tooltips. Locked destinations are
+the action. Reward odds and capacity requirements are available through mobile
+**info icons** and desktop tooltips. Locked destinations are
 hidden: scout routes appear after Nursery/scout training, and Rotten Log also
 requires level 3. Unlocked routes remain visible when scouts are away or resources
-are insufficient. Supplies appear at level 2; later ranks appear at their unlock
+are insufficient. Details omit already-satisfied unlock levels and focus on
+current costs, staffing and slots. Supplies appear at level 2; later ranks appear at their unlock
 levels rather than as locked actions.
 Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
 

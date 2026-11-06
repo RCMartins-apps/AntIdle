@@ -5,53 +5,51 @@ Verify it against Git and PR state at the next session's start.
 
 ## Last verified: 2026-11-06
 
-- `origin/main` at `f431eb8` includes repletes in
-  [PR #29](https://github.com/RCMartins-apps/AntIdle/pull/29) and the durable
-  context files in [PR #30](https://github.com/RCMartins-apps/AntIdle/pull/30).
-- Implemented foundations include exploration destinations/discoveries, SVG
-  resources, diminishing sugar collection, default worker allocation, aphid
-  chambers, protein storage, aging, queen brood automation, construction
-  planning, Dry Clearing/water, statistics and expedition staffing controls.
-  README describes behavior; source and tests define exact rules and balance.
-- Final outpost production build and all 120 engine tests pass. Browser checks
-  in `tests/outpost_smoke.py` and existing `tests/replete_smoke.py` pass at
-  320, 390 and 1920px. Local Markdown links and whitespace checks pass.
+- `origin/main` at `32305bf` includes the Dry Clearing outpost in
+  [PR #31](https://github.com/RCMartins-apps/AntIdle/pull/31), durable context
+  files, and the automatic branch/push/checkpoint workflow.
+- Existing foundations and balance are documented in README. Source and tests
+  remain the authority for exact implemented behavior.
 
 ## Current work
 
-Branch `feature/second-colony-expansion` starts from current `origin/main`
-(`f431eb8`). The owner approved implementing the Dry Clearing outpost as an
-extension of the current colony, with a water requirement and an ongoing benefit.
-This is separate from queen-founded prestige and Understandings.
+Branch `fix/compact-action-details` starts from that main commit. The owner asked
+for more compact mobile action cards: replace the tall Details disclosure label
+with an info icon that expands the existing content. A related follow-up removes
+already-satisfied unlock-level rows from destination and expedition-supplies
+details; visibility gates and actionable costs/requirements are unchanged.
 
-Implemented a one-time Nest → Outposts establishment action, gated by level 6
-and Dew-covered Plants. It costs 3,000 sugar, 40 protein, 300 Knowledge, 750
-space and 150 water, adding 50 shared colony capacity and five Seed Forager
-slots. Each forager produces 0.04 protein/s for 0.02 water/s plus normal sugar
-upkeep. Empty water or full protein pauses production without losing housing.
+Shared action cards now use a labeled inline SVG summary beside the
+primary button, with a 44px touch target. Native details preserve keyboard and
+open/closed behavior; disabled actions still allow viewing details. Closed
+panels add no extra row, costs stay visible, and desktop tooltips remain.
 
-The engine enforces costs/one-time founding, staffing caps, partial water and
-storage, aphid-feeding integration, defaults, save restoration and statistics.
-UI costs, rates, shortage states and phone/desktop layouts are verified. README,
-VISION and decision D10 record the feature and distinguish it from prestige.
+The compact-icon implementation was validated as follows:
+- `sbt fastOptJS fullOptJS test`: 120 tests passed; Closure reported no errors or warnings.
+- `tests/browser_smoke.py`: passed at 320, 390, 767, 768, 844, 1024 and 1920px,
+  including compact height, 44px targets, independent activation, native keyboard
+  toggle, disabled actions and resizing across the mobile breakpoint.
+- `tests/exploration_smoke.py` and `tests/protein_storage_smoke.py`: passed at
+  320, 390 and 1920px; forecasts, purchases and chamber effects remain accessible.
+- Closed and expanded 390px layouts visually inspected. Documentation links and
+  `git diff --check` pass. README and decision D4 describe the new control.
 
-The branch carries forward the two automatic-push policy commits: despite the
-owner reporting a merge, fetched main does not yet include them. This preserves
-the standing authorization and checkpoint instructions without relying on chat.
+Unlock-level cleanup validation also passes: `sbt fastOptJS fullOptJS test`
+completed with 120 passing tests and no Closure errors/warnings. Exploration
+browser regression passes at 320, 390 and 1920px, covering hidden routes, previews,
+costs, supplies and saves. The source change only removes presentation rows.
 
 ## Next work and unknowns
 
-- The approved Dry Clearing outpost is implemented; no next gameplay task is
-  chosen. The owner has requested pushing and opening a PR against `main`.
+- Implementation and validation are complete. No PR is requested yet; the
+  final response reports the actual branch push result.
+- No next gameplay task is selected. Further outpost levels and specialization
+  remain future design choices.
 - Understandings and queen inheritance are agreed prestige foundations, but
-  prestige is not implemented. First rewards, costs, reset rules and founding
-  conditions remain to be designed with the owner.
-- Further outpost expansion levels, additional staffing or environmental
-  mechanics are future design choices, not approved follow-up work.
-- Suggested nurse care, pheromone trails, injuries and waste are possibilities,
-  not approved features. See VISION for the distinction.
-- Local `work/` screenshots and `tests/__pycache__/` are untracked artifacts;
-  preserve unrelated files and do not commit them as project context.
+  prestige is not implemented; effects, costs and reset rules need design.
+- Nurse care, pheromone trails, injuries and waste are tentative possibilities.
+- Preserve unrelated local `work/` screenshots and `tests/__pycache__/` artifacts;
+  do not commit them as project context.
 
 ## Starting a fresh Codex session
 
