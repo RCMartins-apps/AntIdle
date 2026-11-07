@@ -9,6 +9,9 @@ import scala.util.Random
 object PopulationAging {
   val Minute: Long = 60L * TicksPerSecond
 
+  def freshWorkerCohorts(data: AllData, count: Long): List[AgeCohort] =
+    newborn(count, data.currentTick, data.world.saveSeed + data.currentTick + 23L, data.upgrades)
+
   def lifespanText(upgrades: UpgradesData): String =
     if (upgrades(UpgradesData.UpgradeType.ColonyNutrition).unlocked) "54–72" else "45–60"
 
@@ -98,6 +101,8 @@ object PopulationAging {
 
   def starveOne(data: AllData): AntsData = {
     val ants = if (homeWorkers(data.ants) > 0L) loseWorkers(data.ants, 1L)
+    else if (data.ants.taskWorkers(AntTask.TerritoryForager) >= u)
+      data.ants.copy(workers = data.ants.workers - u).removeFromTask(AntTask.TerritoryForager, u)
     else if (ScoutProgression.atHome(data.ants, data.exploration) >= u) data.ants.copy(scouts = data.ants.scouts - u)
     else if (data.ants.repletes >= u) data.ants.copy(repletes = data.ants.repletes - u)
     else if (data.ants.daughterQueens >= u) data.ants.copy(daughterQueens = data.ants.daughterQueens - u)
@@ -138,6 +143,7 @@ object PopulationAging {
   def forecast(data: AntsData, tick: Long): String = {
     def count(cohorts: List[AgeCohort]): Long = cohorts.filter(_.expiresAt <= tick + 5L * Minute).map(_.count).sum
     val storage = if (data.repletes > 0L) s" · ${count(data.ages.repletes)} repletes" else ""
-    s"Aging · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts$storage"
+    val scope = if (data.taskWorkers(AntTask.TerritoryForager) > 0L) "Home aging" else "Aging"
+    s"$scope · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts$storage"
   }
 }

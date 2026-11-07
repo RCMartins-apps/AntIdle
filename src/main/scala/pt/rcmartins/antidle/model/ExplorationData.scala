@@ -13,6 +13,7 @@ case class ExplorationData(
     suppliesLevel: Int = 0,
     surveys: Map[String, Int] = Map.empty,
     sugarTrail: SugarTrail = SugarTrail(),
+    territory: Territory = Territory(),
 )
 
 object ExplorationData {

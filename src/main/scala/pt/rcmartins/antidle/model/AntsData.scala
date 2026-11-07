@@ -28,7 +28,7 @@ case class AntsData(
 
   lazy val upkeepWorkersCount: Long =
     (scouts + repletes + daughterQueens + idleWorkersCount +
-      tasks.map { case (task, amount) => if (task.hasAntUpkeep) amount else 0 }.sum) / u
+      tasks.map { case (task, amount) => if (task.hasAntUpkeep || task == AntTask.TerritoryForager) amount else 0 }.sum) / u
 
   def unlockTask(antTask: AntTask): AntsData =
     if (tasks.exists(_._1 == antTask))

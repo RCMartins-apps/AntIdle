@@ -281,6 +281,11 @@ object MainForm {
               )
             )
           ),
+          child.maybe <-- ifUnlockedOpt(territoryVisibleSignal)(
+            li(className := "nav-item",
+              a(className := "nav-link", idAttr := "territory-tab", dataAttr("bs-toggle") := "tab",
+                href := "#territoryContent", role := "tab", "Territory")),
+          ),
           child.maybe <-- ifUnlockedOpt(discoveriesVisibleSignal)(
             li(className := "nav-item",
               a(className := "nav-link", idAttr := "discoveries-tab", dataAttr("bs-toggle") := "tab",
@@ -333,6 +338,9 @@ object MainForm {
               exploreDiv,
             )
           ),
+          child.maybe <-- ifUnlockedOpt(territoryVisibleSignal)(
+            div(className := "tab-pane", idAttr := "territoryContent", role := "tabpanel", territoryDiv),
+          ),
           child.maybe <-- ifUnlockedOpt(discoveriesVisibleSignal)(
             div(className := "tab-pane", idAttr := "discoveriesContent", role := "tabpanel", discoveriesDiv),
           ),
@@ -372,6 +380,8 @@ object MainForm {
           Option.when(unlocks.resources.showWorkers)("Peak workers" -> stats.maxAliveWorkers.thisRun.toString),
           Option.when(exploration.proteinDiscovered)("Carcasses retrieved" -> stats.carcassesRetrieved.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Aging losses" -> (stats.workersLostToAging.thisRun.toLong + stats.scoutsLostToAging.thisRun + stats.repletesLostToAging.thisRun).toString),
+          Option.when(stats.territoryDeaths.total > 0)("Territory combat losses" -> stats.territoryDeaths.thisRun.toString),
+          Option.when(stats.territoryContests.total > 0)("Territory contests" -> stats.territoryContests.thisRun.toString),
           Option.when(stats.raidDeaths.total > 0)("Raid losses" -> stats.raidDeaths.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Starvation losses" -> stats.starvationDeaths.thisRun.toString),
         ).flatten
@@ -1031,6 +1041,85 @@ object MainForm {
     )
   }
 
+  private def territoryDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
+    val chosen = Var(10)
+    val siteSignal = explorationSignal.map(_.territory).distinct
+    val workerSignal = antsSignal.map(TerritoryProgression.workers).distinct
+    div(className := "territory-card",
+      h5("Contested Foraging Ground"),
+      child <-- siteSignal.map(_.held).distinct.map {
+        case false => div(
+          div(className := "territory-entry small mb-2", "Hold the ground for protein. Hauls arrive after each 60-second contest. Withdraw anytime; unfinished hauls are left behind."),
+          label(forId := "territory-workers", "Workers to hold"),
+          div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
+            input(idAttr := "territory-workers", className := "form-control", typ := "number", minAttr := "10", maxAttr := "37", stepAttr := "1",
+              width.px := 110, minHeight.px := 44, value <-- chosen.signal.map(_.toString),
+              onChange.mapToValue --> (value => chosen.set(TerritoryProgression.target(value.toIntOption.getOrElse(10))))),
+            List(10, 20, 37).map(n => button(className := "btn btn-outline-secondary", typ := "button", minHeight.px := 44,
+              n.toString, aria.label := s"Hold with $n workers", onClick --> (_ => chosen.set(n)))),
+          ),
+          div(className := "territory-risk text-danger small mb-2", child.text <-- chosen.signal.map(n => TerritoryProgression.risk(n.toLong))),
+          div(className := "small mb-1", child.text <-- chosen.signal.map(n =>
+            s"+${resourceRateStr(n.toLong * TerritoryProgression.ProteinPerWorkerSecond)} protein/s toward the haul. No scout or expedition slot required.")),
+          div(className := "territory-entry-aging text-danger small mb-1", child.text <-- antsSignal.combineWith(currentTickSignal, chosen.signal).map {
+            case (ants, tick, amount) =>
+              val due = RaidProgression.overdue(ants.ages.workers, amount.toLong, tick + TerritoryProgression.ContestTicks)
+              if (due == 0L) "" else s"$due selected workers expire before the first contest; aging can add losses."
+          }),
+          div(className := "row", actionButton(
+            name = "Hold Foraging Ground",
+            enabledSignal = chosen.signal.combineWith(antsSignal, resourcesSignal, explorationSignal, unlocksSignal).map {
+              case (n, ants, resources, exploration, unlocks) =>
+                !exploration.territory.held && unlocks.tabs.exploreTabUnlocked && DiscoveryProgression.ContestedGround.found(exploration) &&
+                  ants.availableWorkersCount >= n.toLong * u && resources.hasResources(TerritoryProgression.cost(n))
+            },
+            costSignal = chosen.signal.map(TerritoryProgression.cost), bonusSignal = Val(ActionBonus.empty),
+            descriptionSignal = Val(Some(div("Oldest home workers are assigned first. Combat casualties are random within the holders. Workers consume ordinary sugar upkeep. Full protein storage does not stop contests or casualties. Hauls are delivered only if workers survive the contest and aging."))),
+            onClickAction = _ => useSignalValue[Int](chosen.signal, n => Actions.claimTerritory(n)),
+          )),
+        )
+        case true => div(className := "territory-held border rounded p-2",
+          div(className := "d-flex flex-wrap justify-content-between gap-2",
+            b(child.text <-- workerSignal.combineWith(siteSignal).map { case (count, site) => s"$count/${site.targetWorkers} workers holding" }),
+            span(child.text <-- siteSignal.combineWith(currentTickSignal).map { case (site, tick) =>
+              s"Next contest: ${prettyTimeFromTicks(Math.max(0L, site.nextContestTick - tick))}"
+            }),
+          ),
+          div(className := "territory-risk text-danger small my-2", child.text <-- workerSignal.map(TerritoryProgression.risk)),
+          div(className := "territory-pending", child.text <-- siteSignal.map(site => s"Haul: ${prettyNumberStr(site.pendingProtein)} protein")),
+          div(className := "small", child.text <-- workerSignal.map(n =>
+            s"+${resourceRateStr(n * TerritoryProgression.ProteinPerWorkerSecond)} protein/s · delivered after contest, if workers survive.")),
+          div(className := "territory-storage small my-1",
+            child.text <-- proteinSignal.map(p => s"Storage room: ${prettyNumberStr(p.freeSpace)} protein. Full storage does not stop losses."),
+            className <-- proteinSignal.combineWith(siteSignal, workerSignal, currentTickSignal).map { case (p, site, count, tick) =>
+              val expected = site.pendingProtein + count * TerritoryProgression.ProteinPerWorkerSecond * Math.max(0L, site.nextContestTick - tick) / TicksPerSecond
+              if (p.freeSpace < expected) "text-danger" else ""
+            },
+          ),
+          div(className := "territory-aging text-danger small my-1", child.text <-- siteSignal.map { site =>
+            val due = site.ages.filter(_.expiresAt <= site.nextContestTick).map(_.count).sum
+            if (due == 0L) "" else s"$due holders expire by the contest. Aging losses can overlap combat losses."
+          }),
+          div(className := "d-flex flex-wrap gap-2 my-2",
+            button(className := "btn btn-outline-primary", typ := "button", minHeight.px := 44, "Reinforce",
+              disabled <-- workerSignal.combineWith(siteSignal, availableWorkersCountSignal).map {
+                case (n, site, available) => n >= site.targetWorkers || available < u
+              }, onClick --> (_ => Actions.reinforceTerritory())),
+            button(className := "btn btn-outline-danger", typ := "button", minHeight.px := 44, "Withdraw",
+              onClick --> (_ => Actions.withdrawTerritory())),
+          ),
+          label(className := "d-flex align-items-center gap-2 my-2", minHeight.px := 44,
+            input(typ := "checkbox", className := "form-check-input", checked <-- siteSignal.map(_.maintain).distinct,
+              onChange.mapToChecked --> (enabled => Actions.maintainTerritory(enabled))),
+            "Maintain staffing automatically",
+          ),
+          p(className := "small mb-1", "Reinforcements use idle/default-task workers, oldest first. Other assigned jobs are protected."),
+          p(className := "small mb-0", "Withdraw safely returns survivors, but leaves the unfinished haul behind. Aging is resolved at contests or withdrawal."),
+        )
+      },
+    )
+  }
+
   private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = div(
     className := "col-12 lineage-section",
     child.maybe <-- antsSignal.map(a => a.daughterQueens > 0L || a.lineage.foundings > 0).distinct.map {
@@ -1453,6 +1542,8 @@ object MainForm {
               else Option.when(resources.water.amount == 0L)(span(className := "text-danger", "Needs water"))
             },
           )
+        case AntTask.TerritoryForager =>
+          div("Holding contested ground. Manage staffing and withdrawal in Territory.")
         case AntTask.TrailForager =>
           div("Following a nectar trail. Manage workers in Explore.")
         case AntTask.RoyalNurse =>

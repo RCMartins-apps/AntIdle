@@ -44,6 +44,14 @@ object AntTask {
     val name: String = "Seed Forager"
   }
 
+  case object TerritoryForager extends AntTask {
+    val uiOrder: Int = 8
+    val name: String = "Territory Forager"
+    override val showButtons: Boolean = false
+    // Cohorts are reserved at the site; upkeep is explicitly charged in AntsData.
+    override val hasAntUpkeep: Boolean = false
+  }
+
   case object TrailForager extends AntTask {
     val uiOrder: Int = 7
     val name: String = "Trail Forager"
