@@ -40,8 +40,9 @@ Validation completed:
 
 ## Next work and unknowns
 
-- Implementation and validation are complete; the final response reports the
-  actual push result. No PR is requested for this branch.
+- Implementation and validation are complete.
+  [PR #35](https://github.com/RCMartins-apps/AntIdle/pull/35) is open against
+  `main` for this branch; merging remains the owner's decision.
 - Ordinary prestige can provide starting unlocks/permanent bonuses; challenge
   prestige uses less ideal founding locations and completion rewards.
 - Nurse jobs, queen rearing, first Understandings, challenge rules and the reset
