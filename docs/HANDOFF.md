@@ -16,7 +16,7 @@ The owner approved material collection and Royal Nursery construction first,
 leaving nurses and queen rearing for the next step. They explicitly selected
 woodland resin. Decision D11 records the approved scope.
 
-Checkpoint implemented:
+Implemented:
 - Fallen Pine surveys at exploration level 7 reveal Resin Seep after three
   returns; Collect Resin then provides guaranteed material with workers/scouts.
 - Resin has 200 storage, resource/cost SVGs, gathered statistics, visible costs
@@ -28,14 +28,20 @@ Checkpoint implemented:
 - No nurse jobs, queen rearing, founding, prestige or challenges are implemented
   by this foundation.
 
-The production build and 140 engine tests pass, including ten new resin/nursery
-cases. A final small action-label/locator change still needs rebuilding, and
-phone/desktop checks are pending. This checkpoint is not yet declared ready for
-merge. Exact costs/rewards and README are being finalized.
+Validation completed:
+- `sbt fastOptJS fullOptJS test`: all 140 engine tests pass, including ten new
+  resin/nursery cases; Closure reports no errors or warnings.
+- `tests/royal_nursery_smoke.py`: passes at 320, 390 and 1920px for staged
+  discovery, collection, costs, queue waits, completion, zero balances and old saves.
+- `tests/browser_smoke.py`: passes at 320, 390, 767, 768, 844, 1024 and 1920px.
+- `tests/management_smoke.py`: passes at 320, 390 and 1920px.
+- Mobile material costs, queue wait and prepared states were visually inspected.
+  README documents rewards and costs; local Markdown links and whitespace pass.
 
 ## Next work and unknowns
 
-- Finish validation, document the feature and push the final result. No PR is requested.
+- Implementation and validation are complete; the final response reports the
+  actual push result. No PR is requested for this branch.
 - Ordinary prestige can provide starting unlocks/permanent bonuses; challenge
   prestige uses less ideal founding locations and completion rewards.
 - Nurse jobs, queen rearing, first Understandings, challenge rules and the reset

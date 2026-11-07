@@ -30,8 +30,9 @@ On 2026-11-07 the owner clarified two forms of prestige:
   rules and rewards are not yet selected.
 
 The owner also endorsed raising daughter queens as a development direction,
-including opportunities for new chambers and job types. This is not approval of
-specific nurse rules, chamber names, recipes or queen-rearing costs. Define the
+including opportunities for new chambers and job types. Royal Nursery and resin
+construction are subsequently approved in D11; specific nurse rules, rearing
+recipes and queen-rearing costs remain undecided. Define the
 first rearing/founding loop and reset matrix before implementing prestige.
 Challenge rewards' relationship to Understandings and the interaction between
 normal and challenge foundings remain open design questions.

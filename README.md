@@ -592,3 +592,49 @@ extension field load as level 1, and imported extension counts cannot exceed two
 Run `sbt fastOptJS fullOptJS test`, then
 `python3 tests/outpost_progression_smoke.py` for level gates, purchases, staffing,
 actual upgraded production, rates, old/current saves and phone/desktop layouts.
+
+## Woodland resin and the Royal Nursery foundation
+
+Resin is the first material used for advanced chamber construction. Its amber
+SVG, storage (200 resin), costs and gathered statistics use the same resource
+paths as sugar, protein and water. Discovering its source reveals the resource
+row at zero; the row remains visible after spending the last unit. Statistics
+count only material retained, excluding overflow. Existing early chambers keep
+their costs and do not require resin.
+
+| Expedition | Unlock | Duration | Workers / scouts | Sugar per worker | Base rewards |
+| --- | --- | --- | --- | ---: | --- |
+| Fallen Pine | Exploration level 7 | 120s | 10 / 1 | 30 | 80 XP, 30 Knowledge; surveys the area |
+| Collect Resin | Level 7 and Resin Seep discovery | 120s | 10 / 2 | 35 | 5 resin, 50 XP, 10 Knowledge |
+
+Three completed Fallen Pine surveys discover **Resin Seep**, announced once.
+Collection stays hidden before the discovery; workers and scouts are reserved
+normally and return to the default worker pool. Rewards scale with party size,
+supplies and exploration level, including a level reached on return. Neither
+expedition uses carcass storage. In-flight collection trips survive saves.
+
+**Royal Nursery Planning** becomes visible at exploration level 8 after the
+resin discovery, with an ordinary Nursery already built. Research opens a
+**Royal brood** section in Nest with the one-time **Royal Nursery** build action.
+
+| Stage | Sugar | Protein | Knowledge | Water | Tunneling space | Resin |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Planning research | 5,000 | 100 | 700 | 150 | 0 | 0 |
+| Nursery construction | 3,000 | 50 | 0 | 100 | 1,500 | 80 |
+
+All costs remain visible. Construction uses the existing queue: it can be
+planned while material is missing, shows a red Never wait until resources
+arrive, and charges all costs only on completion. Duplicate royal plans and
+construction after the first nursery are rejected. Loading repairs stale costs
+and removes invalid or duplicate royal plans without spending resources.
+
+The completed nursery shows **1 royal brood slot prepared**. It creates no ants,
+eggs, extra colony housing or prestige rewards. Nurse jobs and daughter-queen
+rearing are the next stage, as agreed; this step prepares their physical chamber.
+
+Old saves default to zero resin, an unbuilt royal nursery and unowned planning
+research. Current saves retain material, discovery, queued costs, the completed
+chamber and resource visibility without granting anything twice. Run
+`sbt fastOptJS fullOptJS test`, then `python3 tests/royal_nursery_smoke.py` for
+hidden gates, surveys, gathering, statistics, costs, queue waits, completion,
+old/current saves and phone/desktop layouts.
