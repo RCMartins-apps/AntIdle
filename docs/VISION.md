@@ -79,4 +79,4 @@ First Understandings and founding follow daughter-queen rearing. Beyond the
 royal brood humidity and feeding implemented in that step, wider humidity,
 pheromone routes, carrying capacity, waste management, injuries and chemical
 records remain suggestions rather than an approved backlog. The existing Brood
-Care upgrade does not implement a nurse or larval-feeding system.
+Care upgrade speeds ordinary brood; royal care uses its own nurse/feeding system.

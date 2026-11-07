@@ -11,7 +11,10 @@ care, stage-specific feeding, progress/pause/shortage UI, mature daughters,
 housing/upkeep/statistics and additive save fields. No founding/reset or
 Understanding is granted. First Understanding and reset rules remain undecided.
 
-First development build and all 140 existing engine tests pass. New royal brood
-engine coverage is written but not run yet; mobile/browser checks, production
-build, README and final review remain. This checkpoint is not ready to merge.
+Development/release builds pass; Closure reports zero errors/warnings and all
+152 engine tests pass, including twelve royal brood cases. The new
+`tests/royal_brood_smoke.py` passes at 320, 390 and 1920px, with mobile rearing
+and ready cards visually inspected. README covers current costs and behavior;
+local Markdown links and whitespace pass. Existing resin/nursery and general UI
+regressions are still running. Final review remains; this is a checkpoint.
 Preserve unrelated untracked `work/` screenshots and `tests/__pycache__/`.

@@ -56,7 +56,7 @@ object TickUpdater {
           }
         },
         CarcassProgression.returnCarcasses,
-        // Charge upkeep before automatic brood can spend the remaining sugar.
+        // Charge adult upkeep first, then royal care, before automatic worker eggs.
         beforeUpkeep => {
           val (allData, foodOffset) = CarcassProgression.consumeFood(beforeUpkeep)
           val sugarUpkeep = ScoutProgression.upkeepCount(allData.ants, allData.exploration) *
@@ -66,6 +66,7 @@ object TickUpdater {
               allData.basicResources.sugar.maxAmount,
               allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep,
             )
+          // Let fresh surplus feed royal brood before storage overflow is discarded.
           val sugarBeforeCare = Math.max(0L, allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep)
 
           val sugarUsedFromSurplus: Long =

@@ -155,12 +155,14 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals(next.basicResources.protein.amount, initial.basicResources.protein.amount - feeding.cost.protein)
     assertEquals(next.basicResources.water.amount, initial.basicResources.water.amount - feeding.cost.water)
     assertEquals(next.ants.royalBrood.get.careUnits, EggCare + feeding.units)
-    val routine = initial.copy(basicResources = initial.basicResources.copy(sugar = BasicResource(5 * 1000L, 40000 * u)),
-      ants = initial.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 100)),
-      upgrades = initial.upgrades.unlock(QueensRoutine))
+    val routine = initial.copy(basicResources = initial.basicResources.copy(sugar = BasicResource(LayEggSugarCost - 1000L, 40000 * u)),
+      ants = initial.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 100, sugarReserve = 0L)),
+      upgrades = initial.upgrades.unlock(QueensRoutine),
+      unlocks = initial.unlocks.copy(actions = initial.unlocks.actions.copy(canLayEggs = true)))
     val step = TickUpdater.updateAllData(routine, None)
     assertEquals(step.ants.royalBrood.get.careUnits, EggCare + 5L)
     assert(step.ants.eggsAndLarvae.isEmpty)
+    assertEquals(TickUpdater.updateAllData(setPaused(routine, true), None).ants.eggsAndLarvae.size, 1)
   }
 
   test("fresh production feeds brood at full storage without draining stock or counting discarded overflow") {
