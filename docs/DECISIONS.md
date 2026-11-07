@@ -223,3 +223,36 @@ Full storage pauses collection; recall/depletion returns workers to their
 default pool and frees the scout. Trail workers and guides age and consume
 normal upkeep. No strength meter or recurring maintenance clicking is added.
 These quantities are implementation balance choices, not future content promises.
+
+## D14: Voluntary danger can cause substantial losses — first raid implemented
+
+The owner wants dangerous actions where ants can die to create meaningful
+population pressure before adding further brood-care Understandings. Large
+losses are acceptable when the risk is clear before committing; the player
+judges whether rewards justify casualties. Do not impose the assistant's
+earlier suggested 0–2-worker cap as a requirement. Queen's Routine already
+provides early automatic worker replacement; do not invent another prerequisite
+automation system to justify danger.
+
+The owner approved implementing the optional raid, then specified that oldest
+ants should be sent first but deaths should be random within the expedition
+party. Reuse oldest-first home-worker cohort selection; sample casualties
+uniformly by individual within the departing party. Survivors retain expiry
+ticks. Store the seeded outcome at departure so reloads cannot reroll danger;
+remove casualty cohorts before resolving overdue survivors' aging on return.
+
+Current implementation balance: Rival Food Cache, exploration level five,
+10–37 workers and at least one scout, 120 seconds before extra-scout speed,
+30 sugar per worker. Ten workers lose 2–4; 37 lose 4–10 (guaranteed combat
+losses, uniform over integer range). Protein is rolled uniformly from 200–350
+per ten workers and scales linearly with party size. Free storage caps retained
+rewards without reducing losses. Extra scouts/supplies do not change these
+combat or protein ranges; normal XP/Knowledge/speed rules still apply. Scouts
+have no combat losses but can die from overdue aging. Ranges, certainty and
+storage room are visible beside the action, with an additional warning if
+oldest selected cohorts expire before return. Existing destinations remain
+safe from combat. Raid deaths have separate run/lifetime statistics. These
+quantities are current balance choices.
+
+Expanded brood allocation and ongoing outpost supply costs remain unadopted
+suggestions, not this implementation.

@@ -2,47 +2,44 @@
 
 ## Last verified: 2026-11-07
 
-- `feature/dna-prestige` continues from merged main `1e1f982` (royal brood PR #36).
-- First prestige is implemented and pushed with [PR #37](https://github.com/RCMartins-apps/AntIdle/pull/37)
-  open against `main`. Merging remains the owner's decision.
-- D13 records approved direction and implemented balance; README covers rules.
+- Main `d9e755a` contains merged first prestige PR #37.
+- Related branch `design/expedition-danger` now implements the approved raid;
+  pushed with [PR #38](https://github.com/RCMartins-apps/AntIdle/pull/38) open
+  against `main`. D14 and README record rules and balance.
+- Latest owner requirement: oldest ants depart first, but casualties are random
+  within the party. Reuses oldest-first home-worker cohort selection and samples
+  individuals uniformly without replacement. Surviving expiry ticks are retained.
 
-## Completed first prestige
+## Completed raid
 
-- Mature daughters enable a founding preview and confirmation in Nest.
-  Colony economy, ants/brood, chambers, research, exploration/discoveries,
-  trails, queues and assignments reset. DNA, Understandings, lifetime totals,
-  resource visibility, settings and banked time remain. Early unlock
-  subscriptions are recreated; the new colony starts with no workers.
-- Each founding awards 1 DNA and additive +10% sugar production. Collectors,
-  aphids and trail harvesting get the bonus; clicks, expedition rewards,
-  consumption, prices and aging keep their rules. Per-collector previews,
-  rates and percentage tooltips agree with actual production.
-- Shared Paths costs 1 DNA once and is inherited. Nectar Meadow returns reveal
-  one finite 1,200-sugar source; marking costs 50 sugar and reserves one scout.
-  Up to ten workers harvest at base 0.8 sugar/s each. Storage pauses gathering;
-  depletion/recall releases staff to the default pool, preserving age cohorts.
-  Guides remain subject to normal upkeep, aging and starvation. Saved excess
-  staffing is capped and missing marked-trail task entries are restored.
-- Persistence uses `ants.lineage` and `exploration.sugarTrail`; old saves get
-  additive defaults. No save version change is required.
+- Rival Food Cache at exploration level 5: 10–37 workers, one scout, 120 seconds
+  before extra-scout speed, 30 sugar per worker. Combat losses are guaranteed:
+  2–4 of ten workers; 4–10 of 37. Protein range is 200–350 per ten workers,
+  scaling linearly with party size; free storage caps actual retained income.
+- Counts/certainty, rewards, costs, storage room and selected-cohort aging
+  warnings are visible beside the action. In-flight parties retain risk text.
+  Scouts have no combat losses, but overdue aging can kill scouts/survivors.
+- Outcomes and casualty-selection seed are saved at departure. Same-tick
+  launches use distinct seeds; reloads and delayed returns cannot reroll them.
+  Combat deaths/cohorts are removed before overdue survivor aging, without
+  double-counting. Replayed completions grant nothing. Existing safe routes
+  keep their behavior. Queen's Routine replaces ordinary worker deficits.
+- Raid losses have separate run/lifetime statistics and prestige retention.
+  Existing parties default to no raid outcome; no save version bump needed.
 
 Validation:
-- `sbt fastOptJS fullOptJS test`: 164 engine tests pass, including twelve
-  prestige/trail cases. Final display-only tooltip correction rebuilt in
-  development/release mode; Closure reports zero errors/warnings.
-- `tests/prestige_smoke.py`: passes at 320, 390 and 1920px. Covers founding
-  cancellation/confirmation, DNA, reset totals, early unlocks, trails and saves.
-  Desktop rerun additionally checks +10.00% in the resource tooltip.
-- `tests/royal_brood_smoke.py`: passes at 320, 390 and 1920px.
-- `tests/browser_smoke.py`: passes at 320, 390, 767, 768, 844, 1024 and 1920px.
-- Mobile trail card visually inspected; local Markdown links/whitespace pass.
+- `sbt fastOptJS fullOptJS test`: 175 engine tests pass, including eleven new
+  raid cases; production Closure reports zero errors/warnings.
+- `tests/raid_smoke.py`: passes at 320, 390 and 1920px for gates, risk/costs,
+  oldest workers, saves, returns, storage/age warnings and automatic replacement.
+- `tests/progression_smoke.py`: passes at 320, 390 and 1920px, including existing
+  carcass/scout/XP/save/limit checks. Mobile raid card visually inspected.
+- Local Markdown links resolve; whitespace checks pass.
 
-## Future work
+## Next work
 
-- Only the first introductory mechanic is implemented. Repeated founding
-  currently gives the same 1 DNA and +10% bonus; additional linear introductory
-  Understandings and later short/long-run DNA milestones remain future work.
-- Challenge founding, its objectives/rewards and interaction with normal
-  Understandings remain unchosen. Do not implement tentative old ideas as rules.
+- Brood-care progression remains deferred until population pressure proves
+  meaningful; recurring outpost supply costs are only an unadopted suggestion.
+- Further introductory Understandings, later DNA milestones and challenge
+  founding remain separate future work. Tune raids using actual play feedback.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

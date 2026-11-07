@@ -27,14 +27,15 @@ object ExplorationHelper {
     else {
       val scouts = destination.scouts + extraScouts.toLong * u
       val (ready, ages) = PopulationAging.depart(data, workers, scouts)
+      val party = ExplorationParty(workers, data.currentTick,
+        data.currentTick + ExplorationProgression.duration(destination, extraScouts), scouts = scouts,
+        destination = destination.id, suppliesLevel = ExplorationProgression.suppliesRank(data.exploration), ages = ages, extraScouts = extraScouts)
+      val departing = if (RaidProgression.isRaid(destination)) party.copy(
+        raidOutcome = Some(RaidProgression.roll(RaidProgression.seed(ready, party), workers))) else party
       DefaultWorkerAssignment.normalize(ready.spendResources(cost(workers, destination, extraScouts))
         .modify(_.ants).using(_.unlockTask(AntTask.Explorer).addToTask(AntTask.Explorer, workers))
         .modify(_.exploration.explorationParties)
-        .using(ExplorationParty(
-          workers, data.currentTick, data.currentTick + ExplorationProgression.duration(destination, extraScouts),
-          scouts = scouts, destination = destination.id,
-          suppliesLevel = ExplorationProgression.suppliesRank(data.exploration), ages = ages, extraScouts = extraScouts,
-        ) :: _)
+        .using(departing :: _)
         .modify(_.statistics.explorationsCount).using(_.addValue(1))
         .modify(_.statistics.explorationsWorkersSentU).using(_.addValue(workers)))
     }
@@ -50,7 +51,10 @@ object ExplorationHelper {
       val reward = ExplorationProgression.expeditionReward(destination.sugarReward, experience, workers, rank)
       s" · ${UINumbersUtils.prettyNumberStr(reward)} sugar"
     } else ""
-    val protein = if (destination.proteinReward > 0L) {
+    val protein = if (RaidProgression.isRaid(destination)) {
+      val (low, high) = RaidProgression.rewardRange(workers)
+      s" · ${UINumbersUtils.prettyNumberStr(low)}–${UINumbersUtils.prettyNumberStr(high)} protein"
+    } else if (destination.proteinReward > 0L) {
       val reward = ExplorationProgression.expeditionReward(destination.proteinReward, experience, workers, rank)
       s" · ${UINumbersUtils.prettyNumberStr(reward)} protein"
     } else ""
@@ -73,7 +77,9 @@ object ExplorationHelper {
     val experience = ExplorationProgression.addExperience(data.experience, xp)
     def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
       ExplorationProgression.expeditionReward(base, experience, workers, rank))
-    val result = if (destination.resinReward > 0L)
+    val result = if (RaidProgression.isRaid(destination))
+      RaidProgression.risk(workers) + " Protein reward is uniformly rolled at 200–350 per ten workers, limited by free storage. Loss counts are uniformly distributed over the displayed range. Extra scouts and supplies do not reduce casualties or increase raid protein. Surviving ants retain their lifespans."
+    else if (destination.resinReward > 0L)
       "Resin guaranteed; stored up to resin capacity"
     else if (destination.waterReward > 0L)
       "Water guaranteed; stored up to water capacity"
@@ -112,11 +118,17 @@ object ExplorationHelper {
       withXP.addMessage(s"Exploration level ${ExplorationProgression.level(experience)}! ${ExplorationProgression.nextMilestone(experience)}")
     else withXP
     val knowledge = ExplorationProgression.expeditionReward(destination.knowledge, experience, party.amountWorkers, party.suppliesLevel)
-    val returned = leveled.modify(_.ants).using(_.removeFromTask(AntTask.Explorer, party.amountWorkers))
+    val (afterBattle, returningAges) = RaidProgression.resolve(leveled, party)
+    val returned = afterBattle.modify(_.ants).using(_.removeFromTask(AntTask.Explorer, party.amountWorkers))
       .giveResources(knowledge = knowledge)
     val report = s"${destination.name}: +$xp XP · +${UINumbersUtils.prettyNumberStr(knowledge)} knowledge."
 
-    val rewarded = if (destination.resinReward > 0L) {
+    val rewarded = if (RaidProgression.isRaid(destination)) {
+      val protein = RaidProgression.outcome(data, party).protein
+      val collected = Math.min(protein, returned.basicResources.protein.freeSpace)
+      returned.giveResources(protein = protein).modify(_.exploration.proteinDiscovered).setTo(true)
+        .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} protein!")
+    } else if (destination.resinReward > 0L) {
       val resin = ExplorationProgression.expeditionReward(destination.resinReward, experience, party.amountWorkers, party.suppliesLevel)
       val collected = Math.min(resin, returned.basicResources.resin.freeSpace)
       returned.giveResources(resin = resin).addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} resin!")
@@ -144,7 +156,7 @@ object ExplorationHelper {
       returned.giveResources(sugar = sugar)
         .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} sugar!")
     } else returned.addMessage(s"$report No resources found.")
-    DefaultWorkerAssignment.normalize(PopulationAging.returnHome(PheromoneTrails.discover(DiscoveryProgression.recordReturn(rewarded, destination), destination), party.ages))
+    DefaultWorkerAssignment.normalize(PopulationAging.returnHome(PheromoneTrails.discover(DiscoveryProgression.recordReturn(rewarded, destination), destination), returningAges))
   }
 
   def dice(random: Random, maxValue: Long): Long = random.nextLong(maxValue) + 1L

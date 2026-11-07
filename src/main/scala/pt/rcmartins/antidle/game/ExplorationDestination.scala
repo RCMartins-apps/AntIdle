@@ -59,7 +59,13 @@ object ExplorationDestination {
     override def actionName: String = "Collect Resin"
   }
 
-  lazy val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow, SeedGathering, DryClearing, ScavengeWater, FallenPine, CollectResin)
+  case object RivalFoodCache extends ExplorationDestination(
+    "rival-food-cache", "Rival Food Cache", 120L * TicksPerSecond, 60L, 30L, 5, 10L * u, u, 0,
+    knowledge = 15L * u) {
+    override def actionName: String = "Raid Rival Food Cache"
+  }
+
+  lazy val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow, SeedGathering, RivalFoodCache, DryClearing, ScavengeWater, FallenPine, CollectResin)
 
   def forParty(party: ExplorationParty): ExplorationDestination =
     all.find(_.id == party.destination).getOrElse(Surroundings)

@@ -372,6 +372,7 @@ object MainForm {
           Option.when(unlocks.resources.showWorkers)("Peak workers" -> stats.maxAliveWorkers.thisRun.toString),
           Option.when(exploration.proteinDiscovered)("Carcasses retrieved" -> stats.carcassesRetrieved.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Aging losses" -> (stats.workersLostToAging.thisRun.toLong + stats.scoutsLostToAging.thisRun + stats.repletesLostToAging.thisRun).toString),
+          Option.when(stats.raidDeaths.total > 0)("Raid losses" -> stats.raidDeaths.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Starvation losses" -> stats.starvationDeaths.thisRun.toString),
         ).flatten
         rows.map { case (label, value) =>
@@ -1599,6 +1600,25 @@ object MainForm {
               case (workers, data, extra) => ExplorationHelper.summary(data, workers, destination, extra)
             },
           ),
+          if (RaidProgression.isRaid(destination)) div(
+            className := "raid-risk text-danger small mb-2",
+            child.text <-- amountOfExplorersSignal.map(workers =>
+              if (workers < destination.minimumWorkers) "Dangerous raid · 10 workers minimum. Combat losses are guaranteed."
+              else RaidProgression.risk(workers)),
+          ) else emptyNode,
+          if (RaidProgression.isRaid(destination)) div(
+            className := "raid-aging text-danger small mb-1",
+            child.text <-- antsSignal.combineWith(currentTickSignal, amountOfExplorersSignal, extraScoutsSignal).map {
+              case (ants, tick, workers, extra) => RaidProgression.ageWarning(ants, tick, workers, extra)
+            },
+          ) else emptyNode,
+          if (RaidProgression.isRaid(destination)) div(
+            className := "raid-storage small mb-1",
+            child.text <-- proteinSignal.map(p => s"Protein storage room: ${prettyNumberStr(p.freeSpace)}"),
+            className <-- proteinSignal.combineWith(amountOfExplorersSignal).map { case (p, workers) =>
+              if (p.freeSpace < RaidProgression.rewardRange(workers)._2) "text-danger" else ""
+            },
+          ) else emptyNode,
           child.maybe <-- amountOfExplorersSignal.map(workers =>
             Option.when(workers < destination.minimumWorkers)(
               small(className := "text-danger destination-minimum mb-1",
@@ -1721,6 +1741,8 @@ object MainForm {
             s"${prettyNumberStr(party.amountWorkers)} workers",
             if (party.scouts > 0L) s" · ${prettyNumberStr(party.scouts)} scouts" else "", ", ",
             child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))),
+            if (RaidProgression.isRaid(ExplorationDestination.forParty(party)))
+              div(className := "text-danger small", RaidProgression.risk(party.amountWorkers)) else emptyNode,
           )
         }),
       ),

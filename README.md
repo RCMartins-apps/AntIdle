@@ -735,3 +735,50 @@ Verification: `sbt fastOptJS fullOptJS test`, then
 DNA purchases, early unlocks after reset, trail discovery and management,
 save/load and phone/desktop layout. Engine tests cover resets, lifetime totals,
 bonuses, finite supply, scout reservations, upkeep, aging and defaults.
+
+## Dangerous expeditions: Rival Food Cache
+
+**Raid Rival Food Cache** unlocks at exploration level 5. Existing routes have
+no combat losses. A raid takes 120 simulated seconds, requires 10–37 workers
+and one scout, and costs 30 sugar per worker. Extra scouts use the existing
+10-sugar cost and travel-speed bonus; they do not reduce combat losses.
+
+| Party | Guaranteed worker combat losses | Protein haul before storage cap |
+| --- | ---: | ---: |
+| 10 workers | 2–4 | 200–350 |
+| 37 workers | 4–10 | 740–1,295 |
+
+Intermediate parties use a gradually lower percentage loss range with integer
+rounding. Counts, certainty, reward range and costs are shown directly beside
+the action, not only in Details. Protein storage room is visible and red if it
+cannot hold the maximum haul. Storage overflow is discarded; it does not reduce
+casualties. Scouts have no combat losses. The in-flight party retains its risk
+notice. There is no additional confirmation dialog for an already disclosed risk.
+
+The loss count is uniform over its displayed inclusive integer range. The
+protein roll is uniform over integer values 200–350 per ten workers, then scaled
+linearly with party size. Exploration level, supplies and inherited sugar
+production do not increase this raid protein range or change casualties. Normal
+XP, Knowledge and extra-scout speed rules still apply.
+
+Departure selects the **oldest home-worker age cohorts first**. Combat deaths
+sample individual workers uniformly without replacement from that party, rather
+than always killing its oldest members. Surviving workers and all scouts keep
+their original expiry ticks. An extra visible warning lists selected workers
+and scouts whose lifespans expire before the scheduled return. Aging can cause
+additional losses, including losing every surviving worker in an overdue party;
+aging losses overlap combat deaths and are counted separately.
+
+A seeded raid outcome is saved on departure, including its casualty-selection
+seed. Reloading, other departures or delayed returns cannot reroll it. On return,
+combat casualties and their age cohorts are removed before ordinary overdue
+aging is resolved; only surviving workers return to the default-task pool.
+The existing Queen's Routine can replace the resulting worker deficit without
+any new automation research. Separate **Raid losses** run/lifetime statistics
+persist across saves; prestige resets the run counter and retains the total.
+Old non-raid parties default to no raid outcome and zero raid deaths.
+
+Run `sbt fastOptJS fullOptJS test` and `python3 tests/raid_smoke.py` to check gates,
+visible costs/risk/storage/aging warnings, oldest-first selection, random
+casualties, saved outcomes, survivor lifespans, automatic replacements and phone/
+desktop layout. Raid rule tests cover full return ticks and replay protection.
