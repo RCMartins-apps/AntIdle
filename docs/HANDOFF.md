@@ -3,7 +3,8 @@
 ## Last verified: 2026-11-07
 
 - `feature/dna-prestige` continues from merged main `1e1f982` (royal brood PR #36).
-- First prestige is implemented and pushed. No PR requested for this task.
+- First prestige is implemented and pushed with [PR #37](https://github.com/RCMartins-apps/AntIdle/pull/37)
+  open against `main`. Merging remains the owner's decision.
 - D13 records approved direction and implemented balance; README covers rules.
 
 ## Completed first prestige
