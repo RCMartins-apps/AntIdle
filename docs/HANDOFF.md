@@ -5,50 +5,51 @@ Verify it against Git and PR state at the next session's start.
 
 ## Last verified: 2026-11-06
 
-- `origin/main` at `179d6c1` includes the Dry Clearing outpost, compact mobile
-  action details and the redundant unlock-level cleanup through PR #32.
-- Existing mechanics and balance are documented in README; source and tests
-  define exact implemented behavior. The automatic branch/push policy is merged.
+- `origin/main` at `963c21b` includes the UI polish merged in PR #33, plus the
+  Dry Clearing outpost and earlier colony systems. Current mechanics are in README.
+- The automatic branch/push/checkpoint workflow and durable context are merged.
 
 ## Current work
 
-Branch `fix/mobile-ui-polish` starts from that main commit. The owner requested
-finding and improving other UI issues. Phone screenshots of all six tabs were
-reviewed before choosing the changes.
+Branch `feature/outpost-progression` starts from that main commit. The owner
+requested additional content and updates, delegating feature selection.
 
 Implemented:
-- Compact resource/available-worker totals without invisible suffix padding,
-  using tabular digits for alignment; negative resource income is red.
-- Direct upgrade-card grid instead of full-width wrappers containing half-width
-  cards. Mobile has one column; desktop has two, with controls aligned at the
-  top rather than stretched to match neighboring costs. Empty states distinguish
-  temporarily unavailable research from completing the catalog, without spoilers.
-- Unmet party minimums are visible beside exploration actions. Fleet status sits
-  above destinations and highlights full slots, explaining otherwise affordable
-  but disabled trips.
+- Dry Clearing Outpost extensions at exploration levels 7 and 8. Each adds 25
+  shared colony housing and five Seed Forager slots, for level 3 totals of 100
+  housing and 15 slots. Each expansion has visible, escalating multi-resource costs.
+- Covered Trails research at level 7 reduces forager water use by 25%.
+- Seed Processing at level 8 raises forager protein yield by 50%.
+- Shared harvest calculation handles partial water/storage at the new ratios;
+  task details, resource estimates and outpost summaries use the upgraded values.
+  Small resource rates now retain useful fractions and tooltip signs.
+- Existing saves default to an unexpanded level-1 outpost. Imported extension
+  counts are bounded and loading does not grant housing again.
 
 Validation:
-- `sbt fastOptJS fullOptJS test`: 120 tests passed; Closure reported no errors or warnings.
-- `tests/ui_polish_smoke.py`: passed at 320, 390 and 1920px, covering formatting,
-  deficits, upgrade layout/empty states/purchases, party minimums, full fleets
-  and return recovery; passed again after the final CSS alignment adjustment.
-- `tests/browser_smoke.py`: passed at 320, 390, 767, 768, 844, 1024 and 1920px.
-- `tests/exploration_smoke.py`: passed at 320, 390 and 1920px.
-- Resource and expedition phone layouts and desktop research grid visually
-  inspected. Documentation links and `git diff --check` pass. README and D4
-  describe the UI conventions. No gameplay balance or save format changed.
+- `sbt fastOptJS fullOptJS test`: all 130 tests pass; Closure reports no errors or warnings.
+- `tests/outpost_progression_smoke.py`: passes at 320, 390 and 1920px for staged
+  reveals, exact costs, storage shortages, staffing, upgraded rates/ticks,
+  level limits, old/current saves and dry pauses; rerun passed with both
+  expansion purchase layouts explicitly checked at narrow widths.
+- Existing `tests/outpost_smoke.py` passes at 320, 390 and 1920px.
+- `tests/foraging_smoke.py` passes at 390 and 1920px, including actual income,
+  upgrades and expedition slot limits.
+- README contains costs, effects and save behavior; decision D10 and the vision
+  reflect the outpost progression. Mobile expansion/research cards are visually
+  inspected; local documentation links and whitespace checks pass.
 
 ## Next work and unknowns
 
 - Implementation and validation are complete.
-  [PR #33](https://github.com/RCMartins-apps/AntIdle/pull/33) is open against
+  [PR #34](https://github.com/RCMartins-apps/AntIdle/pull/34) is open against
   `main` for this branch; merging remains the owner's decision.
-- No next gameplay task is selected. Further outpost levels and specialization
-  remain future design choices.
-- Understandings and queen inheritance are agreed prestige foundations, but
-  prestige is not implemented; effects, costs and reset rules need design.
-- Nurse care, pheromone trails, injuries and waste remain tentative possibilities.
-- Preserve unrelated `work/` screenshots and `tests/__pycache__/` artifacts.
+- Understandings and queen inheritance remain agreed future prestige foundations;
+  effects, costs and reset rules still need design. These are ordinary colony
+  expansions and research, not inherited Understandings.
+- Additional locations, nurse care, pheromone trails, injuries and waste remain
+  future possibilities rather than an approved implementation queue.
+- Preserve unrelated local `work/` screenshots and `tests/__pycache__/` artifacts.
 
 ## Starting a fresh Codex session
 

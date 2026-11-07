@@ -31,8 +31,8 @@ Outposts should eventually have distinct environmental requirements and/or
 resources. The agreed first direction is a dry area with water scavenging and
 living water storage. Dry Clearing exploration, water, repletes and a satellite
 outpost are built. The outpost extends shared colony housing and supports a
-small team gathering protein-rich seeds with a water cost. Further outpost
-specializations and expansion remain future work.
+team gathering protein-rich seeds with a water cost. The outpost now has a
+small expansion and research path; additional locations remain future work.
 
 ## Understandings and prestige
 

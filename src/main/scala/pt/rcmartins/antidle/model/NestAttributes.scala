@@ -13,6 +13,7 @@ case class NestAttributes(
     maxAnts: Long = NestUpgradeBonusMaxAnts,
     maxBuildQueue: Int = 1,
     dryClearingOutpost: Boolean = false,
+    dryClearingExtensions: Int = 0,
 ) {
 
   def maxCarcasses: Int = InitialCarcassSlots + chambers.nurseryChamber.level

@@ -40,6 +40,8 @@ object Actions {
 
   def establishDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.establish)
 
+  def expandDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.expand)
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 

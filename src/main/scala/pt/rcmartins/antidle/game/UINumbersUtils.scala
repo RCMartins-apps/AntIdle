@@ -44,6 +44,13 @@ object UINumbersUtils {
     if (fraction.isEmpty) (amount / u).toString else s"${amount / u}.$fraction"
   }
 
+  // Keep the usual compact format, but retain meaningful fractions below one unit.
+  def resourceRateStr(amount: Long): String = {
+    val magnitude = Math.abs(amount)
+    val number = if (magnitude < u && magnitude % 100L != 0L) preciseRateStr(magnitude) else prettyNumberStr(magnitude)
+    (if (amount < 0L) "-" else "") + number
+  }
+
   def prettyNumberStr(num: Long): String =
     prettyNumberStr("", num, 0)
 
