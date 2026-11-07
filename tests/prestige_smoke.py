@@ -88,7 +88,10 @@ def check_prestige(page, width, url):
         "scouts": [{"expiresAt": 18000, "count": 2}]}
     load_game(page, later)
     explore_tab(page)
-    expect(page.locator(".pheromone-trails")).to_contain_text("Explore Nectar Meadow")
+    expect(page.locator(".pheromone-trails")).to_contain_text("No nectar source")
+    page.get_by_label("About Pheromone trail", exact=True).click()
+    expect(page.locator(".pheromone-trails .info-content")).to_contain_text("Nectar Meadow")
+    page.get_by_label("About Pheromone trail", exact=True).click()
     route = page.locator('.exploration-destination[data-destination="nectar-meadow"]')
     page.locator("#explorer-count").fill("5")
     route.get_by_role("button").first.click()

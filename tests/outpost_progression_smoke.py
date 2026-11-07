@@ -15,7 +15,7 @@ from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, prog
 def check_progression(page, width, url):
     now = datetime(2026, 11, 6, tzinfo=timezone.utc)
     page.clock.install(time=now)
-    page.clock.pause_at(now + timedelta(milliseconds=100))
+    page.clock.pause_at(now + timedelta(seconds=1))
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(url, wait_until="networkidle")

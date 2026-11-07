@@ -30,6 +30,7 @@ def check_compact(page, width, url):
     for chamber, level in (("nurseryChamber", 2), ("aphidChamber", 1), ("repleteChamber", 1), ("royalNurseryChamber", 1)):
         game["nestAttributes"]["chambers"][chamber]["level"] = level
     game["exploration"].update(experience=6000, surveys={"woodland-edge": 5, "nectar-meadow": 3, "rotten-log": 4, "dry-clearing": 3, "fallen-pine": 3, "rival-food-cache": 1}, carcassDiscovered=True)
+    game["exploration"]["carcasses"] = [{"foodRemaining": 10000 * UNIT, "totalFood": 10000 * UNIT, "proteinReward": 0, "requiredWorkers": UNIT, "retrievalTicks": 50}]
     for upgrade in game["upgrades"]["upgrades"]:
         upgrade.update(show=False, unlocked=True)
     load_game(page, game)
@@ -50,6 +51,8 @@ def check_compact(page, width, url):
         control.click()
         expect(details.locator(".info-content")).to_be_visible()
         expect(details.locator(".info-content")).to_contain_text(content)
+        page.clock.run_for(1000)
+        expect(details.locator(".info-content")).to_be_visible()
         assert_fits(page, width)
         control.click()
         expect(details.locator(".info-content")).not_to_be_visible()

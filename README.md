@@ -1055,7 +1055,8 @@ Task and section **[i]** controls reveal useful explanations only when requested
 This includes Brood/aging, Queen's Routine, default workers, royal care, territory,
 XP, carcass storage and individual discoveries. Action **[i]** details now work
 on desktop too. Native disclosures support touch, Enter/Space and visible focus,
-with 44px targets and inline panels that fit narrow screens. Action/task prose
+with 44px targets and inline panels that fit narrow screens. Open discovery help
+stays open during ordinary resource updates. Action/task prose
 is no longer shown automatically on hover; resource-rate breakdown tooltips remain.
 
 Larval/royal material costs, live shortages, imminent aging warnings and dangerous

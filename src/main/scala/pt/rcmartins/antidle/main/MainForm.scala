@@ -1270,9 +1270,7 @@ object MainForm {
       div(className := "border rounded p-2 my-2",
         infoHeading("Pheromone trail", div("Find nectar sources in Nectar Meadow. Marking a trail reserves one scout; up to ten workers gather sugar until the source is depleted.")),
         child <-- trailSignal.map(t => if (t.remaining <= 0L) 0 else if (t.marked) 2 else 1).distinct.map {
-          case 0 => div(className := "small", child.text <-- explorationSignal.map(e =>
-            if (ExplorationProgression.level(e.experience) >= 4) "No nectar source"
-            else "No nectar source"))
+          case 0 => div(className := "small", "No nectar source")
           case 1 => div(className := "row",
             div(className := "small", child.text <-- trailSignal.map(t => s"Nectar source · ${prettyNumberStr(t.remaining)} sugar remaining")),
             actionButton(
@@ -1656,13 +1654,7 @@ object MainForm {
             },
           )
         case AntTask.AphidTender =>
-          div(
-            child.text <-- antsSignal.map(a => s"${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s per tender"),
-            br(),
-            child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) =>
-              Option.when(protein.amount == 0L && amount > 0L)(span(className := "text-danger", "Needs protein"))
-            },
-          )
+          div(child.text <-- antsSignal.map(a => s"${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s per tender"))
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1670,17 +1662,8 @@ object MainForm {
             }
           )
         case AntTask.SeedForager =>
-          div(
-            child.text <-- upgradesSignal.map(upgrades =>
-              s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"),
-            br(),
-            child.maybe <-- antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal).map { case (ants, nest, upgrades, resources) =>
-              val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, resources)
-              if (ants.taskWorkers(AntTask.SeedForager) == 0L) None
-              else if (resources.protein.atCapacity && harvest.protein == 0L) Some(span("Protein full · water use paused"))
-              else Option.when(resources.water.amount == 0L)(span(className := "text-danger", "Needs water"))
-            },
-          )
+          div(child.text <-- upgradesSignal.map(upgrades =>
+            s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"))
         case AntTask.Scavenger =>
           div("+0.05 protein/s per standard gatherer. Two shared places, including small gatherers.")
         case AntTask.BroodNurse =>
@@ -1795,12 +1778,16 @@ object MainForm {
         val found = DiscoveryProgression.all.filter(_.found(data))
         val surveys = DiscoveryProgression.all.filterNot(_.found(data)).flatMap { discovery =>
           ExplorationDestination.all.find(d => d.id == discovery.destination && d.isUnlocked(data, ants, nest)).map { destination =>
-            div(className := "card p-2 my-2 survey-entry", dataAttr("destination") := destination.id,
-              b(destination.name), span(className := "destination-survey", s"Survey ${discovery.progress(data)} / ${discovery.trips}"))
+            (destination.id, destination.name, discovery.progress(data), discovery.trips)
           }
         }
+        (found, surveys)
+      }.distinct.map { case (found, surveys) =>
         List(
-          div(h5("Surveys"), if (surveys.isEmpty) p("All known areas surveyed.") else div(surveys)),
+          div(h5("Surveys"), if (surveys.isEmpty) p("All known areas surveyed.") else div(surveys.map {
+            case (id, name, progress, trips) => div(className := "card p-2 my-2 survey-entry", dataAttr("destination") := id,
+              b(name), span(className := "destination-survey", s"Survey $progress / $trips"))
+          })),
           div(className := "exploration-discoveries", h5("Discoveries"),
             if (found.isEmpty) p("No discoveries yet.") else div(found.map(discovery =>
               div(className := "card p-2 my-2 discovery-entry", infoHeading(discovery.title, div(discovery.description), minor = true)))),
