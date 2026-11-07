@@ -41,8 +41,9 @@ Validation:
 
 ## Next work and unknowns
 
-- Implementation and validation are complete. No PR has been requested; the
-  final response reports the actual branch push result.
+- Implementation and validation are complete.
+  [PR #34](https://github.com/RCMartins-apps/AntIdle/pull/34) is open against
+  `main` for this branch; merging remains the owner's decision.
 - Understandings and queen inheritance remain agreed future prestige foundations;
   effects, costs and reset rules still need design. These are ordinary colony
   expansions and research, not inherited Understandings.
