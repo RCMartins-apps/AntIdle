@@ -28,6 +28,12 @@ constraints. Basic sugar collection has diminishing returns, giving exploration
 and alternative food sources a purpose. New content should deepen decisions
 and create longer-term goals without burying the player in explanations.
 
+Voluntary dangerous actions may cause substantial ant losses when the risk is
+clear before committing. Players should decide whether the reward is worth
+replacing workers; existing automatic egg production supports recovery. Build
+meaningful population pressure before further brood-care progression. Specific
+danger mechanics and balance remain to be designed.
+
 Outposts should eventually have distinct environmental requirements and/or
 resources. The agreed first direction is a dry area with water scavenging and
 living water storage. Dry Clearing exploration, water, repletes and a satellite

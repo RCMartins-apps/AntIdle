@@ -223,3 +223,22 @@ Full storage pauses collection; recall/depletion returns workers to their
 default pool and frees the scout. Trail workers and guides age and consume
 normal upkeep. No strength meter or recurring maintenance clicking is added.
 These quantities are implementation balance choices, not future content promises.
+
+## D14: Voluntary danger can cause substantial losses — approved direction
+
+The owner wants dangerous actions where ants can die to create meaningful
+population pressure before adding further brood-care Understandings. Large
+losses are acceptable when the risk is clear before committing; the player
+judges whether rewards justify casualties. Do not impose the assistant's
+earlier suggested 0–2-worker cap as a requirement. Queen's Routine already
+provides early automatic worker replacement; do not invent another prerequisite
+automation system to justify danger.
+
+Optional risky expeditions are the current proposed application. Specific
+routes, probabilities, casualty ranges, scout exposure and rewards remain
+undecided. A rival foraging-ground raid, safer alternatives, party-size risk
+reduction and resolution on return are proposals, not approved mechanics.
+Show both likelihood and severity of losses, including any total-loss outcome,
+before departure; a vague danger label alone cannot support informed choice.
+Expanded brood allocation and ongoing outpost supply costs remain unadopted
+suggestions, not the next implementation task.
