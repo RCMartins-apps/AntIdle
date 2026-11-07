@@ -187,6 +187,7 @@ object TickCalculator {
         getTicksRemaining(_.tunnelingSpace, tunnelingSpaceSignal, tunnelingSpaceTickGain),
         getTicksRemaining(_.protein, proteinSignal, proteinTickGain),
         waterSignal.map(resource => if (resource.amount >= actionCost.water) 0L else -1L),
+        resinSignal.map(resource => if (resource.amount >= actionCost.resin) 0L else -1L),
         knowledgeSignal.map(resource => if (resource.amount >= actionCost.knowledge) 0L else -1L),
       )
 

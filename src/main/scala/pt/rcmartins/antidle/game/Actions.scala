@@ -89,6 +89,7 @@ object Actions {
         case ChamberType.Nursery     => chambers.nurseryChamber
         case ChamberType.Aphid       => chambers.aphidChamber
         case ChamberType.Replete     => chambers.repleteChamber
+        case ChamberType.RoyalNursery => chambers.royalNurseryChamber
       }
     }
 

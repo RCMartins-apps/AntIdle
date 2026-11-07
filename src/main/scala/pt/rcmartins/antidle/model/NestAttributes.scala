@@ -21,6 +21,8 @@ case class NestAttributes(
   def maxEggsCount: Int = (maxEggs / u).toInt
   def maxAntsCount: Int = (maxAnts / u).toInt
 
+  def royalBroodSlots: Int = Math.min(1, Math.max(0, chambers.royalNurseryChamber.level))
+
 }
 
 object NestAttributes {

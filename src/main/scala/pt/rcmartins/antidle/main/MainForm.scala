@@ -357,6 +357,7 @@ object MainForm {
           Option.when(unlocks.resources.showTunnelingSpace)("Tunneling space dug" -> prettyNumberStr(stats.tunnelingSpaceU.thisRun)),
           Option.when(exploration.proteinDiscovered)("Protein collected" -> prettyNumberStr(stats.proteinU.thisRun)),
           Option.when(unlocks.resources.showWater)("Water collected" -> prettyNumberStr(stats.waterU.thisRun)),
+          Option.when(unlocks.resources.showResin)("Resin collected" -> prettyNumberStr(stats.resinU.thisRun)),
           Option.when(unlocks.resources.showKnowledge)("Knowledge earned" -> prettyNumberStr(stats.knowledgeU.thisRun)),
           Option.when(unlocks.tabs.exploreTabUnlocked)("Expeditions launched" -> stats.explorationsCount.thisRun.toString),
           Option.when(unlocks.tabs.exploreTabUnlocked)("Expeditions completed" -> stats.explorationsCompleted.thisRun.toString),
@@ -598,6 +599,13 @@ object MainForm {
               div(className := "small", "Collection paused", title := "Stored water is retained above capacity. Collect again once there is free space."))))),
           showSignal = unlocksSignal.map(_.resources.showWater),
           tooltipOpt = Some(div("Water supplies gathered from discovered sources in the dry area.")),
+        ),
+        child.maybe <-- createResourceDiv(
+          name = "Resin",
+          resourceSignal = resinSignal,
+          resourceEstimationSignal = Val(div("0/s")),
+          showSignal = unlocksSignal.map(_.resources.showResin),
+          tooltipOpt = Some(div("Collected from woodland resin sources to line protected brood chambers.")),
         ),
         child.maybe <-- createResourceDiv(
           name = "Knowledge",
@@ -866,6 +874,25 @@ object MainForm {
           },
         ),
       ),
+      child.maybe <-- nestSignal.combineWith(upgradesSignal).map { case (nest, upgrades) =>
+        Option.when(upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0) {
+          div(className := "col-12 nest-royal-nursery border-top my-2 py-2",
+            h5("Royal brood"),
+            if (nest.royalBroodSlots > 0) div(className := "royal-nursery-ready",
+              b("Royal Nursery"), div(s"${nest.royalBroodSlots} royal brood slot prepared"),
+            ) else div(className := "row",
+              actionButton(
+                name = "Royal Nursery",
+                enabledSignal = nestSignal.combineWith(upgradesSignal).map { case (n, u) => Construction.canEnqueue(n, u, ChamberType.RoyalNursery) },
+                costSignal = Val(RoyalNurseryProgression.buildCost),
+                bonusSignal = Val(ChamberBonuses.forChamber(ChamberType.RoyalNursery)),
+                descriptionSignal = Val(Some(div("A protected, resin-lined chamber for royal brood."))),
+                onClickAction = _ => Actions.addBuildTask(BuildTask(ChamberType.RoyalNursery, RoyalNurseryProgression.buildCost)),
+              ),
+            ),
+          )
+        }
+      },
       child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)) {
         div(className := "col-12 nest-repletes border-top my-2 py-2",
           h5("Living water storage"),
@@ -1040,6 +1067,7 @@ object MainForm {
           val costs = List(
             costLine(cost.protein, resources.protein.amount, "protein", Some(resources.protein.maxAmount)),
             costLine(cost.water, resources.water.amount, "water", Some(resources.water.maxAmount)),
+            costLine(cost.resin, resources.resin.amount, "resin", Some(resources.resin.maxAmount)),
             costLine(cost.sugar, resources.sugar.amount, "sugar", Some(resources.sugar.maxAmount)),
             costLine(cost.tunnelingSpace, resources.tunnelingSpace.amount, "tunneling space", Some(resources.tunnelingSpace.maxAmount)),
             costLine(cost.knowledge, resources.knowledge.amount, "knowledge"),
@@ -1167,6 +1195,7 @@ object MainForm {
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
           ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
           ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager slots"),
+          ifGreater0(bonus.royalBroodSlots.toLong)(value => s"+$value royal brood slot"),
         )
       },
     )
@@ -1380,6 +1409,7 @@ object MainForm {
       val cost = amountOfExplorersSignal.combineWith(extraScoutsSignal).map { case (workers, extra) => ExplorationHelper.cost(workers, destination, extra) }
       div(
         className := "col-12 col-md-6 px-3 py-2 exploration-destination",
+        dataAttr("destination") := destination.id,
         div(
           className := "card p-2 h-100",
           p(
@@ -1395,7 +1425,7 @@ object MainForm {
           div(
             className := "row",
             actionButton(
-              name = s"Explore ${destination.name}",
+              name = destination.actionName,
               requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersSignal, upgradesSignal, extraScoutsSignal).map {
                 case (data, scouts, workers, upgrades, extra) =>
                   List(ActionRequirement("expedition slots",

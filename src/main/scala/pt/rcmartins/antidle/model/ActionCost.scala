@@ -10,6 +10,7 @@ case class ActionCost(
     knowledge: Long = 0L,
 //    DNA: Long = 0L,
     idleWorkers: Long = 0L,
+    resin: Long = 0L,
 )
 
 object ActionCost {
