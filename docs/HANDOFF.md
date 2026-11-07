@@ -1,20 +1,16 @@
 # Handoff
 
-## Last verified: 2026-11-07
+## Last verified: 2026-11-07 — work in progress
 
-- PR #37 is merged; `origin/main` is `d9e755a`, containing the first prestige,
-  DNA, Shared Paths and inherited production.
-- Current branch `design/expedition-danger` records a new design direction only.
-- D14: voluntary dangerous actions can cause substantial losses, provided risk
-  is clearly disclosed and the player judges the tradeoff. The old proposed
-  0–2-worker loss cap is not a requirement. Queen's Routine already handles
-  automatic replacement; no extra automation prerequisite is needed.
-- More brood-care progression is deferred until population pressure makes it
-  meaningful. Recurring outpost supply costs are also only a suggestion.
-- Optional raiding expedition is proposed, not implemented. Route, reward,
-  probability, casualty range, scout risk and party-size protection still need
-  design. No dangerous-action gameplay changes made in this branch.
-- Validation for this documentation-only update: whitespace and local Markdown
-  links checked. No game rebuild needed. Previous feature's 164 engine tests
-  and phone/desktop checks passed before its merge; not rerun here.
+- Main `d9e755a` contains merged first prestige PR #37.
+- Continue related branch `design/expedition-danger`; owner approved the raid.
+- Latest steering: oldest ants depart first; deaths are random within the party.
+  D14 records scope and balance. Brood-care/outpost-cost suggestions are deferred.
+- Implemented draft: level-five Rival Food Cache, visible loss/reward ranges,
+  sugar/scout/worker costs, storage and selected-cohort age warnings, saved
+  seeded outcomes, uniform individual casualty selection, survivor age handling,
+  separate raid-death statistics and lifetime retention. Safe routes unchanged.
+- First development build and previous 164 engine tests passed. New raid suite
+  had a syntax error, now corrected; rerun pending. Browser/release validation,
+  README and final review remain. This is an unfinished checkpoint.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

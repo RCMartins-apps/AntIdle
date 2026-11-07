@@ -234,11 +234,25 @@ earlier suggested 0–2-worker cap as a requirement. Queen's Routine already
 provides early automatic worker replacement; do not invent another prerequisite
 automation system to justify danger.
 
-Optional risky expeditions are the current proposed application. Specific
-routes, probabilities, casualty ranges, scout exposure and rewards remain
-undecided. A rival foraging-ground raid, safer alternatives, party-size risk
-reduction and resolution on return are proposals, not approved mechanics.
-Show both likelihood and severity of losses, including any total-loss outcome,
-before departure; a vague danger label alone cannot support informed choice.
+The owner approved implementing the optional raid, then specified that oldest
+ants should be sent first but deaths should be random within the expedition
+party. Reuse oldest-first home-worker cohort selection; sample casualties
+uniformly by individual within the departing party. Survivors retain expiry
+ticks. Store the seeded outcome at departure so reloads cannot reroll danger;
+remove casualty cohorts before resolving overdue survivors' aging on return.
+
+Current implementation balance: Rival Food Cache, exploration level five,
+10–37 workers and at least one scout, 120 seconds before extra-scout speed,
+30 sugar per worker. Ten workers lose 2–4; 37 lose 4–10 (guaranteed combat
+losses, uniform over integer range). Protein is rolled uniformly from 200–350
+per ten workers and scales linearly with party size. Free storage caps retained
+rewards without reducing losses. Extra scouts/supplies do not change these
+combat or protein ranges; normal XP/Knowledge/speed rules still apply. Scouts
+have no combat losses but can die from overdue aging. Ranges, certainty and
+storage room are visible beside the action, with an additional warning if
+oldest selected cohorts expire before return. Existing destinations remain
+safe from combat. Raid deaths have separate run/lifetime statistics. These
+quantities are current balance choices.
+
 Expanded brood allocation and ongoing outpost supply costs remain unadopted
-suggestions, not the next implementation task.
+suggestions, not this implementation.

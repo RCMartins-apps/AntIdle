@@ -32,7 +32,9 @@ Voluntary dangerous actions may cause substantial ant losses when the risk is
 clear before committing. Players should decide whether the reward is worth
 replacing workers; existing automatic egg production supports recovery. Build
 meaningful population pressure before further brood-care progression. Specific
-danger mechanics and balance remain to be designed.
+danger is introduced through the optional Rival Food Cache raid. Oldest home
+workers depart first, but combat casualties are random within their party.
+Exact balance remains adjustable; safe expeditions remain available.
 
 Outposts should eventually have distinct environmental requirements and/or
 resources. The agreed first direction is a dry area with water scavenging and
