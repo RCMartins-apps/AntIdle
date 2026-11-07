@@ -62,8 +62,8 @@ The owner wants two forms of prestige:
 Raising a daughter queen is an approved direction for connecting generations.
 The owner likes the opportunities this creates for new chambers and worker
 jobs. The approved first foundation is woodland resin collection and Royal
-Nursery construction, preparing one royal brood slot. The next implementation
-adds Royal Nurses and sustained daughter-queen rearing before founding.
+Nursery construction, preparing one royal brood slot. Royal Nurses and sustained
+daughter-queen rearing are now implemented as the next step before founding.
 Keep the distinction between expanding the present colony through satellite
 outposts and founding a new generation through a daughter queen.
 
