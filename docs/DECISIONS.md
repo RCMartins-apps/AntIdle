@@ -201,13 +201,24 @@ DNA earnings. The exact introductory count, mechanics and earning formula are
 not chosen. This supersedes the earlier suggestion of an immediate three-way
 Understanding shop and fixed one-DNA reward; those were never approved.
 
-The reset/persistence matrix remains undecided. Earlier proposed rules reset
-colony resources, population, chambers, research and exploration while retaining
-DNA, Understandings, lifetime statistics and settings; this is still a proposal.
-Challenge founding remains a separate agreed direction, with details unchosen.
+The owner approved implementing the first prestige with Shared Paths and an
+automatic +10% sugar-production bonus per founding, stacked additively. Apply
+the bonus to collectors, aphids and trail production; keep consumption, aging,
+prices, manual sugar gathering and expedition rewards unchanged. DNA purchases
+Understandings; the production bonus is automatic and costs no DNA.
 
-Tentative introductory sequence for discussion: pheromone trail management,
-brood/nurse allocation, environmental management, then connected outpost
-logistics. These should add new decisions rather than merely rename existing
-Default Workers, Brood Care, repletes or Dry Clearing systems. Reveal only the
-next generation's reward in the player UI. Exact rewards require agreement.
+Current first implementation balance: founding with a mature daughter awards
+1 DNA; Shared Paths costs 1 DNA once. The reset preview explicitly lists colony
+resources, ants/brood, chambers, research, exploration/discoveries, trails, queues
+and assignments as reset. Retain DNA, Understandings, lifetime statistics,
+resource visibility, settings and banked time. Exact future introductory rewards
+and scaling DNA remain future work. This implements only the first mechanic.
+
+Shared Paths reveals finite nectar sources from Nectar Meadow returns after
+exploration is unlocked. One trail at a time; marking costs 50 sugar and
+reserves one scout. Up to ten ordinary workers gather from 1,200 sugar supply
+at base 0.8 sugar/s each, including the inherited production bonus in speed.
+Full storage pauses collection; recall/depletion returns workers to their
+default pool and frees the scout. Trail workers and guides age and consume
+normal upkeep. No strength meter or recurring maintenance clicking is added.
+These quantities are implementation balance choices, not future content promises.

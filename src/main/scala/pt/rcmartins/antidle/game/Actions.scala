@@ -42,6 +42,24 @@ object Actions {
 
   def expandDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.expand)
 
+  def purchaseSharedPaths(): Unit = actionUpdater.writer.onNext(Prestige.purchase)
+
+  def foundDaughterColony(): Unit = actionUpdater.writer.onNext { data =>
+    val next = Prestige.found(data)
+    if (next != data) {
+      Utils.pause = true
+      scala.scalajs.js.timers.setTimeout(0) {
+        saves.SaveLoad.reloadDataFromLoadedSave(next, messageAlert = None)
+        saves.SaveLoad.saveToLocalStorage(next)
+      }
+    }
+    next
+  }
+
+  def markSugarTrail(): Unit = actionUpdater.writer.onNext(PheromoneTrails.mark)
+  def assignTrailWorkers(delta: Long): Unit = actionUpdater.writer.onNext(PheromoneTrails.assign(_, delta))
+  def recallSugarTrail(): Unit = actionUpdater.writer.onNext(PheromoneTrails.recall)
+
   def raiseRoyalEgg(): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.start)
 
   def setRoyalCarePaused(paused: Boolean): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.setPaused(_, paused))

@@ -74,9 +74,11 @@ mostly linear sequence so players learn colony management gradually. Afterwards,
 shorter and longer runs should offer meaningful choices in DNA accumulation.
 Exact introductory rewards, count and DNA scaling remain undecided.
 
-The first Understanding, its effects, acquisition requirements, reset contents
-and founding population have not been chosen. The exact prestige action name
-has not been chosen either. How challenge rewards interact with Understandings,
+The first implemented Understanding is Shared Paths, opening finite nectar
+trails managed with workers and a guiding scout. Founding gives an automatic
++10% sugar production per completed prestige, stacked additively; DNA buys
+Understandings separately. The new colony starts with the normal initial queen
+and no workers. The reset preview lists what is lost and inherited. The founding action is called Found daughter colony. How challenge rewards interact with Understandings,
 whether normal and challenge foundings can be combined, and how completion or
 abandonment works also need design before implementation.
 

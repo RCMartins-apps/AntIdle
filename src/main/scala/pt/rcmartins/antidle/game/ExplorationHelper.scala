@@ -144,7 +144,7 @@ object ExplorationHelper {
       returned.giveResources(sugar = sugar)
         .addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} sugar!")
     } else returned.addMessage(s"$report No resources found.")
-    DefaultWorkerAssignment.normalize(PopulationAging.returnHome(DiscoveryProgression.recordReturn(rewarded, destination), party.ages))
+    DefaultWorkerAssignment.normalize(PopulationAging.returnHome(PheromoneTrails.discover(DiscoveryProgression.recordReturn(rewarded, destination), destination), party.ages))
   }
 
   def dice(random: Random, maxValue: Long): Long = random.nextLong(maxValue) + 1L

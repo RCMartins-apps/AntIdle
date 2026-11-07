@@ -19,6 +19,7 @@ object TickUpdater {
         PopulationAging.tick,
         // Brood maturation is shared by workers and the new scout caste.
         ScoutProgression.growBrood,
+        PheromoneTrails.tick,
         // Ants income from tasks
         allData => {
           def countWorkers(task: AntTask): Long =
@@ -27,7 +28,7 @@ object TickUpdater {
           val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades) +
+          val totalSugarToGain: Long = Foraging.productionPerTick(sugarWorkers, allData.upgrades, allData.ants.lineage) +
             AphidHusbandry.productionPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount)
 
           val sugarToGive: Long =

@@ -56,7 +56,7 @@ object PopulationAging {
       val ages = data.ants.ages
       val updated = data.modify(_.ants.ages).setTo(ages.copy(active = true,
         workers = fit(ages.workers, homeWorkers(data.ants), data.world.saveSeed + data.currentTick),
-        scouts = fit(ages.scouts, ScoutProgression.available(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L),
+        scouts = fit(ages.scouts, ScoutProgression.atHome(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L),
         repletes = fit(ages.repletes, data.ants.repletes / u, data.world.saveSeed + data.currentTick + 13L, longLived = true)))
       if (ages.active) updated
       else updated.addMessage(s"Colony aging has begun: new adults live ${lifespanText(data.upgrades)} minutes of simulated time. Aging continues while away; overdue ants die on return.")
@@ -98,7 +98,7 @@ object PopulationAging {
 
   def starveOne(data: AllData): AntsData = {
     val ants = if (homeWorkers(data.ants) > 0L) loseWorkers(data.ants, 1L)
-    else if (ScoutProgression.available(data.ants, data.exploration) >= u) data.ants.copy(scouts = data.ants.scouts - u)
+    else if (ScoutProgression.atHome(data.ants, data.exploration) >= u) data.ants.copy(scouts = data.ants.scouts - u)
     else if (data.ants.repletes >= u) data.ants.copy(repletes = data.ants.repletes - u)
     else if (data.ants.daughterQueens >= u) data.ants.copy(daughterQueens = data.ants.daughterQueens - u)
     else data.ants

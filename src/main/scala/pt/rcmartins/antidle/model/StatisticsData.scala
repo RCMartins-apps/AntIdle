@@ -63,6 +63,30 @@ object StatisticsData {
     implicit val encoder: JsonEncoder[StatLong] = DeriveJsonEncoder.gen[StatLong]
   }
 
+  def newColony(stats: StatisticsData): StatisticsData = stats.copy(
+    sugarU = stats.sugarU.copy(thisRun = 0),
+    tunnelingSpaceU = stats.tunnelingSpaceU.copy(thisRun = 0),
+    knowledgeU = stats.knowledgeU.copy(thisRun = 0),
+    proteinU = stats.proteinU.copy(thisRun = 0),
+    waterU = stats.waterU.copy(thisRun = 0),
+    resinU = stats.resinU.copy(thisRun = 0),
+    royalEggsRaised = stats.royalEggsRaised.copy(thisRun = 0),
+    daughterQueensMatured = stats.daughterQueensMatured.copy(thisRun = 0),
+    explorationsCompleted = stats.explorationsCompleted.copy(thisRun = 0),
+    carcassesRetrieved = stats.carcassesRetrieved.copy(thisRun = 0),
+    workersMatured = stats.workersMatured.copy(thisRun = 0),
+    scoutsMatured = stats.scoutsMatured.copy(thisRun = 0),
+    workersLostToAging = stats.workersLostToAging.copy(thisRun = 0),
+    scoutsLostToAging = stats.scoutsLostToAging.copy(thisRun = 0),
+    starvationDeaths = stats.starvationDeaths.copy(thisRun = 0),
+    repletesPromoted = stats.repletesPromoted.copy(thisRun = 0),
+    repletesLostToAging = stats.repletesLostToAging.copy(thisRun = 0),
+    eggsCount = stats.eggsCount.copy(thisRun = 0),
+    maxAliveWorkers = stats.maxAliveWorkers.copy(thisRun = 0),
+    explorationsCount = stats.explorationsCount.copy(thisRun = 0),
+    explorationsWorkersSentU = stats.explorationsWorkersSentU.copy(thisRun = 0)
+  )
+
   val initial: StatisticsData = StatisticsData()
 
 }
