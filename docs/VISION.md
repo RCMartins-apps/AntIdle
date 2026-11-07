@@ -1,7 +1,8 @@
 # Game direction
 
-Status: agreed direction, captured from the project owner's conversation on
-2026-11-05. Future mechanics below are not implemented merely by being recorded.
+Status: agreed direction, initially recorded on 2026-11-05 and refined for queens
+and prestige on 2026-11-07. Future mechanics below are not implemented merely by
+being recorded.
 
 ## Identity
 
@@ -49,9 +50,26 @@ discoveries and exploration XP are distinct from inherited Understandings.
 Do not relabel those systems as Understandings or imply that current research
 is already a prestige system.
 
+The owner wants two forms of prestige:
+
+- **Upgrade progression:** the new colony begins with an ability already
+  unlocked and/or a permanent production or capacity boost. Permanent numeric
+  bonuses are valid rewards; Understandings need not all introduce new mechanics.
+- **Challenge progression:** the daughter colony is founded in a less suitable,
+  more challenging location. Completing that challenge unlocks something new.
+  The specific locations, objectives and rewards are still undecided.
+
+Raising a daughter queen is an approved direction for connecting generations.
+The owner likes the opportunities this creates for new chambers and worker
+jobs. Their exact names, costs, roles and rearing mechanics have not been chosen.
+Keep the distinction between expanding the present colony through satellite
+outposts and founding a new generation through a daughter queen.
+
 The first Understanding, its effects, acquisition requirements, reset contents
 and founding population have not been chosen. The exact prestige action name
-has not been chosen either. These need design before implementation.
+has not been chosen either. How challenge rewards interact with Understandings,
+whether normal and challenge foundings can be combined, and how completion or
+abandonment works also need design before implementation.
 
 ## Possibilities, not commitments
 
