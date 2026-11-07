@@ -170,7 +170,7 @@ object UpgradesData {
       val name: String = "QueensRoutine"
       val cost: ActionCost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u)
       val title: String = "Queen's Routine"
-      val description: String = "Automatically raise worker eggs toward a population target while keeping a sugar reserve. Configure in Brood."
+      val description: String = "Automatically raise worker eggs toward a population target while keeping a sugar reserve. Refill jobs lost to aging from the idle/default pool. Configure in Brood."
     }
 
     case object ConstructionPlanning extends UpgradeType {

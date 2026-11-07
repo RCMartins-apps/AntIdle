@@ -22,7 +22,7 @@ object Actions {
 
   def reduceAntTask(antTask: AntTask, amountU: Long): Unit =
     actionUpdater.writer.onNext { allData =>
-      allData.modify(_.ants).using(_.removeFromTask(antTask, amountU))
+      AgingJobReplacement.cancel(allData, antTask).modify(_.ants).using(_.removeFromTask(antTask, amountU))
     }
 
   def incrementAntTask(antTask: AntTask, amountU: Long): Unit =
@@ -32,6 +32,8 @@ object Actions {
 
   def selectDefaultTask(task: Option[AntTask]): Unit =
     actionUpdater.writer.onNext(DefaultWorkerAssignment.select(_, task))
+
+  def cancelAgingJobReplacements(): Unit = actionUpdater.writer.onNext(AgingJobReplacement.cancelAll)
 
   def configureQueenRoutine(enabled: Boolean, target: Int, reserve: Long): Unit =
     actionUpdater.writer.onNext(AutomaticBrood.configure(_, enabled, target, reserve))

@@ -24,7 +24,8 @@ object PheromoneTrails {
     if (!canMark(data)) data else data.spendResources(markCost).copy(
       ants = data.ants.unlockTask(AntTask.TrailForager),
       exploration = data.exploration.copy(sugarTrail = data.exploration.sugarTrail.copy(marked = true)))
-  def assign(data: AllData, delta: Long): AllData = {
+  def assign(initial: AllData, delta: Long): AllData = {
+    val data = AgingJobReplacement.cancel(initial, AntTask.TrailForager)
     if (!data.exploration.sugarTrail.marked || !data.ants.lineage.sharedPaths) data
     else {
       val ants = if (delta > 0L) data.ants.addToTask(AntTask.TrailForager, Math.min(delta, Capacity - workers(data.ants)))
@@ -32,9 +33,12 @@ object PheromoneTrails {
       DefaultWorkerAssignment.normalize(data.copy(ants = ants))
     }
   }
-  def recall(data: AllData): AllData = DefaultWorkerAssignment.normalize(data.copy(
+  def recall(initial: AllData): AllData = {
+    val data = AgingJobReplacement.cancel(initial, AntTask.TrailForager)
+    DefaultWorkerAssignment.normalize(data.copy(
     ants = data.ants.removeFromTask(AntTask.TrailForager, data.ants.taskWorkers(AntTask.TrailForager)),
     exploration = data.exploration.copy(sugarTrail = data.exploration.sugarTrail.copy(marked = false))))
+  }
   def reconcile(data: AllData): AllData = {
     val trail = data.exploration.sugarTrail
     if (!data.ants.lineage.sharedPaths || !trail.marked || trail.remaining <= 0L ||
