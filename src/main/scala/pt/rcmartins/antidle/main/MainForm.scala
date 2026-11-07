@@ -1053,7 +1053,7 @@ object MainForm {
             Option.when(known)(div(className := "small mt-1", "Shared Paths inherited · trails become available with exploration."))),
           child.maybe <-- antsSignal.map(_.daughterQueens >= u).distinct.map { ready => Option.when(ready) {
             detailsTag(className := "founding-preview mt-2",
-              summaryTag("Review founding"),
+              summaryTag(minHeight.px := 44, "Review founding"),
               p(className := "small my-2", "Found with your daughter queen: +1 DNA and +10% sugar production, added to your inherited bonus."),
               p(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
               p(className := "small", "Reset: resources, ants and brood, chambers, research, exploration levels, discoveries, trails, queues and task assignments."),

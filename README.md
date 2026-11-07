@@ -688,3 +688,50 @@ task on load without assigning workers. Progress, manual pause, nurses and
 mature daughters survive reload without repeating maturation rewards. Run
 `python3 tests/royal_brood_smoke.py` after `sbt fastOptJS` for phone/desktop
 staffing, costs, stages, rates, shortages, pause/reload and completion checks.
+
+## First prestige: DNA and Shared Paths
+
+A mature daughter queen unlocks **Review founding** in Nest. The preview and
+confirmation list the reset before **Found daughter colony** takes effect:
+
+- Reset colony resources, ants/brood, chambers, research, expedition XP,
+  discoveries, trails, queues and worker assignments.
+- Keep DNA, purchased Understandings, lifetime statistics, discovered resource
+  visibility, settings and stored simulation time. The new colony begins with
+  its queen and no workers, using the normal initial economy.
+- Each founding awards **1 DNA** and automatically adds **+10% sugar production**,
+  stacked additively (+10%, +20%, etc.). Collectors, aphids and trail foragers
+  receive this bonus. Sugar gathering clicks, expedition rewards, costs, upkeep,
+  aging and consumption are unchanged. Per-colony statistics restart at zero.
+
+The first Understanding, **Shared Paths**, costs **1 DNA** once. Ownership is
+inherited across later foundings. This is the first introductory prestige
+mechanic; later introductory Understandings, challenges and milestone-based
+DNA earnings remain future content. Repeated founding currently awards the
+same DNA amount and adds the same production bonus.
+
+After Shared Paths, returning **Nectar Meadow** expeditions reveal a finite
+**1,200 sugar** source when no source remains. The normal expedition reward is
+unchanged. Explore shows one source/trail, without exposing locked destinations.
+
+**Mark trail** costs **50 sugar** and reserves **one scout**. Assign up to ten
+workers with the trail card's controls. Each gathers **0.8 sugar/s**, improved
+by the inherited production bonus; output is limited by actual storage room
+and remaining supply. The bonus increases harvesting speed, not source size.
+The card shows workers, sugar/s and remaining sugar. At full storage, gathering
+pauses without wasting supply. **Recall trail** frees workers and the scout,
+keeping unharvested sugar; marking it again costs 50 sugar. Depletion releases
+staff automatically. Workers return to their selected default task, respecting
+its capacity, with any overflow idle.
+
+Trail workers and the guiding scout retain ordinary upkeep and saved age
+cohorts. They do not gain new lifespans when assigned or recalled. A lost guide
+ends active gathering and releases workers while preserving the source.
+Lineage/DNA/Understanding state is stored in `ants.lineage`; the source and
+marking state are in `exploration.sugarTrail`. Older saves receive safe defaults.
+
+Verification: `sbt fastOptJS fullOptJS test`, then
+`python3 tests/prestige_smoke.py` checks founding cancellation/confirmation,
+DNA purchases, early unlocks after reset, trail discovery and management,
+save/load and phone/desktop layout. Engine tests cover resets, lifetime totals,
+bonuses, finite supply, scout reservations, upkeep, aging and defaults.

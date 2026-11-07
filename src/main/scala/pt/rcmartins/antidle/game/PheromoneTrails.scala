@@ -39,7 +39,12 @@ object PheromoneTrails {
     val trail = data.exploration.sugarTrail
     if (!data.ants.lineage.sharedPaths || !trail.marked || trail.remaining <= 0L ||
       data.ants.scouts - data.exploration.explorationParties.map(_.scouts).sum < u) recall(data)
-    else data
+    else {
+      val ready = data.copy(ants = data.ants.unlockTask(AntTask.TrailForager))
+      val excess = Math.max(0L, ready.ants.taskWorkers(AntTask.TrailForager) - Capacity)
+      if (excess == 0L) ready else DefaultWorkerAssignment.normalize(ready.copy(
+        ants = ready.ants.removeFromTask(AntTask.TrailForager, excess)))
+    }
   }
   def tick(data: AllData): AllData = {
     val ready = reconcile(data)

@@ -245,9 +245,9 @@ object TickCalculator {
                 case ResourceOrigin(_, _) =>
                   s"0/sec"
                 case PercentOrigin(_, percent) if percent > 0 =>
-                  f"+${percent - 1.0}%.2f%%"
+                  f"+${(percent - 1.0) * 100.0}%.2f%%"
                 case PercentOrigin(_, percent) if percent < 0 =>
-                  f"${percent - 1.0}%.2f%%"
+                  f"${(percent - 1.0) * 100.0}%.2f%%"
                 case PercentOrigin(_, _) =>
                   "0.00%"
               }

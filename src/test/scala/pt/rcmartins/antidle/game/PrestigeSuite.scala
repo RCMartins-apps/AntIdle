@@ -126,4 +126,43 @@ class PrestigeSuite extends FunSuite {
     assertEquals("{}".fromJson[AntsData].toOption.get.lineage, Lineage())
     assertEquals("{}".fromJson[ExplorationData].toOption.get.sugarTrail, SugarTrail())
   }
+  test("loading caps oversized trail staffing and restores missing task without refreshing supply") {
+    val marked = PheromoneTrails.mark(known)
+    val oversized = marked.copy(ants = marked.ants.copy(tasks = Seq(
+      AntTask.SugarCollector -> (5 * u), AntTask.TrailForager -> (15 * u))))
+    val capped = PheromoneTrails.reconcile(oversized)
+    assertEquals(capped.ants.taskWorkers(AntTask.TrailForager), 10 * u)
+    assertEquals(capped.ants.taskWorkers(AntTask.SugarCollector), 10 * u)
+    assertEquals(capped.exploration.sugarTrail, marked.exploration.sugarTrail)
+    val missing = marked.copy(ants = marked.ants.copy(tasks = Seq(AntTask.SugarCollector -> (20 * u))))
+    assert(PheromoneTrails.reconcile(missing).ants.tasks.exists(_._1 == AntTask.TrailForager))
+  }
+  test("a guide cannot be booked onto an expedition or protected from starvation") {
+    val marked = PheromoneTrails.mark(known.copy(exploration = known.exploration.copy(
+      experience = ExplorationProgression.threshold(4))))
+    val sent = ExplorationHelper.start(marked, 5 * u, ExplorationDestination.NectarMeadow)
+    assertEquals(sent.exploration.explorationParties.size, 1)
+    assertEquals(ScoutProgression.available(sent.ants, sent.exploration), 0L)
+    assertEquals(ScoutProgression.atHome(sent.ants, sent.exploration), u)
+    val alone = marked.copy(ants = marked.ants.copy(workers = 0L, scouts = u, tasks = Seq.empty))
+    assertEquals(PopulationAging.starveOne(alone).scouts, 0L)
+  }
+  test("royal care forecasts account for trail income before ordinary upkeep") {
+    val assigned = PheromoneTrails.assign(PheromoneTrails.mark(known), 5 * u)
+    val data = assigned.copy(ants = assigned.ants.copy(royalBrood = Some(RoyalBrood(RoyalBroodProgression.EggCare)),
+      tasks = Seq(AntTask.TrailForager -> (5 * u), AntTask.RoyalNurse -> (5 * u), AntTask.SugarCollector -> (10 * u))),
+      nestAttributes = assigned.nestAttributes.copy(chambers = assigned.nestAttributes.chambers.copy(
+        royalNurseryChamber = Chamber.RoyalNurseryChamber(1))),
+      basicResources = assigned.basicResources.copy(sugar = BasicResource(0L, 1000 * u),
+        protein = BasicResource(100 * u, 100 * u), water = BasicResource(100 * u, 100 * u)))
+    val predicted = RoyalBroodProgression.forecast(data.ants, data.nestAttributes, data.upgrades, data.exploration, data.basicResources)
+    val next = TickUpdater.updateAllData(data, None)
+    assertEquals(predicted.units, 5L)
+    assertEquals(next.ants.royalBrood.get.careUnits, RoyalBroodProgression.EggCare + predicted.units)
+    val production = PheromoneTrails.production(data.ants, data.exploration, data.basicResources) +
+      Foraging.productionPerTick(10L, data.upgrades, data.ants.lineage)
+    assertEquals(next.basicResources.sugar.amount,
+      production - data.ants.upkeepWorkersCount * antsSugarUpkeepTick - predicted.cost.sugar)
+  }
+
 }
