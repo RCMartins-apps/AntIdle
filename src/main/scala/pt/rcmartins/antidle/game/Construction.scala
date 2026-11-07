@@ -4,7 +4,7 @@ import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.ConstructionPlanning
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.{ConstructionPlanning, RoyalNurseryPlanning}
 
 object Construction {
   def level(chambers: AllChamberData, kind: ChamberType): Int = kind match {
@@ -37,7 +37,7 @@ object Construction {
       case ((planned, queue), task) =>
         val count = planned.getOrElse(task.chamberType, 0)
         val allowed = task.chamberType != ChamberType.RoyalNursery ||
-          (data.upgrades(pt.rcmartins.antidle.model.UpgradesData.UpgradeType.RoyalNurseryPlanning).unlocked &&
+          (data.upgrades(RoyalNurseryPlanning).unlocked &&
             nest.chambers.royalNurseryChamber.level == 0 && count == 0)
         if (!allowed) (planned, queue)
         else (planned.updated(task.chamberType, count + 1),

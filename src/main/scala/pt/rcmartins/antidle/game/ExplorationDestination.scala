@@ -20,6 +20,8 @@ sealed abstract class ExplorationDestination(
     val waterReward: Long = 0L,
     val resinReward: Long = 0L,
 ) {
+  def actionName: String = s"Explore $name"
+
   def isUnlocked(data: ExplorationData, ants: AntsData, nest: NestAttributes): Boolean =
     ExplorationProgression.level(data.experience) >= requiredLevel &&
       requiredDiscovery.forall(DiscoveryProgression.has(data, _)) &&
@@ -53,7 +55,9 @@ object ExplorationDestination {
     knowledge = 30L * u)
   case object CollectResin extends ExplorationDestination(
     "collect-resin", "Collect Resin", 120L * TicksPerSecond, 50L, 35L, 7, 10L * u, 2L * u, 0,
-    knowledge = 10L * u, requiredDiscovery = Some("resin-seep"), resinReward = 5L * u)
+    knowledge = 10L * u, requiredDiscovery = Some("resin-seep"), resinReward = 5L * u) {
+    override def actionName: String = "Collect Resin"
+  }
 
   lazy val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow, SeedGathering, DryClearing, ScavengeWater, FallenPine, CollectResin)
 

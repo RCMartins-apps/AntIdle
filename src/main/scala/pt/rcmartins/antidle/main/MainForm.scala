@@ -1409,6 +1409,7 @@ object MainForm {
       val cost = amountOfExplorersSignal.combineWith(extraScoutsSignal).map { case (workers, extra) => ExplorationHelper.cost(workers, destination, extra) }
       div(
         className := "col-12 col-md-6 px-3 py-2 exploration-destination",
+        dataAttr("destination") := destination.id,
         div(
           className := "card p-2 h-100",
           p(
@@ -1424,7 +1425,7 @@ object MainForm {
           div(
             className := "row",
             actionButton(
-              name = s"Explore ${destination.name}",
+              name = destination.actionName,
               requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersSignal, upgradesSignal, extraScoutsSignal).map {
                 case (data, scouts, workers, upgrades, extra) =>
                   List(ActionRequirement("expedition slots",
