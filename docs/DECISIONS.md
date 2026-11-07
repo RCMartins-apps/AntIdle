@@ -381,3 +381,22 @@ and round up fractional ticks; they are not promises about future purchases,
 expedition deliveries or staffing changes. Use the same estimate in the income
 tooltip. On mobile put the rate below the numeric amount/capacity, alongside the
 name/estimate column, to avoid an extra full-width line.
+
+
+## D20: Scout eggs must queue while the queen is busy — approved
+
+The owner reported scout raising being rejected during the queen's laying
+cooldown instead of accepting an order. Scout orders now share manual FIFO
+ordering with worker batches, including while brood places are full. Keep
+Nursery, standard-worker, supply and future-housing checks when accepting an
+order; cooldown/current brood space gate actual laying. A ready queen can still
+lay an unqueued scout immediately. Charge sugar/protein and increment egg
+statistics when laid, never when merely queued. If supplies run out, retain the
+order and show the missing resource.
+
+Reserve housing for queued scouts across worker/scout/royal actions. Automatic
+workers wait for manual orders; scouts do not satisfy worker population targets.
+Cancellation clears unlaid orders of both types, preserving existing brood.
+Save mixed ordering without breaking existing worker-only queues. Store worker
+orders ahead of each scout rather than expanding worker batches into individual
+records. Show queued caste counts, visible scout costs and concise details.

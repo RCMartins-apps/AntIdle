@@ -912,7 +912,7 @@ object MainForm {
           if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein. Adults perform tasks at 50% output."
           else "Worker eggs: 10 sugar · about 2m at full care. Larval care: 20 sugar + 2 protein per worker. Nurses improve development speed."
         }),
-        child.maybe <-- antsSignal.map(_.eggOrders > 0).distinct.map { queued => Option.when(queued) {
+        child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map { queued => Option.when(queued) {
           button(className := "btn btn-outline-secondary mb-2", typ := "button", minHeight.px := 44, "Cancel egg orders",
             onClick --> (_ => Actions.cancelEggOrders()))
         } },
@@ -956,11 +956,11 @@ object MainForm {
               name = "Raise Scout Egg",
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-              descriptionSignal = Val(Some(div("Guides woodland expeditions. About 90s development, with 20 sugar + 2 protein in larval care. Shares the queen laying cooldown and brood places."))),
+              descriptionSignal = Val(Some(div("Order a scout egg, even while the queen is busy. Earlier manual orders are laid first; sugar and protein are charged when laid. About 90s development, plus 20 sugar + 2 protein in larval care."))),
               costSignal = Val(ScoutProgression.eggCost),
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseScout(),
-              requirementsSignal = broodRequirementsSignal,
+              requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
           },
         ),
@@ -1392,7 +1392,7 @@ object MainForm {
     antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       List(
         ActionRequirement("brood places", Math.max(0L, BroodProgression.capacity(nest).toLong * u - ants.eggsAndLarvae.size * u)),
-        ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - (ants.populationCount.toLong + ants.eggOrders) * u)),
+        ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - (ants.populationCount.toLong + ants.queuedEggs) * u)),
       )
     }.distinct
 

@@ -183,7 +183,7 @@ class BroodPipelineSuite extends FunSuite {
   test("new scout brood shares laying and feeding instead of bypassing the pipeline") {
     val d = normal.copy(nestAttributes = normal.nestAttributes.copy(chambers = normal.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))))
     val raised = ScoutProgression.raise(d)
-    assert(!ScoutProgression.canRaise(raised))
+    assert(!ScoutProgression.canLay(raised.ants, raised.nestAttributes, raised.basicResources))
     assertEquals(raised.ants.eggsAndLarvae.head.asInstanceOf[AntBrood.Developing].kind, "scout")
     val adult = (1 to 450).foldLeft(raised)((state, _) => advance(state))
     assertEquals(adult.ants.scouts, u)

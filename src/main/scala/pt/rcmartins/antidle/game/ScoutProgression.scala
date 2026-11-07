@@ -24,14 +24,27 @@ object ScoutProgression {
   def canRaise(allData: AllData): Boolean =
     canRaise(allData.ants, allData.nestAttributes, allData.basicResources)
 
-  def canRaise(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean = {
-    nest.chambers.nurseryChamber.level > 0 &&
-      ants.standardWorkersUnlocked && ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < BroodProgression.capacity(nest) &&
-      ants.populationCount + ants.eggOrders < nest.maxAntsCount && resources.hasResources(eggCost)
+  // Ordering reserves future housing, not an immediately free brood place or cooldown.
+  def canRaise(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
+    nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&
+      ants.populationCount + ants.queuedEggs < nest.maxAntsCount && resources.hasResources(eggCost)
+
+  def canLay(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
+    nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&
+      ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < BroodProgression.capacity(nest) &&
+      ants.populationCount < nest.maxAntsCount && resources.hasResources(eggCost)
+
+  def raise(allData: AllData): AllData = {
+    if (!canRaise(allData)) allData
+    else {
+      val ordered = allData.modify(_.ants.scoutEggOrders).using(_ :+ allData.ants.eggOrders)
+      // Preserve immediate laying when the queen is ready and no earlier orders exist.
+      if (allData.ants.queuedEggs == 0) BroodProgression.layOrdered(ordered) else ordered
+    }
   }
 
-  def raise(allData: AllData): AllData =
-    if (!canRaise(allData)) allData
+  def lay(allData: AllData): AllData =
+    if (!canLay(allData.ants, allData.nestAttributes, allData.basicResources)) allData
     else allData.spendResources(eggCost)
       .modify(_.ants.eggsAndLarvae)
       .using(_ :+ AntBrood.Developing(allData.currentTick, "scout"))
