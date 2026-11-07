@@ -30,6 +30,8 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
   `Construction.scala`, `PopulationAging.scala`, `AutomaticBrood.scala`: mechanics.
 - `game/Prestige.scala`: founding resets, DNA purchases and inherited production.
 - `game/PheromoneTrails.scala`: finite nectar sources, guide reservations and trail workers.
+- `game/TerritoryProgression.scala`: held crews, pending hauls, recurring contests and withdrawal.
+  Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
 - `game/UpgradeVisibility.scala`, `ResourceVisibility.scala`: visibility reconciliation.
 - `game/saves/`: serialization, restoration and load-time reconciliation.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.

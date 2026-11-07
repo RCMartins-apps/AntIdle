@@ -1080,7 +1080,8 @@ object MainForm {
         )
         case true => div(className := "territory-held border rounded p-2",
           div(className := "d-flex flex-wrap justify-content-between gap-2",
-            b(child.text <-- workerSignal.combineWith(siteSignal).map { case (count, site) => s"$count/${site.targetWorkers} workers holding" }),
+            b(child.text <-- workerSignal.combineWith(siteSignal).map { case (count, site) => s"$count/${site.targetWorkers} workers holding" },
+              className <-- workerSignal.combineWith(siteSignal).map { case (count, site) => if (count < site.targetWorkers) "text-danger" else "" }),
             span(child.text <-- siteSignal.combineWith(currentTickSignal).map { case (site, tick) =>
               s"Next contest: ${prettyTimeFromTicks(Math.max(0L, site.nextContestTick - tick))}"
             }),
@@ -1100,6 +1101,13 @@ object MainForm {
             val due = site.ages.filter(_.expiresAt <= site.nextContestTick).map(_.count).sum
             if (due == 0L) "" else s"$due holders expire by the contest. Aging losses can overlap combat losses."
           }),
+          div(className := "territory-reinforcements small",
+            child.maybe <-- antsSignal.combineWith(siteSignal).map { case (ants, site) =>
+              val missing = Math.max(0L, site.targetWorkers - TerritoryProgression.workers(ants))
+              Option.when(missing > 0L)(span("Reinforcements: ", requirementLabel(ActionRequirement(
+                ants.availableWorkersLabel, ants.availableWorkersCount, missing * u))))
+            },
+          ),
           div(className := "d-flex flex-wrap gap-2 my-2",
             button(className := "btn btn-outline-primary", typ := "button", minHeight.px := 44, "Reinforce",
               disabled <-- workerSignal.combineWith(siteSignal, availableWorkersCountSignal).map {

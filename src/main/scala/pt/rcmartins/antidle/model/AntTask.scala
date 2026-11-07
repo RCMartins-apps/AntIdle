@@ -12,6 +12,8 @@ sealed trait AntTask {
 
   val hasAntUpkeep: Boolean = true
 
+  def agesAtHome: Boolean = hasAntUpkeep
+
 }
 
 object AntTask {
@@ -48,8 +50,8 @@ object AntTask {
     val uiOrder: Int = 8
     val name: String = "Territory Forager"
     override val showButtons: Boolean = false
-    // Cohorts are reserved at the site; upkeep is explicitly charged in AntsData.
-    override val hasAntUpkeep: Boolean = false
+    // Holders consume colony sugar, but their reserved cohorts age at contests.
+    override val agesAtHome: Boolean = false
   }
 
   case object TrailForager extends AntTask {

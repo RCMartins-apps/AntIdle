@@ -166,4 +166,24 @@ class TerritorySuite extends FunSuite {
     assertEquals(founded.exploration.territory, Territory())
     assertEquals(founded.ants.taskWorkers(AntTask.TerritoryForager), 0L)
   }
+  test("home aging cannot remove territory holders and becoming age-enabled gives them valid cohorts") {
+    val homeOld = held.copy(ants = held.ants.copy(ages = held.ants.ages.copy(workers = List(AgeCohort(101L, 30L)))))
+    val aged = PopulationAging.tick(homeOld.copy(world = homeOld.world.copy(currentTick = 101L)))
+    assertEquals(aged.ants.workers, 10 * u)
+    assertEquals(aged.ants.taskWorkers(AntTask.TerritoryForager), 10 * u)
+    assertEquals(aged.ants.upkeepWorkersCount, 12L)
+    val missing = held.copy(exploration = held.exploration.copy(territory = held.exploration.territory.copy(ages = Nil)))
+    val repaired = TerritoryProgression.reconcile(missing)
+    assertEquals(repaired.exploration.territory.ages.map(_.count).sum, 10L)
+    assertEquals(TerritoryProgression.reconcile(repaired).exploration.territory.ages, repaired.exploration.territory.ages)
+  }
+
+  test("older saves with a completed raid recover the earned discovery without carrying it across prestige") {
+    val old = colony.copy(exploration = colony.exploration.copy(surveys = Map.empty),
+      statistics = colony.statistics.copy(raidDeaths = StatisticsData.StatInt(3, 3)))
+    assert(TerritoryProgression.visible(roundTrip(old).exploration))
+    val newRun = old.copy(statistics = StatisticsData.newColony(old.statistics))
+    assert(!TerritoryProgression.visible(roundTrip(newRun).exploration))
+  }
+
 }

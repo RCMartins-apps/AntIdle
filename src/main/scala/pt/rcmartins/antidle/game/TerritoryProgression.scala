@@ -57,7 +57,12 @@ object TerritoryProgression {
       exploration = data.exploration.copy(territory = Territory()))
     DefaultWorkerAssignment.normalize(PopulationAging.returnHome(released, TravelAges(workers = site.ages)))
   }
-  def reconcile(data: AllData): AllData = {
+  def reconcile(initial: AllData): AllData = {
+    // Earlier raid saves did not record this newly added survey. Current-run
+    // combat deaths prove the player already completed a raid; retain that unlock.
+    val data = if (initial.statistics.raidDeaths.thisRun > 0 && !DiscoveryProgression.ContestedGround.found(initial.exploration))
+      initial.copy(exploration = initial.exploration.copy(surveys = initial.exploration.surveys.updated("rival-food-cache", 1)))
+    else initial
     val site = data.exploration.territory
     val count = workers(data.ants)
     if (!site.held && count == 0L) data

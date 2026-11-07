@@ -42,7 +42,7 @@ object PopulationAging {
   }
 
   def homeWorkers(ants: AntsData): Long =
-    Math.max(0L, (ants.workers - ants.tasks.filterNot(_._1.hasAntUpkeep).map(_._2).sum) / u)
+    Math.max(0L, (ants.workers - ants.tasks.filterNot(_._1.agesAtHome).map(_._2).sum) / u)
 
   def reconcile(data: AllData): AllData = {
     if (!data.ants.ages.active && data.nestAttributes.chambers.nurseryChamber.level == 0) data
@@ -93,7 +93,7 @@ object PopulationAging {
     val deficit = Math.max(0L, deaths * u - Math.max(0L, ants.idleWorkersCount))
     val (_, tasks) = ants.tasks.reverse.foldLeft((deficit, List.empty[(AntTask, Long)])) {
       case ((needed, tasks), (task, amount)) =>
-        val removed = if (task.hasAntUpkeep) Math.min(needed, amount) else 0L
+        val removed = if (task.agesAtHome) Math.min(needed, amount) else 0L
         (needed - removed, (task -> (amount - removed)) :: tasks)
     }
     ants.copy(workers = ants.workers - deaths * u, tasks = tasks)
