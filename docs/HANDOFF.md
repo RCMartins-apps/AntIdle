@@ -3,52 +3,39 @@
 This is a short replaceable snapshot, not a task queue or a permanent change log.
 Verify it against Git and PR state at the next session's start.
 
-## Last verified: 2026-11-06
+## Last verified: 2026-11-07
 
-- `origin/main` at `963c21b` includes the UI polish merged in PR #33, plus the
-  Dry Clearing outpost and earlier colony systems. Current mechanics are in README.
-- The automatic branch/push/checkpoint workflow and durable context are merged.
+- `origin/main` at `9cabeaa` includes the outpost progression merged in
+  [PR #34](https://github.com/RCMartins-apps/AntIdle/pull/34).
+- That feature adds outpost levels 2–3, Covered Trails and Seed Processing;
+  README documents current costs and mechanics. Its prior validation was 130
+  passing engine tests and phone/desktop checks; those were not rerun here.
+- Durable context and the automatic branch/push/checkpoint policy are merged.
 
 ## Current work
 
-Branch `feature/outpost-progression` starts from that main commit. The owner
-requested additional content and updates, delegating feature selection.
+Branch `docs/queen-prestige-paths` records the owner's prestige clarification:
+- Upgrade prestige can give the new colony starting unlocks and permanent
+  production/capacity boosts. Numeric rewards are explicitly valid.
+- Challenge prestige starts a daughter colony in a less ideal environment and
+  unlocks something new on challenge completion.
+- Raising a daughter queen is endorsed, with opportunities for new chambers
+  and jobs. Specific rearing mechanics and content have not been selected.
 
-Implemented:
-- Dry Clearing Outpost extensions at exploration levels 7 and 8. Each adds 25
-  shared colony housing and five Seed Forager slots, for level 3 totals of 100
-  housing and 15 slots. Each expansion has visible, escalating multi-resource costs.
-- Covered Trails research at level 7 reduces forager water use by 25%.
-- Seed Processing at level 8 raises forager protein yield by 50%.
-- Shared harvest calculation handles partial water/storage at the new ratios;
-  task details, resource estimates and outpost summaries use the upgraded values.
-  Small resource rates now retain useful fractions and tooltip signs.
-- Existing saves default to an unexpanded level-1 outpost. Imported extension
-  counts are bounded and loading does not grant housing again.
-
-Validation:
-- `sbt fastOptJS fullOptJS test`: all 130 tests pass; Closure reports no errors or warnings.
-- `tests/outpost_progression_smoke.py`: passes at 320, 390 and 1920px for staged
-  reveals, exact costs, storage shortages, staffing, upgraded rates/ticks,
-  level limits, old/current saves and dry pauses; rerun passed with both
-  expansion purchase layouts explicitly checked at narrow widths.
-- Existing `tests/outpost_smoke.py` passes at 320, 390 and 1920px.
-- `tests/foraging_smoke.py` passes at 390 and 1920px, including actual income,
-  upgrades and expedition slot limits.
-- README contains costs, effects and save behavior; decision D10 and the vision
-  reflect the outpost progression. Mobile expansion/research cards are visually
-  inspected; local documentation links and whitespace checks pass.
+VISION and decision D2 preserve this distinction. This is documentation-only;
+no prestige, challenge, brood-care or queen-rearing gameplay is implemented by
+this branch. Validation is local Markdown link checks and `git diff --check`.
+The final response reports the actual push result. No PR has been requested.
 
 ## Next work and unknowns
 
-- Implementation and validation are complete.
-  [PR #34](https://github.com/RCMartins-apps/AntIdle/pull/34) is open against
-  `main` for this branch; merging remains the owner's decision.
-- Understandings and queen inheritance remain agreed future prestige foundations;
-  effects, costs and reset rules still need design. These are ordinary colony
-  expansions and research, not inherited Understandings.
-- Additional locations, nurse care, pheromone trails, injuries and waste remain
-  future possibilities rather than an approved implementation queue.
+- Design the first daughter-queen rearing/founding loop, its costs and the reset
+  matrix before implementation. First Understanding effects are not yet chosen.
+- Define the first challenge location, goal and reward, completion/abandonment
+  behavior, its relationship to Understandings, and whether it can be combined
+  with normal prestige benefits. None is settled by the two-form direction.
+- New chambers/jobs are supported as a direction; nurse staffing, feeding rules,
+  royal chambers and other concrete examples remain suggestions.
 - Preserve unrelated local `work/` screenshots and `tests/__pycache__/` artifacts.
 
 ## Starting a fresh Codex session

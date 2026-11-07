@@ -1,6 +1,7 @@
 # Design decisions
 
-These are lasting decisions from the owner, captured on 2026-11-05. Consult
+These are lasting decisions from the owner, initially captured on 2026-11-05 and
+updated as the direction develops. Consult
 source, tests and README for exact current balance; this file preserves intent.
 Edit an entry when the owner changes it rather than accumulating contradictions.
 
@@ -19,6 +20,21 @@ research resource. Prestige rewards and the exact reset matrix are undecided;
 do not turn illustrative Understanding names or bonuses from chat into rules.
 Existing descriptions calling research "permanent" mean saved ownership today,
 not an agreed promise of persistence across future prestige resets.
+
+On 2026-11-07 the owner clarified two forms of prestige:
+- An upgrade form, where the new colony has starting unlocks and/or permanent
+  production or capacity boosts. Numeric bonuses are explicitly valid; do not
+  impose a rule that every Understanding must change a mechanic.
+- A challenge form, where a new colony starts in a less ideal location and
+  completing its challenge unlocks something new. Exact challenges, completion
+  rules and rewards are not yet selected.
+
+The owner also endorsed raising daughter queens as a development direction,
+including opportunities for new chambers and job types. This is not approval of
+specific nurse rules, chamber names, recipes or queen-rearing costs. Define the
+first rearing/founding loop and reset matrix before implementing prestige.
+Challenge rewards' relationship to Understandings and the interaction between
+normal and challenge foundings remain open design questions.
 
 ## D3: Resources need a purpose — implemented foundation, ongoing direction
 
