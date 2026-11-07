@@ -38,6 +38,10 @@ Exact balance remains adjustable; safe expeditions remain available. Optional
 territorial contests extend this pressure into holding a productive location
 with recurring casualties and player-controlled withdrawal/reinforcement.
 
+Population losses can collapse a workforce, but must leave a recovery path
+through the founding queen. Emergency recovery restores a foothold; it must
+not sustain an established colony for free. See D17 in DECISIONS.
+
 Outposts should eventually have distinct environmental requirements and/or
 resources. The agreed first direction is a dry area with water scavenging and
 living water storage. Dry Clearing exploration, water, repletes and a satellite

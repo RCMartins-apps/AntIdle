@@ -934,3 +934,30 @@ Verification: `sbt fastOptJS fullOptJS test` and
 finite lifespans, type transition, staged nutrition, care capacity, shared job
 caps, queued laying, saves and phone/desktop controls. Existing lifecycle,
 raid/territory replacement and batch UI tests now expect the paced pipeline.
+
+### Emergency colony recovery
+
+The founding queen survives starvation, and **Gather Sugar** is always available.
+If standard workers are unlocked but no workers remain, **Raise Emergency Worker**
+costs **5 sugar** and rears one small worker without protein. It automatically
+collects sugar on maturity. Existing research, brood and egg orders are kept.
+Workers away from the nest still count as surviving workers; no emergency egg
+is available while they, another worker, small brood or a legacy worker egg exist.
+
+The queen can tend this one emergency brood even if unfed larvae fill normal
+brood places or housing. It receives priority care, counts toward population,
+and may temporarily put population above capacity; ordinary eggs still obey
+normal limits. The Resources brood limit includes its temporary queen-tended
+place while it is developing. Normal half output/upkeep and aging apply.
+
+When **Queen's Routine** is unlocked and enabled with a positive target, it also
+handles recovery. It spends 5 stored sugar above the player's reserve if possible;
+otherwise the queen gathers protected supplies over **25 simulated seconds**, then
+rears the emergency egg. These supplies are consumed directly by that egg and
+never enter ordinary storage. The usual roughly 15-second development follows.
+Saved progress resumes on reload; turning automation off or recovering a worker
+clears unfinished foraging. Recovery stops once a worker survives. A red
+**Colony is starving** warning in Brood shows the current sugar deficit.
+
+`python3 tests/recovery_smoke.py` checks manual and unattended recovery, visible
+costs, paused larvae/full beds, saved progress and mobile/desktop layout.

@@ -92,7 +92,7 @@ object Utils {
   val messagesSignal: Signal[Seq[String]] = messagesSeq.signal.distinct
 
   val eggResourceSignal: Signal[BasicResource] =
-    antsSignal.combineWith(nestSignal).map { case (ants, nest) => BasicResource(ants.eggsAndLarvae.size.toLong * u, BroodProgression.capacity(nest).toLong * u) }
+    antsSignal.combineWith(nestSignal).map { case (ants, nest) => BasicResource(ants.eggsAndLarvae.size.toLong * u, (BroodProgression.capacity(nest) + EmergencyRecovery.broodCount(ants)).toLong * u) }
 
   val workersResourceSignal: Signal[BasicResource] =
     antsSignal.map(a => BasicResource(a.workers, 0L))

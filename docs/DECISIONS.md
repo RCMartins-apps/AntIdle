@@ -320,3 +320,27 @@ Preserve existing standard adults and legacy already-laid brood on old saves;
 fresh colonies and prestige start with the founding phase. Opening and mature
 replacement throughput must both be tested. Temporary food opportunities and
 soldiers remain deferred. Prior example opening timings were not binding rules.
+
+## D17: A collapsed colony must remain recoverable — approved
+
+The founding queen survives starvation and Gather Sugar stays available. After
+standard-worker research, losing all workers opens a manual emergency small
+worker egg for 5 sugar, with no protein care cost. One surviving worker (including
+workers away on expeditions or territory duty), existing small brood or a legacy
+self-sufficient worker egg prevents another emergency egg. Research, existing
+brood, orders and other progression are retained.
+
+To cover larvae stalled for protein and full brood/housing, the queen can tend
+one emergency brood outside the ordinary limits. It counts in population, so
+ordinary laying remains blocked at capacity; the temporary extra place is not
+available to other eggs. Recovery brood receives priority care and becomes a
+normal small sugar collector, with the usual half output/upkeep and lifespan.
+
+With Queen's Routine unlocked, enabled and a positive worker target, recovery
+uses 5 stored sugar only above the configured reserve. Otherwise the queen
+spends 25 simulated seconds gathering protected provisions for that one egg.
+These cannot fund ordinary storage, upgrades, adult upkeep or repeated eggs
+while a worker survives. Progress is saved; disabling automation or a worker
+returning clears unfinished emergency foraging. Existing brood/orders do not
+prevent this safety net. This is opt-in automatic recovery, not free colony-wide
+production. A compact red starvation warning shows the current sugar deficit.

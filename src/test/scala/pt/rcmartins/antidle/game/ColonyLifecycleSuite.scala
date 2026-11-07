@@ -167,7 +167,7 @@ class ColonyLifecycleSuite extends FunSuite {
   }
 
   test("automatic brood respects sugar reserves, target population and eggs already growing") {
-    val initial = colony(0).copy(upgrades = UpgradesData.initial.unlock(QueensRoutine))
+    val initial = colony(1).copy(upgrades = UpgradesData.initial.unlock(QueensRoutine))
     val budget = initial.copy(basicResources = initial.basicResources.copy(sugar = BasicResource(35 * u, 1000 * u)))
     val configured = AutomaticBrood.configure(budget, true, 5, 20 * u)
     val first = AutomaticBrood.tick(configured)
