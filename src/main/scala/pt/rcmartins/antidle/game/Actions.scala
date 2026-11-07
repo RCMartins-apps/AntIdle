@@ -36,6 +36,8 @@ object Actions {
   def configureQueenRoutine(enabled: Boolean, target: Int, reserve: Long): Unit =
     actionUpdater.writer.onNext(AutomaticBrood.configure(_, enabled, target, reserve))
 
+  def raiseEmergencyWorker(): Unit = actionUpdater.writer.onNext(EmergencyRecovery.raise)
+
   def promoteReplete(): Unit = actionUpdater.writer.onNext(RepleteProgression.promote)
 
   def establishDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.establish)

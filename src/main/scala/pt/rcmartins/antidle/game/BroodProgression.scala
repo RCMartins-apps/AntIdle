@@ -106,8 +106,12 @@ object BroodProgression {
     val perBrood = (if (nursePower(a) > 0L) 2L * u else u) * boost / 100L
     var resources = initialResources
     var broods = a.eggsAndLarvae.toVector
-    if (count > 0) (0 until count).foreach { offset =>
-      val index = (Math.max(0, a.broodCursor) % count + offset) % count
+    val order = if (count == 0) Seq.empty else (0 until count).map(offset => (Math.max(0, a.broodCursor) % count + offset) % count)
+    // Keep the one emergency brood fed by the queen even in an overloaded nursery.
+    order.sortBy(index => broods(index) match {
+      case b: AntBrood.Developing if b.kind == EmergencyRecovery.Kind => 0
+      case _ => 1
+    }).foreach { index =>
       broods(index) match {
         case b: AntBrood.Developing =>
           val end = if (b.isEgg) b.eggEnd else if (b.isLarvae) b.larvaEnd else b.totalCare
@@ -159,7 +163,9 @@ object BroodProgression {
     val projected = RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources)
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val feedingResources = projected.spendResources(royal.cost)
-    val queue = s"${ants.eggOrders} eggs ordered · ${ants.eggsAndLarvae.size}/${capacity(nest)} brood places"
+    val emergency = EmergencyRecovery.broodCount(ants)
+    val extra = if (emergency > 0) " · 1 queen-tended recovery brood" else ""
+    val queue = s"${ants.eggOrders} eggs ordered · ${ants.eggsAndLarvae.size - emergency}/${capacity(nest)} brood places$extra"
     val waiting = if (ants.eggOrders > 0 && resources.sugar.amount < eggCost(ants)) "Needs sugar"
       else if (ants.eggOrders > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"
       else if (ants.layingCooldown > 0L) s"Next egg in ${UINumbersUtils.prettyTimeFromTicks(ants.layingCooldown)}"

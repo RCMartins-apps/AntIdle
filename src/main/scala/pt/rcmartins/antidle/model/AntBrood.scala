@@ -19,14 +19,14 @@ object AntBrood {
   implicit val encoder: JsonEncoder[AntBrood] = DeriveJsonEncoder.gen[AntBrood]
 
   case class Developing(initialTick: Long, kind: String = "worker", care: Long = 0L) extends AntBrood {
-    def small: Boolean = kind == "small"
+    def small: Boolean = kind == "small" || kind == "emergency-small"
     def totalCare: Long = (if (small) 75L else if (kind == "scout") 450L else 600L) * 10000L
     def eggEnd: Long = totalCare / 6L
     def larvaEnd: Long = totalCare * 5L / 6L
     def isEgg: Boolean = care < eggEnd
     def isLarvae: Boolean = care >= eggEnd && care < larvaEnd
     def isPupae: Boolean = care >= larvaEnd
-    def name: String = (if (small) "Small worker" else if (kind == "scout") "Scout" else "Worker") +
+    def name: String = (if (kind == "emergency-small") "Emergency small worker" else if (small) "Small worker" else if (kind == "scout") "Scout" else "Worker") +
       (if (isEgg) " egg" else if (isLarvae) " larva" else " pupa")
   }
 

@@ -13,6 +13,11 @@ object AutomaticBrood {
   def status(ants: AntsData, nest: NestAttributes, sugar: Long): String = {
     val routine = ants.queenRoutine
     if (!routine.enabled) "Paused"
+    else if (EmergencyRecovery.broodCount(ants) > 0) "Rearing one emergency small worker"
+    else if (routine.targetWorkers > 0 && EmergencyRecovery.needed(ants)) {
+      if (EmergencyRecovery.canRaise(ants, sugar - routine.sugarReserve)) "Raising one emergency small worker"
+      else EmergencyRecovery.status(ants)
+    }
     else if (ants.totalWorkers / u + BroodProgression.incoming(ants) + ants.eggOrders >= routine.targetWorkers) "Target covered"
     else if (ants.populationCount >= nest.maxAntsCount) "Population limit reached"
     else if (ants.eggsAndLarvae.size >= BroodProgression.capacity(nest)) "Brood places full"
@@ -21,10 +26,12 @@ object AutomaticBrood {
     else "Raising worker eggs"
   }
 
-  def tick(data: AllData): AllData = {
+  def tick(initial: AllData): AllData = {
+    val data = EmergencyRecovery.tick(initial)
     val routine = data.ants.queenRoutine
     val covered = data.ants.totalWorkers / u + BroodProgression.incoming(data.ants) + data.ants.eggOrders
-    if (!data.upgrades(QueensRoutine).unlocked || !routine.enabled || !data.unlocks.actions.canLayEggs || covered >= routine.targetWorkers) data
+    if (EmergencyRecovery.needed(data.ants) || EmergencyRecovery.broodCount(data.ants) > 0 && data.ants.totalWorkers == 0L) data
+    else if (!data.upgrades(QueensRoutine).unlocked || !routine.enabled || !data.unlocks.actions.canLayEggs || covered >= routine.targetWorkers) data
     else BroodProgression.lay(data, routine.sugarReserve)
   }
 }

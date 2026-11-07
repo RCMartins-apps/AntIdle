@@ -1,22 +1,26 @@
 # Handoff
 
-## Last verified: 2026-11-07 — staged brood and founding workers
+## Last verified: 2026-11-07 — emergency colony recovery
 
-- Branch `design/brood-development` continues from merged main `0803328` (PR #39).
-- Implemented approved D16: small founding adults with exactly 50% task output
-  and upkeep, saved 30–40 minute lifespans, and research switching future eggs
-  to standard workers. Existing adults and already-laid brood retain their type.
-- Queued, paced laying replaces instant batches; eggs/larvae/pupae share brood
-  places, larvae consume sugar/protein, and capped nurse jobs supply care.
-  Queen's Routine uses the same pipeline. Nearby scraps provide early protein.
-  Fresh games/prestige start small; legacy saves keep standard-worker access.
-- Opening simulation unlocks standards within five simulated minutes and hatches
-  the first within ten, with over fifteen minutes before earliest founding deaths.
-  This verifies a deliberate strategy, not every allocation or final balance.
-- Engine suite: 203 passing tests, including 15 new pipeline tests. Development
-  and production builds pass. Browser checks pass at 320/390/1920px for the new
-  pipeline, lifecycle, progression and territory; general UI passes 320–1920px.
-  Raid and prestige regressions also pass at 320/390/1920px. Final builds pass.
-- README documents costs, timings, jobs and save behavior. Balance remains
-  adjustable; temporary food opportunities and soldier specialization are deferred.
+- Branch `feature/emergency-colony-recovery` starts from merged main `86d7203`
+  (PR #40, founding workers and staged brood).
+- Implemented approved D17: after all workers are lost, the queen can rear one
+  emergency small worker for 5 sugar without protein, preserving research and
+  existing brood/orders. Gather Sugar remains available; the founding queen
+  survives starvation. Workers away still prevent emergency eligibility.
+- Queen's Routine must be unlocked, enabled and have a positive target for
+  unattended recovery. It uses 5 sugar above the reserve, or gathers protected
+  provisions over 25 simulated seconds. They fund only this egg, not storage.
+  Saved progress resumes; opt-out/returning workers clear unfinished foraging.
+- One queen-tended recovery brood bypasses normal brood/housing limits so full,
+  hungry larvae cannot block recovery. It receives priority care and counts in
+  population; normal egg limits still apply. The hatched small worker collects
+  sugar automatically and retains normal small-worker efficiency/upkeep/aging.
+- Added a compact red starvation warning with sugar deficit. Recovery controls
+  show costs; longer explanations stay under details.
+- Verified: development and production builds; 211 engine tests (8 new recovery
+  tests); recovery browser checks at 320/390/1920px including manual/automatic,
+  paused larvae, full capacity, reserves, opt-out, persistence and layout.
+- Existing staged-brood UI regression also passes at 320/390/1920px.
+  Balance timings remain adjustable. No new prestige/content direction added.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

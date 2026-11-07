@@ -857,6 +857,12 @@ object MainForm {
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
         h5("Brood"),
+        child.maybe <-- sugarSignal.combineWith(TickCalculator.sugarTickGain.sum).map { case (sugar, net) =>
+          Option.when(net < 0L && sugar.amount < -net) {
+            div(className := "starvation-warning text-danger small mb-2",
+              b("Colony is starving"), s" · Sugar deficit: ${resourceRateStr(-net * TicksPerSecond)}/s")
+          }
+        },
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
           detailsTag(
             className := "colony-aging mb-2",
@@ -887,6 +893,20 @@ object MainForm {
         child.maybe <-- antsSignal.map(_.eggOrders > 0).distinct.map { queued => Option.when(queued) {
           button(className := "btn btn-outline-secondary mb-2", typ := "button", minHeight.px := 44, "Cancel egg orders",
             onClick --> (_ => Actions.cancelEggOrders()))
+        } },
+        child.maybe <-- antsSignal.map(EmergencyRecovery.needed).distinct.map { needed => Option.when(needed) {
+          div(className := "emergency-recovery row mb-2",
+            div(className := "small mb-2", "No workers remain. The queen can rear one small worker without protein.",
+              detailsTag(summaryTag("Recovery details"), p("The founding queen survives starvation. She can tend one emergency brood even when normal brood places or housing are full. Existing brood and research are kept. Queen's Routine gathers protected supplies for this one egg when enabled with a positive target; your sugar reserve is kept."))),
+            actionButton(
+              name = "Raise Emergency Worker",
+              enabledSignal = antsSignal.combineWith(sugarSignal).map { case (ants, sugar) => EmergencyRecovery.canRaise(ants, sugar.amount) },
+              descriptionSignal = Val(Some(div("One small worker · about 15s development · 50% task output. Automatically collects sugar. Gather Sugar remains available."))),
+              costSignal = Val(ActionCost(sugar = EmergencyRecovery.EggCost)),
+              bonusSignal = Val(ActionBonus(eggs = u)),
+              onClickAction = _ => Actions.raiseEmergencyWorker(),
+            ),
+          )
         } },
         actionAmountControl("brood-action-amount"),
         div(

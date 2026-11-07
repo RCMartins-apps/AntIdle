@@ -24,6 +24,7 @@ case class AntsData(
     eggOrders: Int = 0,
     layingCooldown: Long = 0L,
     broodCursor: Int = 0,
+    emergencyForagingTicks: Long = 0L,
 ) {
 
   lazy val idleWorkersCount: Long =
