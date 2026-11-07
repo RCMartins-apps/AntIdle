@@ -1,26 +1,27 @@
 # Handoff
 
-## Last verified: 2026-11-07 — emergency colony recovery
+## Last verified: 2026-11-07 — preserve staffing through aging
 
-- Branch `feature/emergency-colony-recovery` starts from merged main `86d7203`
-  (PR #40, founding workers and staged brood).
-- Implemented approved D17: after all workers are lost, the queen can rear one
-  emergency small worker for 5 sugar without protein, preserving research and
-  existing brood/orders. Gather Sugar remains available; the founding queen
-  survives starvation. Workers away still prevent emergency eligibility.
-- Queen's Routine must be unlocked, enabled and have a positive target for
-  unattended recovery. It uses 5 sugar above the reserve, or gathers protected
-  provisions over 25 simulated seconds. They fund only this egg, not storage.
-  Saved progress resumes; opt-out/returning workers clear unfinished foraging.
-- One queen-tended recovery brood bypasses normal brood/housing limits so full,
-  hungry larvae cannot block recovery. It receives priority care and counts in
-  population; normal egg limits still apply. The hatched small worker collects
-  sugar automatically and retains normal small-worker efficiency/upkeep/aging.
-- Added a compact red starvation warning with sugar deficit. Recovery controls
-  show costs; longer explanations stay under details.
-- Verified: development and production builds; 211 engine tests (8 new recovery
-  tests); recovery browser checks at 320/390/1920px including manual/automatic,
-  paused larvae, full capacity, reserves, opt-out, persistence and layout.
-- Existing staged-brood UI regression also passes at 320/390/1920px.
-  Balance timings remain adjustable. No new prestige/content direction added.
+- Branch `fix/aging-job-replacement` starts from merged main `6a23158` (PR #41).
+- Fixed reverse task-list depletion after Queen's Routine is unlocked. Home
+  aging uses idle/default workers first, preserving other staffed jobs whenever
+  the pool can cover losses. Cohort expiry and actual population losses remain.
+- If the pool is exhausted, save aging-specific job vacancies and refill them
+  as workers mature, return or become free. This maintenance is part of the
+  Queen's Routine unlock, independent of its automatic-egg toggle. Idle workers
+  are used when no default is selected. Standard workers can fill aging small
+  worker jobs; spare small collectors can fill supported jobs. Shared caps apply.
+- Never borrow busy expedition/carrier/territory crews or reset expiry ticks.
+  Starvation/combat do not create aging replacement requests. Job edits cancel
+  that role's pending request; changing the default drops its quota. Trail
+  recall/depletion cancels trail requests. A compact conditional list and Cancel
+  replacements button appear under Queen's Routine only while jobs are waiting.
+- Verified: 221 engine tests (10 new staffing tests), development and production
+  builds; new browser regression at 320/390/1920px covers default pool, saved
+  vacancies, actual nurse replacement through automatic brood, cancellation,
+  small-to-standard job replacement and layout. Existing lifecycle browser
+  regression also passes at 320/390/1920px. Final builds and all 221 tests pass.
+- Existing saved assignments with jobs already emptied cannot be reconstructed;
+  this preserves staffing against future aging losses. Old saves default to no
+  pending requests. README and D18 document the behavior.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

@@ -50,7 +50,8 @@ object BroodProgression {
     Math.min(Math.max(0L, room), (normal * 2L + small) * 50L)
   }
 
-  def assignSmall(data: AllData, task: AntTask, delta: Long): AllData = {
+  def assignSmall(initial: AllData, task: AntTask, delta: Long): AllData = {
+    val data = AgingJobReplacement.cancel(initial, task)
     val a = data.ants
     val current = task match {
       case AntTask.Tunneler => a.smallTunnelers

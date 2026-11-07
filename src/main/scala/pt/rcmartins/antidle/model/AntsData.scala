@@ -25,6 +25,7 @@ case class AntsData(
     layingCooldown: Long = 0L,
     broodCursor: Int = 0,
     emergencyForagingTicks: Long = 0L,
+    agingJobVacancies: Seq[(AntTask, Long)] = Seq.empty,
 ) {
 
   lazy val idleWorkersCount: Long =

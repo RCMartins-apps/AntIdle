@@ -23,7 +23,8 @@ object DefaultWorkerAssignment {
     if (!data.upgrades(UpgradeType.DefaultWorkers).unlocked) data
     else normalize(data.modify(_.ants).using(_.withDefaultTask(task)))
 
-  def assign(data: AllData, task: AntTask, amount: Long): AllData = {
+  def assign(initial: AllData, task: AntTask, amount: Long): AllData = {
+    val data = AgingJobReplacement.cancel(initial, task)
     val small = if (task == AntTask.Scavenger) data.ants.smallScavengers else if (task == AntTask.BroodNurse) data.ants.smallNurses else 0L
     val room = Math.max(0L, capacity(task, data.nestAttributes) - small - data.ants.taskWorkers(task))
     normalize(data.modify(_.ants).using(_.addToTask(task, Math.max(0L, Math.min(amount, room)))))
@@ -47,6 +48,6 @@ object DefaultWorkerAssignment {
       capped.modify(_.ants).using(_.assignIdleToDefault)
     else if (capped.ants.defaultTask.nonEmpty) capped.modify(_.ants.defaultTask).setTo(None)
     else capped
-    clamp(assigned)
+    clamp(AgingJobReplacement.refill(clamp(assigned)))
   }
 }
