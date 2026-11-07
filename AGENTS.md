@@ -31,6 +31,7 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
   `Construction.scala`, `PopulationAging.scala`, `AutomaticBrood.scala`: mechanics.
 - `game/BroodProgression.scala`: founding/standard brood, ordered laying, feeding, nurses and small-worker jobs.
   Fresh `AntsData.initial` starts small; missing legacy caste fields retain standard workers.
+  Scout orders store worker-order counts ahead of them for compact shared FIFO; `ScoutProgression` handles acceptance versus actual laying.
 - `game/AgingJobReplacement.scala`: saved old-age job vacancies, pool refill and manual cancellation.
 - `game/EmergencyRecovery.scala`: one-worker recovery after collapse and protected queen provisions.
 - `game/Prestige.scala`: founding resets, DNA purchases and inherited production.

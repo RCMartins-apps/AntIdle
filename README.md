@@ -79,7 +79,8 @@ as its shared ant capacity bonus. Returning parties reserve a slot when sent;
 new discoveries can wait outside even when storage is full.
 
 The Nursery costs 3 protein plus tunneling space. It unlocks scout eggs costing
-50 sugar and 2 protein, maturing in 30 seconds. A scout can guide a 45-second
+50 sugar and 2 protein when laid, developing in about 90 seconds at full base
+care with another 20 sugar and 2 protein in larval feeding. A scout can guide a 45-second
 woodland expedition that discovers a larger carcass. Nearby expeditions take
 15 seconds; the first guarantees a carcass, while later ones can find carcasses,
 sugar, or nothing. Scouts on expeditions and workers on retrievals remain part
@@ -104,8 +105,9 @@ and phone/desktop layouts.
 
 Workers, scouts, and growing brood share one ant capacity, including ants away on
 expeditions. Nest, Queen, and Nursery upgrades increase that shared limit. The
-Nursery unlocks scout eggs without imposing a separate scout limit. Egg capacity
-still limits how many eggs can incubate at once. Save format 6 stores this as `maxAnts`; older save formats are no longer supported.
+Nursery unlocks scout eggs without imposing a separate scout limit. Brood capacity
+limits eggs, larvae and pupae together; pending worker/scout orders reserve
+future colony housing. Save format 6 stores this as `maxAnts`; older save formats are no longer supported.
 
 ## Exploration progression
 
@@ -297,9 +299,9 @@ compact route summary shows the sugar return; costs stay visible on the action.
 Rewards obey normal storage caps, and in-flight expeditions survive save reload.
 
 Reinforced Mandibles updates task descriptions, resource income estimates and
-actual tick production together. Brood Care affects existing eggs as well as new
-ones: workers grow in 8 seconds and scouts in 24 seconds. Egg countdowns use the
-same calculation as maturation. Both upgrades are permanent and saved.
+actual tick production together. Brood Care raises care throughput for existing
+and new developing brood by 25% when supplied; legacy already-laid eggs retain
+their earlier growth model. Both upgrades are permanent and saved.
 
 Run `sbt fastOptJS fullOptJS test`, then `python3 tests/colony_smoke.py` to verify
 hidden content, purchase costs, tunneling production, maturation times, meadow
@@ -910,6 +912,25 @@ future housing space; sugar is charged only as each egg is actually laid.
 The visible cost is the queued batch's current egg price. Orders can be
 cancelled without a refund because unlaid eggs have not been paid for. If
 supplies or space later run short, orders wait rather than disappearing.
+
+**Raise Scout Egg** also accepts an order while the queen is laying or brood
+places are full. Scouts and manual worker batches share FIFO order: later clicks
+never overtake earlier orders. If the queen is ready and no earlier order exists,
+the scout egg is laid immediately. Otherwise its **50 sugar and 2 protein** are
+charged when it is laid, not when queued. The status shows pending worker/scout
+counts and missing supplies. Cancel egg orders clears both types of unpaid orders
+without removing developing brood.
+
+Queued scouts reserve future housing alongside worker orders, including for
+royal-brood purchases. Queen's Routine waits for manual orders rather than laying
+automatic workers ahead of an unfunded scout; scouts do not count toward its
+worker target. Queue state survives saves, and old worker-only queues remain
+valid. Internally each queued scout stores the count of worker orders ahead of
+it, preserving FIFO without expanding large worker batches into per-egg records.
+
+`python3 tests/scout_queue_smoke.py` covers the busy-queen case, mixed FIFO,
+costs, persistence, missing supplies, cancellation, full brood places and housing
+on phone and desktop. `ScoutQueueSuite` covers these rules in the engine.
 
 The queen lays one egg at a time, with base intervals of **5 simulated seconds
 for small workers** and **20 seconds for standard workers**. Queen chamber

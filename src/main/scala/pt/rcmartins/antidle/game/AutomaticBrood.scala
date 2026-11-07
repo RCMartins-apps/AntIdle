@@ -19,6 +19,7 @@ object AutomaticBrood {
       else EmergencyRecovery.status(ants)
     }
     else if (ants.totalWorkers / u + BroodProgression.incoming(ants) + ants.eggOrders >= routine.targetWorkers) "Target covered"
+    else if (ants.queuedEggs > 0) "Waiting for manual egg orders"
     else if (ants.populationCount >= nest.maxAntsCount) "Population limit reached"
     else if (ants.eggsAndLarvae.size >= BroodProgression.capacity(nest)) "Brood places full"
     else if (sugar - routine.sugarReserve < BroodProgression.eggCost(ants)) "Keeping sugar reserve"
@@ -31,7 +32,7 @@ object AutomaticBrood {
     val routine = data.ants.queenRoutine
     val covered = data.ants.totalWorkers / u + BroodProgression.incoming(data.ants) + data.ants.eggOrders
     if (EmergencyRecovery.needed(data.ants) || EmergencyRecovery.broodCount(data.ants) > 0 && data.ants.totalWorkers == 0L) data
-    else if (!data.upgrades(QueensRoutine).unlocked || !routine.enabled || !data.unlocks.actions.canLayEggs || covered >= routine.targetWorkers) data
+    else if (!data.upgrades(QueensRoutine).unlocked || !routine.enabled || !data.unlocks.actions.canLayEggs || covered >= routine.targetWorkers || data.ants.queuedEggs > 0) data
     else BroodProgression.lay(data, routine.sugarReserve)
   }
 }

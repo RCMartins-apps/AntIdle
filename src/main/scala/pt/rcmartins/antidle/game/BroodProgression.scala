@@ -19,12 +19,12 @@ object BroodProgression {
   }
   def orderAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int =
     Math.max(0L, Math.min(Math.max(0, requested).toLong,
-      Math.min(nest.maxAntsCount.toLong - ants.populationCount - ants.eggOrders, sugar / eggCost(ants)))).toInt
+      Math.min(nest.maxAntsCount.toLong - ants.populationCount - ants.queuedEggs, sugar / eggCost(ants)))).toInt
   def order(data: AllData, requested: Int): AllData = {
     val amount = orderAmount(data.ants, data.nestAttributes, data.basicResources.sugar.amount, requested)
     data.copy(ants = data.ants.copy(eggOrders = data.ants.eggOrders + amount))
   }
-  def cancel(data: AllData): AllData = data.copy(ants = data.ants.copy(eggOrders = 0))
+  def cancel(data: AllData): AllData = data.copy(ants = data.ants.copy(eggOrders = 0, scoutEggOrders = Seq.empty))
   def canLay(ants: AntsData, nest: NestAttributes, sugar: Long, reserve: Long = 0L): Boolean =
     ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < capacity(nest) &&
       ants.populationCount < nest.maxAntsCount && sugar - reserve >= eggCost(ants)
@@ -37,11 +37,16 @@ object BroodProgression {
       statistics = data.statistics.copy(eggsCount = data.statistics.eggsCount.addValue(1L)))
   }
   def layOrdered(data: AllData): AllData = {
-    if (data.ants.eggOrders <= 0) data
+    if (data.ants.scoutEggOrders.headOption.contains(0)) {
+      val laid = ScoutProgression.lay(data)
+      if (laid.ants.eggsAndLarvae.size == data.ants.eggsAndLarvae.size) laid
+      else laid.copy(ants = laid.ants.copy(scoutEggOrders = laid.ants.scoutEggOrders.tail))
+    } else if (data.ants.eggOrders <= 0) data
     else {
       val laid = lay(data)
       if (laid.ants.eggsAndLarvae.size == data.ants.eggsAndLarvae.size) laid
-      else laid.copy(ants = laid.ants.copy(eggOrders = laid.ants.eggOrders - 1))
+      else laid.copy(ants = laid.ants.copy(eggOrders = laid.ants.eggOrders - 1,
+        scoutEggOrders = laid.ants.scoutEggOrders.map(ahead => Math.max(0, ahead - 1))))
     }
   }
   def scavenged(ants: AntsData, room: Long): Long = {
@@ -84,7 +89,8 @@ object BroodProgression {
     val nurses = Math.min(Math.max(0L, a.smallNurses), Math.min(a.smallWorkers - tunnelers - scavengers,
       Math.max(0L, initial.nestAttributes.chambers.nurseryChamber.level.toLong * 5L * u - a.taskWorkers(AntTask.BroodNurse))))
     val ants = a.copy(standardWorkersUnlocked = standard, smallTunnelers = tunnelers, smallScavengers = scavengers,
-      smallNurses = nurses, layingCooldown = Math.max(0L, a.layingCooldown), eggOrders = Math.max(0, a.eggOrders))
+      smallNurses = nurses, layingCooldown = Math.max(0L, a.layingCooldown), eggOrders = Math.max(0, a.eggOrders),
+      scoutEggOrders = a.scoutEggOrders.map(ahead => Math.max(0, Math.min(ahead, Math.max(0, a.eggOrders)))).sorted)
     val unlocked = if (standard) ants.unlockTask(AntTask.Scavenger) else ants
     val nursed = if (initial.nestAttributes.chambers.nurseryChamber.level > 0) unlocked.unlockTask(AntTask.BroodNurse) else unlocked
     val working = if (a.totalWorkers > 0L) nursed.unlockTask(AntTask.SugarCollector) else nursed
@@ -166,9 +172,14 @@ object BroodProgression {
     val feedingResources = projected.spendResources(royal.cost)
     val emergency = EmergencyRecovery.broodCount(ants)
     val extra = if (emergency > 0) " · 1 queen-tended recovery brood" else ""
-    val queue = s"${ants.eggOrders} eggs ordered · ${ants.eggsAndLarvae.size - emergency}/${capacity(nest)} brood places$extra"
-    val waiting = if (ants.eggOrders > 0 && resources.sugar.amount < eggCost(ants)) "Needs sugar"
-      else if (ants.eggOrders > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"
+    val orders = if (ants.scoutEggOrders.isEmpty) s"${ants.eggOrders} eggs ordered"
+      else s"${ants.eggOrders} worker · ${ants.scoutEggOrders.size} scout eggs ordered"
+    val nextScout = ants.scoutEggOrders.headOption.contains(0)
+    val nextCost = if (nextScout) ScoutProgression.eggCost else ActionCost(sugar = eggCost(ants))
+    val queue = s"$orders · ${ants.eggsAndLarvae.size - emergency}/${capacity(nest)} brood places$extra"
+    val waiting = if (ants.queuedEggs > 0 && resources.sugar.amount < nextCost.sugar) "Needs sugar"
+      else if (nextScout && resources.protein.amount < nextCost.protein) "Needs protein for scout egg"
+      else if (ants.queuedEggs > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"
       else if (ants.layingCooldown > 0L) s"Next egg in ${UINumbersUtils.prettyTimeFromTicks(ants.layingCooldown)}"
       else "Queen ready"
     val larvae = ants.eggsAndLarvae.collect { case b: AntBrood.Developing if b.isLarvae && !b.small => b }
