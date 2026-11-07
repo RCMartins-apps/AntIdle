@@ -6,7 +6,8 @@ This is a replaceable snapshot. Verify it against Git and PR state on resuming.
 
 - `origin/main` at `70642c5` contains merged Royal Nursery/resin PR #35.
 - Branch `feature/royal-brood-rearing` implements the next prestige foundation.
-  It is pushed; no PR was requested or created for this task.
+  It is pushed with [PR #36](https://github.com/RCMartins-apps/AntIdle/pull/36)
+  open against `main`. Merging remains the owner's decision.
 - Standing branch/push/checkpoint instructions remain in AGENTS.md.
 
 ## Completed work
