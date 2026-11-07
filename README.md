@@ -628,9 +628,52 @@ arrive, and charges all costs only on completion. Duplicate royal plans and
 construction after the first nursery are rejected. Loading repairs stale costs
 and removes invalid or duplicate royal plans without spending resources.
 
-The completed nursery shows **1 royal brood slot prepared**. It creates no ants,
-eggs, extra colony housing or prestige rewards. Nurse jobs and daughter-queen
-rearing are the next stage, as agreed; this step prepares their physical chamber.
+Building the nursery unlocks **Royal Nurse** in Tasks and **Raise Royal Egg**
+in Nest. It does not add ordinary egg slots or colony housing.
+
+### Raising a daughter queen
+
+Royal Nurses are assigned from ordinary workers, with a maximum of five. They
+keep normal sugar upkeep and aging, and can be selected as the default task;
+excess workers stay idle when its five slots are filled. Expeditions can borrow
+from that default pool, reducing royal care until nurses return.
+
+Raise Royal Egg costs **500 sugar, 50 protein and 20 water**. It requires a
+built nursery, at least one assigned Royal Nurse and one free colony housing
+slot. It reserves that housing slot throughout rearing; ordinary egg slots are
+independent. One royal brood or mature daughter occupies the nursery.
+
+| Stage | Time with five nurses | Sugar/s per nurse | Protein/s per nurse | Water/s per nurse |
+| --- | ---: | ---: | ---: | ---: |
+| Royal egg | 1 minute | 0 | 0 | 0.01 |
+| Royal larva | 8 minutes | 0.5 | 0.05 | 0.01 |
+| Royal pupa | 1 minute | 0 | 0 | 0.01 |
+
+Rearing uses **1,200 sugar, 120 protein and 30 water** beyond the starting cost
+and normal nurse upkeep. The total is the same with fewer nurses, but care
+takes proportionally longer: one nurse needs 50 simulated minutes. Feeding is
+charged only for care actually performed, including partial supplies and the
+last tick of each stage. Existing Brood Care research changes ordinary worker/
+scout development, not this royal timeline. Stored-time multipliers advance
+royal care with the rest of the simulation.
+
+Nest displays the current stage, overall progress, staffing, stage feeding rates
+and estimated remaining time with supplied care. Missing nurses, sugar, protein
+or water show the relevant reason; partial supplies slow care. **Pause care**
+stops feeding and preserves progress, with a saved **Resume care** control.
+Nurses remain ordinary workers with upkeep while care is paused or no brood
+exists. Adult upkeep is charged first, then royal care, then automatic worker
+eggs; fresh sugar production can feed royal brood directly even at full storage.
+Resource rate estimates include actual affordable care.
+
+Maturation replaces the brood reservation with a **daughter queen**, counts it
+in population, updates royal egg/maturation statistics and announces completion
+once. Its resource row remains visible after unlocking, including at zero. A
+daughter consumes normal adult sugar upkeep; it does not use worker aging
+cohorts, but can starve after other home adult ants. It remains in the nursery
+until a future founding feature uses it. This step grants no Understanding and
+does not reset or create a colony; the first permanent reward and reset rules
+still need design.
 
 Old saves default to zero resin, an unbuilt royal nursery and unowned planning
 research. Current saves retain material, discovery, queued costs, the completed
@@ -638,3 +681,10 @@ chamber and resource visibility without granting anything twice. Run
 `sbt fastOptJS fullOptJS test`, then `python3 tests/royal_nursery_smoke.py` for
 hidden gates, surveys, gathering, statistics, costs, queue waits, completion,
 old/current saves and phone/desktop layouts.
+
+Royal brood uses additive save fields: older saves default to no royal brood,
+no daughters and zero royal statistics. A completed nursery restores its nurse
+task on load without assigning workers. Progress, manual pause, nurses and
+mature daughters survive reload without repeating maturation rewards. Run
+`python3 tests/royal_brood_smoke.py` after `sbt fastOptJS` for phone/desktop
+staffing, costs, stages, rates, shortages, pause/reload and completion checks.

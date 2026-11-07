@@ -31,9 +31,10 @@ On 2026-11-07 the owner clarified two forms of prestige:
 
 The owner also endorsed raising daughter queens as a development direction,
 including opportunities for new chambers and job types. Royal Nursery and resin
-construction are subsequently approved in D11; specific nurse rules, rearing
-recipes and queen-rearing costs remain undecided. Define the
-first rearing/founding loop and reset matrix before implementing prestige.
+construction are subsequently approved in D11. D12 records the next implemented
+step: Royal Nurses and daughter rearing, with current balance documented in
+README. Define the first Understanding, founding loop and reset matrix before
+implementing prestige.
 Challenge rewards' relationship to Understandings and the interaction between
 normal and challenge foundings remain open design questions.
 
@@ -168,3 +169,20 @@ The nursery prepares one royal brood slot. Building it does not rear a queen,
 reset the colony, grant an Understanding or choose challenge rules. Those remain
 separate design/implementation steps. Costs, storage shortages and queue waits
 must handle resin explicitly, and its resource row stays visible after unlock.
+
+## D12: Raise the daughter queen before adding founding — 2026-11-07
+
+After merging the nursery foundation, the owner asked to start the next work
+toward prestige. This step implements ordinary Royal Nurse workers and royal
+egg/larva/pupa rearing in the existing nursery. First Understandings, founding,
+the reset matrix and challenge rules are still unchosen and remain separate.
+
+Current implementation balance: up to five nurses; ten simulated minutes with
+full staffing; water throughout and extra sugar/protein during the larval stage.
+Shortages, missing nurses or manual pause preserve development without charging
+unperformed care. Nurses retain normal upkeep, aging and default-task behavior.
+A royal egg reserves one common housing slot; its mature daughter replaces that
+reservation and occupies the royal slot. Daughters have normal sugar upkeep and
+can starve after other home ants, but do not use worker aging cohorts. A mature
+daughter grants no permanent bonus and does not trigger a reset. These quantities
+are balance choices, not a finalized prestige contract.
