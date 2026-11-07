@@ -29,6 +29,8 @@ object ChamberBonuses {
         ActionBonus(aphidSlots = 1)
       case ChamberType.Nursery =>
         ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
+      case ChamberType.RoyalNursery =>
+        ActionBonus(royalBroodSlots = 1)
     }
 
   def reconcileProteinCapacity(data: AllData): AllData =
@@ -50,6 +52,8 @@ object ChamberBonuses {
         allData.modify(_.nestAttributes.chambers.aphidChamber.level).using(_ + 1)
       case ChamberType.Nursery =>
         allData.modify(_.nestAttributes.chambers.nurseryChamber.level).using(_ + 1)
+      case ChamberType.RoyalNursery =>
+        allData.modify(_.nestAttributes.chambers.royalNurseryChamber.level).setTo(1)
     }
 
     val bonus = forChamber(chamberType, allData.upgrades)

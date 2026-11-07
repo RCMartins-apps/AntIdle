@@ -10,6 +10,7 @@ case class AllChamberData(
     nurseryChamber: NurseryChamber = NurseryChamber(0),
     aphidChamber: AphidChamber = AphidChamber(0),
     repleteChamber: RepleteChamber = RepleteChamber(0),
+    royalNurseryChamber: RoyalNurseryChamber = RoyalNurseryChamber(0),
 )
 
 object AllChamberData {

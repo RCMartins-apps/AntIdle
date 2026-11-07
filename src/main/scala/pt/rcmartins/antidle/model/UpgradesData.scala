@@ -211,6 +211,16 @@ object UpgradesData {
       val description: String = "Specialize workers in husking and processing gathered seeds. Seed Foragers yield 50% more protein: 0.06 protein/s each."
     }
 
+    case object RoyalNurseryPlanning extends UpgradeType {
+      def shouldShow(data: AllData): Boolean = data.nestAttributes.chambers.nurseryChamber.level > 0 &&
+        pt.rcmartins.antidle.game.DiscoveryProgression.ResinSeep.found(data.exploration) &&
+        pt.rcmartins.antidle.game.ExplorationProgression.level(data.exploration.experience) >= 8
+      val name: String = "RoyalNurseryPlanning"
+      val title: String = "Royal Nursery Planning"
+      val cost: ActionCost = ActionCost(sugar = 5000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u)
+      val description: String = "Plan a protected, resin-lined chamber for royal brood. Unlocks Royal Nursery construction."
+    }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -234,6 +244,7 @@ object UpgradesData {
       RepleteStorage,
       CoveredTrails,
       SeedProcessing,
+      RoyalNurseryPlanning,
     )
 
   }

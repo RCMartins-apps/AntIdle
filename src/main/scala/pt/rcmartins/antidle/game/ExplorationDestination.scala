@@ -18,6 +18,7 @@ sealed abstract class ExplorationDestination(
     val proteinReward: Long = 0L,
     val requiredDiscovery: Option[String] = None,
     val waterReward: Long = 0L,
+    val resinReward: Long = 0L,
 ) {
   def isUnlocked(data: ExplorationData, ants: AntsData, nest: NestAttributes): Boolean =
     ExplorationProgression.level(data.experience) >= requiredLevel &&
@@ -47,7 +48,14 @@ object ExplorationDestination {
     "scavenge-water", "Scavenge Water", 90L * TicksPerSecond, 30L, 25L, 6, 5L * u, u, 0,
     knowledge = 5L * u, requiredDiscovery = Some("dew-plants"), waterReward = 20L * u)
 
-  lazy val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow, SeedGathering, DryClearing, ScavengeWater)
+  case object FallenPine extends ExplorationDestination(
+    "fallen-pine", "Fallen Pine", 120L * TicksPerSecond, 80L, 30L, 7, 10L * u, u, 0,
+    knowledge = 30L * u)
+  case object CollectResin extends ExplorationDestination(
+    "collect-resin", "Collect Resin", 120L * TicksPerSecond, 50L, 35L, 7, 10L * u, 2L * u, 0,
+    knowledge = 10L * u, requiredDiscovery = Some("resin-seep"), resinReward = 5L * u)
+
+  lazy val all: List[ExplorationDestination] = List(Surroundings, WoodlandEdge, RottenLog, NectarMeadow, SeedGathering, DryClearing, ScavengeWater, FallenPine, CollectResin)
 
   def forParty(party: ExplorationParty): ExplorationDestination =
     all.find(_.id == party.destination).getOrElse(Surroundings)

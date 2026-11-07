@@ -153,3 +153,17 @@ with a capped workforce and water-dependent research for sheltered routes and
 seed processing. These are current-colony expansions and research, not inherited
 Understandings. Existing outposts begin at level 1 when the saved extension count
 is absent; loading preserves paid housing rather than granting it again.
+
+## D11: Royal Nursery foundation and resin — approved scope, 2026-11-07
+
+The owner approved starting with material collection and the Royal Nursery
+chamber, leaving nurse jobs and daughter-queen rearing for the next step. They
+selected resin collected from woodland sources as the first building material.
+Use it to make advanced construction require a distinct supply and hauling path;
+existing early chambers keep their costs. Exact quantities and gates are current
+implementation balance choices rather than settled prestige rules.
+
+The nursery prepares one royal brood slot. Building it does not rear a queen,
+reset the colony, grant an Understanding or choose challenge rules. Those remain
+separate design/implementation steps. Costs, storage shortages and queue waits
+must handle resin explicitly, and its resource row stays visible after unlock.

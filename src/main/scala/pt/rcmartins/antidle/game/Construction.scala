@@ -14,9 +14,10 @@ object Construction {
     case ChamberType.Nursery => chambers.nurseryChamber.level
     case ChamberType.Aphid => chambers.aphidChamber.level
     case ChamberType.Replete => chambers.repleteChamber.level
+    case ChamberType.RoyalNursery => chambers.royalNurseryChamber.level
   }
 
-  def cost(kind: ChamberType, level: Int): ActionCost = ActionCost(
+  def cost(kind: ChamberType, level: Int): ActionCost = if (kind == ChamberType.RoyalNursery) RoyalNurseryProgression.buildCost else ActionCost(
     tunnelingSpace = getChamberTunnelingSpaceNeeded(kind, level),
     protein = if (kind == ChamberType.Nursery) NurseryProteinCost * (level + 1L)
       else if (kind == ChamberType.Aphid) 2L * u * (level + 1L)
@@ -26,12 +27,20 @@ object Construction {
   def nextCost(nest: NestAttributes, kind: ChamberType): ActionCost =
     cost(kind, level(nest.chambers, kind) + nest.buildQueue.count(_.chamberType == kind))
 
+  def canEnqueue(nest: NestAttributes, upgrades: UpgradesData, kind: ChamberType): Boolean =
+    nest.buildQueue.size < nest.maxBuildQueue &&
+      (kind != ChamberType.RoyalNursery || RoyalNurseryProgression.canPlan(nest, upgrades))
+
   def reconcile(data: AllData): AllData = {
     val nest = data.nestAttributes
     val (_, queue) = nest.buildQueue.foldLeft((Map.empty[ChamberType, Int], List.empty[BuildTask])) {
       case ((planned, queue), task) =>
         val count = planned.getOrElse(task.chamberType, 0)
-        (planned.updated(task.chamberType, count + 1),
+        val allowed = task.chamberType != ChamberType.RoyalNursery ||
+          (data.upgrades(pt.rcmartins.antidle.model.UpgradesData.UpgradeType.RoyalNurseryPlanning).unlocked &&
+            nest.chambers.royalNurseryChamber.level == 0 && count == 0)
+        if (!allowed) (planned, queue)
+        else (planned.updated(task.chamberType, count + 1),
           queue :+ task.copy(actionCost = cost(task.chamberType, level(nest.chambers, task.chamberType) + count)))
     }
     data.modify(_.nestAttributes).using(_.copy(buildQueue = queue,
@@ -40,7 +49,7 @@ object Construction {
 
   def enqueue(data: AllData, kind: ChamberType): AllData = {
     val ready = reconcile(data)
-    if (ready.nestAttributes.buildQueue.size >= ready.nestAttributes.maxBuildQueue) ready
+    if (!canEnqueue(ready.nestAttributes, ready.upgrades, kind)) ready
     else reconcile(ready.modify(_.nestAttributes.buildQueue).using(_ :+ BuildTask(kind, nextCost(ready.nestAttributes, kind))))
   }
 

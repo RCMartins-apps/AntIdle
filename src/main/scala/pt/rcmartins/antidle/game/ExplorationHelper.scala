@@ -58,7 +58,11 @@ object ExplorationHelper {
       val reward = ExplorationProgression.expeditionReward(destination.waterReward, experience, workers, rank)
       s" · ${UINumbersUtils.prettyNumberStr(reward)} water"
     } else ""
-    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein$water"
+    val resin = if (destination.resinReward > 0L) {
+      val reward = ExplorationProgression.expeditionReward(destination.resinReward, experience, workers, rank)
+      s" · ${UINumbersUtils.prettyNumberStr(reward)} resin"
+    } else ""
+    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein$water$resin"
   }
 
   def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String = {
@@ -69,7 +73,9 @@ object ExplorationHelper {
     val experience = ExplorationProgression.addExperience(data.experience, xp)
     def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
       ExplorationProgression.expeditionReward(base, experience, workers, rank))
-    val result = if (destination.waterReward > 0L)
+    val result = if (destination.resinReward > 0L)
+      "Resin guaranteed; stored up to resin capacity"
+    else if (destination.waterReward > 0L)
       "Water guaranteed; stored up to water capacity"
     else if (destination.proteinReward > 0L)
       "Protein guaranteed; no carcass storage needed"
@@ -110,7 +116,11 @@ object ExplorationHelper {
       .giveResources(knowledge = knowledge)
     val report = s"${destination.name}: +$xp XP · +${UINumbersUtils.prettyNumberStr(knowledge)} knowledge."
 
-    val rewarded = if (destination.waterReward > 0L) {
+    val rewarded = if (destination.resinReward > 0L) {
+      val resin = ExplorationProgression.expeditionReward(destination.resinReward, experience, party.amountWorkers, party.suppliesLevel)
+      val collected = Math.min(resin, returned.basicResources.resin.freeSpace)
+      returned.giveResources(resin = resin).addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} resin!")
+    } else if (destination.waterReward > 0L) {
       val water = ExplorationProgression.expeditionReward(destination.waterReward, experience, party.amountWorkers, party.suppliesLevel)
       val collected = Math.min(water, returned.basicResources.water.freeSpace)
       returned.giveResources(water = water).addMessage(s"$report Collected ${UINumbersUtils.prettyNumberStr(collected)} water!")
