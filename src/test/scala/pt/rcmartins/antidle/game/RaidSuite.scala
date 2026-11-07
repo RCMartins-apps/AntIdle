@@ -146,8 +146,24 @@ class RaidSuite extends FunSuite {
     assertEquals(RaidProgression.overdue(ants.ages.workers, 10L, 700L), 5L)
     val warning = RaidProgression.ageWarning(ants, 100L, 10 * u, 0)
     assert(warning.contains("5 workers"))
-    assert(warning.contains("1 scouts"))
+    assert(warning.contains("1 scout"))
     assertEquals(RaidProgression.ageWarning(colony.ants, 100L, 10 * u, 0), "")
+  }
+
+  test("actual return tick resolves casualties once and Queen's Routine replaces lost workers") {
+    val prepared = colony.copy(ants = colony.ants.copy(queenRoutine = QueenRoutine(true, 40, 0L)),
+      nestAttributes = colony.nestAttributes.copy(maxEggs = 5 * u, maxAnts = 100 * u),
+      upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.QueensRoutine),
+      unlocks = colony.unlocks.copy(actions = colony.unlocks.actions.copy(canLayEggs = true)))
+    val sent = start(prepared)
+    val party = sent.exploration.explorationParties.head
+    val returned = TickUpdater.updateAllData(sent.copy(world = sent.world.copy(currentTick = party.targetTick - 1L)), None)
+    val losses = party.raidOutcome.get.workerLosses
+    assertEquals(returned.ants.workers, (40L - losses) * u)
+    assertEquals(returned.ants.eggsAndLarvae.size, losses)
+    assertEquals(returned.statistics.raidDeaths.thisRun, losses)
+    assertEquals(TickUpdater.updateAllData(returned, None).statistics.raidDeaths.thisRun, losses)
+    assertEquals(TickUpdater.updateAllData(loaded(returned), None).statistics.raidDeaths.thisRun, losses)
   }
 
 }

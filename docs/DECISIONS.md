@@ -224,7 +224,7 @@ default pool and frees the scout. Trail workers and guides age and consume
 normal upkeep. No strength meter or recurring maintenance clicking is added.
 These quantities are implementation balance choices, not future content promises.
 
-## D14: Voluntary danger can cause substantial losses — approved direction
+## D14: Voluntary danger can cause substantial losses — first raid implemented
 
 The owner wants dangerous actions where ants can die to create meaningful
 population pressure before adding further brood-care Understandings. Large

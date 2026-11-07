@@ -33,8 +33,8 @@ object RaidProgression {
     val returning = tick + ExplorationProgression.duration(ExplorationDestination.RivalFoodCache, extraScouts)
     val dueWorkers = overdue(ants.ages.workers, workers / u, returning)
     val dueScouts = overdue(ants.ages.scouts, 1L + extraScouts, returning)
-    val warnings = List(Option.when(dueWorkers > 0L)(s"$dueWorkers workers"),
-      Option.when(dueScouts > 0L)(s"$dueScouts scouts")).flatten
+    val warnings = List(Option.when(dueWorkers > 0L)(s"$dueWorkers worker${if (dueWorkers == 1L) "" else "s"}"),
+      Option.when(dueScouts > 0L)(s"$dueScouts scout${if (dueScouts == 1L) "" else "s"}")).flatten
     if (warnings.isEmpty) "" else "Age on return: " + warnings.mkString(" · ") + ". May overlap combat losses."
   }
 

@@ -31,7 +31,7 @@ and create longer-term goals without burying the player in explanations.
 Voluntary dangerous actions may cause substantial ant losses when the risk is
 clear before committing. Players should decide whether the reward is worth
 replacing workers; existing automatic egg production supports recovery. Build
-meaningful population pressure before further brood-care progression. Specific
+meaningful population pressure before further brood-care progression. This
 danger is introduced through the optional Rival Food Cache raid. Oldest home
 workers depart first, but combat casualties are random within their party.
 Exact balance remains adjustable; safe expeditions remain available.
