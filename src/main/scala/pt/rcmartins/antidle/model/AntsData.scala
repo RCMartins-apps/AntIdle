@@ -15,6 +15,7 @@ case class AntsData(
     queenRoutine: QueenRoutine = QueenRoutine(),
     royalBrood: Option[RoyalBrood] = None,
     daughterQueens: Long = 0L,
+    lineage: Lineage = Lineage(),
 ) {
 
   lazy val idleWorkersCount: Long =

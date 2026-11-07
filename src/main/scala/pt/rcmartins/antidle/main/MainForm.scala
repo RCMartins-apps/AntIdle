@@ -824,6 +824,7 @@ object MainForm {
 
     div(
       className := "row",
+      prestigeDiv,
       actionButton(
         name = GatherSugarAction,
         enabledSignal = Val(true),
@@ -1028,6 +1029,94 @@ object MainForm {
       ),
     )
   }
+
+  private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = div(
+    className := "col-12 lineage-section",
+    child.maybe <-- antsSignal.map(a => a.daughterQueens > 0L || a.lineage.foundings > 0).distinct.map {
+      visible => Option.when(visible) {
+        div(className := "border rounded p-2 my-2",
+          h5("Queen's lineage"),
+          div(child.text <-- antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1L} · DNA: ${a.lineage.dna} · +${a.lineage.foundings.toLong * 10L}% sugar production")),
+          child.maybe <-- antsSignal.map(_.lineage).distinct.map { lineage =>
+            Option.when(lineage.foundings > 0 && !lineage.sharedPaths) {
+              div(className := "understanding-shared-paths mt-2",
+                b("Understanding: Shared Paths"),
+                p(className := "small mb-1", "Mark nectar sources found through exploration and assign trail workers."),
+                div(className := "small", "Cost: 1 DNA"),
+                button(className := "btn btn-primary mt-1", minHeight.px := 44, typ := "button",
+                  "Learn Shared Paths", disabled := (lineage.dna < 1L),
+                  onClick --> (_ => Actions.purchaseSharedPaths())),
+              )
+            }
+          },
+          child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
+            Option.when(known)(div(className := "small mt-1", "Shared Paths inherited · trails become available with exploration."))),
+          child.maybe <-- antsSignal.map(_.daughterQueens >= u).distinct.map { ready => Option.when(ready) {
+            detailsTag(className := "founding-preview mt-2",
+              summaryTag(minHeight.px := 44, "Review founding"),
+              p(className := "small my-2", "Found with your daughter queen: +1 DNA and +10% sugar production, added to your inherited bonus."),
+              p(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
+              p(className := "small", "Reset: resources, ants and brood, chambers, research, exploration levels, discoveries, trails, queues and task assignments."),
+              button(className := "btn btn-primary", minHeight.px := 44, typ := "button", "Found daughter colony",
+                onClick --> { _ =>
+                  if (window.confirm("Found a new colony? Colony resources, ants, chambers, research and exploration will reset. DNA, Understandings, lifetime statistics, settings and stored time are kept. Gain 1 DNA and +10% sugar production."))
+                    Actions.foundDaughterColony()
+                }),
+            )
+          } },
+        )
+      }
+    },
+  )
+
+  private def pheromoneTrailDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = div(
+    className := "col-12 pheromone-trails",
+    child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map { known => Option.when(known) {
+      val trailSignal = explorationSignal.map(_.sugarTrail).distinct
+      val workersSignal = antsSignal.map(a => PheromoneTrails.workers(a) / u).distinct
+      div(className := "border rounded p-2 my-2",
+        h5("Pheromone trail"),
+        child <-- trailSignal.map(t => if (t.remaining <= 0L) 0 else if (t.marked) 2 else 1).distinct.map {
+          case 0 => div(className := "small", child.text <-- explorationSignal.map(e =>
+            if (ExplorationProgression.level(e.experience) >= 4) "Explore Nectar Meadow to find a sugar source."
+            else "Explore to discover a nectar source."))
+          case 1 => div(className := "row",
+            div(className := "small", child.text <-- trailSignal.map(t => s"Nectar source · ${prettyNumberStr(t.remaining)} sugar remaining")),
+            actionButton(
+              name = "Mark trail", costSignal = Val(PheromoneTrails.markCost), bonusSignal = Val(ActionBonus.empty),
+              descriptionSignal = Val(Some(div("Reserves one scout. Up to ten workers follow the trail; recall releases them."))),
+              enabledSignal = antsSignal.combineWith(explorationSignal, resourcesSignal).map { case (ants, exploration, resources) =>
+                resources.hasResources(PheromoneTrails.markCost) && ScoutProgression.available(ants, exploration) >= u
+              },
+              requirementsSignal = antsSignal.combineWith(explorationSignal).map { case (ants, exploration) =>
+                List(ActionRequirement("scouts", ScoutProgression.available(ants, exploration), isCost = true))
+              },
+              onClickAction = _ => Actions.markSugarTrail(),
+            ),
+          )
+          case _ => div(
+            div(className := "small", child.text <-- trailSignal.map(t => s"${prettyNumberStr(t.remaining)} sugar remaining · 1 scout guiding")),
+            div(className := "small trail-production", child.text <-- antsSignal.combineWith(explorationSignal, resourcesSignal).map {
+              case (ants, exploration, resources) =>
+                val rate = PheromoneTrails.production(ants, exploration, resources) * TicksPerSecond
+                if (resources.sugar.atCapacity) "Sugar full · gathering paused"
+                else s"+${resourceRateStr(rate)} sugar/s"
+            }),
+            div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
+              button(className := "btn btn-outline-primary", minHeight.px := 44, typ := "button", "−", aria.label := "Remove trail worker",
+                disabled <-- workersSignal.map(_ <= 0L), onClick --> (_ => Actions.assignTrailWorkers(-u))),
+              span(child.text <-- workersSignal.map(n => s"$n/10 workers")),
+              button(className := "btn btn-outline-primary", minHeight.px := 44, typ := "button", "+", aria.label := "Assign trail worker",
+                disabled <-- workersSignal.combineWith(availableWorkersCountSignal).map { case (n, available) => n >= 10L || available < u },
+                onClick --> (_ => Actions.assignTrailWorkers(u))),
+              button(className := "btn btn-outline-secondary", minHeight.px := 44, typ := "button", "Recall trail",
+                onClick --> (_ => Actions.recallSugarTrail())),
+            ),
+          )
+        },
+      )
+    } },
+  )
 
   private def royalRearingDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val broodSignal = antsSignal.map(_.royalBrood).distinct
@@ -1332,14 +1421,14 @@ object MainForm {
       antTask match {
         case AntTask.SugarCollector =>
           div(
-            child.text <-- amountSignal.combineWith(upgradesSignal).map { case (amount, upgrades) =>
+            child.text <-- amountSignal.combineWith(upgradesSignal, antsSignal).map { case (amount, upgrades, ants) =>
               val count = amount / u
-              s"${preciseRateStr(Foraging.averagePerSecond(count, upgrades))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades))}"
+              s"${preciseRateStr(Foraging.averagePerSecond(count, upgrades, ants.lineage))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades, ants.lineage))}"
             },
           )
         case AntTask.AphidTender =>
           div(
-            "0.8 sugar/s · −0.01 protein/s per tender",
+            child.text <-- antsSignal.map(a => s"${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s per tender"),
             br(),
             child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) =>
               Option.when(protein.amount == 0L && amount > 0L)(span(className := "text-danger", "Needs protein"))
@@ -1363,6 +1452,8 @@ object MainForm {
               else Option.when(resources.water.amount == 0L)(span(className := "text-danger", "Needs water"))
             },
           )
+        case AntTask.TrailForager =>
+          div("Following a nectar trail. Manage workers in Explore.")
         case AntTask.RoyalNurse =>
           div("Tends royal brood. Feeding costs and progress are shown in Nest.")
         case AntTask.CarcassCarrier =>
@@ -1543,6 +1634,7 @@ object MainForm {
 
     div(
       className := "row",
+      pheromoneTrailDiv,
       div(
         className := "col-12 px-3 py-2",
         label(forId := "explorer-count", "Workers"),

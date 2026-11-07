@@ -44,6 +44,12 @@ object AntTask {
     val name: String = "Seed Forager"
   }
 
+  case object TrailForager extends AntTask {
+    val uiOrder: Int = 7
+    val name: String = "Trail Forager"
+    override val showButtons: Boolean = false
+  }
+
   case object RoyalNurse extends AntTask {
     val uiOrder: Int = 6
     val name: String = "Royal Nurse"

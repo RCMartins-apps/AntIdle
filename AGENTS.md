@@ -28,6 +28,8 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/Constants.scala`, `game/ChamberBonuses.scala`: shared balance values and chamber effects.
 - `game/*Progression.scala`, `Foraging.scala`, `AphidHusbandry.scala`,
   `Construction.scala`, `PopulationAging.scala`, `AutomaticBrood.scala`: mechanics.
+- `game/Prestige.scala`: founding resets, DNA purchases and inherited production.
+- `game/PheromoneTrails.scala`: finite nectar sources, guide reservations and trail workers.
 - `game/UpgradeVisibility.scala`, `ResourceVisibility.scala`: visibility reconciliation.
 - `game/saves/`: serialization, restoration and load-time reconciliation.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.

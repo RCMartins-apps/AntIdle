@@ -39,6 +39,8 @@ small expansion and research path; additional locations remain future work.
 
 **Understandings** is the reserved player-facing term for the most powerful
 unlocks: they persist between prestiges and belong to the queen's lineage.
+DNA is the prestige currency used to purchase them; Knowledge remains colony
+research currency.
 
 The agreed foundation is generational inheritance through queens. A young queen
 carries the previous generation's Understandings into a new colony. The owner
@@ -63,19 +65,28 @@ Raising a daughter queen is an approved direction for connecting generations.
 The owner likes the opportunities this creates for new chambers and worker
 jobs. The approved first foundation is woodland resin collection and Royal
 Nursery construction, preparing one royal brood slot. Royal Nurses and sustained
-daughter-queen rearing are now implemented as the next step before founding.
+daughter-queen rearing are implemented, with founding following in the first
+prestige loop.
 Keep the distinction between expanding the present colony through satellite
 outposts and founding a new generation through a daughter queen.
 
-The first Understanding, its effects, acquisition requirements, reset contents
-and founding population have not been chosen. The exact prestige action name
-has not been chosen either. How challenge rewards interact with Understandings,
+The first roughly three or four prestiges should introduce mechanics in a
+mostly linear sequence so players learn colony management gradually. Afterwards,
+shorter and longer runs should offer meaningful choices in DNA accumulation.
+Remaining introductory rewards, exact count and later DNA scaling remain undecided.
+
+The first implemented Understanding is Shared Paths, opening finite nectar
+trails managed with workers and a guiding scout. Founding gives an automatic
++10% sugar production per completed prestige, stacked additively; DNA buys
+Understandings separately. The new colony starts with the normal initial queen
+and no workers. The reset preview lists what is lost and inherited. The founding
+action is called Found daughter colony. How challenge rewards interact with Understandings,
 whether normal and challenge foundings can be combined, and how completion or
 abandonment works also need design before implementation.
 
 ## Possibilities, not commitments
 
-First Understandings and founding follow daughter-queen rearing. Beyond the
+Further Understandings and challenge colonies follow the first founding loop. Beyond the
 royal brood humidity and feeding implemented in that step, wider humidity,
 pheromone routes, carrying capacity, waste management, injuries and chemical
 records remain suggestions rather than an approved backlog. The existing Brood

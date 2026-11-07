@@ -11,13 +11,15 @@ Use believable colony needs and adaptations to create gameplay choices. Balance
 and clarity take precedence over exhaustive realism. Uplifting provides room
 for the colony to grow beyond natural ant behavior. See [VISION.md](VISION.md).
 
-## D2: Understandings are inherited prestige unlocks — approved, not implemented
+## D2: Understandings are inherited prestige unlocks — first loop implemented
 
 Reserve **Understandings** for the most powerful permanent unlocks, inherited
 through queens across prestiges. A young queen transfers the preceding
 generation's Understandings into a new colony. Knowledge remains a separate
-research resource. Prestige rewards and the exact reset matrix are undecided;
-do not turn illustrative Understanding names or bonuses from chat into rules.
+research resource. DNA is the prestige currency used to purchase inherited
+Understandings (owner decision, 2026-11-07). D13 records the first implemented
+reward and reset matrix; later rewards and challenges remain undecided. Do not
+turn illustrative Understanding names or bonuses from chat into rules.
 Existing descriptions calling research "permanent" mean saved ownership today,
 not an agreed promise of persistence across future prestige resets.
 
@@ -33,8 +35,7 @@ The owner also endorsed raising daughter queens as a development direction,
 including opportunities for new chambers and job types. Royal Nursery and resin
 construction are subsequently approved in D11. D12 records the next implemented
 step: Royal Nurses and daughter rearing, with current balance documented in
-README. Define the first Understanding, founding loop and reset matrix before
-implementing prestige.
+README. The first Understanding and founding loop follow in D13.
 Challenge rewards' relationship to Understandings and the interaction between
 normal and challenge foundings remain open design questions.
 
@@ -174,8 +175,9 @@ must handle resin explicitly, and its resource row stays visible after unlock.
 
 After merging the nursery foundation, the owner asked to start the next work
 toward prestige. This step implements ordinary Royal Nurse workers and royal
-egg/larva/pupa rearing in the existing nursery. First Understandings, founding,
-the reset matrix and challenge rules are still unchosen and remain separate.
+egg/larva/pupa rearing in the existing nursery. At this stage, founding and
+Understandings were separate work; D13 now records their first implementation.
+Challenge rules remain unchosen.
 
 Current implementation balance: up to five nurses; ten simulated minutes with
 full staffing; water throughout and extra sugar/protein during the larval stage.
@@ -186,3 +188,38 @@ reservation and occupies the royal slot. Daughters have normal sugar upkeep and
 can starve after other home ants, but do not use worker aging cohorts. A mature
 daughter grants no permanent bonus and does not trigger a reset. These quantities
 are balance choices, not a finalized prestige contract.
+
+## D13: DNA funds Understandings — approved direction, 2026-11-07
+
+The owner approved starting the prestige system after merging royal brood
+rearing and selected DNA as the prestige currency for purchasing Understandings.
+DNA is distinct from colony Knowledge and ordinary resources.
+
+The owner refined the direction: the first roughly three or four prestiges
+should be mostly linear, introducing new mechanics and meaningful colony
+management gradually. Later, players choose shorter or longer runs for different
+DNA earnings. The remaining introductory mechanics, exact count and later earning formula
+are not chosen. This replaces the earlier proposed immediate three-way shop;
+only Shared Paths is offered by the first implementation below.
+
+The owner approved implementing the first prestige with Shared Paths and an
+automatic +10% sugar-production bonus per founding, stacked additively. Apply
+the bonus to collectors, aphids and trail production; keep consumption, aging,
+prices, manual sugar gathering and expedition rewards unchanged. DNA purchases
+Understandings; the production bonus is automatic and costs no DNA.
+
+Current first implementation balance: founding with a mature daughter awards
+1 DNA; Shared Paths costs 1 DNA once. The reset preview explicitly lists colony
+resources, ants/brood, chambers, research, exploration/discoveries, trails, queues
+and assignments as reset. Retain DNA, Understandings, lifetime statistics,
+resource visibility, settings and banked time. Exact future introductory rewards
+and scaling DNA remain future work. This implements only the first mechanic.
+
+Shared Paths reveals finite nectar sources from Nectar Meadow returns after
+exploration is unlocked. One trail at a time; marking costs 50 sugar and
+reserves one scout. Up to ten ordinary workers gather from 1,200 sugar supply
+at base 0.8 sugar/s each, including the inherited production bonus in speed.
+Full storage pauses collection; recall/depletion returns workers to their
+default pool and frees the scout. Trail workers and guides age and consume
+normal upkeep. No strength meter or recurring maintenance clicking is added.
+These quantities are implementation balance choices, not future content promises.

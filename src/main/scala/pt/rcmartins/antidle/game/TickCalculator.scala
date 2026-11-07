@@ -98,6 +98,8 @@ object TickCalculator {
                 .filter(_ => upgrades(ImproveSugarCollectorTask2).unlocked),
               Some(PercentOrigin(ImproveSugarCollectorTask3.title, SugarImprovementBonusPerc))
                 .filter(_ => upgrades(ImproveSugarCollectorTask3).unlocked),
+              Some(PercentOrigin("Inherited production", 1.0 + ants.lineage.foundings * 0.1)).filter(_ => ants.lineage.foundings > 0),
+              Some(ResourceOrigin("Pheromone trail", PheromoneTrails.production(ants, exploration, resources))).filter(_.tickResourceU > 0),
               Some(ResourceOrigin("Aphid Tenders", AphidHusbandry.productionPerTick(ants, nest, upgrades, resources.protein.amount)))
                 .filter(_.tickResourceU > 0),
               Some(
@@ -243,9 +245,9 @@ object TickCalculator {
                 case ResourceOrigin(_, _) =>
                   s"0/sec"
                 case PercentOrigin(_, percent) if percent > 0 =>
-                  f"+${percent - 1.0}%.2f%%"
+                  f"+${(percent - 1.0) * 100.0}%.2f%%"
                 case PercentOrigin(_, percent) if percent < 0 =>
-                  f"${percent - 1.0}%.2f%%"
+                  f"${(percent - 1.0) * 100.0}%.2f%%"
                 case PercentOrigin(_, _) =>
                   "0.00%"
               }

@@ -8,12 +8,15 @@ object ScoutProgression {
 
   val eggCost: ActionCost = ActionCost(sugar = ScoutSugarCost, protein = ScoutProteinCost)
 
-  def available(ants: AntsData, exploration: ExplorationData): Long =
+  def atHome(ants: AntsData, exploration: ExplorationData): Long =
     Math.max(0L, ants.scouts - exploration.explorationParties.map(_.scouts).sum)
+
+  def available(ants: AntsData, exploration: ExplorationData): Long =
+    Math.max(0L, atHome(ants, exploration) - PheromoneTrails.guides(ants, exploration))
 
   // Like expedition workers, scouts away from the nest do not consume colony food.
   def upkeepCount(ants: AntsData, exploration: ExplorationData): Long =
-    ants.upkeepWorkersCount - (ants.scouts - available(ants, exploration)) / u
+    ants.upkeepWorkersCount - exploration.explorationParties.map(_.scouts).sum / u
 
   def canRaise(allData: AllData): Boolean =
     canRaise(allData.ants, allData.nestAttributes, allData.basicResources)

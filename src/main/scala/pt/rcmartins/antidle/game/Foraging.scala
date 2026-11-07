@@ -1,7 +1,7 @@
 package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.game.Constants._
-import pt.rcmartins.antidle.model.UpgradesData
+import pt.rcmartins.antidle.model.{Lineage, UpgradesData}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 
 object Foraging {
@@ -21,19 +21,19 @@ object Foraging {
     count * defaultTaskCollectSugarTick - penaltyPerTick(upgrades) * count * (count - 1L) / 2L
   }
 
-  def productionPerTick(collectors: Long, upgrades: UpgradesData): Long =
-    techniques.filter(upgrades(_).unlocked).foldLeft(basePerTick(collectors, upgrades)) { (amount, _) =>
+  def productionPerTick(collectors: Long, upgrades: UpgradesData, lineage: Lineage = Lineage()): Long =
+    Prestige.sugar(techniques.filter(upgrades(_).unlocked).foldLeft(basePerTick(collectors, upgrades)) { (amount, _) =>
       (BigDecimal(amount) * BigDecimal.decimal(SugarImprovementBonusPerc)).toLong
-    }
+    }, lineage)
 
-  def averagePerSecond(collectors: Long, upgrades: UpgradesData): Long = {
+  def averagePerSecond(collectors: Long, upgrades: UpgradesData, lineage: Lineage = Lineage()): Long = {
     val count = Math.max(1L, collectors)
-    productionPerTick(count, upgrades) * TicksPerSecond / count
+    productionPerTick(count, upgrades, lineage) * TicksPerSecond / count
   }
 
-  def nextPerSecond(collectors: Long, upgrades: UpgradesData): Long = {
+  def nextPerSecond(collectors: Long, upgrades: UpgradesData, lineage: Lineage = Lineage()): Long = {
     val count = Math.max(0L, collectors)
     if (count >= productiveCollectors(upgrades)) 0L
-    else (productionPerTick(count + 1L, upgrades) - productionPerTick(count, upgrades)) * TicksPerSecond
+    else (productionPerTick(count + 1L, upgrades, lineage) - productionPerTick(count, upgrades, lineage)) * TicksPerSecond
   }
 }

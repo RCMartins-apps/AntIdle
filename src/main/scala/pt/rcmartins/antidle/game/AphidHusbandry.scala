@@ -17,5 +17,5 @@ object AphidHusbandry {
     Math.min(Math.max(0L, available), workers(ants, nest, upgrades) * ProteinPerWorkerSecond / TicksPerSecond)
 
   def productionPerTick(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData, protein: Long): Long =
-    proteinPerTick(ants, nest, upgrades, protein) * SugarPerWorkerSecond / ProteinPerWorkerSecond
+    Prestige.sugar(proteinPerTick(ants, nest, upgrades, protein) * SugarPerWorkerSecond / ProteinPerWorkerSecond, ants.lineage)
 }

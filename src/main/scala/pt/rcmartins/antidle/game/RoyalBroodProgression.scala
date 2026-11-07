@@ -55,12 +55,12 @@ object RoyalBroodProgression {
   // Unstored sugar production can feed brood directly, just as it feeds adult ants.
   def forecastResources(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
       exploration: ExplorationData, resources: BasicResources): BasicResources = {
-    val sugar = Foraging.productionPerTick(ants.taskWorkers(AntTask.SugarCollector) / u, upgrades) +
+    val sugar = Foraging.productionPerTick(ants.taskWorkers(AntTask.SugarCollector) / u, upgrades, ants.lineage) +
       AphidHusbandry.productionPerTick(ants, nest, upgrades, resources.protein.amount)
     val feeding = AphidHusbandry.proteinPerTick(ants, nest, upgrades, resources.protein.amount)
     val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, resources)
     val upkeep = ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick - CarcassProgression.foodOffset(exploration, ants)
-    resources.copy(sugar = resources.sugar.copy(amount = Math.max(0L, resources.sugar.amount + sugar - upkeep)),
+    resources.copy(sugar = resources.sugar.copy(amount = Math.max(0L, resources.sugar.amount + PheromoneTrails.production(ants, exploration, resources) + sugar - upkeep)),
       protein = (resources.protein - feeding) + harvest.protein, water = resources.water - harvest.water)
   }
 
