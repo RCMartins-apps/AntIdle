@@ -4,7 +4,8 @@
 
 - `origin/main` at `d86ccfc` contains merged raid PR #38.
 - Branch `feature/contested-territory` implements the owner-approved next step;
-  pushed, with no PR requested. D15 and README document rules and balance.
+  pushed with [PR #39](https://github.com/RCMartins-apps/AntIdle/pull/39) open
+  against `main`. D15 and README document rules and balance.
 - Temporary vulnerable food sources and soldier specialization were liked but
   explicitly deferred. They are saved in VISION/D15, not implemented here.
 
