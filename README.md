@@ -366,8 +366,9 @@ aging alongside other game systems when the player enables it.
 `PopulationAging` stores counts in ten-second expiration cohorts rather than
 one record per ant. Seeded random placement spreads a birth batch across the
 45–60 minute range; expiry ticks are assigned once and never rerolled on load.
-Idle workers die first, then assigned home workers; scouts
-age independently. Home deaths never remove expedition workers, carriers or
+Idle workers are used first. After Queen's Routine is unlocked, the selected
+default pool absorbs further home-worker aging losses before other jobs are
+reduced. Scouts age independently. Home deaths never remove expedition workers, carriers or
 reserved scouts. Expeditions and carcass retrievals carry their cohorts with
 them with unchanged expiry ticks. Aging continues while away, but deaths are
 deferred until return: overdue ants complete the trip and die immediately on
@@ -391,6 +392,22 @@ and brood places. Automation runs after upkeep/care, lays at most one egg when
 the queen is ready, respects its reserve and stops when the target is covered.
 Configuration is saved; a compact status explains when it is paused, limited by
 slots, holding reserves or already meeting the target.
+
+Buying Queen's Routine also maintains jobs after **old-age losses**, even while
+automatic egg laying is paused. Idle/default workers fill aging vacancies;
+when the pool runs out, missing jobs are remembered and filled as workers hatch
+or return. Standard workers can replace small workers in their jobs, respecting
+shared scraps/nurse capacities; spare small sugar collectors can fill their
+supported jobs too. Reassignment does not reset lifespans or create workers.
+Expedition/carrier/territory crews are never borrowed for this maintenance.
+Starvation and combat do not create these aging replacement requests.
+
+Pending jobs appear under Queen's Routine and survive save/reload. Editing a
+job cancels its outstanding aging request; **Cancel replacements** clears all
+pending requests. Making a job the default also removes its fixed replacement
+request. Recalled or depleted nectar trails discard their requests. Run
+`python3 tests/aging_jobs_smoke.py` for pool preservation, delayed nurse
+replacement, small-to-standard transitions, cancellation and phone/desktop UI.
 
 After `sbt fastOptJS fullOptJS test`, run `python3 tests/lifecycle_smoke.py` for
 phone and desktop checks of grace periods, actual deaths, replacement, travel

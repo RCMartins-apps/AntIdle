@@ -801,6 +801,13 @@ object MainForm {
     div(
       className := "queen-routine mb-3",
       h6("Queen's Routine"),
+      child.maybe <-- antsSignal.map(_.agingJobVacancies).distinct.map { vacancies => Option.when(vacancies.nonEmpty) {
+        div(className := "aging-job-replacements small mb-2",
+          span("Awaiting workers: " + vacancies.map { case (task, amount) => s"${amount / u} ${task.name}" }.mkString(" · ")),
+          button(className := "btn btn-outline-secondary btn-sm ms-2", typ := "button", minHeight.px := 44,
+            "Cancel replacements", onClick --> (_ => Actions.cancelAgingJobReplacements())),
+        )
+      } },
       label(
         input(
           idAttr := "queen-routine-enabled", typ := "checkbox", className := "form-check-input me-2",
@@ -886,7 +893,7 @@ object MainForm {
             }),
             p(child.text <-- upgradesSignal.map(upgrades =>
               s"New adults live ${PopulationAging.lifespanText(upgrades)} minutes of simulated time. Aging continues during expeditions and carcass retrievals. Overdue ants die on return. Stored-time multipliers advance aging with the colony.")),
-            p("Losses use idle workers first, then assigned workers. Deaths are summarized once per minute."),
+            p("After Queen's Routine is unlocked, aging draws from idle/default workers first and refills missing jobs as workers become available. Deaths are summarized once per minute."),
           )
         }),
         child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked)) {

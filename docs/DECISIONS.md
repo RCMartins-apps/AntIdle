@@ -346,6 +346,30 @@ prevent this safety net. This is opt-in automatic recovery, not free colony-wide
 production. A compact red starvation warning shows the current sugar deficit.
 
 
+## D18: Aging should preserve job staffing after Queen's Routine — approved
+
+The owner reported nurses, scraps gatherers and tunnelers being removed in
+reverse UI order as home age cohorts expired. Aging has shared caste cohorts,
+not job-specific ages; job list order must not drain specialized staffing while
+the default pool could replace it.
+
+After Queen's Routine is purchased, aging consumes idle/default workers first.
+Any remaining vacancies are recorded and refilled from the idle/default pool as
+workers become available, including newly matured/returning workers. This job
+maintenance belongs to the unlock; the automatic-egg checkbox only controls
+laying. With no selected default, idle workers are the replacement pool.
+Small-worker job losses can be filled by standard workers; spare small sugar
+collectors can fill supported jobs. Respect shared job caps and retain all
+survivors' expiry ticks. Do not create ants or borrow occupied travel/territory
+crews. Combat/starvation remain separate and do not create aging vacancies.
+
+Only aging vacancies are remembered, not arbitrary historical job targets.
+Save pending requests; show them compactly with a cancellation control. Explicit
+job edits cancel that job's pending request, changing a job to the default drops
+its quota, and recalling/depleting a nectar trail cancels its request. A fully
+staffed colony keeps the same UI. Existing saves default to no pending requests.
+
+
 ## D19: Visible resource full/empty estimates — approved
 
 The owner wants time to capacity or depletion visible below resource names,

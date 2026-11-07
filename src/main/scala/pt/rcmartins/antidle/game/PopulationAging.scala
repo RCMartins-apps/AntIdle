@@ -109,10 +109,13 @@ object PopulationAging {
     applyDeaths(data.modify(_.ants.ages).using(a => a.copy(
       workers = grouped(a.workers ++ ages.workers), scouts = grouped(a.scouts ++ ages.scouts))), summarize = false)
 
-  private def loseWorkers(ants: AntsData, requested: Long): AntsData = {
+  private def loseWorkers(ants: AntsData, requested: Long, replaceJobs: Boolean = false): AntsData = {
     val deaths = Math.min(requested, homeWorkers(ants))
     val deficit = Math.max(0L, deaths * u - Math.max(0L, ants.idleWorkersCount))
-    val (_, tasks) = ants.tasks.reverse.foldLeft((deficit, List.empty[(AntTask, Long)])) {
+    val pooled = if (replaceJobs) ants.effectiveDefaultTask.filter(_.agesAtHome) else None
+    val fromPool = Math.min(deficit, pooled.map(ants.taskWorkers).getOrElse(0L))
+    val remaining = ants.tasks.map { case (task, amount) => task -> (if (pooled.contains(task)) amount - fromPool else amount) }
+    val (_, tasks) = remaining.reverse.foldLeft((deficit - fromPool, List.empty[(AntTask, Long)])) {
       case ((needed, tasks), (task, amount)) =>
         val removed = if (task.agesAtHome) Math.min(needed, amount) else 0L
         (needed - removed, (task -> (amount - removed)) :: tasks)
@@ -149,11 +152,12 @@ object PopulationAging {
       val scoutLosses = deadScouts.map(_.count).sum
       val nextAges = ages.copy(smallWorkers = smallWorkers, workers = workers, scouts = scouts, repletes = repletes, pendingRepletes = ages.pendingRepletes + repleteLosses,
         pendingWorkers = ages.pendingWorkers + workerLosses + smallLosses, pendingScouts = ages.pendingScouts + scoutLosses)
-      val updated = RepleteProgression.reconcile(ready.modify(_.ants).using(a => loseSmall(loseWorkers(a, workerLosses), smallLosses)
+      val lossesApplied = RepleteProgression.reconcile(ready.modify(_.ants).using(a => loseSmall(loseWorkers(a, workerLosses, ready.upgrades(UpgradesData.UpgradeType.QueensRoutine).unlocked), smallLosses)
         .copy(scouts = a.scouts - scoutLosses * u, repletes = a.repletes - repleteLosses * u, ages = nextAges))
         .modify(_.statistics.workersLostToAging).using(_.addValue(workerLosses + smallLosses))
         .modify(_.statistics.scoutsLostToAging).using(_.addValue(scoutLosses))
         .modify(_.statistics.repletesLostToAging).using(_.addValue(repleteLosses)))
+      val updated = DefaultWorkerAssignment.normalize(AgingJobReplacement.record(ready.ants, lossesApplied))
       if (summarize && ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L || nextAges.pendingRepletes > 0L)) {
         val losses = List(Option.when(nextAges.pendingWorkers > 0L)(s"${nextAges.pendingWorkers} workers"),
           Option.when(nextAges.pendingScouts > 0L)(s"${nextAges.pendingScouts} scouts"),
