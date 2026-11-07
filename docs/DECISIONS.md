@@ -344,3 +344,16 @@ while a worker survives. Progress is saved; disabling automation or a worker
 returning clears unfinished emergency foraging. Existing brood/orders do not
 prevent this safety net. This is opt-in automatic recovery, not free colony-wide
 production. A compact red starvation warning shows the current sugar deficit.
+
+
+## D19: Visible resource full/empty estimates — approved
+
+The owner wants time to capacity or depletion visible below resource names,
+especially for food, using the existing two-line mobile resource rows. Show a
+compact approximate countdown at the current net resource rate, red when
+emptying, and Full when already at capacity. Hide stationary countdowns and
+full-capacity forecasts for unlimited resources. Estimates use simulated time
+and round up fractional ticks; they are not promises about future purchases,
+expedition deliveries or staffing changes. Use the same estimate in the income
+tooltip. On mobile put the rate below the numeric amount/capacity, alongside the
+name/estimate column, to avoid an extra full-width line.
