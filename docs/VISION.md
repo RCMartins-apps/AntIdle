@@ -69,6 +69,11 @@ daughter-queen rearing are now implemented as the next step before founding.
 Keep the distinction between expanding the present colony through satellite
 outposts and founding a new generation through a daughter queen.
 
+The first roughly three or four prestiges should introduce mechanics in a
+mostly linear sequence so players learn colony management gradually. Afterwards,
+shorter and longer runs should offer meaningful choices in DNA accumulation.
+Exact introductory rewards, count and DNA scaling remain undecided.
+
 The first Understanding, its effects, acquisition requirements, reset contents
 and founding population have not been chosen. The exact prestige action name
 has not been chosen either. How challenge rewards interact with Understandings,

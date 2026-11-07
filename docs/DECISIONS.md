@@ -194,10 +194,20 @@ The owner approved starting the prestige system after merging royal brood
 rearing and selected DNA as the prestige currency for purchasing Understandings.
 DNA is distinct from colony Knowledge and ordinary resources.
 
-Pending clarification: the first reset matrix, DNA earnings and first
-Understanding effects. Proposed starting design (not approved): one DNA for
-founding with a mature daughter; reset colony resources, population, chambers,
-research and exploration; retain DNA, Understandings, lifetime statistics and
-settings. Proposed first rewards are worker tasks unlocked at founding, +20%
-sugar production, or +25% housing, costing one DNA each. Do not treat these
-proposals as accepted until the owner responds. Challenge founding is separate.
+The owner refined the direction: the first roughly three or four prestiges
+should be mostly linear, introducing new mechanics and meaningful colony
+management gradually. Later, players choose shorter or longer runs for different
+DNA earnings. The exact introductory count, mechanics and earning formula are
+not chosen. This supersedes the earlier suggestion of an immediate three-way
+Understanding shop and fixed one-DNA reward; those were never approved.
+
+The reset/persistence matrix remains undecided. Earlier proposed rules reset
+colony resources, population, chambers, research and exploration while retaining
+DNA, Understandings, lifetime statistics and settings; this is still a proposal.
+Challenge founding remains a separate agreed direction, with details unchosen.
+
+Tentative introductory sequence for discussion: pheromone trail management,
+brood/nurse allocation, environmental management, then connected outpost
+logistics. These should add new decisions rather than merely rename existing
+Default Workers, Brood Care, repletes or Dry Clearing systems. Reveal only the
+next generation's reward in the player UI. Exact rewards require agreement.
