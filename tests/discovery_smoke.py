@@ -90,11 +90,9 @@ def check_discoveries(page, width, url):
     expect(page.get_by_role("button", name="Assign Aphid Tender", exact=True)).to_be_disabled()
     task = page.locator("#task-aphidtender")
     description = "0.8 sugar/s · −0.01 protein/s per tender"
-    if width <= 767:
-        expect(task.locator(".task-description")).to_have_text(description)
-    else:
-        task.hover()
-        expect(page.locator(".game-tooltip")).to_have_text(description)
+    task.get_by_label("About Aphid Tender", exact=True).click()
+    expect(task.locator(".task-description")).to_have_text(description)
+    task.get_by_label("About Aphid Tender", exact=True).click()
     expect(resource("Protein")).to_contain_text("-0.01/s")
     expect(resource("Sugar")).to_contain_text("-7.60/s")  # 40 workers + 2 scouts, one tender.
     before = save_game(page)

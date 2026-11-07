@@ -308,9 +308,9 @@ def run_checks(browser, url):
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
         page.get_by_role("tab", name="Nest", exact=True).click()
-        page.get_by_role("button", name="Raise Worker Egg", exact=False).hover()
-        expect(page.locator(".game-tooltip")).to_be_visible()
-        expect(page.locator(".game-tooltip")).to_contain_text("Order worker eggs")
+        page.get_by_label("Details for Raise Worker Egg", exact=True).click()
+        expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
+        page.get_by_label("Details for Raise Worker Egg", exact=True).click()
         page.set_viewport_size({"width": 390, "height": 844})
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
         expect(page.locator("details[open]")).to_contain_text("Order worker eggs")

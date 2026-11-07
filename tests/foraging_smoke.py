@@ -36,11 +36,9 @@ def check_foraging(page, width, url):
     def collector_description(text):
         page.get_by_role("tab", name="Tasks", exact=False).click()
         row = page.locator("#task-sugarcollector")
-        if width <= 767:
-            expect(row.locator(".task-description")).to_have_text(text)
-        else:
-            row.hover()
-            expect(page.locator(".game-tooltip")).to_have_text(text)
+        row.get_by_label("About Sugar Collector", exact=True).click()
+        expect(row.locator(".task-description")).to_have_text(text)
+        row.get_by_label("About Sugar Collector", exact=True).click()
 
     def sugar_row():
         return page.locator(".resource-row").filter(has=page.get_by_text("Sugar", exact=True))

@@ -129,7 +129,7 @@ Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destinat
 details include selected workers, supplies, and the level reached on return.
 Cards show duration, XP, and Knowledge, with live resource and worker costs beside
 the action. Reward odds and capacity requirements are available through mobile
-**info icons** and desktop tooltips. Locked destinations are
+**info icons** on phone and desktop. Locked destinations are
 hidden: scout routes appear after Nursery/scout training, and Rotten Log also
 requires level 3. Unlocked routes remain visible when scouts are away or resources
 are insufficient. Details omit already-satisfied unlock levels and focus on
@@ -333,7 +333,7 @@ rewards. Departures and unrelated destinations do not advance surveys.
   10 protein, 12 Knowledge and 60 XP, scaled by the existing expedition rules.
   Protein is guaranteed, obeys its storage cap and needs no carcass retrieval.
 
-Known discoveries stay listed in the Discoveries tab, with a short description of what each
+Known discoveries stay listed in the Discoveries tab, with optional [i] descriptions of what each
 unlocks. Survey counts default to empty for saves that do not contain them;
 existing XP does not automatically grant discoveries. Research restores the new
 task immediately, including on load.
@@ -1042,3 +1042,23 @@ in …**, rather than implying another egg has been ordered.
 `ActionFeedbackSuite` verifies shared reservations, queued-head laying, blocked
 status and construction reasons. `python3 tests/action_feedback_smoke.py` covers
 visible slot colors, full/duplicate plans, cancellation and phone/desktop layout.
+
+
+## Compact screens and [i] help
+
+Default screens focus on controls and live numbers: resource rates, task counts,
+prices, progress, shortages and expedition risk. Repeated descriptions such as
+small nurses providing half care are removed. Small-worker efficiency appears
+once in its heading; task output rates remain visible.
+
+Task and section **[i]** controls reveal useful explanations only when requested.
+This includes Brood/aging, Queen's Routine, default workers, royal care, territory,
+XP, carcass storage and individual discoveries. Action **[i]** details now work
+on desktop too. Native disclosures support touch, Enter/Space and visible focus,
+with 44px targets and inline panels that fit narrow screens. Action/task prose
+is no longer shown automatically on hover; resource-rate breakdown tooltips remain.
+
+Larval/royal material costs, live shortages, imminent aging warnings and dangerous
+expedition losses remain visible. No game balance, automation or save changes.
+`python3 tests/compact_ui_smoke.py` checks collapsed defaults, information controls,
+keyboard interaction, visible costs/rates/warnings and phone/desktop layout.

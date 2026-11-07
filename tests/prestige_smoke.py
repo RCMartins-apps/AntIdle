@@ -69,7 +69,7 @@ def check_prestige(page, width, url):
     page.clock.run_for(60000)
     expect(page.locator("#tasks-tab")).to_be_visible()
     page.locator("#tasks-tab").click()
-    expect(page.locator(".small-worker-tasks")).to_contain_text("50% efficiency")
+    expect(page.locator(".small-worker-tasks")).to_contain_text("Small workers · 50%")
     expect(page.locator(".small-collector-summary")).to_contain_text("0.22 sugar/s")
 
     if width == 1920:

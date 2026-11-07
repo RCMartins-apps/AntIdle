@@ -34,7 +34,7 @@ def check_brood(page, width, url):
     assert born["ants"]["workers"] == 0
     assert born["ants"]["ages"]["smallWorkers"][0]["expiresAt"] > born["world"]["currentTick"] + 29 * 300
     page.locator("#tasks-tab").click()
-    expect(page.locator(".small-worker-tasks")).to_contain_text("50% efficiency")
+    expect(page.locator(".small-worker-tasks")).to_contain_text("Small workers · 50%")
     expect(page.locator(".small-collector-summary")).to_contain_text("0.20 sugar/s")
     page.get_by_role("button", name="Assign small Tunneler", exact=True).click()
     page.clock.run_for(2000)

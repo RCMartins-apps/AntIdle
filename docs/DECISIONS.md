@@ -411,3 +411,21 @@ duplicate construction queues only while a button is blocked. Enqueue messages
 and eligibility come from the same check. No new costs, content, automation or
 save fields are introduced. An idle laying cooldown describes when the queen
 is ready, not an egg that has not been ordered.
+
+
+## D22: Much less default UI text, with explicit information controls — approved
+
+The owner identified phrases such as nurses providing half care as redundant
+clutter and asked for a broad reduction in text. Remove repeated explanations;
+put genuinely useful mechanics behind [i] buttons on phone and desktop. Keep
+costs, rates, counts, progress and relevant blocking/danger warnings visible.
+Do not turn hidden hover tutorials into visible paragraphs with future features.
+
+This pass covers tasks and small-worker jobs, brood/aging, Queen's Routine,
+default workers, royal care, territorial instructions, exploration XP, carcass
+storage and discovery descriptions. Native keyboard-operable disclosures expand
+in flow, with 44px information targets. Action details are available explicitly
+on desktop as well as mobile; action/task prose no longer appears on hover.
+Material care costs and danger disclosures remain direct, not hidden in help.
+Mechanics and saves are unchanged. Existing smoke checks should open [i] when
+asserting explanatory content rather than depending on old always-visible prose.

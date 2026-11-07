@@ -1,21 +1,21 @@
 # Handoff
 
-## Last verified: 2026-11-07 — action and queue feedback polish
+## Last verified: 2026-11-07 — compact UI text (checkpoint)
 
-- Branch `fix/action-queue-feedback` starts from merged main `6303814` (PR #44).
-- Fixed Royal Egg colony-slot feedback ignoring queued worker/scout reservations.
-  Worker/scout/royal acceptance and displayed slots share availableColonySlots;
-  actual queued-head laying still uses its reserved place normally.
-- Brood now reports Colony slots full when housing blocks actual laying. With
-  no pending eggs, cooldown says Queen ready in rather than promising a next egg.
-- Chamber actions show Build queue full / Already queued only when relevant.
-  Construction.blockedReason supplies both eligibility and visible text, including
-  duplicate Royal Nursery plans; cancelling a plan clears the feedback immediately.
-  Resource shortages still allow construction plans; costs remain visible.
-- Verified development/release builds and 238 engine tests (5 new feedback cases).
-  New action_feedback_smoke passes 320/390/1920px: full and duplicate plans,
-  cancellation, Royal Egg slot colors, housing blockage and cooldown wording.
-  Existing management browser regression also passes at 320/390/1920px, covering
-  construction costs/levels, waits, cancellation, completion and save/load.
-- README and D21 record behavior. No save, balance or progression changes.
-- Preserve unrelated untracked `work/` and `tests/__pycache__/`.
+- Branch `ui/compact-descriptions` starts from merged main `8183e32` (PR #45).
+- Owner requested much less UI prose, removing redundant text and putting useful
+  explanations behind [i]. D22 and AGENTS record this as a lasting UI rule.
+- Implemented reusable keyboard/touch [i] controls for tasks/sections and explicit
+  action details on desktop too. Removed duplicated nurse/worker explanations;
+  moved brood/aging, automation, default work, royal care, territory, XP, carcass
+  storage and discovery prose into collapsed help. Numeric rates/costs and live
+  shortages/danger remain visible. Inactive/zero aging summaries stay inside help.
+- Updated existing browser checks to open info controls instead of hovering prose;
+  added compact_ui_smoke covering collapsed text, live data, keyboard and layout.
+- Development and production builds pass; all 238 engine tests pass. New compact
+  browser test has passed at 320px; other widths, general responsive and existing
+  gameplay smoke checks are still running/not yet completed. This is a backup
+  checkpoint, not a final verification claim. The phone Tasks screenshot was
+  visually inspected after fixing the shared icon and shortening the small header.
+- No mechanics or save changes. Finish browser regressions and update this note
+  before final push/handoff. Preserve untracked `work/` and `tests/__pycache__/`.

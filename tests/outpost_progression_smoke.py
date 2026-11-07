@@ -137,11 +137,9 @@ def check_progression(page, width, url):
     page.get_by_role("tab", name="Tasks", exact=False).click()
     row = page.locator("#task-seedforager")
     expect(row).to_contain_text("15 / 15")
-    if width <= 767:
-        expect(row.locator(".task-description")).to_contain_text("0.06 protein/s · −0.015 water/s")
-    else:
-        row.hover()
-        expect(page.locator(".game-tooltip")).to_contain_text("0.06 protein/s · −0.015 water/s")
+    row.get_by_label("About Seed Forager", exact=True).click()
+    expect(row.locator(".task-description")).to_contain_text("0.06 protein/s · −0.015 water/s")
+    row.get_by_label("About Seed Forager", exact=True).click()
     assert_fits(page, width)
     dry = copy.deepcopy(active)
     dry["basicResources"]["water"]["amount"] = 0
