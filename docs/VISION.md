@@ -106,3 +106,10 @@ Deferred ideas the owner liked: temporary vulnerable food sources that reward
 fast replacements, and worker-to-soldier specialization trading ordinary labor
 for protection. Revisit after territorial contests; neither is implemented by
 that feature, and exact rules remain proposals.
+
+The owner approved redesigning brood around gradual laying, development-space
+limits, larval feeding and nurse throughput, with Queen's Routine using the same
+pipeline. A proposed small founding worker phase would keep the opening quick
+before an unlock switches future brood to ordinary workers. Exact caste rules,
+transition and balance are still being discussed; current brood mechanics have
+not yet been replaced. See D16 in DECISIONS.

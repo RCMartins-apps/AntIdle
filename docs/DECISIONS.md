@@ -288,3 +288,27 @@ automatic reclaim. Entry, potential haul rate, countdown, casualty range,
 storage and aging warnings are visible. Exact numbers are current balance
 choices, not a finalized economy. This is current-colony content, not a new
 Understanding or a challenge-prestige implementation.
+
+## D16: Brood pipeline redesign and small founding workers — design in progress
+
+The owner approved the direction of replacing instant egg batches with a
+rate-limited queen, brood capacity occupied through development, larval feeding
+and nurse-supported throughput. Queen's Routine should use the same pipeline.
+This is not implemented; opening pacing and mature-colony sustainability must
+be balanced together before replacing existing mechanics.
+
+To avoid making the opening wait several minutes, the owner proposed an initial
+small worker, with an unlock switching subsequent production to ordinary
+workers. This is the current proposed bridge to the longer development pipeline.
+Exact unlock, timings, feeding, productivity, upkeep, task restrictions and
+transition handling remain undecided. Earlier suggestions of founding reserves,
+three initial brood places, 20–30-second laying intervals and two-minute normal
+development are illustrative, not approved numeric rules.
+
+Recommended for discussion: model these as small founding workers (nanitics),
+leave existing adults small, and switch newly laid brood to ordinary workers
+after the unlock rather than instantly transforming adults or existing brood.
+Give small workers lower output/upkeep and reserve dangerous work for ordinary
+workers, so fast founding brood cannot replace the later throughput challenge.
+Whether small workers remain selectable is unchosen; avoid assuming a
+permanent fast-breeding alternative. These recommendations are not settled rules.
