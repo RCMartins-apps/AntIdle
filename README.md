@@ -978,3 +978,25 @@ clears unfinished foraging. Recovery stops once a worker survives. A red
 
 `python3 tests/recovery_smoke.py` checks manual and unattended recovery, visible
 costs, paused larvae/full beds, saved progress and mobile/desktop layout.
+
+
+## Resource capacity and depletion estimates
+
+The Resources panel shows **Full in ~…** below a resource name when its current
+net income is positive, or **Empty in ~…** in red while reserves are draining.
+Sugar, protein, water and tunnelling space use the same net rates as their
+income displays, including existing upkeep/feeding forecasts. At capacity the
+label reads **Full**; a draining full store still shows time to empty. Zero-rate
+countdowns are hidden, and unlimited Knowledge/population counters have no
+capacity forecast. Resin can show Full but has no continuous-income countdown.
+
+Times are approximate simulated time at the current net rate; later purchases,
+expedition deliveries and staffing changes can alter them. Fractional ticks
+round up rather than displaying a premature zero. Income tooltips share the
+same estimate. On phones the timer sits below the name, while the rate sits
+below amount/capacity on the right, keeping the compact two-line arrangement.
+
+After `sbt fastOptJS`, run `python3 tests/resource_timing_smoke.py` for filling,
+draining, full/steady stores, protein feeding, live countdowns and phone/tablet/
+desktop positioning. `ResourceTimingSuite` covers rounding, unlimited capacity,
+over-capacity stocks and large values.

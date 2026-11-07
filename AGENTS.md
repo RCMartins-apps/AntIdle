@@ -24,6 +24,7 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 
 - `model/`: immutable game state, costs, chambers, upgrades and statistics.
 - `game/TickUpdater.scala`: simulated game ticks and progression.
+- `game/TickCalculator.scala`, `ResourceTiming.scala`: net resource rates and visible full/empty estimates.
 - `game/Actions.scala`, `game/Utils.scala`: UI action dispatch and reactive state.
 - `game/Constants.scala`, `game/ChamberBonuses.scala`: shared balance values and chamber effects.
 - `game/*Progression.scala`, `Foraging.scala`, `AphidHusbandry.scala`,

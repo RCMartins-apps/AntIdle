@@ -1,27 +1,26 @@
 # Handoff
 
-## Last verified: 2026-11-07 — preserve staffing through aging
+## Last verified: 2026-11-07 — visible resource capacity timers
 
-- Branch `fix/aging-job-replacement` starts from merged main `6a23158` (PR #41).
-- Fixed reverse task-list depletion after Queen's Routine is unlocked. Home
-  aging uses idle/default workers first, preserving other staffed jobs whenever
-  the pool can cover losses. Cohort expiry and actual population losses remain.
-- If the pool is exhausted, save aging-specific job vacancies and refill them
-  as workers mature, return or become free. This maintenance is part of the
-  Queen's Routine unlock, independent of its automatic-egg toggle. Idle workers
-  are used when no default is selected. Standard workers can fill aging small
-  worker jobs; spare small collectors can fill supported jobs. Shared caps apply.
-- Never borrow busy expedition/carrier/territory crews or reset expiry ticks.
-  Starvation/combat do not create aging replacement requests. Job edits cancel
-  that role's pending request; changing the default drops its quota. Trail
-  recall/depletion cancels trail requests. A compact conditional list and Cancel
-  replacements button appear under Queen's Routine only while jobs are waiting.
-- Verified: 221 engine tests (10 new staffing tests), development and production
-  builds; new browser regression at 320/390/1920px covers default pool, saved
-  vacancies, actual nurse replacement through automatic brood, cancellation,
-  small-to-standard job replacement and layout. Existing lifecycle browser
-  regression also passes at 320/390/1920px. Final builds and all 221 tests pass.
-- Existing saved assignments with jobs already emptied cannot be reconstructed;
-  this preserves staffing against future aging losses. Old saves default to no
-  pending requests. README and D18 document the behavior.
+- Branch `feature/resource-capacity-timers`, PR #43, now includes merged main
+  `602ed3f` (PR #42). Both D18 aging staffing and D19 resource timers are retained.
+  Merge conflicts were confined to these context notes; source merged cleanly.
+- Added approximate Full in / Empty in labels below resource names. Depletion
+  is red; full stores say Full, including at zero net income. Draining full or
+  over-capacity stores show time to empty based on the actual stock.
+- Sugar, protein, water and tunnelling use the same net rates as the existing
+  income display; resin can show Full without inventing continuous income.
+  No stationary countdowns or unlimited/population capacity forecasts. Shared
+  ResourceTiming helper rounds up ticks and also supplies income tooltips.
+- On mobile the label/timer occupies the left column and amount/capacity/rate
+  occupy the right, keeping the compact two-line layout. Estimates use simulated
+  time at the current net rate, not predicted future actions or expedition hauls.
+- Verified `sbt fastOptJS fullOptJS test`: 225 passing engine tests after merging main, including
+  four new timer edge-case tests; Closure reports no errors/warnings. New
+  resource_timing_smoke passes at 320/390/844/1920px; existing browser_smoke
+  passes all widths from 320–1920px. Final font sizing was rechecked across the
+  four new-test widths; the 320px screenshot was visually inspected.
+- After merging main, both resource timing (320/390/844/1920px) and aging jobs
+  (320/390/1920px) browser checks were rerun and pass.
+- README and D19 record behavior. No save schema, economy or progression change.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

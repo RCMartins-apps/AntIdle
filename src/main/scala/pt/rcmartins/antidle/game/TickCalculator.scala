@@ -259,28 +259,8 @@ object TickCalculator {
       },
       hr(),
       child <-- resource.combineWith(sumSignal).map { case (resource, sumU) =>
-        div(
-          className := "d-flex justify-content-between",
-          if (sumU >= 0) "To Full: " else "To Empty: ",
-          span(
-            // TODO deal this small numbers in minutes
-            if (sumU > 0) {
-              val timeToFull: Long = resource.freeSpace / sumU
-              if (timeToFull == 0)
-                "0s"
-              else
-                s"${UINumbersUtils.prettyTimeFromTicks(timeToFull)}"
-            } else if (sumU < 0) {
-              val timeToEmpty: Long = resource.amount / -sumU
-              if (timeToEmpty == 0)
-                "0s"
-              else
-                s"${UINumbersUtils.prettyTimeFromTicks(timeToEmpty)}"
-            } else {
-              "Never"
-            }
-          )
-        )
+        val timing: String = ResourceTiming.estimate(resource, sumU).map(_.text).getOrElse("No capacity trend")
+        div(timing)
       },
     )
 

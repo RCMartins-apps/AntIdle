@@ -587,6 +587,7 @@ object MainForm {
         className := "card-body",
         child.maybe <-- createResourceDiv(
           name = "Sugar",
+          netRateSignal = Some(TickCalculator.sugarTickGain.sum),
           resourceSignal = sugarSignal,
           resourceEstimationSignal =
             Val(prettyResourceEstDiv(TickCalculator.sugarTickGain, sugarSignal)),
@@ -594,6 +595,7 @@ object MainForm {
         ),
         child.maybe <-- createResourceDiv(
           name = "Tunneling Space",
+          netRateSignal = Some(TickCalculator.tunnelingSpaceTickGain.sum),
           resourceSignal = tunnelingSpaceSignal,
           resourceEstimationSignal =
             Val(prettyResourceEstDiv(TickCalculator.tunnelingSpaceTickGain, tunnelingSpaceSignal)),
@@ -601,12 +603,14 @@ object MainForm {
         ),
         child.maybe <-- createResourceDiv(
           name = "Protein",
+          netRateSignal = Some(TickCalculator.proteinTickGain.sum),
           resourceSignal = proteinSignal,
           resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal)),
           showSignal = nurseryUnlockedSignal,
         ),
         child.maybe <-- createResourceDiv(
           name = "Water",
+          netRateSignal = Some(TickCalculator.waterTickGain.sum),
           resourceSignal = waterSignal,
           resourceEstimationSignal = Val(div(prettyResourceEstDiv(TickCalculator.waterTickGain, waterSignal),
             child.maybe <-- waterSignal.map(w => Option.when(w.amount > w.maxAmount)(
@@ -616,6 +620,7 @@ object MainForm {
         ),
         child.maybe <-- createResourceDiv(
           name = "Resin",
+          netRateSignal = Some(Val(0L)),
           resourceSignal = resinSignal,
           resourceEstimationSignal = Val(div("0/s")),
           showSignal = unlocksSignal.map(_.resources.showResin),
@@ -712,6 +717,7 @@ object MainForm {
       resourceEstimationSignal: Signal[ReactiveHtmlElement[HTMLDivElement]],
       showSignal: Signal[Boolean],
       tooltipOpt: Option[ReactiveHtmlElement[HTMLDivElement]] = None,
+      netRateSignal: Option[Signal[Long]] = None,
   ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] = {
     val amountSignal: Signal[Long] = resourceSignal.map(_.amount).distinct
     val maxAmountSignal: Signal[Long] = resourceSignal.map(_.maxAmount).distinct
@@ -732,6 +738,15 @@ object MainForm {
                   case Some(content) => detailsTag(summaryTag(resourceName), content)
                   case None => resourceName
                 }
+              },
+              netRateSignal.map { rate =>
+                div(className := "resource-timing", title := "Estimated simulated time at the current net rate.",
+                  child.maybe <-- resourceSignal.combineWith(rate).map { case (resource, net) =>
+                    ResourceTiming.estimate(resource, net).map { estimate =>
+                      span(className := (if (estimate.toEmpty) "text-danger" else "text-body-secondary"), estimate.text)
+                    }
+                  },
+                )
               },
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
