@@ -10,6 +10,8 @@ case class StatisticsData(
     proteinU: StatLong = StatLong(),
     waterU: StatLong = StatLong(),
     resinU: StatLong = StatLong(),
+    royalEggsRaised: StatInt = StatInt(),
+    daughterQueensMatured: StatInt = StatInt(),
     explorationsCompleted: StatInt = StatInt(),
     carcassesRetrieved: StatInt = StatInt(),
     workersMatured: StatInt = StatInt(),

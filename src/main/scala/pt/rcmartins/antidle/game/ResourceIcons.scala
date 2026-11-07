@@ -25,6 +25,8 @@ object ResourceIcons {
     "M12 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM12 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM12 11a7 5 0 1 0 0 10 7 5 0 0 0 0-10ZM10 4 7 2M14 4l3-2M10 8 5 7M14 8l5-1M6 14l-3-2M18 14l3-2M6 18l-3 2M18 18l3 2")
   case object Scouts extends ResourceIcon("scouts",
     "M7 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM7 11a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM7 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM5 7 3 4M6 12l-4-1M8 13l4 1M5 17l-3 2M9 18l3 3M18 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10ZM20 5l-1 3-3 1 1-3 3-1Z")
+  case object Queens extends ResourceIcon("queens",
+    "M8 3l2 3h4l2-3M12 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM12 13a5 4 0 1 0 0 8 5 4 0 0 0 0-8ZM9 9 4 7M15 9l5-2M8 15l-5-2M16 15l5-2M8 19l-4 3M16 19l4 3")
   case object Eggs extends ResourceIcon("eggs",
     "M20 14c0 5-3.6 8-8 8s-8-3-8-8S8 2 12 2s8 7 8 12ZM9 7l-2 4")
   case object Colony extends ResourceIcon("colony",
@@ -37,6 +39,8 @@ object ResourceIcons {
     case "resin" => Some(Resin)
     case "knowledge" => Some(Knowledge)
     case "tunneling space" => Some(Tunneling)
+    case "daughter queens" => Some(Queens)
+    case "royal nurses" => Some(Workers)
     case "scouts" => Some(Scouts)
     case "repletes" | "replete slots" => Some(Repletes)
     case "eggs" | "egg slots" => Some(Eggs)

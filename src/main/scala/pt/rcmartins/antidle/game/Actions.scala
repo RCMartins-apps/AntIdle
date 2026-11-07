@@ -42,6 +42,10 @@ object Actions {
 
   def expandDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.expand)
 
+  def raiseRoyalEgg(): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.start)
+
+  def setRoyalCarePaused(paused: Boolean): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.setPaused(_, paused))
+
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 

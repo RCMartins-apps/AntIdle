@@ -123,7 +123,7 @@ def check_royal_nursery(page, width, url):
     assert built["basicResources"]["resin"]["amount"] == 1031250 - 80 * UNIT
     nest()
     expect(build).to_have_count(0)
-    expect(page.locator(".royal-nursery-ready")).to_contain_text("1 royal brood slot prepared")
+    expect(page.locator(".royal-nursery-ready")).to_contain_text("Raise Royal Egg")
     assert_fits(page, width)
     page.reload(wait_until="networkidle")
     assert save_game(page)["nestAttributes"]["chambers"]["royalNurseryChamber"]["level"] == 1

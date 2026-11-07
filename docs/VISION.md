@@ -62,8 +62,8 @@ The owner wants two forms of prestige:
 Raising a daughter queen is an approved direction for connecting generations.
 The owner likes the opportunities this creates for new chambers and worker
 jobs. The approved first foundation is woodland resin collection and Royal
-Nursery construction, preparing one royal brood slot. Nurses and daughter-queen
-rearing remain the next step; their roles and mechanics have not been chosen.
+Nursery construction, preparing one royal brood slot. The next implementation
+adds Royal Nurses and sustained daughter-queen rearing before founding.
 Keep the distinction between expanding the present colony through satellite
 outposts and founding a new generation through a daughter queen.
 
@@ -75,8 +75,8 @@ abandonment works also need design before implementation.
 
 ## Possibilities, not commitments
 
-Nurse jobs and daughter-queen rearing are the next direction after the approved
-nursery foundation; exact staffing and feeding rules still need design. Humidity,
+First Understandings and founding follow daughter-queen rearing. Beyond the
+royal brood humidity and feeding implemented in that step, wider humidity,
 pheromone routes, carrying capacity, waste management, injuries and chemical
 records remain suggestions rather than an approved backlog. The existing Brood
 Care upgrade does not implement a nurse or larval-feeding system.

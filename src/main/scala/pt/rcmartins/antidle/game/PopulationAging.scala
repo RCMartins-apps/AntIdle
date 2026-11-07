@@ -100,6 +100,7 @@ object PopulationAging {
     val ants = if (homeWorkers(data.ants) > 0L) loseWorkers(data.ants, 1L)
     else if (ScoutProgression.available(data.ants, data.exploration) >= u) data.ants.copy(scouts = data.ants.scouts - u)
     else if (data.ants.repletes >= u) data.ants.copy(repletes = data.ants.repletes - u)
+    else if (data.ants.daughterQueens >= u) data.ants.copy(daughterQueens = data.ants.daughterQueens - u)
     else data.ants
     ants.copy(sugarCumulativeDebt = Math.max(0L, ants.sugarCumulativeDebt - AntDeathRiskThreshold))
   }

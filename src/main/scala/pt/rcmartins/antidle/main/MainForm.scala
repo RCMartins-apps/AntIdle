@@ -365,6 +365,8 @@ object MainForm {
           Option.when(unlocks.resources.showEggs)("Eggs raised" -> stats.eggsCount.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Workers matured" -> stats.workersMatured.thisRun.toString),
           Option.when(unlocks.resources.showScouts)("Scouts matured" -> stats.scoutsMatured.thisRun.toString),
+          Option.when(unlocks.resources.showDaughterQueens)("Royal eggs raised" -> stats.royalEggsRaised.thisRun.toString),
+          Option.when(unlocks.resources.showDaughterQueens)("Daughter queens matured" -> stats.daughterQueensMatured.thisRun.toString),
           Option.when(unlocks.resources.showRepletes)("Repletes promoted" -> stats.repletesPromoted.thisRun.toString),
           Option.when(unlocks.resources.showRepletes)("Repletes lost to aging" -> stats.repletesLostToAging.thisRun.toString),
           Option.when(unlocks.resources.showWorkers)("Peak workers" -> stats.maxAliveWorkers.thisRun.toString),
@@ -667,6 +669,15 @@ object MainForm {
           tooltipOpt = Some(div("Promoted workers store 100 extra water each and consume normal ant sugar upkeep.")),
         ),
         child.maybe <-- createResourceDiv(
+          name = "Daughter queens",
+          resourceSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+            BasicResource(ants.daughterQueens, nest.royalBroodSlots.toLong * u)
+          },
+          resourceEstimationSignal = Val(div()),
+          showSignal = unlocksSignal.map(_.resources.showDaughterQueens),
+          tooltipOpt = Some(div("Mature daughters consume normal ant sugar upkeep and occupy a royal brood slot.")),
+        ),
+        child.maybe <-- createResourceDiv(
           name = "Scouts",
           resourceSignal = scoutResourceSignal,
           resourceEstimationSignal = Val(div()),
@@ -874,13 +885,11 @@ object MainForm {
           },
         ),
       ),
-      child.maybe <-- nestSignal.combineWith(upgradesSignal).map { case (nest, upgrades) =>
+      child.maybe <-- nestSignal.combineWith(upgradesSignal).distinct.map { case (nest, upgrades) =>
         Option.when(upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0) {
           div(className := "col-12 nest-royal-nursery border-top my-2 py-2",
             h5("Royal brood"),
-            if (nest.royalBroodSlots > 0) div(className := "royal-nursery-ready",
-              b("Royal Nursery"), div(s"${nest.royalBroodSlots} royal brood slot prepared"),
-            ) else div(className := "row",
+            if (nest.royalBroodSlots > 0) royalRearingDiv else div(className := "row",
               actionButton(
                 name = "Royal Nursery",
                 enabledSignal = nestSignal.combineWith(upgradesSignal).map { case (n, u) => Construction.canEnqueue(n, u, ChamberType.RoyalNursery) },
@@ -1017,6 +1026,85 @@ object MainForm {
           },
         ),
       ),
+    )
+  }
+
+  private def royalRearingDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
+    val broodSignal = antsSignal.map(_.royalBrood).distinct
+    val nursesSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+      RoyalBroodProgression.nurses(ants, nest)
+    }.distinct
+    val projectedSignal = antsSignal.combineWith(nestSignal, upgradesSignal, explorationSignal, resourcesSignal).map {
+      case (ants, nest, upgrades, exploration, resources) =>
+        RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources)
+    }
+    val statusSignal = antsSignal.combineWith(nestSignal, projectedSignal).map { case (ants, nest, resources) =>
+      RoyalBroodProgression.status(ants, nest, resources)
+    }.distinct
+    div(className := "royal-nursery-ready",
+      child <-- antsSignal.map(ants => if (ants.royalBrood.nonEmpty) 1 else if (ants.daughterQueens > 0L) 2 else 0).distinct.map {
+        case 0 => div(
+          p(className := "small mb-1", "Assign up to five Royal Nurses in Tasks. Full staffing takes about 10 minutes of simulated time."),
+          p(className := "royal-total-care small mb-1",
+            s"Rearing supplies: ${prettyNumberStr(RoyalBroodProgression.rearingCost.sugar)} sugar · ${prettyNumberStr(RoyalBroodProgression.rearingCost.protein)} protein · ${prettyNumberStr(RoyalBroodProgression.rearingCost.water)} water, plus normal nurse upkeep."),
+          div(className := "row",
+            actionButton(
+              name = "Raise Royal Egg",
+              enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal).map { case (ants, nest, resources) =>
+                RoyalBroodProgression.canStart(ants, nest, resources)
+              },
+              costSignal = Val(RoyalBroodProgression.startCost),
+              bonusSignal = Val(ActionBonus.empty),
+              requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) => List(
+                ActionRequirement("royal nurses", RoyalBroodProgression.nurses(ants, nest) * u, isCost = true),
+                ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - ants.populationCount * u), isCost = true),
+              ) },
+              descriptionSignal = Val(Some(div("Reserves one colony slot. Nurses use water throughout rearing; larvae also need sugar and protein. Progress is kept when care pauses."))),
+              onClickAction = _ => Actions.raiseRoyalEgg(),
+            ),
+          ),
+        )
+        case 1 => div(className := "royal-brood-card border rounded p-2",
+          div(className := "d-flex justify-content-between gap-2",
+            b(child.text <-- broodSignal.map(_.map(RoyalBroodProgression.stage).getOrElse("Royal brood"))),
+            span(child.text <-- broodSignal.map(b => s"${b.map(_.careUnits * 100L / RoyalBroodProgression.TotalCare).getOrElse(0L)}%")),
+          ),
+          div(className := "progress my-2", role := "progressbar", aria.label := "Royal brood development",
+            aria.valueMin := 0.0, aria.valueMax := 100.0,
+            aria.valueNow <-- broodSignal.map(_.map(_.careUnits * 100L / RoyalBroodProgression.TotalCare).getOrElse(0L).toDouble),
+            div(className := "progress-bar", width <-- broodSignal.map(b => s"${b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)}%")),
+          ),
+          div(className := "small", child.text <-- nursesSignal.map(n => s"$n/${RoyalBroodProgression.MaxNurses} Royal Nurses")),
+          div(className := "royal-feeding small my-1",
+            child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
+              val cost = brood.map(b => RoyalBroodProgression.scaledCost(RoyalBroodProgression.unitCost(b), count * TicksPerSecond)).getOrElse(ActionCost.empty)
+              val rates = List("sugar" -> cost.sugar, "protein" -> cost.protein, "water" -> cost.water)
+                .collect { case (name, amount) if amount > 0L => s"−${resourceRateStr(amount)} $name/s" }
+              "Care at this staffing: " + (if (rates.isEmpty) "no nurses assigned" else rates.mkString(" · "))
+            },
+          ),
+          div(className := "royal-care-status small", child.text <-- statusSignal,
+            className <-- statusSignal.map(s => if (s.startsWith("Needs") || s.startsWith("Limited")) "text-danger" else "")),
+          div(className := "small text-body-secondary my-1",
+            child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
+              brood.map { b =>
+                val ticks = RoyalBroodProgression.remainingTicks(b, count)
+                if (ticks < 0L) "Assign Royal Nurses in Tasks to continue."
+                else s"${prettyTimeFromTicks(ticks)} remaining with supplied care"
+              }.getOrElse("")
+            },
+          ),
+          button(className := "btn btn-outline-primary royal-care-toggle mt-1", minHeight.px := 44,
+            `type` := "button",
+            child.text <-- broodSignal.map(b => if (b.exists(_.paused)) "Resume care" else "Pause care"),
+            onClick --> { _ => useSignalValue[Option[RoyalBrood]](broodSignal, b => Actions.setRoyalCarePaused(!b.exists(_.paused))) },
+          ),
+        )
+        case _ => div(className := "royal-queen-ready border rounded p-2",
+          ResourceIcons.icon(ResourceIcons.Queens), b("Daughter queen mature"),
+          div(className := "small", "Your daughter queen is ready for the next generation."),
+        )
+      },
     )
   }
 
@@ -1275,6 +1363,8 @@ object MainForm {
               else Option.when(resources.water.amount == 0L)(span(className := "text-danger", "Needs water"))
             },
           )
+        case AntTask.RoyalNurse =>
+          div("Tends royal brood. Feeding costs and progress are shown in Nest.")
         case AntTask.CarcassCarrier =>
           div("Returning with a carcass.")
         case AntTask.Explorer =>

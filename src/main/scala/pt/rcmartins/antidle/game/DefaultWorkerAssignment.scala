@@ -8,6 +8,7 @@ object DefaultWorkerAssignment {
   def capacity(task: AntTask, nest: NestAttributes): Long = task match {
     case AntTask.AphidTender => AphidHusbandry.capacity(nest)
     case AntTask.SeedForager => OutpostProgression.capacity(nest)
+    case AntTask.RoyalNurse => RoyalBroodProgression.capacity(nest)
     case _ => Long.MaxValue
   }
 
@@ -24,7 +25,7 @@ object DefaultWorkerAssignment {
     val limit = if (data.upgrades(UpgradeType.AphidTending).unlocked) AphidHusbandry.capacity(data.nestAttributes) else 0L
     data.modify(_.ants.tasks).using(_.map { case (task, amount) =>
       task -> (if (task == AntTask.AphidTender) Math.min(amount, limit)
-        else if (task == AntTask.SeedForager) Math.min(amount, OutpostProgression.capacity(data.nestAttributes)) else amount)
+        else if (task == AntTask.SeedForager || task == AntTask.RoyalNurse) Math.min(amount, capacity(task, data.nestAttributes)) else amount)
     })
   }
 

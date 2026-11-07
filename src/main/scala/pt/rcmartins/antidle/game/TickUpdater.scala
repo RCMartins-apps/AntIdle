@@ -66,13 +66,14 @@ object TickUpdater {
               allData.basicResources.sugar.maxAmount,
               allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep,
             )
+          val sugarBeforeCare = Math.max(0L, allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep)
 
           val sugarUsedFromSurplus: Long =
             Math.min(sugarUpkeep, surplusSugarU)
 
-          allData
+          val afterUpkeep = allData
             .modify(_.basicResources.sugar.amount)
-            .setTo(Math.max(0, sugarRemaining))
+            .setTo(sugarBeforeCare)
             .modify(_.statistics.sugarU)
             .usingIf(sugarUsedFromSurplus > 0)(_.addValue(sugarUsedFromSurplus))
             .pipe { allData =>
@@ -96,14 +97,21 @@ object TickUpdater {
                     )
                       {
                         val survivors = PopulationAging.starveOne(allData)
-                        val losses = (allData.ants.workers - survivors.workers + allData.ants.scouts - survivors.scouts + allData.ants.repletes - survivors.repletes) / u
+                        val losses = (allData.ants.workers - survivors.workers + allData.ants.scouts - survivors.scouts +
+                          allData.ants.repletes - survivors.repletes + allData.ants.daughterQueens - survivors.daughterQueens) / u
                         val updated = allData.copy(ants = survivors).modify(_.statistics.starvationDeaths).using(_.addValue(losses))
-                        if (losses > 0L) updated.addMessage("An ant died of starvation.") else updated
+                        if (allData.ants.daughterQueens > survivors.daughterQueens) updated.addMessage("A daughter queen died of starvation.")
+                        else if (losses > 0L) updated.addMessage("An ant died of starvation.") else updated
                       }
                     else
                       allData
                   }
             }
+          val tended = RoyalBroodProgression.tick(afterUpkeep)
+          val royalSugarSpent = afterUpkeep.basicResources.sugar.amount - tended.basicResources.sugar.amount
+          val royalSurplusUsed = Math.min(royalSugarSpent, Math.max(0L, surplusSugarU - sugarUpkeep))
+          tended.modify(_.basicResources.sugar.amount).using(amount => Math.min(amount, tended.basicResources.sugar.maxAmount))
+            .modify(_.statistics.sugarU).usingIf(royalSurplusUsed > 0L)(_.addValue(royalSurplusUsed))
         },
         AutomaticBrood.tick,
         PopulationAging.reconcile,
