@@ -16,7 +16,8 @@ for the colony to grow beyond natural ant behavior. See [VISION.md](VISION.md).
 Reserve **Understandings** for the most powerful permanent unlocks, inherited
 through queens across prestiges. A young queen transfers the preceding
 generation's Understandings into a new colony. Knowledge remains a separate
-research resource. Prestige rewards and the exact reset matrix are undecided;
+research resource. DNA is the prestige currency used to purchase inherited
+Understandings (owner decision, 2026-11-07). Prestige rewards and the exact reset matrix are undecided;
 do not turn illustrative Understanding names or bonuses from chat into rules.
 Existing descriptions calling research "permanent" mean saved ownership today,
 not an agreed promise of persistence across future prestige resets.
@@ -186,3 +187,17 @@ reservation and occupies the royal slot. Daughters have normal sugar upkeep and
 can starve after other home ants, but do not use worker aging cohorts. A mature
 daughter grants no permanent bonus and does not trigger a reset. These quantities
 are balance choices, not a finalized prestige contract.
+
+## D13: DNA funds Understandings — approved direction, 2026-11-07
+
+The owner approved starting the prestige system after merging royal brood
+rearing and selected DNA as the prestige currency for purchasing Understandings.
+DNA is distinct from colony Knowledge and ordinary resources.
+
+Pending clarification: the first reset matrix, DNA earnings and first
+Understanding effects. Proposed starting design (not approved): one DNA for
+founding with a mature daughter; reset colony resources, population, chambers,
+research and exploration; retain DNA, Understandings, lifetime statistics and
+settings. Proposed first rewards are worker tasks unlocked at founding, +20%
+sugar production, or +25% housing, costing one DNA each. Do not treat these
+proposals as accepted until the owner responds. Challenge founding is separate.

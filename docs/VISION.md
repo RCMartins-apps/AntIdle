@@ -39,6 +39,8 @@ small expansion and research path; additional locations remain future work.
 
 **Understandings** is the reserved player-facing term for the most powerful
 unlocks: they persist between prestiges and belong to the queen's lineage.
+DNA is the prestige currency used to purchase them; Knowledge remains colony
+research currency.
 
 The agreed foundation is generational inheritance through queens. A young queen
 carries the previous generation's Understandings into a new colony. The owner
