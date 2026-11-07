@@ -27,9 +27,16 @@ object Construction {
   def nextCost(nest: NestAttributes, kind: ChamberType): ActionCost =
     cost(kind, level(nest.chambers, kind) + nest.buildQueue.count(_.chamberType == kind))
 
+  def blockedReason(nest: NestAttributes, upgrades: UpgradesData, kind: ChamberType): Option[String] = {
+    if (kind == ChamberType.RoyalNursery && nest.chambers.royalNurseryChamber.level > 0) Some("Already built")
+    else if (kind == ChamberType.RoyalNursery && nest.buildQueue.exists(_.chamberType == kind)) Some("Already queued")
+    else if (nest.buildQueue.size >= nest.maxBuildQueue) Some("Build queue full")
+    else if (kind == ChamberType.RoyalNursery && !RoyalNurseryProgression.canPlan(nest, upgrades)) Some("Requires Royal Nursery Planning")
+    else None
+  }
+
   def canEnqueue(nest: NestAttributes, upgrades: UpgradesData, kind: ChamberType): Boolean =
-    nest.buildQueue.size < nest.maxBuildQueue &&
-      (kind != ChamberType.RoyalNursery || RoyalNurseryProgression.canPlan(nest, upgrades))
+    blockedReason(nest, upgrades, kind).isEmpty
 
   def reconcile(data: AllData): AllData = {
     val nest = data.nestAttributes

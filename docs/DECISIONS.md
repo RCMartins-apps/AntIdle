@@ -400,3 +400,14 @@ Cancellation clears unlaid orders of both types, preserving existing brood.
 Save mixed ordering without breaking existing worker-only queues. Store worker
 orders ahead of each scout rather than expanding worker batches into individual
 records. Show queued caste counts, visible scout costs and concise details.
+
+
+## D21: Keep action eligibility and visible blocking feedback consistent — polish pass
+
+The owner requested further fixes like the scout queue inconsistency. This pass
+keeps reserved-housing counts shared between worker/scout/royal actions and their
+UI, reports actual housing blockage in the laying queue, and explains full or
+duplicate construction queues only while a button is blocked. Enqueue messages
+and eligibility come from the same check. No new costs, content, automation or
+save fields are introduced. An idle laying cooldown describes when the queen
+is ready, not an egg that has not been ordered.

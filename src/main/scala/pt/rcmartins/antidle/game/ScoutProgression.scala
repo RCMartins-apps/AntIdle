@@ -27,7 +27,7 @@ object ScoutProgression {
   // Ordering reserves future housing, not an immediately free brood place or cooldown.
   def canRaise(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
     nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&
-      ants.populationCount + ants.queuedEggs < nest.maxAntsCount && resources.hasResources(eggCost)
+      BroodProgression.availableColonySlots(ants, nest) >= u && resources.hasResources(eggCost)
 
   def canLay(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
     nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&

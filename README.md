@@ -1021,3 +1021,24 @@ After `sbt fastOptJS`, run `python3 tests/resource_timing_smoke.py` for filling,
 draining, full/steady stores, protein feeding, live countdowns and phone/tablet/
 desktop positioning. `ResourceTimingSuite` covers rounding, unlimited capacity,
 over-capacity stocks and large values.
+
+
+## Action and queue feedback
+
+Chamber buttons show a short reason only when blocked: **Build queue full** or,
+for a Royal Nursery plan already present, **Already queued**. Cancelling a plan
+clears the reason as soon as space is available. Enqueue eligibility and the
+message use the same construction check; resource shortages still allow plans
+to be queued and remain visible in their costs.
+
+Worker, scout and royal-egg actions share the same future-housing calculation,
+including unlaid orders of both ordinary castes. The Royal Egg's colony-slot
+indicator therefore turns red when queued eggs reserve the remaining space.
+An existing queued egg can still use its own reserved place when laid. If actual
+population fills housing and stops laying, Brood says **Colony slots full**
+instead of Queen ready. With no orders, the laying cooldown says **Queen ready
+in …**, rather than implying another egg has been ordered.
+
+`ActionFeedbackSuite` verifies shared reservations, queued-head laying, blocked
+status and construction reasons. `python3 tests/action_feedback_smoke.py` covers
+visible slot colors, full/duplicate plans, cancellation and phone/desktop layout.
