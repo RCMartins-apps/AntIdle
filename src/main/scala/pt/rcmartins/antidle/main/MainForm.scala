@@ -1797,6 +1797,13 @@ object MainForm {
     )
 
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
+    val chosenDestinationVar = Var(ExplorationDestination.Surroundings.id)
+    val unlockedDestinationsSignal = explorationSignal.combineWith(antsSignal, nestSignal).map {
+      case (data, ants, nest) => ExplorationDestination.all.filter(_.isUnlocked(data, ants, nest))
+    }.distinct
+    val selectedDestinationSignal = chosenDestinationVar.signal.combineWith(unlockedDestinationsSignal).map {
+      case (id, unlocked) => unlocked.find(_.id == id).getOrElse(ExplorationDestination.Surroundings)
+    }.distinct
     val amountOfExplorersVar = Var(1L * u)
     val amountOfExplorersSignal = amountOfExplorersVar.signal.combineWith(availableWorkersCountSignal)
       .map { case (requested, available) => ExplorationProgression.selectedWorkers(requested, available) }.distinct
@@ -1822,6 +1829,7 @@ object MainForm {
       val cost = amountOfExplorersSignal.combineWith(extraScoutsSignal).map { case (workers, extra) => ExplorationHelper.cost(workers, destination, extra) }
       div(
         className := "col-12 col-md-6 px-3 py-2 exploration-destination",
+        className <-- selectedDestinationSignal.map(selected => if (selected == destination) "destination-selected" else ""),
         dataAttr("destination") := destination.id,
         div(
           className := "card p-2 h-100",
@@ -1884,10 +1892,18 @@ object MainForm {
     }
 
     div(
-      className := "row",
-      pheromoneTrailDiv,
+      className := "row exploration-layout",
       div(
-        className := "col-12 px-3 py-2",
+        className := "col-12 px-3 py-2 expedition-setup",
+        div(className := "mobile-only destination-picker mb-2",
+          label(forId := "expedition-destination", "Destination"),
+          select(idAttr := "expedition-destination", className := "form-select",
+            children <-- unlockedDestinationsSignal.map(_.map(destination =>
+              option(value := destination.id, destination.name + (if (RaidProgression.isRaid(destination)) " · Dangerous" else "")))),
+            value <-- selectedDestinationSignal.map(_.id),
+            onChange.mapToValue --> chosenDestinationVar.writer,
+          ),
+        ),
         label(forId := "explorer-count", "Workers"),
         div(className := "expedition-worker-stepper",
           button(className := "btn btn-outline-secondary", typ := "button",
@@ -1913,12 +1929,16 @@ object MainForm {
           ),
         ),
         div(className := "d-flex gap-2 flex-wrap worker-presets",
-          List(1, 5, 17, 37).zipWithIndex.map { case (workers, index) =>
-            button(className := "btn btn-outline-secondary", aria.label := s"Send $workers workers",
-              s"$workers · ${index + 1}×",
-              disabled <-- availableWorkersCountSignal.map(_ < workers.toLong * u),
-              onClick --> (_ => amountOfExplorersVar.set(workers.toLong * u)),
-            )
+          children <-- selectedDestinationSignal.combineWith(windowWidthVar.signal.map(_ <= 767).distinct).map { case (destination, mobile) =>
+            val minimum = if (mobile) (destination.minimumWorkers / u).toInt else 1
+            (List(minimum) ++ List(5, 17, 37).filter(_ >= minimum)).distinct.map { workers =>
+              val multiplier = if (workers >= 37) 4 else if (workers >= 17) 3 else if (workers >= 5) 2 else 1
+              button(className := "btn btn-outline-secondary", aria.label := s"Send $workers workers",
+                if (mobile && workers == minimum) s"Min: $workers" else s"$workers · $multiplier×",
+                disabled <-- availableWorkersCountSignal.map(_ < workers.toLong * u),
+                onClick --> (_ => amountOfExplorersVar.set(workers.toLong * u)),
+              )
+            }
           },
         ),
         child.maybe <-- ifUnlockedOpt(unlocksSignal.map(_.resources.showScouts)) {
@@ -1934,21 +1954,11 @@ object MainForm {
           )
         },
       ),
-      div(
-        className := "col-12 px-3 py-2 exploration-progress",
-        infoHeading("Exploration experience", div(
-          p(className := "mb-1 exploration-milestone",
-            child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
-          p(child.text <-- explorationSignal.map { data =>
-            val bonus = ExplorationProgression.bonusPercent(data.experience)
-            val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
-              s" Next level: +${bonus + 25}%." else ""
-            s"Reward bonus: +$bonus% sugar, carcass sugar and protein.$next"
-          }),
-          p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at the 37-worker party limit. Extra scouts add 25% travel speed each, up to three."),
-        )),
-        p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
-      ),
+      ExplorationDestination.all.map { destination =>
+        child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
+          case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
+        }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
+      },
       div(
         className := "col-12 px-3 py-2 expedition-status",
         div(
@@ -1975,11 +1985,22 @@ object MainForm {
           )
         }),
       ),
-      ExplorationDestination.all.map { destination =>
-        child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
-          case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
-        }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
-      },
+      pheromoneTrailDiv,
+      div(
+        className := "col-12 px-3 py-2 exploration-progress",
+        infoHeading("Exploration experience", div(
+          p(className := "mb-1 exploration-milestone",
+            child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
+          p(child.text <-- explorationSignal.map { data =>
+            val bonus = ExplorationProgression.bonusPercent(data.experience)
+            val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
+              s" Next level: +${bonus + 25}%." else ""
+            s"Reward bonus: +$bonus% sugar, carcass sugar and protein.$next"
+          }),
+          p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at the 37-worker party limit. Extra scouts add 25% travel speed each, up to three."),
+        )),
+        p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
+      ),
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
         div(
           className := "col-12 px-3 py-2 expedition-supplies",

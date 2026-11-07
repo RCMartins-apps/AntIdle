@@ -7,7 +7,7 @@ import os
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -92,6 +92,7 @@ def check_prestige(page, width, url):
     page.get_by_label("About Pheromone trail", exact=True).click()
     expect(page.locator(".pheromone-trails .info-content")).to_contain_text("Nectar Meadow")
     page.get_by_label("About Pheromone trail", exact=True).click()
+    select_expedition(page, "nectar-meadow")
     route = page.locator('.exploration-destination[data-destination="nectar-meadow"]')
     page.locator("#explorer-count").fill("5")
     route.get_by_role("button").first.click()

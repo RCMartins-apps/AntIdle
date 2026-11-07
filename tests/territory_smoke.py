@@ -7,7 +7,7 @@ import os
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -37,6 +37,7 @@ def check_territory(page, width, url):
     load_game(page, game)
     expect(tab).to_have_count(0)
     explore_tab(page)
+    select_expedition(page, "rival-food-cache")
     page.locator("#explorer-count").fill("10")
     page.get_by_role("button", name="Raid Rival Food Cache", exact=True).click()
     sent = save_game(page)

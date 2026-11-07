@@ -9,7 +9,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 
 
 def task_count(game, name):
@@ -113,6 +113,7 @@ def check_progression(page, width, url):
     assert adult["ants"]["scouts"] == UNIT
     assert not adult["ants"]["eggsAndLarvae"]
     explore_tab(page)
+    select_expedition(page, "woodland-edge")
     page.get_by_role("button", name="Explore Woodland Edge", exact=True).click()
     page.clock.run_for(45000)
     distant = save_game(page)
