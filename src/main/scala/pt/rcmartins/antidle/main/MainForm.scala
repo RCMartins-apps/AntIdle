@@ -839,6 +839,9 @@ object MainForm {
     )
   }
 
+  private def constructionBlockedSignal(kind: ChamberType): Signal[Option[String]] =
+    nestSignal.combineWith(upgradesSignal).map { case (nest, upgrades) => Construction.blockedReason(nest, upgrades, kind) }.distinct
+
   private def nestDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     def standardBuyChamber(
         name: String,
@@ -852,7 +855,8 @@ object MainForm {
           name = name,
           topRightBadgeSignal =
             chamberSignal.map(_.level).distinct.map(Some(_).filter(_ > 0).map(span(_))),
-          enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
+          enabledSignal = constructionBlockedSignal(chamberType).map(_.isEmpty),
+          blockedReasonSignal = constructionBlockedSignal(chamberType),
           descriptionSignal = Val(Option.when(chamberType == ChamberType.Queen)(div("Adds brood places and improves the queen's laying rate. Brood still needs care and larval food."))),
           costSignal = actionCost,
           bonusSignal = Actions.getActionBonus(chamberType),
@@ -972,7 +976,8 @@ object MainForm {
             if (nest.royalBroodSlots > 0) royalRearingDiv else div(className := "row",
               actionButton(
                 name = "Royal Nursery",
-                enabledSignal = nestSignal.combineWith(upgradesSignal).map { case (n, u) => Construction.canEnqueue(n, u, ChamberType.RoyalNursery) },
+                enabledSignal = constructionBlockedSignal(ChamberType.RoyalNursery).map(_.isEmpty),
+                blockedReasonSignal = constructionBlockedSignal(ChamberType.RoyalNursery),
                 costSignal = Val(RoyalNurseryProgression.buildCost),
                 bonusSignal = Val(ChamberBonuses.forChamber(ChamberType.RoyalNursery)),
                 descriptionSignal = Val(Some(div("A protected, resin-lined chamber for royal brood."))),
@@ -1068,7 +1073,8 @@ object MainForm {
             val cost = Actions.buildChamberCost(ChamberType.Replete)
             actionButton(
               name = ChamberType.Replete.name,
-              enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
+              enabledSignal = constructionBlockedSignal(ChamberType.Replete).map(_.isEmpty),
+              blockedReasonSignal = constructionBlockedSignal(ChamberType.Replete),
               descriptionSignal = Val(Some(div("Each level houses one replete. Promote a worker to add water capacity."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Replete),
@@ -1080,7 +1086,8 @@ object MainForm {
             val cost = Actions.buildChamberCost(ChamberType.Aphid)
             actionButton(
               name = ChamberType.Aphid.name,
-              enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
+              enabledSignal = constructionBlockedSignal(ChamberType.Aphid).map(_.isEmpty),
+              blockedReasonSignal = constructionBlockedSignal(ChamberType.Aphid),
               descriptionSignal = Val(Some(div("Each level supports one Aphid Tender: +0.8 sugar/s, −0.01 protein/s while fed."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
@@ -1094,7 +1101,8 @@ object MainForm {
             val cost = Actions.buildChamberCost(ChamberType.Nursery)
             actionButton(
               name = "Nursery Chamber",
-              enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
+              enabledSignal = constructionBlockedSignal(ChamberType.Nursery).map(_.isEmpty),
+              blockedReasonSignal = constructionBlockedSignal(ChamberType.Nursery),
               descriptionSignal = Val(Some(div("Adds three brood places and five shared nurse places per level, alongside its housing and carcass storage."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
@@ -1312,7 +1320,7 @@ object MainForm {
               bonusSignal = Val(ActionBonus.empty),
               requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) => List(
                 ActionRequirement("royal nurses", RoyalBroodProgression.nurses(ants, nest) * u, isCost = true),
-                ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - ants.populationCount * u), isCost = true),
+                ActionRequirement("colony slots", BroodProgression.availableColonySlots(ants, nest), isCost = true),
               ) },
               descriptionSignal = Val(Some(div("Reserves one colony slot. Nurses use water throughout rearing; larvae also need sugar and protein. Progress is kept when care pauses."))),
               onClickAction = _ => Actions.raiseRoyalEgg(),
@@ -1392,7 +1400,7 @@ object MainForm {
     antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       List(
         ActionRequirement("brood places", Math.max(0L, BroodProgression.capacity(nest).toLong * u - ants.eggsAndLarvae.size * u)),
-        ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - (ants.populationCount.toLong + ants.queuedEggs) * u)),
+        ActionRequirement("colony slots", BroodProgression.availableColonySlots(ants, nest)),
       )
     }.distinct
 
@@ -1431,6 +1439,7 @@ object MainForm {
       topLeftBadgeSignal: Signal[Option[ReactiveHtmlElement[HTMLElement]]] = Val(None),
       topRightBadgeSignal: Signal[Option[ReactiveHtmlElement[HTMLElement]]] = Val(None),
       requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
+      blockedReasonSignal: Signal[Option[String]] = Val(None),
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "col-6 px-3 py-2 d-grid action-cell",
@@ -1463,6 +1472,8 @@ object MainForm {
           },
       ),
       actionCosts(costSignal, requirementsSignal),
+      child.maybe <-- blockedReasonSignal.map(_.map(reason =>
+        div(className := "action-blocked-reason small text-danger text-center", reason))),
       child.maybe <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
         Option.when(mobile) {
           detailsTag(

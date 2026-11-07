@@ -69,7 +69,7 @@ object RoyalBroodProgression {
     care(ants, nest, forecastResources(ants, nest, upgrades, exploration, resources))
 
   def canStart(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
-    ants.royalBrood.isEmpty && freeSlots(ants, nest) > 0L && ants.populationCount + ants.queuedEggs < nest.maxAntsCount &&
+    ants.royalBrood.isEmpty && freeSlots(ants, nest) > 0L && BroodProgression.availableColonySlots(ants, nest) >= u &&
       nurses(ants, nest) > 0L && resources.hasResources(startCost)
 
   def canStart(data: AllData): Boolean = canStart(data.ants, data.nestAttributes, data.basicResources)

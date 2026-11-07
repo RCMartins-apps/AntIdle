@@ -17,9 +17,12 @@ object BroodProgression {
     case _: AntBrood.Egg => true
     case _ => false
   }
+  def availableColonySlots(ants: AntsData, nest: NestAttributes): Long =
+    Math.max(0L, nest.maxAnts - (ants.populationCount.toLong + ants.queuedEggs.toLong) * u)
+
   def orderAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int =
     Math.max(0L, Math.min(Math.max(0, requested).toLong,
-      Math.min(nest.maxAntsCount.toLong - ants.populationCount - ants.queuedEggs, sugar / eggCost(ants)))).toInt
+      Math.min(availableColonySlots(ants, nest) / u, sugar / eggCost(ants)))).toInt
   def order(data: AllData, requested: Int): AllData = {
     val amount = orderAmount(data.ants, data.nestAttributes, data.basicResources.sugar.amount, requested)
     data.copy(ants = data.ants.copy(eggOrders = data.ants.eggOrders + amount))
@@ -180,7 +183,11 @@ object BroodProgression {
     val waiting = if (ants.queuedEggs > 0 && resources.sugar.amount < nextCost.sugar) "Needs sugar"
       else if (nextScout && resources.protein.amount < nextCost.protein) "Needs protein for scout egg"
       else if (ants.queuedEggs > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"
-      else if (ants.layingCooldown > 0L) s"Next egg in ${UINumbersUtils.prettyTimeFromTicks(ants.layingCooldown)}"
+      else if (ants.queuedEggs > 0 && ants.populationCount >= nest.maxAntsCount) "Colony slots full"
+      else if (ants.layingCooldown > 0L) {
+        val next = if (ants.queuedEggs > 0) "Next egg" else "Queen ready"
+        s"$next in ${UINumbersUtils.prettyTimeFromTicks(ants.layingCooldown)}"
+      }
       else "Queen ready"
     val larvae = ants.eggsAndLarvae.collect { case b: AntBrood.Developing if b.isLarvae && !b.small => b }
     val hungry = if (larvae.nonEmpty && feedingResources.protein.amount < 50L) " · Needs protein for larvae"
