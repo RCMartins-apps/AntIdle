@@ -782,3 +782,72 @@ Run `sbt fastOptJS fullOptJS test` and `python3 tests/raid_smoke.py` to check ga
 visible costs/risk/storage/aging warnings, oldest-first selection, random
 casualties, saved outcomes, survivor lifespans, automatic replacements and phone/
 desktop layout. Raid rule tests cover full return ticks and replay protection.
+
+## Optional territorial contests
+
+Returning from the first Rival Food Cache raid discovers **Contested Foraging
+Ground**, opening a separate **Territory** tab. Existing safe play and prestige
+remain available without holding it. No additional prestige Understanding,
+scout or expedition slot is required.
+
+Choose a fixed target of **10–37 workers** and pay **20 sugar per worker** to
+**Hold Foraging Ground**. Workers are taken oldest-first from the available
+idle/default pool; other assigned jobs remain protected. While holding, each
+worker contributes **0.3 protein per simulated second** to an unfinished haul.
+Every **60 simulated seconds**, rivals contest the site:
+
+- Combat losses are guaranteed and uniformly drawn from the displayed count
+  range: **2–4 of ten** or **4–10 of 37** workers. Casualties are random
+  individuals among holders. Below ten, smaller remaining crews still face
+  combat and can eventually be wiped out; a lone holder certainly dies.
+- Combat survivors retain their expiry ticks. Overdue holder aging resolves
+  after combat, without counting the same death twice. It can cause additional
+  losses, including losing the whole remaining crew. Aging warnings show which
+  holders expire by the contest.
+- If workers remain, the haul arrives, limited by actual free protein storage.
+  Ten workers present for a complete interval collect **180 protein** before
+  that cap. Only delivered inventory counts as collected resource statistics.
+- Full protein storage does **not** pause contests or casualties. If nobody
+  survives, the site and unfinished haul are lost, without automatic reclaim.
+
+**Withdraw** immediately stops the hold and returns workers to their default
+pool, respecting task capacities. Original age cohorts are restored and overdue
+aging is resolved; no new lifespan is granted. The unfinished haul is left
+behind, while previously delivered protein remains. Reclaiming costs sugar
+again and begins a new interval. This prevents banking resource income by
+withdrawing just before every fight.
+
+**Reinforce** fills missing places from available workers, up to the fixed
+target, with no additional recruitment resource fee. **Maintain staffing
+automatically** is initially off; enabling it performs the same recruitment
+on simulation ticks. It may draw workers from the selected default task, but
+never other assigned jobs. Newborn replacements from the existing Queen's
+Routine can restore the colony while this setting maintains the holding crew.
+Target changes require withdrawing and making a new claim.
+
+Holders consume ordinary colony sugar upkeep and can starve. Their reserved
+age cohorts remain separate from home workers; normal home aging cannot remove
+the wrong holders. Their aging is settled at each contest or withdrawal, so
+continuous occupation cannot make them immortal. `AntTask.agesAtHome` is
+separate from upkeep for this purpose. General protein/s estimates describe
+immediately available production; the Territory card shows the pending haul's
+rate and its delivery countdown separately.
+
+The tab displays staffing, reinforcement availability, countdown, haul/rate,
+combat range, storage and age warnings, withdrawal and automatic staffing.
+Saved `exploration.territory` contains its crew's cohorts, target, staffing
+setting, next contest tick, seed, round and pending haul. Reloading does not
+reroll combat or reset its countdown. Territory combat deaths, contest count
+and claims have run/lifetime statistics; prestige resets the hold and current
+run counters while retaining lifetime totals. Old saves default to no hold;
+colonies with a completed raid in the current run recover the new discovery
+on load, without repeating that raid.
+Stored-time acceleration advances contests and worker aging with normal ticks.
+
+Run `sbt fastOptJS fullOptJS test` and `python3 tests/territory_smoke.py` to verify
+claim costs/discovery, recurring losses, delayed/capped deliveries, oldest
+cohorts, fixed saved contests, aging/starvation, reinforcements, automatic eggs,
+withdrawal and phone/desktop layout.
+
+Temporary vulnerable food sources and soldier specialization are deferred
+content ideas; neither is added by territorial contests.

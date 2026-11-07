@@ -19,6 +19,7 @@ object TickUpdater {
         PopulationAging.tick,
         // Brood maturation is shared by workers and the new scout caste.
         ScoutProgression.growBrood,
+        TerritoryProgression.tick,
         PheromoneTrails.tick,
         // Ants income from tasks
         allData => {

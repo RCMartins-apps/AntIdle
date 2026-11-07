@@ -34,7 +34,9 @@ replacing workers; existing automatic egg production supports recovery. Build
 meaningful population pressure before further brood-care progression. This
 danger is introduced through the optional Rival Food Cache raid. Oldest home
 workers depart first, but combat casualties are random within their party.
-Exact balance remains adjustable; safe expeditions remain available.
+Exact balance remains adjustable; safe expeditions remain available. Optional
+territorial contests extend this pressure into holding a productive location
+with recurring casualties and player-controlled withdrawal/reinforcement.
 
 Outposts should eventually have distinct environmental requirements and/or
 resources. The agreed first direction is a dry area with water scavenging and
@@ -99,3 +101,8 @@ royal brood humidity and feeding implemented in that step, wider humidity,
 pheromone routes, carrying capacity, waste management, injuries and chemical
 records remain suggestions rather than an approved backlog. The existing Brood
 Care upgrade speeds ordinary brood; royal care uses its own nurse/feeding system.
+
+Deferred ideas the owner liked: temporary vulnerable food sources that reward
+fast replacements, and worker-to-soldier specialization trading ordinary labor
+for protection. Revisit after territorial contests; neither is implemented by
+that feature, and exact rules remain proposals.

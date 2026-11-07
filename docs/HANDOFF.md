@@ -2,44 +2,49 @@
 
 ## Last verified: 2026-11-07
 
-- Main `d9e755a` contains merged first prestige PR #37.
-- Related branch `design/expedition-danger` now implements the approved raid;
-  pushed with [PR #38](https://github.com/RCMartins-apps/AntIdle/pull/38) open
-  against `main`. D14 and README record rules and balance.
-- Latest owner requirement: oldest ants depart first, but casualties are random
-  within the party. Reuses oldest-first home-worker cohort selection and samples
-  individuals uniformly without replacement. Surviving expiry ticks are retained.
+- `origin/main` at `d86ccfc` contains merged raid PR #38.
+- Branch `feature/contested-territory` implements the owner-approved next step;
+  pushed with [PR #39](https://github.com/RCMartins-apps/AntIdle/pull/39) open
+  against `main`. D15 and README document rules and balance.
+- Temporary vulnerable food sources and soldier specialization were liked but
+  explicitly deferred. They are saved in VISION/D15, not implemented here.
 
-## Completed raid
+## Completed territorial contests
 
-- Rival Food Cache at exploration level 5: 10–37 workers, one scout, 120 seconds
-  before extra-scout speed, 30 sugar per worker. Combat losses are guaranteed:
-  2–4 of ten workers; 4–10 of 37. Protein range is 200–350 per ten workers,
-  scaling linearly with party size; free storage caps actual retained income.
-- Counts/certainty, rewards, costs, storage room and selected-cohort aging
-  warnings are visible beside the action. In-flight parties retain risk text.
-  Scouts have no combat losses, but overdue aging can kill scouts/survivors.
-- Outcomes and casualty-selection seed are saved at departure. Same-tick
-  launches use distinct seeds; reloads and delayed returns cannot reroll them.
-  Combat deaths/cohorts are removed before overdue survivor aging, without
-  double-counting. Replayed completions grant nothing. Existing safe routes
-  keep their behavior. Queen's Routine replaces ordinary worker deficits.
-- Raid losses have separate run/lifetime statistics and prestige retention.
-  Existing parties default to no raid outcome; no save version bump needed.
+- First Rival Food Cache return discovers Contested Foraging Ground, revealing
+  a dedicated Territory tab. Older current-run raid casualties recover that
+  earned discovery on load. Prestige resets it with ordinary discoveries.
+- Claim a fixed target of 10–37 workers for 20 sugar each; no scout or expedition
+  slot. Oldest available home cohorts are reserved at the site. Each holder
+  contributes 0.3 protein/s toward an unfinished haul, delivered after each
+  60-second contest if holders survive combat and aging, limited by storage.
+- Visible recurring casualties use raid-size ranges: 2–4 of ten or 4–10 of 37;
+  smaller understaffed crews continue fighting and can be wiped out. Saved
+  seed/round/timer prevents reload rerolls. Full stores never stop casualties.
+- Safe withdrawal restores survivor cohorts/default assignments but abandons
+  the unfinished haul. Expired holders die at contest/withdrawal, preserving
+  fixed lifespans. Defeat loses ground/haul without automatic reclaim.
+- Manual reinforcement and opt-in automatic staffing borrow only idle/default
+  workers. Queen's Routine supplies ordinary replacements. Holders pay normal
+  upkeep and can starve. `agesAtHome` separates cohort location from upkeep,
+  preventing home aging from removing the wrong holders or granting immunity.
+- Costs, risks, countdown, haul/rate, storage/aging warnings and staffing
+  availability are visible. Contest/death/claim statistics have run/lifetime
+  persistence. Old saves default to no hold; no save version bump required.
 
 Validation:
-- `sbt fastOptJS fullOptJS test`: 175 engine tests pass, including eleven new
-  raid cases; production Closure reports zero errors/warnings.
-- `tests/raid_smoke.py`: passes at 320, 390 and 1920px for gates, risk/costs,
-  oldest workers, saves, returns, storage/age warnings and automatic replacement.
-- `tests/progression_smoke.py`: passes at 320, 390 and 1920px, including existing
-  carcass/scout/XP/save/limit checks. Mobile raid card visually inspected.
-- Local Markdown links resolve; whitespace checks pass.
+- Development/release builds and all 188 engine tests pass, including thirteen
+  territory cases. Closure reports zero errors/warnings.
+- `tests/territory_smoke.py`: passes at 320, 390 and 1920px for discovery, costs,
+  risk, deferred haul, contest/save timing, replacement/refill, withdrawal,
+  storage, aging and layout. Extra 390px rerun covers old-raid discovery recovery.
+- `tests/raid_smoke.py`: passes at 320, 390 and 1920px.
+- `tests/browser_smoke.py`: passes at 320, 390, 767, 768, 844, 1024 and 1920px.
+- Mobile territory card visually inspected; local Markdown links/whitespace pass.
 
 ## Next work
 
-- Brood-care progression remains deferred until population pressure proves
-  meaningful; recurring outpost supply costs are only an unadopted suggestion.
-- Further introductory Understandings, later DNA milestones and challenge
-  founding remain separate future work. Tune raids using actual play feedback.
+- Tune population/reward pressure through play feedback before adding further
+  brood-care progression. Additional sites, later introductory Understandings,
+  scalable DNA milestones and challenge founding remain future work.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

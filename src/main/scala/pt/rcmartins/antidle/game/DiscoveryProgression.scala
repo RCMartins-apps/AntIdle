@@ -19,7 +19,9 @@ object DiscoveryProgression {
     "Unlocks water scavenging, Replete Storage research and establishing the Dry Clearing Outpost in Nest.")
   val ResinSeep = Discovery("resin-seep", "Resin Seep", "fallen-pine", 3,
     "Reveals Collect Resin expeditions and Royal Nursery Planning research at exploration level 8.")
-  val all: List[Discovery] = List(WildAphids, SeedCache, DryTrail, DewPlants, ResinSeep)
+  val ContestedGround = Discovery("contested-ground", "Contested Foraging Ground", "rival-food-cache", 1,
+    "A rival colony contests a rich food source. Hold it from Territory for recurring protein and disclosed losses.")
+  val all: List[Discovery] = List(ContestedGround, WildAphids, SeedCache, DryTrail, DewPlants, ResinSeep)
 
   def has(data: ExplorationData, id: String): Boolean = all.exists(d => d.id == id && d.found(data))
 

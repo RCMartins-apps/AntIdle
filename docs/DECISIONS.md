@@ -256,3 +256,35 @@ quantities are current balance choices.
 
 Expanded brood allocation and ongoing outpost supply costs remain unadopted
 suggestions, not this implementation.
+
+## D15: Optional territorial contests before more brood progression — approved
+
+The owner chose territorial contests as the next feature: holding an optional
+contested location produces resources at recurring population cost, with clear
+risk and player-controlled staffing/withdrawal. Temporary exposed food sources
+and worker-to-soldier specialization were liked but explicitly deferred. Keep
+those ideas for later; do not implement them in this step.
+
+First implementation balance: the first Rival Food Cache return discovers
+Contested Foraging Ground, opening a separate Territory tab. A fixed target
+of 10–37 workers holds it; entry costs 20 sugar per worker, with no scout or
+expedition slot. Harvest accumulates at 0.3 protein/s per holder and is delivered
+after each 60-second contest if workers survive. Combat uses the raid's
+size-dependent casualty range (2–4 at ten, 4–10 at 37); smaller remaining crews
+can be wiped out. Full storage does not stop combat or casualties.
+
+Workers are recruited oldest-first from the available/default pool. Reserved
+cohorts retain expiry ticks; aging resolves at contests or withdrawal, preventing
+indefinite aging immunity. Combat selects individual holders randomly, with
+saved seed/round/timer for reload-stable outcomes. Ordinary sugar upkeep and
+starvation still apply. Optional automatic reinforcement is off initially; it
+borrows only idle/default workers and respects other assigned jobs. Queen's
+Routine provides the existing replacement pipeline.
+
+Withdrawal safely returns surviving workers and their ages but abandons the
+unfinished haul; no free resource income can be banked by withdrawing just
+before every fight. A defeated crew loses the site and pending haul, without
+automatic reclaim. Entry, potential haul rate, countdown, casualty range,
+storage and aging warnings are visible. Exact numbers are current balance
+choices, not a finalized economy. This is current-colony content, not a new
+Understanding or a challenge-prestige implementation.
