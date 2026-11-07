@@ -27,6 +27,8 @@ The colony should need better methods because supporting growth creates natural
 constraints. Basic sugar collection has diminishing returns, giving exploration
 and alternative food sources a purpose. New content should deepen decisions
 and create longer-term goals without burying the player in explanations.
+Default screens should show concise live data and controls. Important mechanics
+belong behind [i] buttons; redundant descriptive prose should be removed.
 
 Voluntary dangerous actions may cause substantial ant losses when the risk is
 clear before committing. Players should decide whether the reward is worth

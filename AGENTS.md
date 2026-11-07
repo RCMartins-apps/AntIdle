@@ -47,6 +47,15 @@ Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at
 Keep engine rules, displayed costs, previews and income estimates consistent.
 Validate gameplay rules in the engine, not only by disabling UI buttons.
 
+## UI copy and information
+
+Keep default screens compact. Show counts, rates, costs, progress and relevant
+blocking/risk warnings directly. Remove explanations that repeat those values.
+Put important mechanics behind explicit [i] controls on phone and desktop;
+use MainForm's infoHeading/infoDetails helpers for sections/tasks and the shared
+action details control for actions. Do not add always-visible tutorial paragraphs
+with new features. Keep ongoing material costs and danger disclosures visible.
+
 ## Verification
 
 - `sbt fastOptJS`: development build; serve the repo with `python3 -m http.server 8000`.

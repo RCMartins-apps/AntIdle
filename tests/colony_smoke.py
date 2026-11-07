@@ -67,11 +67,9 @@ def check_colony(page, width, url):
     expect(tunneling).to_contain_text("+7.50/s")
     page.get_by_role("tab", name="Tasks", exact=False).click()
     task = page.locator("#task-tunneler")
-    if width <= 767:
-        expect(task.locator(".task-description")).to_have_text("+1.5 tunneling space per second / ant")
-    else:
-        task.hover()
-        expect(page.locator(".game-tooltip")).to_have_text("+1.5 tunneling space per second / ant")
+    task.get_by_label("About Tunneler", exact=True).click()
+    expect(task.locator(".task-description")).to_have_text("+1.5 tunneling space per second / ant")
+    task.get_by_label("About Tunneler", exact=True).click()
     before = save_game(page)
     page.clock.run_for(1000)
     after = save_game(page)

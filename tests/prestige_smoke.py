@@ -69,7 +69,7 @@ def check_prestige(page, width, url):
     page.clock.run_for(60000)
     expect(page.locator("#tasks-tab")).to_be_visible()
     page.locator("#tasks-tab").click()
-    expect(page.locator(".small-worker-tasks")).to_contain_text("50% efficiency")
+    expect(page.locator(".small-worker-tasks")).to_contain_text("Small workers · 50%")
     expect(page.locator(".small-collector-summary")).to_contain_text("0.22 sugar/s")
 
     if width == 1920:
@@ -88,7 +88,10 @@ def check_prestige(page, width, url):
         "scouts": [{"expiresAt": 18000, "count": 2}]}
     load_game(page, later)
     explore_tab(page)
-    expect(page.locator(".pheromone-trails")).to_contain_text("Explore Nectar Meadow")
+    expect(page.locator(".pheromone-trails")).to_contain_text("No nectar source")
+    page.get_by_label("About Pheromone trail", exact=True).click()
+    expect(page.locator(".pheromone-trails .info-content")).to_contain_text("Nectar Meadow")
+    page.get_by_label("About Pheromone trail", exact=True).click()
     route = page.locator('.exploration-destination[data-destination="nectar-meadow"]')
     page.locator("#explorer-count").fill("5")
     route.get_by_role("button").first.click()

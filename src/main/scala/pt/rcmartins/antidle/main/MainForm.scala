@@ -29,6 +29,19 @@ object MainForm {
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
 
+  private def infoDetails(label: String, content: ReactiveHtmlElement[HTMLDivElement]): ReactiveHtmlElement[HTMLElement] =
+    detailsTag(
+      className := "info-details",
+      summaryTag(className := "info-summary", aria.label := s"About $label", title := s"About $label",
+        svg.svg(aria.hidden := true, svg.viewBox := "0 0 24 24",
+          svg.path(svg.d := "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 11v6M12 7h.01")),
+      ),
+      div(className := "info-content", content),
+    )
+
+  private def infoHeading(label: String, content: ReactiveHtmlElement[HTMLDivElement], minor: Boolean = false): ReactiveHtmlElement[HTMLDivElement] =
+    div(className := "info-heading", if (minor) h6(label) else h5(label), infoDetails(label, content))
+
   val currentGlobalAlert: Var[Option[String]] = Var(None)
 
   private val tooltipX: Var[Int] = Var(0)
@@ -800,7 +813,11 @@ object MainForm {
       })
     div(
       className := "queen-routine mb-3",
-      h6("Queen's Routine"),
+      infoHeading("Queen's Routine", div(
+        "Keeps the worker target while respecting the sugar reserve. Adults, developing workers and manual worker orders count toward the target. Scouts stay manual.",
+        div(child.text <-- antsSignal.map(a => s"${prettyNumberStr(BroodProgression.eggCost(a))} sugar per worker egg.")),
+        div("Aging vacancies are refilled from the idle/default pool. With no workers, the queen can gather supplies for one emergency worker."),
+      ), minor = true),
       child.maybe <-- antsSignal.map(_.agingJobVacancies).distinct.map { vacancies => Option.when(vacancies.nonEmpty) {
         div(className := "aging-job-replacements small mb-2",
           span("Awaiting workers: " + vacancies.map { case (task, amount) => s"${amount / u} ${task.name}" }.mkString(" · ")),
@@ -835,7 +852,6 @@ object MainForm {
       div(className := "queen-routine-status small", child.text <-- antsSignal.combineWith(nestSignal, sugarSignal).map {
         case (ants, nest, sugar) => AutomaticBrood.status(ants, nest, sugar.amount)
       }),
-      small(child.text <-- antsSignal.map(a => s"${prettyNumberStr(BroodProgression.eggCost(a))} sugar / worker egg · Developing brood and queued orders count toward the target. Scouts remain manual.")),
     )
   }
 
@@ -857,7 +873,7 @@ object MainForm {
             chamberSignal.map(_.level).distinct.map(Some(_).filter(_ > 0).map(span(_))),
           enabledSignal = constructionBlockedSignal(chamberType).map(_.isEmpty),
           blockedReasonSignal = constructionBlockedSignal(chamberType),
-          descriptionSignal = Val(Option.when(chamberType == ChamberType.Queen)(div("Adds brood places and improves the queen's laying rate. Brood still needs care and larval food."))),
+          descriptionSignal = Val(Option.when(chamberType == ChamberType.Queen)(div("Adds brood places and speeds laying."))),
           costSignal = actionCost,
           bonusSignal = Actions.getActionBonus(chamberType),
           onClickAction = _ =>
@@ -882,13 +898,12 @@ object MainForm {
       div(
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
-        h5("Brood"),
-        child.maybe <-- sugarSignal.combineWith(TickCalculator.sugarTickGain.sum).map { case (sugar, net) =>
-          Option.when(net < 0L && sugar.amount < -net) {
-            div(className := "starvation-warning text-danger small mb-2",
-              b("Colony is starving"), s" · Sugar deficit: ${resourceRateStr(-net * TicksPerSecond)}/s")
-          }
-        },
+        infoHeading("Brood", div(
+          div(className := "brood-feeding", child.text <-- antsSignal.map { ants =>
+            if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein."
+            else "Worker eggs: 10 sugar · about 2m at full care. Larval care: 20 sugar + 2 protein per worker."
+          }),
+          p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
           detailsTag(
             className := "colony-aging mb-2",
@@ -900,6 +915,18 @@ object MainForm {
             p("After Queen's Routine is unlocked, aging draws from idle/default workers first and refills missing jobs as workers become available. Deaths are summarized once per minute."),
           )
         }),
+        )),
+        child.maybe <-- sugarSignal.combineWith(TickCalculator.sugarTickGain.sum).map { case (sugar, net) =>
+          Option.when(net < 0L && sugar.amount < -net) {
+            div(className := "starvation-warning text-danger small mb-2",
+              b("Colony is starving"), s" · Sugar deficit: ${resourceRateStr(-net * TicksPerSecond)}/s")
+          }
+        },
+        child.maybe <-- antsSignal.combineWith(currentTickSignal).map { case (ants, tick) =>
+          val ages = ants.ages
+          val soon = (ages.workers ++ ages.smallWorkers ++ ages.scouts ++ ages.repletes).exists(c => c.count > 0L && c.expiresAt <= tick + 5L * PopulationAging.Minute)
+          Option.when(ages.active && soon)(div(className := "aging-warning small text-danger mb-2", PopulationAging.forecast(ants, tick)))
+        },
         child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked)) {
           queenRoutineControls
         },
@@ -912,22 +939,18 @@ object MainForm {
             BroodProgression.status(ants, nest, resources, upgrades, exploration)
           },
         ),
-        div(className := "brood-feeding small mb-2", child.text <-- antsSignal.map { ants =>
-          if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein. Adults perform tasks at 50% output."
-          else "Worker eggs: 10 sugar · about 2m at full care. Larval care: 20 sugar + 2 protein per worker. Nurses improve development speed."
-        }),
+        child.maybe <-- antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Option.when(standard)(
+          div(className := "brood-care-cost small mb-2", "Larvae: 20 sugar · 2 protein / worker"))),
         child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map { queued => Option.when(queued) {
           button(className := "btn btn-outline-secondary mb-2", typ := "button", minHeight.px := 44, "Cancel egg orders",
             onClick --> (_ => Actions.cancelEggOrders()))
         } },
         child.maybe <-- antsSignal.map(EmergencyRecovery.needed).distinct.map { needed => Option.when(needed) {
           div(className := "emergency-recovery row mb-2",
-            div(className := "small mb-2", "No workers remain. The queen can rear one small worker without protein.",
-              detailsTag(summaryTag("Recovery details"), p("The founding queen survives starvation. She can tend one emergency brood even when normal brood places or housing are full. Existing brood and research are kept. Queen's Routine gathers protected supplies for this one egg when enabled with a positive target; your sugar reserve is kept."))),
             actionButton(
               name = "Raise Emergency Worker",
               enabledSignal = antsSignal.combineWith(sugarSignal).map { case (ants, sugar) => EmergencyRecovery.canRaise(ants, sugar.amount) },
-              descriptionSignal = Val(Some(div("One small worker · about 15s development · 50% task output. Automatically collects sugar. Gather Sugar remains available."))),
+              descriptionSignal = Val(Some(div("The queen rears one small sugar collector without protein, even with full brood places. Development takes about 15s. Queen's Routine can gather protected supplies for this egg; existing brood and research are kept."))),
               costSignal = Val(ActionCost(sugar = EmergencyRecovery.EggCost)),
               bonusSignal = Val(ActionBonus(eggs = u)),
               onClickAction = _ => Actions.raiseEmergencyWorker(),
@@ -948,7 +971,7 @@ object MainForm {
                 case mult => Some(span(s"x$mult"))
               },
               enabledSignal = Actions.layEggActionEnabled,
-              descriptionSignal = Val(Some(div("Order worker eggs. The queen lays them gradually and charges sugar per egg when laid. All development stages occupy brood places. Shortages pause care without losing progress."))),
+              descriptionSignal = Val(Some(div("Order worker eggs. Sugar is charged as they are laid."))),
               costSignal = displayedBatch.combineWith(antsSignal).map { case (mult, ants) => ActionCost(sugar = mult * BroodProgression.eggCost(ants)) },
               bonusSignal = displayedBatch.map(mult => ActionBonus(eggs = mult * u)),
               onClickAction = mult => Actions.layEggAction(mult),
@@ -960,7 +983,7 @@ object MainForm {
               name = "Raise Scout Egg",
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-              descriptionSignal = Val(Some(div("Order a scout egg, even while the queen is busy. Earlier manual orders are laid first; sugar and protein are charged when laid. About 90s development, plus 20 sugar + 2 protein in larval care."))),
+              descriptionSignal = Val(Some(div("Shares the laying queue. Develops in about 90s; larval care costs 20 sugar + 2 protein."))),
               costSignal = Val(ScoutProgression.eggCost),
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseScout(),
@@ -972,7 +995,7 @@ object MainForm {
       child.maybe <-- nestSignal.combineWith(upgradesSignal).distinct.map { case (nest, upgrades) =>
         Option.when(upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0) {
           div(className := "col-12 nest-royal-nursery border-top my-2 py-2",
-            h5("Royal brood"),
+            infoHeading("Royal brood", div("Up to five Royal Nurses tend one daughter queen. Full staffing takes about 10 minutes. Care pauses when supplies run out; progress is kept.")),
             if (nest.royalBroodSlots > 0) royalRearingDiv else div(className := "row",
               actionButton(
                 name = "Royal Nursery",
@@ -1016,7 +1039,7 @@ object MainForm {
               div(s"+${OutpostProgression.housing(nest) / u} colony capacity · ${OutpostProgression.capacity(nest) / u} Seed Forager slots"),
               div(child.text <-- antsSignal.combineWith(resourcesSignal, upgradesSignal, nestSignal).map { case (ants, resources, upgrades, currentNest) =>
                 val harvest = OutpostProgression.harvestPerTick(ants, currentNest, upgrades, resources)
-                val state = if (ants.taskWorkers(AntTask.SeedForager) == 0L) "Assign Seed Foragers in Tasks"
+                val state = if (ants.taskWorkers(AntTask.SeedForager) == 0L) "0 Seed Foragers"
                   else if (resources.protein.atCapacity && harvest.protein == 0L) "Protein full · water use paused"
                   else if (resources.water.amount == 0L) "Needs water · foraging paused"
                   else s"+${preciseRateStr(harvest.protein * TicksPerSecond)} protein/s · −${preciseRateStr(harvest.water * TicksPerSecond)} water/s"
@@ -1075,7 +1098,7 @@ object MainForm {
               name = ChamberType.Replete.name,
               enabledSignal = constructionBlockedSignal(ChamberType.Replete).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Replete),
-              descriptionSignal = Val(Some(div("Each level houses one replete. Promote a worker to add water capacity."))),
+              descriptionSignal = Val(Some(div("Houses promoted repletes."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Replete),
               topRightBadgeSignal = chambersSignal.map(c => Option.when(c.repleteChamber.level > 0)(span(c.repleteChamber.level))),
@@ -1088,7 +1111,7 @@ object MainForm {
               name = ChamberType.Aphid.name,
               enabledSignal = constructionBlockedSignal(ChamberType.Aphid).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Aphid),
-              descriptionSignal = Val(Some(div("Each level supports one Aphid Tender: +0.8 sugar/s, −0.01 protein/s while fed."))),
+              descriptionSignal = Val(Some(div("Adds space for an Aphid Tender."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1103,7 +1126,7 @@ object MainForm {
               name = "Nursery Chamber",
               enabledSignal = constructionBlockedSignal(ChamberType.Nursery).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Nursery),
-              descriptionSignal = Val(Some(div("Adds three brood places and five shared nurse places per level, alongside its housing and carcass storage."))),
+              descriptionSignal = Val(Some(div("+3 brood places · +5 nurse places per level."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1122,10 +1145,9 @@ object MainForm {
     val siteSignal = explorationSignal.map(_.territory).distinct
     val workerSignal = antsSignal.map(TerritoryProgression.workers).distinct
     div(className := "territory-card",
-      h5("Contested Foraging Ground"),
+      infoHeading("Contested Foraging Ground", div("Hauls arrive after each 60-second contest. Reinforcements use the oldest idle/default workers. Withdrawal returns survivors but abandons the unfinished haul. Full storage does not stop contests or losses.")),
       child <-- siteSignal.map(_.held).distinct.map {
         case false => div(
-          div(className := "territory-entry small mb-2", "Hold the ground for protein. Hauls arrive after each 60-second contest. Withdraw anytime; unfinished hauls are left behind."),
           label(forId := "territory-workers", "Workers to hold"),
           div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
             input(idAttr := "territory-workers", className := "form-control", typ := "number", minAttr := "10", maxAttr := "37", stepAttr := "1",
@@ -1136,7 +1158,7 @@ object MainForm {
           ),
           div(className := "territory-risk text-danger small mb-2", child.text <-- chosen.signal.map(n => TerritoryProgression.risk(n.toLong))),
           div(className := "small mb-1", child.text <-- chosen.signal.map(n =>
-            s"+${resourceRateStr(n.toLong * TerritoryProgression.ProteinPerWorkerSecond)} protein/s toward the haul. No scout or expedition slot required.")),
+            s"+${resourceRateStr(n.toLong * TerritoryProgression.ProteinPerWorkerSecond)} protein/s")),
           div(className := "territory-entry-aging text-danger small mb-1", child.text <-- antsSignal.combineWith(currentTickSignal, chosen.signal).map {
             case (ants, tick, amount) =>
               val due = RaidProgression.overdue(ants.ages.workers, amount.toLong, tick + TerritoryProgression.ContestTicks)
@@ -1165,9 +1187,9 @@ object MainForm {
           div(className := "territory-risk text-danger small my-2", child.text <-- workerSignal.map(TerritoryProgression.risk)),
           div(className := "territory-pending", child.text <-- siteSignal.map(site => s"Haul: ${prettyNumberStr(site.pendingProtein)} protein")),
           div(className := "small", child.text <-- workerSignal.map(n =>
-            s"+${resourceRateStr(n * TerritoryProgression.ProteinPerWorkerSecond)} protein/s · delivered after contest, if workers survive.")),
+            s"+${resourceRateStr(n * TerritoryProgression.ProteinPerWorkerSecond)} protein/s")),
           div(className := "territory-storage small my-1",
-            child.text <-- proteinSignal.map(p => s"Storage room: ${prettyNumberStr(p.freeSpace)} protein. Full storage does not stop losses."),
+            child.text <-- proteinSignal.map(p => if (p.atCapacity) "Full storage · losses continue" else s"Storage room: ${prettyNumberStr(p.freeSpace)} protein"),
             className <-- proteinSignal.combineWith(siteSignal, workerSignal, currentTickSignal).map { case (p, site, count, tick) =>
               val expected = site.pendingProtein + count * TerritoryProgression.ProteinPerWorkerSecond * Math.max(0L, site.nextContestTick - tick) / TicksPerSecond
               if (p.freeSpace < expected) "text-danger" else ""
@@ -1197,8 +1219,6 @@ object MainForm {
               onChange.mapToChecked --> (enabled => Actions.maintainTerritory(enabled))),
             "Maintain staffing automatically",
           ),
-          p(className := "small mb-1", "Reinforcements use idle/default-task workers, oldest first. Other assigned jobs are protected."),
-          p(className := "small mb-0", "Withdraw safely returns survivors, but leaves the unfinished haul behind. Aging is resolved at contests or withdrawal."),
         )
       },
     )
@@ -1214,8 +1234,7 @@ object MainForm {
           child.maybe <-- antsSignal.map(_.lineage).distinct.map { lineage =>
             Option.when(lineage.foundings > 0 && !lineage.sharedPaths) {
               div(className := "understanding-shared-paths mt-2",
-                b("Understanding: Shared Paths"),
-                p(className := "small mb-1", "Mark nectar sources found through exploration and assign trail workers."),
+                infoHeading("Understanding: Shared Paths", div("Mark nectar sources found through exploration and assign trail workers."), minor = true),
                 div(className := "small", "Cost: 1 DNA"),
                 button(className := "btn btn-primary mt-1", minHeight.px := 44, typ := "button",
                   "Learn Shared Paths", disabled := (lineage.dna < 1L),
@@ -1224,7 +1243,7 @@ object MainForm {
             }
           },
           child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
-            Option.when(known)(div(className := "small mt-1", "Shared Paths inherited · trails become available with exploration."))),
+            Option.when(known)(div(className := "small mt-1", "Shared Paths inherited"))),
           child.maybe <-- antsSignal.map(_.daughterQueens >= u).distinct.map { ready => Option.when(ready) {
             detailsTag(className := "founding-preview mt-2",
               summaryTag(minHeight.px := 44, "Review founding"),
@@ -1249,11 +1268,9 @@ object MainForm {
       val trailSignal = explorationSignal.map(_.sugarTrail).distinct
       val workersSignal = antsSignal.map(a => PheromoneTrails.workers(a) / u).distinct
       div(className := "border rounded p-2 my-2",
-        h5("Pheromone trail"),
+        infoHeading("Pheromone trail", div("Find nectar sources in Nectar Meadow. Marking a trail reserves one scout; up to ten workers gather sugar until the source is depleted.")),
         child <-- trailSignal.map(t => if (t.remaining <= 0L) 0 else if (t.marked) 2 else 1).distinct.map {
-          case 0 => div(className := "small", child.text <-- explorationSignal.map(e =>
-            if (ExplorationProgression.level(e.experience) >= 4) "Explore Nectar Meadow to find a sugar source."
-            else "Explore to discover a nectar source."))
+          case 0 => div(className := "small", "No nectar source")
           case 1 => div(className := "row",
             div(className := "small", child.text <-- trailSignal.map(t => s"Nectar source · ${prettyNumberStr(t.remaining)} sugar remaining")),
             actionButton(
@@ -1307,9 +1324,8 @@ object MainForm {
     div(className := "royal-nursery-ready",
       child <-- antsSignal.map(ants => if (ants.royalBrood.nonEmpty) 1 else if (ants.daughterQueens > 0L) 2 else 0).distinct.map {
         case 0 => div(
-          p(className := "small mb-1", "Assign up to five Royal Nurses in Tasks. Full staffing takes about 10 minutes of simulated time."),
           p(className := "royal-total-care small mb-1",
-            s"Rearing supplies: ${prettyNumberStr(RoyalBroodProgression.rearingCost.sugar)} sugar · ${prettyNumberStr(RoyalBroodProgression.rearingCost.protein)} protein · ${prettyNumberStr(RoyalBroodProgression.rearingCost.water)} water, plus normal nurse upkeep."),
+            s"Care: ${prettyNumberStr(RoyalBroodProgression.rearingCost.sugar)} sugar · ${prettyNumberStr(RoyalBroodProgression.rearingCost.protein)} protein · ${prettyNumberStr(RoyalBroodProgression.rearingCost.water)} water."),
           div(className := "row",
             actionButton(
               name = "Raise Royal Egg",
@@ -1343,7 +1359,7 @@ object MainForm {
               val cost = brood.map(b => RoyalBroodProgression.scaledCost(RoyalBroodProgression.unitCost(b), count * TicksPerSecond)).getOrElse(ActionCost.empty)
               val rates = List("sugar" -> cost.sugar, "protein" -> cost.protein, "water" -> cost.water)
                 .collect { case (name, amount) if amount > 0L => s"−${resourceRateStr(amount)} $name/s" }
-              "Care at this staffing: " + (if (rates.isEmpty) "no nurses assigned" else rates.mkString(" · "))
+              if (rates.isEmpty) "" else rates.mkString(" · ")
             },
           ),
           div(className := "royal-care-status small", child.text <-- statusSignal,
@@ -1352,8 +1368,8 @@ object MainForm {
             child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
               brood.map { b =>
                 val ticks = RoyalBroodProgression.remainingTicks(b, count)
-                if (ticks < 0L) "Assign Royal Nurses in Tasks to continue."
-                else s"${prettyTimeFromTicks(ticks)} remaining with supplied care"
+                if (ticks < 0L) ""
+                else s"~${prettyTimeFromTicks(ticks)} remaining"
               }.getOrElse("")
             },
           ),
@@ -1474,10 +1490,8 @@ object MainForm {
       actionCosts(costSignal, requirementsSignal),
       child.maybe <-- blockedReasonSignal.map(_.map(reason =>
         div(className := "action-blocked-reason small text-danger text-center", reason))),
-      child.maybe <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
-        Option.when(mobile) {
           detailsTag(
-            className := "mobile-only action-details",
+            className := "action-details",
             summaryTag(
               aria.label := s"Details for $name",
               title := s"Details for $name",
@@ -1487,11 +1501,7 @@ object MainForm {
               ),
             ),
             actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false),
-          )
-        }
-      },
-    ).amendThis(elem =>
-      createTooltipForActionButton(elem, descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false)
+          ),
     )
 
   private def createTooltipForActionButton(
@@ -1562,7 +1572,8 @@ object MainForm {
         unlocked => Option.when(unlocked) {
           div(
             className := "default-workers",
-            label(forId := "default-worker-task", "Default task"),
+            div(className := "info-heading", label(forId := "default-worker-task", "Default task"),
+              infoDetails("Default task", div("New and returning workers join this task when it has room. They remain available for expeditions and other assignments."))),
             select(
               idAttr := "default-worker-task",
               className := "form-select",
@@ -1575,7 +1586,6 @@ object MainForm {
                   Actions.selectDefaultTask(ants.defaultTaskChoices.find(_.toString == selected)))
               },
             ),
-            small("New and returning workers join this task when it has room. Its workers remain available for other actions."),
           )
         }
       },
@@ -1590,10 +1600,9 @@ object MainForm {
   private def smallWorkerTasks: ReactiveHtmlElement[HTMLDivElement] = div(
     child.maybe <-- unlocksSignal.map(_.resources.showSmallWorkers).distinct.map { known => Option.when(known) {
       div(className := "small-worker-tasks border rounded p-2 my-2",
-        h5("Small founding workers · 50% efficiency"),
-        div(className := "small mb-2", "Unassigned small workers gather sugar automatically. Standard worker jobs use the separate standard workforce."),
+        infoHeading("Small workers · 50%", div("Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
         div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) =>
-          s"Sugar collectors: ${ants.smallCollectors / u} · ${resourceRateStr(Foraging.perCollector(ants, upgrades, small = true))} sugar/s each"
+          s"${ants.smallCollectors / u} × ${resourceRateStr(Foraging.perCollector(ants, upgrades, small = true))} sugar/s"
         }),
         List(AntTask.Tunneler, AntTask.Scavenger, AntTask.BroodNurse).map { task =>
           div(className := "small-worker-job my-2",
@@ -1617,9 +1626,9 @@ object MainForm {
               },
               onClick --> (event => Actions.assignSmallWorker(task, taskMultiplier(event).toLong * u))),
             div(className := "small text-body-secondary", task match {
-              case AntTask.Tunneler => "50% standard tunnelling speed."
-              case AntTask.Scavenger => "+0.025 protein/s each · two shared scraps-gathering places."
-              case _ => "Supports one additional developing ant · half a standard nurse's care."
+              case AntTask.Tunneler => ""
+              case AntTask.Scavenger => "+0.025 protein/s each"
+              case _ => ""
             }),
           )
         },
@@ -1645,13 +1654,7 @@ object MainForm {
             },
           )
         case AntTask.AphidTender =>
-          div(
-            child.text <-- antsSignal.map(a => s"${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s per tender"),
-            br(),
-            child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) =>
-              Option.when(protein.amount == 0L && amount > 0L)(span(className := "text-danger", "Needs protein"))
-            },
-          )
+          div(child.text <-- antsSignal.map(a => s"${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s per tender"))
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1659,21 +1662,12 @@ object MainForm {
             }
           )
         case AntTask.SeedForager =>
-          div(
-            child.text <-- upgradesSignal.map(upgrades =>
-              s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"),
-            br(),
-            child.maybe <-- antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal).map { case (ants, nest, upgrades, resources) =>
-              val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, resources)
-              if (ants.taskWorkers(AntTask.SeedForager) == 0L) None
-              else if (resources.protein.atCapacity && harvest.protein == 0L) Some(span("Protein full · water use paused"))
-              else Option.when(resources.water.amount == 0L)(span(className := "text-danger", "Needs water"))
-            },
-          )
+          div(child.text <-- upgradesSignal.map(upgrades =>
+            s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"))
         case AntTask.Scavenger =>
           div("+0.05 protein/s per standard gatherer. Two shared places, including small gatherers.")
         case AntTask.BroodNurse =>
-          div("Supports two additional developing brood at base speed; well-staffed brood can develop faster. Small nurses provide half the care. Places come from Nurseries.")
+          div("Supports two additional brood at base speed. Food shortages pause development.")
         case AntTask.TerritoryForager =>
           div("Holding contested ground. Manage staffing and withdrawal in Territory.")
         case AntTask.TrailForager =>
@@ -1692,7 +1686,6 @@ object MainForm {
       span(
         className := "col-6",
         antTask.name,
-        child.text <-- antsSignal.map(ants => if (ants.effectiveDefaultTask.contains(antTask)) " · Default" else ""),
         nbsp,
         "(",
         child.text <-- amountSignal.combineWith(nestSignal, antsSignal).map { case (amount, nest, ants) =>
@@ -1735,9 +1728,21 @@ object MainForm {
           ),
         ),
       ),
-      div(className := "col-4"),
-      div(className := "mobile-only task-description", taskDescription),
-    ).amendThis(elem => setTooltip(elem, taskDescription))
+      div(className := "task-rate small text-body-secondary", antTask match {
+        case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) => s"${preciseRateStr(Foraging.perCollector(ants, upgrades, small = false))} sugar/s each" })
+        case AntTask.Tunneler => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} space/s each"))
+        case AntTask.Scavenger => div("+0.05 protein/s each")
+        case AntTask.AphidTender => div(child.text <-- antsSignal.map(a => s"+${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s each"),
+          child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
+        case AntTask.SeedForager => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s each"),
+          child.maybe <-- antsSignal.combineWith(resourcesSignal).map { case (ants, resources) =>
+            if (ants.taskWorkers(antTask) == 0L) None
+            else if (resources.protein.atCapacity) Some(div("Protein full"))
+            else Option.when(resources.water.amount == 0L)(div(className := "text-danger", "Needs water")) })
+        case _ => emptyNode
+      }),
+      div(className := "col-12 task-info", infoDetails(antTask.name, div(className := "task-description", taskDescription))),
+    )
   }
 
   private def upgradesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
@@ -1761,8 +1766,7 @@ object MainForm {
         if (available.isEmpty) Seq(div(className := "col-12 py-3 upgrades-empty text-body-secondary",
           if (UpgradeType.all.forall(t => upgrades(t).unlocked))
             p(className := "mb-0", "All current upgrades researched.")
-          else div(p(className := "mb-1", "No upgrades available right now."),
-            small("Grow the colony and explore to discover more research."))))
+          else div(p(className := "mb-1", "No upgrades available."))))
         else available.map(t => createUpgrade(t))
       },
     )
@@ -1774,15 +1778,19 @@ object MainForm {
         val found = DiscoveryProgression.all.filter(_.found(data))
         val surveys = DiscoveryProgression.all.filterNot(_.found(data)).flatMap { discovery =>
           ExplorationDestination.all.find(d => d.id == discovery.destination && d.isUnlocked(data, ants, nest)).map { destination =>
-            div(className := "card p-2 my-2 survey-entry", dataAttr("destination") := destination.id,
-              b(destination.name), span(className := "destination-survey", s"Survey ${discovery.progress(data)} / ${discovery.trips}"))
+            (destination.id, destination.name, discovery.progress(data), discovery.trips)
           }
         }
+        (found, surveys)
+      }.distinct.map { case (found, surveys) =>
         List(
-          div(h5("Surveys"), if (surveys.isEmpty) p("All known areas surveyed.") else div(surveys)),
+          div(h5("Surveys"), if (surveys.isEmpty) p("All known areas surveyed.") else div(surveys.map {
+            case (id, name, progress, trips) => div(className := "card p-2 my-2 survey-entry", dataAttr("destination") := id,
+              b(name), span(className := "destination-survey", s"Survey $progress / $trips"))
+          })),
           div(className := "exploration-discoveries", h5("Discoveries"),
-            if (found.isEmpty) p("Complete surveys to uncover discoveries.") else div(found.map(discovery =>
-              div(className := "card p-2 my-2 discovery-entry", b(discovery.title), span(discovery.description)))),
+            if (found.isEmpty) p("No discoveries yet.") else div(found.map(discovery =>
+              div(className := "card p-2 my-2 discovery-entry", infoHeading(discovery.title, div(discovery.description), minor = true)))),
           ),
         )
       },
@@ -1928,10 +1936,7 @@ object MainForm {
       ),
       div(
         className := "col-12 px-3 py-2 exploration-progress",
-        h5("Exploration experience"),
-        p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
-        detailsTag(
-          summaryTag("XP details"),
+        infoHeading("Exploration experience", div(
           p(className := "mb-1 exploration-milestone",
             child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
           p(child.text <-- explorationSignal.map { data =>
@@ -1941,7 +1946,8 @@ object MainForm {
             s"Reward bonus: +$bonus% sugar, carcass sugar and protein.$next"
           }),
           p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at the 37-worker party limit. Extra scouts add 25% travel speed each, up to three."),
-        ),
+        )),
+        p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
       ),
       div(
         className := "col-12 px-3 py-2 expedition-status",
@@ -2036,15 +2042,15 @@ object MainForm {
               child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, retrieval.targetTick - tick))),
             )
           }),
-          h5("Carcass storage", small(className := "text-body-secondary ms-2 carcass-capacity",
+          infoHeading("Carcass storage", div("Returning parties reserve a slot. Carcass sugar is consumed before stored sugar.")),
+          small(className := "text-body-secondary carcass-capacity",
             child.text <-- explorationSignal.combineWith(nestSignal)
-              .map { case (exploration, nest) => s"${CarcassProgression.occupiedSlots(exploration)} / ${nest.maxCarcasses}" })),
+              .map { case (exploration, nest) => s"${CarcassProgression.occupiedSlots(exploration)} / ${nest.maxCarcasses}" }),
           div(
             className := "text-body-secondary carcass-storage-summary",
             child.text <-- explorationSignal.map(data =>
               s"${data.carcasses.size} stored · ${data.retrievals.size} returning"),
           ),
-          small(className := "text-body-secondary", "Returning parties reserve a slot. Carcass sugar is used before stored sugar."),
           children <-- explorationSignal.map { exploration =>
             if (exploration.carcasses.isEmpty) Seq(p("No carcasses at home."))
             else exploration.carcasses.map { carcass =>

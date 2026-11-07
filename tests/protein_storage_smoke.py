@@ -56,13 +56,10 @@ def check_storage(page, width, url):
     expect(protein).to_contain_text("/400")
     page.get_by_role("tab", name="Nest", exact=True).click()
     chamber = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Food Storage Chamber 3", exact=True))
-    if width <= 767:
-        chamber.get_by_label("Details for Food Storage Chamber", exact=True).click()
-        expect(chamber.locator("details[open]")).to_contain_text("+100 max protein")
-        expect(chamber.locator("details[open]")).to_contain_text("+1000 max sugar")
-    else:
-        chamber.get_by_role("button").hover()
-        expect(page.locator(".game-tooltip")).to_contain_text("+100 max protein")
+    chamber.get_by_label("Details for Food Storage Chamber", exact=True).click()
+    expect(chamber.locator("details[open]")).to_contain_text("+100 max protein")
+    expect(chamber.locator("details[open]")).to_contain_text("+1000 max sugar")
+    chamber.get_by_label("Details for Food Storage Chamber", exact=True).click()
     chamber.get_by_role("button").click()
     page.clock.run_for(200)
     built = save_game(page)
