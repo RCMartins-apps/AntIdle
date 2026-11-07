@@ -813,7 +813,7 @@ object MainForm {
       div(className := "queen-routine-status small", child.text <-- antsSignal.combineWith(nestSignal, sugarSignal).map {
         case (ants, nest, sugar) => AutomaticBrood.status(ants, nest, sugar.amount)
       }),
-      small("10 sugar / worker egg · Growing eggs count toward the target. Scouts remain manual."),
+      small(child.text <-- antsSignal.map(a => s"${prettyNumberStr(BroodProgression.eggCost(a))} sugar / worker egg · Developing brood and queued orders count toward the target. Scouts remain manual.")),
     )
   }
 
@@ -831,7 +831,7 @@ object MainForm {
           topRightBadgeSignal =
             chamberSignal.map(_.level).distinct.map(Some(_).filter(_ > 0).map(span(_))),
           enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
-          descriptionSignal = Val(None),
+          descriptionSignal = Val(Option.when(chamberType == ChamberType.Queen)(div("Adds brood places and improves the queen's laying rate. Brood still needs care and larval food."))),
           costSignal = actionCost,
           bonusSignal = Actions.getActionBonus(chamberType),
           onClickAction = _ =>
@@ -872,13 +872,17 @@ object MainForm {
           queenRoutineControls
         },
         div(className := "brood-pipeline small mb-2",
-          child.text <-- antsSignal.combineWith(nestSignal, resourcesSignal).map { case (ants, nest, resources) =>
-            BroodProgression.status(ants, nest, resources)
+          className <-- antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal).map {
+            case (ants, nest, resources, upgrades, exploration) =>
+              if (BroodProgression.status(ants, nest, resources, upgrades, exploration).contains("Needs")) "text-danger" else ""
+          },
+          child.text <-- antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal).map { case (ants, nest, resources, upgrades, exploration) =>
+            BroodProgression.status(ants, nest, resources, upgrades, exploration)
           },
         ),
         div(className := "brood-feeding small mb-2", child.text <-- antsSignal.map { ants =>
           if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein. Adults perform tasks at 50% output."
-          else "Worker eggs: 10 sugar · about 2m development. Larval care: 20 sugar + 2 protein per worker. Nurses improve development speed."
+          else "Worker eggs: 10 sugar · about 2m at full care. Larval care: 20 sugar + 2 protein per worker. Nurses improve development speed."
         }),
         child.maybe <-- antsSignal.map(_.eggOrders > 0).distinct.map { queued => Option.when(queued) {
           button(className := "btn btn-outline-secondary mb-2", typ := "button", minHeight.px := 44, "Cancel egg orders",
@@ -902,7 +906,7 @@ object MainForm {
               costSignal = displayedBatch.combineWith(antsSignal).map { case (mult, ants) => ActionCost(sugar = mult * BroodProgression.eggCost(ants)) },
               bonusSignal = displayedBatch.map(mult => ActionBonus(eggs = mult * u)),
               onClickAction = mult => Actions.layEggAction(mult),
-              requirementsSignal = broodRequirementsSignal,
+              requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
           },
           child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
@@ -1049,7 +1053,7 @@ object MainForm {
             actionButton(
               name = "Nursery Chamber",
               enabledSignal = nestSignal.map(n => n.buildQueue.size < n.maxBuildQueue),
-              descriptionSignal = Val(None),
+              descriptionSignal = Val(Some(div("Adds three brood places and five shared nurse places per level, alongside its housing and carcass storage."))),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1346,7 +1350,7 @@ object MainForm {
     antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       List(
         ActionRequirement("brood places", Math.max(0L, BroodProgression.capacity(nest).toLong * u - ants.eggsAndLarvae.size * u)),
-        ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - ants.populationCount * u)),
+        ActionRequirement("colony slots", Math.max(0L, nest.maxAnts - (ants.populationCount.toLong + ants.eggOrders) * u)),
       )
     }.distinct
 
@@ -1487,7 +1491,7 @@ object MainForm {
           ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),
           ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " max water")),
           ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete slot"),
-          ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " max eggs")),
+          ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " brood places")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
           ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
@@ -1523,7 +1527,7 @@ object MainForm {
         }
       },
       span(
-        "Available workers: ",
+        "Available standard workers: ",
         b(child.text <-- availableWorkersCountSignal.map(prettyNumberStr)),
       ),
       smallWorkerTasks,
@@ -1547,12 +1551,12 @@ object MainForm {
               val count = if (task == AntTask.Tunneler) ants.smallTunnelers else if (task == AntTask.Scavenger) ants.smallScavengers else ants.smallNurses
               s"${task.name}: ${count / u} "
             }),
-            button(className := "btn btn-outline-primary mx-1", typ := "button", minHeight.px := 44, "−", aria.label := s"Remove small ${task.name}",
+            button(className := "btn btn-outline-primary mx-1", typ := "button", minHeight.px := 44, minWidth.px := 44, "−", aria.label := s"Remove small ${task.name}",
               disabled <-- antsSignal.map { ants =>
                 (if (task == AntTask.Tunneler) ants.smallTunnelers else if (task == AntTask.Scavenger) ants.smallScavengers else ants.smallNurses) == 0L
               },
               onClick --> (event => Actions.assignSmallWorker(task, -taskMultiplier(event).toLong * u))),
-            button(className := "btn btn-outline-primary mx-1", typ := "button", minHeight.px := 44, "+", aria.label := s"Assign small ${task.name}",
+            button(className := "btn btn-outline-primary mx-1", typ := "button", minHeight.px := 44, minWidth.px := 44, "+", aria.label := s"Assign small ${task.name}",
               disabled <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
                 val current = if (task == AntTask.Tunneler) ants.smallTunnelers else if (task == AntTask.Scavenger) ants.smallScavengers else ants.smallNurses
                 val max = if (task == AntTask.Tunneler) Long.MaxValue else DefaultWorkerAssignment.capacity(task, nest) - ants.taskWorkers(task)
@@ -1562,7 +1566,7 @@ object MainForm {
             div(className := "small text-body-secondary", task match {
               case AntTask.Tunneler => "50% standard tunnelling speed."
               case AntTask.Scavenger => "+0.025 protein/s each · two shared scraps-gathering places."
-              case _ => "1 care unit per tick · half a standard nurse's contribution."
+              case _ => "Supports one additional developing ant · half a standard nurse's care."
             }),
           )
         },
@@ -1616,7 +1620,7 @@ object MainForm {
         case AntTask.Scavenger =>
           div("+0.05 protein/s per standard gatherer. Two shared places, including small gatherers.")
         case AntTask.BroodNurse =>
-          div("Adds 2 care units per tick; small nurses add 1. Shared nurse places come from Nurseries.")
+          div("Supports two additional developing brood at base speed; well-staffed brood can develop faster. Small nurses provide half the care. Places come from Nurseries.")
         case AntTask.TerritoryForager =>
           div("Holding contested ground. Manage staffing and withdrawal in Territory.")
         case AntTask.TrailForager =>

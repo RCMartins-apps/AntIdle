@@ -176,9 +176,9 @@ class ColonyLifecycleSuite extends FunSuite {
     assertEquals(AutomaticBrood.tick(first), first)
     val targeted = AutomaticBrood.configure(initial, true, 2, 100 * u)
     val full = AutomaticBrood.tick(targeted)
-    assertEquals(full.ants.eggsAndLarvae.size, 2)
+    assertEquals(full.ants.eggsAndLarvae.size, 1)
     assertEquals(AutomaticBrood.tick(full), full)
-    assertEquals(full.statistics.eggsCount, initial.statistics.eggsCount.addValue(2))
+    assertEquals(full.statistics.eggsCount, initial.statistics.eggsCount.addValue(1))
   }
 
   test("automatic brood shares egg and population slots with scout eggs") {
@@ -186,7 +186,7 @@ class ColonyLifecycleSuite extends FunSuite {
     val small = initial.copy(nestAttributes = initial.nestAttributes.copy(maxAnts = 9 * u, maxEggs = 2 * u),
       ants = initial.ants.copy(eggsAndLarvae = Seq(AntBrood.ScoutEgg(0L))))
     val result = AutomaticBrood.tick(AutomaticBrood.configure(small, true, 20, 0))
-    assertEquals(result.ants.eggsAndLarvae.count(_.isInstanceOf[AntBrood.Egg]), 1)
+    assertEquals(BroodProgression.incoming(result.ants), 1)
     assertEquals(result.ants.populationCount, 9)
     assertEquals(AutomaticBrood.tick(result), result)
   }
@@ -195,11 +195,11 @@ class ColonyLifecycleSuite extends FunSuite {
     val original = colony(3).copy(upgrades = UpgradesData.initial.unlock(QueensRoutine, DefaultWorkers))
     val assigned = original.copy(ants = original.ants.copy(tasks = Seq(AntTask.SugarCollector -> (3 * u)), defaultTask = Some(AntTask.SugarCollector)))
     val aged = setAge(assigned, List(AgeCohort(Minute, 1), AgeCohort(60 * Minute, 2)))
-    val configured = AutomaticBrood.configure(aged, true, 3, 100 * u)
+    val configured = AutomaticBrood.configure(aged.copy(basicResources = aged.basicResources.copy(protein = BasicResource(10 * u, 100 * u))), true, 3, 100 * u)
     val first = TickUpdater.updateAllData(configured.copy(world = configured.world.copy(currentTick = Minute - 1L)), None)
     assertEquals(first.ants.workers, 2L * u)
     assertEquals(first.ants.eggsAndLarvae.size, 1)
-    val grown = (1 to 50).foldLeft(first)((data, _) => TickUpdater.updateAllData(data, None))
+    val grown = (1 to 600).foldLeft(first)((data, _) => TickUpdater.updateAllData(data, None))
     assertEquals(grown.ants.workers, 3L * u)
     assertEquals(grown.ants.taskWorkers(AntTask.SugarCollector), 3L * u)
     assert(grown.ants.eggsAndLarvae.isEmpty)

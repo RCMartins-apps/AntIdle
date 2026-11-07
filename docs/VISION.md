@@ -112,6 +112,6 @@ limits, larval feeding and nurse throughput, with Queen's Routine using the same
 pipeline. An approved small founding worker phase keeps the opening quick before an
 unlock switches future brood to ordinary workers. Small workers provide half
 standard task output and live somewhat shorter lives, with a generous transition
-window. Existing adults retain their type. Exact caste rules,
-transition and balance are still being discussed; current brood mechanics have
-not yet been replaced. See D16 in DECISIONS.
+window. Existing adults retain their type. This founding phase and the staged
+brood pipeline are implemented; exact timings and costs remain adjustable.
+See D16 in DECISIONS.

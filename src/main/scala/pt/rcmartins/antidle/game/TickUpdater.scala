@@ -109,13 +109,12 @@ object TickUpdater {
                       allData
                   }
             }
-          val tended = RoyalBroodProgression.tick(afterUpkeep)
+          val tended = BroodProgression.tick(RoyalBroodProgression.tick(afterUpkeep))
           val royalSugarSpent = afterUpkeep.basicResources.sugar.amount - tended.basicResources.sugar.amount
           val royalSurplusUsed = Math.min(royalSugarSpent, Math.max(0L, surplusSugarU - sugarUpkeep))
           tended.modify(_.basicResources.sugar.amount).using(amount => Math.min(amount, tended.basicResources.sugar.maxAmount))
             .modify(_.statistics.sugarU).usingIf(royalSurplusUsed > 0L)(_.addValue(royalSurplusUsed))
         },
-        BroodProgression.tick,
         BroodProgression.layOrdered,
         AutomaticBrood.tick,
         PopulationAging.reconcile,

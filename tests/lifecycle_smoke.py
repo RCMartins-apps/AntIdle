@@ -72,8 +72,8 @@ def check_lifecycle(page, width, url):
     page.locator("#queen-routine-reserve").press("Tab")
     page.clock.run_for(200)
     laid = save_game(page)
-    assert len(laid["ants"]["eggsAndLarvae"]) == 2
-    page.clock.run_for(10000)
+    assert len(laid["ants"]["eggsAndLarvae"]) == 1
+    page.clock.run_for(140000)
     grown = save_game(page)
     assert grown["ants"]["workers"] == 14 * UNIT
     assert not grown["ants"]["eggsAndLarvae"]
@@ -96,7 +96,7 @@ def check_lifecycle(page, width, url):
     assert replaced["ants"]["workers"] == 13 * UNIT
     assert len(replaced["ants"]["eggsAndLarvae"]) == 1
     assert sum(m.startswith("Aging:") for m in replaced["messages"]) == 1
-    page.clock.run_for(10000)
+    page.clock.run_for(120000)
     restored = save_game(page)
     assert restored["ants"]["workers"] == 14 * UNIT
     assert restored["ants"]["tasks"][0][1] == 14 * UNIT

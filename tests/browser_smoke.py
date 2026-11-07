@@ -53,6 +53,7 @@ def progressed_game(initial):
         resource["amount"] = 100000 * UNIT
         if resource["maxAmount"] != 9223372036854775807:
             resource["maxAmount"] = 100000 * UNIT
+    game["ants"]["standardWorkersUnlocked"] = True
     game["ants"]["workers"] = 300 * UNIT
     game["ants"]["tasks"] = [
         [{"SugarCollector": {}}, 0],
@@ -119,7 +120,7 @@ def check_compact_details(page):
     toggle.focus()
     toggle.press("Space")
     expect(panel).to_have_attribute("open", "")
-    expect(panel).to_contain_text("Ants require a constant sugar supply")
+    expect(panel).to_contain_text("Order worker eggs")
     assert action.bounding_box()["height"] > closed_height
     expect(action.locator(".action-costs")).to_be_visible()
     toggle.press("Enter")
@@ -142,7 +143,7 @@ def check_chamber_bonuses(page, initial):
         ("Expand Nest", "nestChamber", {"ants": 10, "tunneling": 500},
          ("+10 max ants", "+500 max tunneling space")),
         ("Queen's Chamber", "queenChamber", {"ants": 5, "eggs": 2},
-         ("+5 max ants", "+2 max eggs")),
+         ("+5 max ants", "+2 brood places")),
         ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
          ("+1000 max sugar",)),
     ):
@@ -262,12 +263,14 @@ def run_checks(browser, url):
                 assert actual == outcomes[multiplier], (width, multiplier)
             else:
                 outcomes[multiplier] = actual
-            assert len(result["ants"]["eggsAndLarvae"]) == multiplier
+            assert result["ants"]["eggOrders"] == multiplier
+            assert result["ants"]["eggsAndLarvae"] == []
             assert result["ants"]["tasks"][1][1] == multiplier * UNIT
 
         # Visible batch price follows what will actually be bought, including partial batches.
         partial = progressed_game(initial)
         partial["basicResources"]["sugar"]["amount"] = 35 * UNIT
+        partial["ants"]["workers"] = 0
         load_game(page, partial)
         if width <= 767:
             page.locator(".nest-brood").get_by_label("Action amount").select_option("10")
@@ -281,10 +284,16 @@ def run_checks(browser, url):
         if width > 767:
             page.keyboard.up("Control")
         bought = save_game(page)
-        assert bought["basicResources"]["sugar"]["amount"] == 5 * UNIT
-        assert len(bought["ants"]["eggsAndLarvae"]) == 3
+        assert bought["basicResources"]["sugar"]["amount"] == 35 * UNIT
+        assert bought["ants"]["eggOrders"] == 3
+        assert bought["ants"]["eggsAndLarvae"] == []
+        page.clock.run_for(200)
+        laid = save_game(page)
+        assert laid["basicResources"]["sugar"]["amount"] == 25 * UNIT
+        assert laid["ants"]["eggOrders"] == 2
+        assert len(laid["ants"]["eggsAndLarvae"]) == 1
         page.get_by_role("tab", name="Nest", exact=True).click()
-        expect(egg_action.locator(".action-costs")).to_contain_text("5/10 sugar")
+        expect(egg_action.locator(".action-costs")).to_contain_text("25/20 sugar" if width <= 767 else "25/10 sugar")
         load_game(page, game)
 
         if width <= 767:
@@ -293,7 +302,7 @@ def run_checks(browser, url):
             load_game(page, blocked)
             expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_disabled()
             page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-            expect(page.locator(".action-details[open]")).to_contain_text("Ants require a constant sugar supply")
+            expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
             load_game(page, game)
 
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
@@ -301,10 +310,10 @@ def run_checks(browser, url):
         page.get_by_role("tab", name="Nest", exact=True).click()
         page.get_by_role("button", name="Raise Worker Egg", exact=False).hover()
         expect(page.locator(".game-tooltip")).to_be_visible()
-        expect(page.locator(".game-tooltip")).to_contain_text("Ants require a constant sugar supply")
+        expect(page.locator(".game-tooltip")).to_contain_text("Order worker eggs")
         page.set_viewport_size({"width": 390, "height": 844})
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-        expect(page.locator("details[open]")).to_contain_text("Ants require a constant sugar supply")
+        expect(page.locator("details[open]")).to_contain_text("Order worker eggs")
         assert_fits(page, 390)
         if width == 390:
             check_nest_capacity(page, initial)

@@ -158,7 +158,8 @@ class TerritorySuite extends FunSuite {
       upgrades = held.upgrades.unlock(UpgradesData.UpgradeType.QueensRoutine),
       unlocks = held.unlocks.copy(actions = held.unlocks.actions.copy(canLayEggs = true)))
     val returned = TickUpdater.updateAllData(d.copy(world = d.world.copy(currentTick = d.exploration.territory.nextContestTick - 1L)), None)
-    assertEquals(returned.ants.eggsAndLarvae.size, returned.statistics.territoryDeaths.thisRun)
+    assertEquals(returned.ants.eggsAndLarvae.size, 1)
+    assert(returned.ants.layingCooldown > 0L)
     val stats = StatisticsData.newColony(returned.statistics)
     assertEquals(stats.territoryDeaths.thisRun, 0)
     assertEquals(stats.territoryDeaths.total, returned.statistics.territoryDeaths.total)

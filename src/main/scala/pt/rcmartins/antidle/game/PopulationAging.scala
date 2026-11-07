@@ -82,6 +82,7 @@ object PopulationAging {
         scouts = fit(ages.scouts, ScoutProgression.atHome(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L),
         repletes = fit(ages.repletes, data.ants.repletes / u, data.world.saveSeed + data.currentTick + 13L, longLived = true)))
       if (ages.active) updated
+      else if (data.ants.smallWorkers > 0L) updated.addMessage("Colony aging has begun: small workers live 30–40 simulated minutes; standard workers live 45–60. Their fixed lifespans are saved.")
       else updated.addMessage(s"Colony aging has begun: new adults live ${lifespanText(data.upgrades)} minutes of simulated time. Aging continues while away; overdue ants die on return.")
     }
   }
@@ -167,6 +168,7 @@ object PopulationAging {
     def count(cohorts: List[AgeCohort]): Long = cohorts.filter(_.expiresAt <= tick + 5L * Minute).map(_.count).sum
     val storage = if (data.repletes > 0L) s" · ${count(data.ages.repletes)} repletes" else ""
     val scope = if (data.taskWorkers(AntTask.TerritoryForager) > 0L) "Home aging" else "Aging"
-    s"$scope · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts$storage"
+    val small = if (data.smallWorkers > 0L) s" · ${count(data.ages.smallWorkers)} small workers" else ""
+    s"$scope · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts$small$storage"
   }
 }
