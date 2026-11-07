@@ -4,7 +4,8 @@
 
 - Main `d9e755a` contains merged first prestige PR #37.
 - Related branch `design/expedition-danger` now implements the approved raid;
-  pushed, with no new PR requested. D14 and README record rules and balance.
+  pushed with [PR #38](https://github.com/RCMartins-apps/AntIdle/pull/38) open
+  against `main`. D14 and README record rules and balance.
 - Latest owner requirement: oldest ants depart first, but casualties are random
   within the party. Reuses oldest-first home-worker cohort selection and samples
   individuals uniformly without replacement. Surviving expiry ticks are retained.
