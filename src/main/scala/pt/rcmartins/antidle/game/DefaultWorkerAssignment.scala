@@ -8,8 +8,15 @@ object DefaultWorkerAssignment {
   def capacity(task: AntTask, nest: NestAttributes): Long = task match {
     case AntTask.AphidTender => AphidHusbandry.capacity(nest)
     case AntTask.SeedForager => OutpostProgression.capacity(nest)
+    case AntTask.Scavenger => 2L * pt.rcmartins.antidle.game.Constants.u
+    case AntTask.BroodNurse => nest.chambers.nurseryChamber.level.toLong * 5L * pt.rcmartins.antidle.game.Constants.u
     case AntTask.RoyalNurse => RoyalBroodProgression.capacity(nest)
     case _ => Long.MaxValue
+  }
+
+  def availableCapacity(ants: AntsData, task: AntTask, nest: NestAttributes): Long = {
+    val small = if (task == AntTask.Scavenger) ants.smallScavengers else if (task == AntTask.BroodNurse) ants.smallNurses else 0L
+    Math.max(0L, capacity(task, nest) - small)
   }
 
   def select(data: AllData, task: Option[AntTask]): AllData =
@@ -17,7 +24,8 @@ object DefaultWorkerAssignment {
     else normalize(data.modify(_.ants).using(_.withDefaultTask(task)))
 
   def assign(data: AllData, task: AntTask, amount: Long): AllData = {
-    val room = Math.max(0L, capacity(task, data.nestAttributes) - data.ants.taskWorkers(task))
+    val small = if (task == AntTask.Scavenger) data.ants.smallScavengers else if (task == AntTask.BroodNurse) data.ants.smallNurses else 0L
+    val room = Math.max(0L, capacity(task, data.nestAttributes) - small - data.ants.taskWorkers(task))
     normalize(data.modify(_.ants).using(_.addToTask(task, Math.max(0L, Math.min(amount, room)))))
   }
 
@@ -25,6 +33,10 @@ object DefaultWorkerAssignment {
     val limit = if (data.upgrades(UpgradeType.AphidTending).unlocked) AphidHusbandry.capacity(data.nestAttributes) else 0L
     data.modify(_.ants.tasks).using(_.map { case (task, amount) =>
       task -> (if (task == AntTask.AphidTender) Math.min(amount, limit)
+        else if (task == AntTask.Scavenger || task == AntTask.BroodNurse) {
+          val small = if (task == AntTask.Scavenger) data.ants.smallScavengers else data.ants.smallNurses
+          Math.min(amount, Math.max(0L, capacity(task, data.nestAttributes) - small))
+        }
         else if (task == AntTask.SeedForager || task == AntTask.RoyalNurse) Math.min(amount, capacity(task, data.nestAttributes)) else amount)
     })
   }

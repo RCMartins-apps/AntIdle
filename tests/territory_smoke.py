@@ -87,7 +87,7 @@ def check_territory(page, width, url):
     assert result["basicResources"]["protein"]["amount"] == 180 * UNIT
     assert result["statistics"]["proteinU"]["thisRun"] == 180 * UNIT
     assert result["ants"]["workers"] == (40 - losses) * UNIT
-    assert len(result["ants"]["eggsAndLarvae"]) == losses
+    assert len(result["ants"]["eggsAndLarvae"]) == 1
     assert result["exploration"]["territory"]["round"] == 1
     assert result["exploration"]["territory"]["seed"] == started["exploration"]["territory"]["seed"]
     tab.click()
@@ -100,8 +100,8 @@ def check_territory(page, width, url):
     assert maintained["ants"]["workers"] == (40 - losses) * UNIT
     page.clock.run_for(10000)
     replenished = save_game(page)
-    assert replenished["ants"]["workers"] == 40 * UNIT
-    assert replenished["ants"]["eggsAndLarvae"] == []
+    assert replenished["ants"]["workers"] == (40 - losses) * UNIT
+    assert len(replenished["ants"]["eggsAndLarvae"]) == 1
     tab.click()
     assert_fits(page, width)
     page.locator(".territory-card").screenshot(path=f"/tmp/antidle-territory-{width}.png")
@@ -110,8 +110,8 @@ def check_territory(page, width, url):
     assert not withdrawn["exploration"]["territory"]["held"]
     assert withdrawn["exploration"]["territory"]["pendingProtein"] == 0
     assert withdrawn["basicResources"]["protein"]["amount"] == 180 * UNIT
-    assert withdrawn["ants"]["workers"] == 40 * UNIT
-    assert next(n for t, n in withdrawn["ants"]["tasks"] if "SugarCollector" in t) == 40 * UNIT
+    assert withdrawn["ants"]["workers"] == (40 - losses) * UNIT
+    assert next(n for t, n in withdrawn["ants"]["tasks"] if "SugarCollector" in t) == (40 - losses) * UNIT
     assert next(c["count"] for c in withdrawn["ants"]["ages"]["workers"] if c["expiresAt"] == 5000) == 15 - losses
     page.clock.run_for(60000)
     assert save_game(page)["statistics"]["territoryContests"]["thisRun"] == 1

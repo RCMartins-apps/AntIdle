@@ -54,6 +54,7 @@ object Unlocks {
       showScouts: Boolean = false,
       showRepletes: Boolean = false,
       showDaughterQueens: Boolean = false,
+      showSmallWorkers: Boolean = false,
   )
 
   object ResourceUnlocks {

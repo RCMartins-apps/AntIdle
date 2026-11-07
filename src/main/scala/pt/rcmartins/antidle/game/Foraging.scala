@@ -1,7 +1,7 @@
 package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.game.Constants._
-import pt.rcmartins.antidle.model.{Lineage, UpgradesData}
+import pt.rcmartins.antidle.model.{AntsData, AntTask, Lineage, UpgradesData}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 
 object Foraging {
@@ -25,6 +25,21 @@ object Foraging {
     Prestige.sugar(techniques.filter(upgrades(_).unlocked).foldLeft(basePerTick(collectors, upgrades)) { (amount, _) =>
       (BigDecimal(amount) * BigDecimal.decimal(SugarImprovementBonusPerc)).toLong
     }, lineage)
+
+  def mixedBasePerTick(ants: AntsData, upgrades: UpgradesData): Long = {
+    val normal = ants.taskWorkers(AntTask.SugarCollector) / u
+    val small = ants.smallCollectors / u
+    val count = normal + small
+    if (count == 0L) 0L else basePerTick(count, upgrades) * (2L * normal + small) / (2L * count)
+  }
+  def production(ants: AntsData, upgrades: UpgradesData): Long =
+    Prestige.sugar(techniques.filter(upgrades(_).unlocked).foldLeft(mixedBasePerTick(ants, upgrades)) { (amount, _) =>
+      (BigDecimal(amount) * BigDecimal.decimal(SugarImprovementBonusPerc)).toLong
+    }, ants.lineage)
+  def perCollector(ants: AntsData, upgrades: UpgradesData, small: Boolean): Long = {
+    val count = (ants.taskWorkers(AntTask.SugarCollector) + ants.smallCollectors) / u
+    if (count == 0L) 0L else productionPerTick(count, upgrades, ants.lineage) * TicksPerSecond / count / (if (small) 2L else 1L)
+  }
 
   def averagePerSecond(collectors: Long, upgrades: UpgradesData, lineage: Lineage = Lineage()): Long = {
     val count = Math.max(1L, collectors)

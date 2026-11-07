@@ -115,7 +115,8 @@ def check_raid(page, width, url):
     load_game(page, automated)
     page.clock.run_for(200)
     replaced = save_game(page)
-    assert len(replaced["ants"]["eggsAndLarvae"]) == losses
+    assert len(replaced["ants"]["eggsAndLarvae"]) == 1
+    assert replaced["ants"]["layingCooldown"] > 0
     assert replaced["statistics"]["raidDeaths"]["thisRun"] == losses
     old = copy.deepcopy(game)
     old["statistics"].pop("raidDeaths", None)

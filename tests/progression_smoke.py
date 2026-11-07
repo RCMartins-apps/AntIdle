@@ -99,9 +99,16 @@ def check_progression(page, width, url):
     assert nursery["basicResources"]["protein"]["amount"] == 2 * UNIT
     explore_tab(page)
     expect(page.locator(".carcass-capacity")).to_have_text("1 / 2")
+    # Nearby scraps supply the scout's newly required larval protein.
+    page.get_by_role("tab", name="Tasks").click()
+    for _ in range(2):
+        page.get_by_role("button", name="Assign Scraps Gatherer", exact=True).click()
+    page.clock.run_for(20000)
+    for _ in range(2):
+        page.get_by_role("button", name="Remove Scraps Gatherer", exact=True).click()
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_role("button", name="Raise Scout Egg", exact=True).click()
-    page.clock.run_for(30000)
+    page.clock.run_for(90000)
     adult = save_game(page)
     assert adult["ants"]["scouts"] == UNIT
     assert not adult["ants"]["eggsAndLarvae"]

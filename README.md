@@ -286,7 +286,7 @@ its level and colony prerequisites are met:
 | --- | --- | --- | --- |
 | Reinforced Mandibles | Exploration level 3 | 1,200 sugar, 20 protein, 100 Knowledge | Tunnelers produce 50% more space |
 | Nectar Meadow | Exploration level 4 and scout training | 40 sugar per worker; at least 5 workers and 1 scout | 90-second expedition with guaranteed sugar and Knowledge |
-| Brood Care | Exploration level 4 and a Nursery | 2,000 sugar, 40 protein, 180 Knowledge | Worker and scout eggs mature in 20% less time |
+| Brood Care | Exploration level 4 and a Nursery | 2,000 sugar, 40 protein, 180 Knowledge | +25% brood-care throughput when supplied (about 20% less development time) |
 
 Nectar Meadow trades workers, a scout, sugar supplies and an expedition slot for
 a predictable sugar return without carcass storage. Base rewards are 300 sugar,
@@ -356,9 +356,10 @@ to check purchase costs, both chamber bonuses and saved capacity on phone/deskto
 
 ## Colony lifecycle
 
-The first Nursery activates aging. Existing workers/scouts receive a full,
-varied 45–60 minute lifespan, and newly matured adults receive their own full
-lifespan. All durations use simulated ticks: loading does not consume stored
+In new colonies, the first small founding adult activates aging immediately.
+Small workers live 30–40 simulated minutes; standard workers/scouts live
+45–60. Legacy standard-only colonies still activate aging with their first
+Nursery. Existing adults receive a full grace period when aging begins. All durations use simulated ticks: loading does not consume stored
 time or instantly age the colony. The existing catch-up multiplier advances
 aging alongside other game systems when the player enables it.
 
@@ -383,10 +384,11 @@ visible after the population reaches zero.
 **Queen's Routine** appears at exploration level 3 with a Nursery. It costs
 1,200 sugar, 20 protein and 100 Knowledge and unlocks opt-in automatic worker
 eggs in Brood. The player sets a worker target and sugar reserve; automatic eggs
-cost the same 10 sugar as manual eggs. Living workers (including those away) and
-growing worker eggs count toward the target. Scouts remain manual; both castes
-share egg/population slots. Automation runs after upkeep and never spends below
-its reserve, fills only available slots and stops when the target is covered.
+cost the current worker type's egg price, just like manual orders. Small and
+standard adults, developing worker brood and queued manual worker orders count
+toward the target. Scouts remain manual and share the queen's laying cooldown
+and brood places. Automation runs after upkeep/care, lays at most one egg when
+the queen is ready, respects its reserve and stops when the target is covered.
 Configuration is saved; a compact status explains when it is paused, limited by
 slots, holding reserves or already meeting the target.
 
@@ -851,3 +853,84 @@ withdrawal and phone/desktop layout.
 
 Temporary vulnerable food sources and soldier specialization are deferred
 content ideas; neither is added by territorial contests.
+
+
+## Founding workers and staged brood development
+
+Fresh colonies and new prestige generations begin with **small founding
+workers (nanitics)**. They develop in about 15 simulated seconds, so the opening
+still produces useful workers quickly. Newly laid small eggs cost **5 sugar**;
+founding care uses no protein resource. Remaining unassigned small workers
+collect sugar automatically, while the Tasks panel can move them to tunnelling,
+nearby scraps gathering or nursing when those jobs are available.
+
+Small workers provide **50% of standard task output**, including tunnelling,
+protein gathering and nurse contribution. They consume **half normal sugar
+upkeep** and live **30–40 simulated minutes** from adulthood, or **36–48** with
+Colony Nutrition. Their saved cohorts never reroll. They occupy housing and
+count toward total-worker targets, but cannot substitute for the standard
+worker pool used by expeditions, retrievals, territory holding or promotions.
+Their resource row remains visible after discovery, including at zero.
+
+**Standard Worker Development** appears after five small adults, opening the
+Upgrades tab if needed. It costs **75 sugar and 10 tunnelling space**, with no
+Knowledge or protein prerequisite. Research permanently changes future worker
+eggs in this colony to standard workers. Existing small adults and already-laid
+brood keep their type; queued orders that have not been laid use the new type
+and price. Small workers continue their existing jobs until reassigned or lost.
+
+Nearby **Scraps Gatherers** unlock with this transition, providing protein
+before scouts or expedition rewards are required. There are **two shared
+places**: standard gatherers produce **0.05 protein/s** each, small gatherers
+**0.025/s**. Full protein storage limits retained production. These nearby
+scraps are limited in staffing, leaving larger expedition/outpost sources useful.
+
+### Orders, laying and development
+
+**Raise Worker Egg** now queues the chosen number of orders instead of creating
+an instant batch. Orders are limited by currently affordable egg costs and
+future housing space; sugar is charged only as each egg is actually laid.
+The visible cost is the queued batch's current egg price. Orders can be
+cancelled without a refund because unlaid eggs have not been paid for. If
+supplies or space later run short, orders wait rather than disappearing.
+
+The queen lays one egg at a time, with base intervals of **5 simulated seconds
+for small workers** and **20 seconds for standard workers**. Queen chamber
+improvements above the initial level reduce this interval. Scout raising uses
+the shared cooldown. Eggs, larvae and pupae occupy brood places until adulthood:
+capacity is the existing Queen egg capacity plus **three places per Nursery
+level**. The Resources panel calls this combined population **Brood**.
+
+Standard workers require about **two simulated minutes at full base care**;
+scouts require about **90 seconds**. Both spend one sixth of care as eggs, two
+thirds as larvae and one sixth as pupae. Standard worker eggs cost **10 sugar**;
+larval care additionally consumes **20 sugar and 2 protein**, charged exactly
+as development advances. Scouts retain their 50-sugar/2-protein egg cost plus
+the same larval feeding. Shortages pause affected care without losing progress.
+The visible brood status names missing sugar/protein and shows pending orders,
+occupied places and the queen's cooldown.
+
+The queen supports three brood at base care. **Brood Nurses** add throughput:
+a standard nurse supports two additional brood at base speed, a small nurse
+one. There are five shared nurse places per Nursery level. Sufficient staffing
+can double individual development speed; overloaded care is shared fairly
+across brood. Brood Care research raises throughput by 25%. Laying rate,
+development space, nutrition and care staffing are separate limits; Queen's
+Routine uses this same pipeline and no longer restores a large loss in one tick.
+Fresh sugar production can feed larvae directly at full storage, and resource
+rate estimates include actual affordable feeding.
+
+Older saves retain standard adults and legacy already-laid eggs/scouts; future
+brood uses the new pipeline. New state is additive and needs no version bump.
+Existing small-worker saves retain adults, job assignments, life cohorts,
+orders and development progress. Loading restores earned task visibility.
+The opening engine simulation, starting with 50 gathered sugar, unlocks standard
+workers within five simulated minutes and reaches the first standard adult
+within ten, with over fifteen minutes before the earliest small-worker deaths.
+Those checks cover a deliberate opening strategy, not every possible allocation.
+
+Verification: `sbt fastOptJS fullOptJS test` and
+`python3 tests/brood_pipeline_smoke.py` cover the opening, exact half efficiency,
+finite lifespans, type transition, staged nutrition, care capacity, shared job
+caps, queued laying, saves and phone/desktop controls. Existing lifecycle,
+raid/territory replacement and batch UI tests now expect the paced pipeline.

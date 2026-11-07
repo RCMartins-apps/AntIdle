@@ -55,13 +55,13 @@ object RoyalBroodProgression {
   // Unstored sugar production can feed brood directly, just as it feeds adult ants.
   def forecastResources(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
       exploration: ExplorationData, resources: BasicResources): BasicResources = {
-    val sugar = Foraging.productionPerTick(ants.taskWorkers(AntTask.SugarCollector) / u, upgrades, ants.lineage) +
+    val sugar = Foraging.production(ants, upgrades) +
       AphidHusbandry.productionPerTick(ants, nest, upgrades, resources.protein.amount)
     val feeding = AphidHusbandry.proteinPerTick(ants, nest, upgrades, resources.protein.amount)
     val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, resources)
-    val upkeep = ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick - CarcassProgression.foodOffset(exploration, ants)
+    val upkeep = ScoutProgression.upkeepPerTick(ants, exploration) - CarcassProgression.foodOffset(exploration, ants)
     resources.copy(sugar = resources.sugar.copy(amount = Math.max(0L, resources.sugar.amount + PheromoneTrails.production(ants, exploration, resources) + sugar - upkeep)),
-      protein = (resources.protein - feeding) + harvest.protein, water = resources.water - harvest.water)
+      protein = (resources.protein - feeding) + (harvest.protein + BroodProgression.scavenged(ants, resources.protein.freeSpace - harvest.protein + feeding)), water = resources.water - harvest.water)
   }
 
   def forecast(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
@@ -69,7 +69,7 @@ object RoyalBroodProgression {
     care(ants, nest, forecastResources(ants, nest, upgrades, exploration, resources))
 
   def canStart(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
-    ants.royalBrood.isEmpty && freeSlots(ants, nest) > 0L && ants.populationCount < nest.maxAntsCount &&
+    ants.royalBrood.isEmpty && freeSlots(ants, nest) > 0L && ants.populationCount + ants.eggOrders < nest.maxAntsCount &&
       nurses(ants, nest) > 0L && resources.hasResources(startCost)
 
   def canStart(data: AllData): Boolean = canStart(data.ants, data.nestAttributes, data.basicResources)

@@ -49,7 +49,7 @@ object Utils {
   val currentTickSignal: Signal[Long] = worldData.signal.map(_.currentTick).distinct
   val targetTickSignal: Signal[Long] = worldData.signal.map(_.targetTick).distinct
 
-  val workersSignal: Signal[Long] = antsSignal.map(_.workers).distinct
+  val workersSignal: Signal[Long] = antsSignal.map(_.totalWorkers).distinct
   val eggsCountSignal: Signal[Long] =
     antsSignal.map(_.eggsAndLarvae.count(_.isEgg) * u).distinct
 
@@ -68,7 +68,7 @@ object Utils {
     antsSignal.map(_.populationCount.toLong * u).distinct
 
   val unlockedAntTasks: Signal[Seq[AntTask]] =
-    antsSignal.map(_.tasks.map(_._1)).distinct
+    antsSignal.map(a => if (!a.standardWorkersUnlocked && a.workers == 0L) Seq.empty else a.tasks.map(_._1)).distinct
 
   val idleWorkersCountSignal: Signal[Long] = antsData.signal.map(_.idleWorkersCount).distinct
   val availableWorkersCountSignal: Signal[Long] = antsData.signal.map(_.availableWorkersCount).distinct
@@ -92,10 +92,10 @@ object Utils {
   val messagesSignal: Signal[Seq[String]] = messagesSeq.signal.distinct
 
   val eggResourceSignal: Signal[BasicResource] =
-    eggsCountSignal.combineWith(maxEggs).map { case (amount, max) => BasicResource(amount, max) }
+    antsSignal.combineWith(nestSignal).map { case (ants, nest) => BasicResource(ants.eggsAndLarvae.size.toLong * u, BroodProgression.capacity(nest).toLong * u) }
 
   val workersResourceSignal: Signal[BasicResource] =
-    workersSignal.map(BasicResource(_, 0L))
+    antsSignal.map(a => BasicResource(a.workers, 0L))
 
   val populationResourceSignal: Signal[BasicResource] =
     antAndBroodCount.combineWith(maxAnts).map { case (amount, max) => BasicResource(amount, max) }

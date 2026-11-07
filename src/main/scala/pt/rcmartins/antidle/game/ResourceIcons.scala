@@ -43,9 +43,9 @@ object ResourceIcons {
     case "royal nurses" => Some(Workers)
     case "scouts" => Some(Scouts)
     case "repletes" | "replete slots" => Some(Repletes)
-    case "eggs" | "egg slots" => Some(Eggs)
+    case "eggs" | "egg slots" | "brood" | "brood places" => Some(Eggs)
     case "ants" | "colony slots" => Some(Colony)
-    case "workers" | "idle workers" | "party workers" => Some(Workers)
+    case "small workers" | "workers" | "idle workers" | "party workers" => Some(Workers)
     case resourceLabel if resourceLabel.endsWith(" workers") => Some(Workers)
     case _ => None
   }

@@ -46,6 +46,15 @@ object AntTask {
     val name: String = "Seed Forager"
   }
 
+  case object Scavenger extends AntTask {
+    val uiOrder: Int = 3
+    val name: String = "Scraps Gatherer"
+  }
+  case object BroodNurse extends AntTask {
+    val uiOrder: Int = 6
+    val name: String = "Brood Nurse"
+  }
+
   case object TerritoryForager extends AntTask {
     val uiOrder: Int = 8
     val name: String = "Territory Forager"

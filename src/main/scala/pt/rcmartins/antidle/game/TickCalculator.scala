@@ -89,7 +89,7 @@ object TickCalculator {
               Some(
                 ResourceOrigin(
                   AntTask.SugarCollector.name,
-                  Foraging.basePerTick(sugarCollectorAmount, upgrades),
+                  Foraging.mixedBasePerTick(ants, upgrades),
                 )
               ),
               Some(PercentOrigin(ImproveSugarCollectorTask1.title, SugarImprovementBonusPerc))
@@ -105,11 +105,12 @@ object TickCalculator {
               Some(
                 ResourceOrigin(
                   "Ants Demand",
-                  -ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick,
+                  -ScoutProgression.upkeepPerTick(ants, exploration),
                 )
               ),
               Some(ResourceOrigin("Royal brood", -RoyalBroodProgression.forecast(ants, nest, upgrades, exploration, resources).cost.sugar))
                 .filter(_.tickResourceU < 0),
+              Some(ResourceOrigin("Larval feeding", -BroodProgression.forecastCost(ants, nest, upgrades, exploration, resources).sugar)).filter(_.tickResourceU < 0),
               Some(ResourceOrigin("Carcass sugar", CarcassProgression.foodOffset(exploration, ants)))
                 .filter(_.tickResourceU > 0),
             ).flatten
@@ -120,6 +121,8 @@ object TickCalculator {
     antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal, explorationSignal).map { case (ants, nest, upgrades, resources, exploration) =>
       List(ResourceOrigin("Aphid Tenders", -AphidHusbandry.proteinPerTick(ants, nest, upgrades, resources.protein.amount)),
         ResourceOrigin("Seed Foragers", OutpostProgression.harvestPerTick(ants, nest, upgrades, resources).protein),
+        ResourceOrigin("Scraps Gatherers", BroodProgression.scavenged(ants, resources.protein.freeSpace - OutpostProgression.harvestPerTick(ants, nest, upgrades, resources).protein + AphidHusbandry.proteinPerTick(ants, nest, upgrades, resources.protein.amount))),
+        ResourceOrigin("Larval feeding", -BroodProgression.forecastCost(ants, nest, upgrades, exploration, resources).protein),
         ResourceOrigin("Royal brood", -RoyalBroodProgression.forecast(ants, nest, upgrades, exploration, resources).cost.protein))
     }
   )
@@ -133,14 +136,13 @@ object TickCalculator {
 
   val tunnelingSpaceTickGain: BonusOriginGroup =
     BonusOriginGroup(
-      antTaskCountSignal(AntTask.Tunneler)
-        .combineWith(upgradesSignal)
-        .map { case (tunnelersAmount, upgrades) =>
+      antsSignal.combineWith(upgradesSignal)
+        .map { case (ants, upgrades) =>
           List(
             Some(
               ResourceOrigin(
                 AntTask.Tunneler.name,
-                tunnelersAmount * ColonyDevelopment.tunnelingPerWorkerTick(upgrades),
+                (ants.taskWorkers(AntTask.Tunneler) / u * 2L + ants.smallTunnelers / u) * ColonyDevelopment.tunnelingPerWorkerTick(upgrades) / 2L,
               )
             ),
           ).flatten

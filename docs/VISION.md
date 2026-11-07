@@ -106,3 +106,12 @@ Deferred ideas the owner liked: temporary vulnerable food sources that reward
 fast replacements, and worker-to-soldier specialization trading ordinary labor
 for protection. Revisit after territorial contests; neither is implemented by
 that feature, and exact rules remain proposals.
+
+The owner approved redesigning brood around gradual laying, development-space
+limits, larval feeding and nurse throughput, with Queen's Routine using the same
+pipeline. An approved small founding worker phase keeps the opening quick before an
+unlock switches future brood to ordinary workers. Small workers provide half
+standard task output and live somewhat shorter lives, with a generous transition
+window. Existing adults retain their type. This founding phase and the staged
+brood pipeline are implemented; exact timings and costs remain adjustable.
+See D16 in DECISIONS.

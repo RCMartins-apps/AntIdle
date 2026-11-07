@@ -18,20 +18,24 @@ object ScoutProgression {
   def upkeepCount(ants: AntsData, exploration: ExplorationData): Long =
     ants.upkeepWorkersCount - exploration.explorationParties.map(_.scouts).sum / u
 
+  def upkeepPerTick(ants: AntsData, exploration: ExplorationData): Long =
+    upkeepCount(ants, exploration) * antsSugarUpkeepTick + ants.smallWorkers / u * antsSugarUpkeepTick / 2L
+
   def canRaise(allData: AllData): Boolean =
     canRaise(allData.ants, allData.nestAttributes, allData.basicResources)
 
   def canRaise(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean = {
     nest.chambers.nurseryChamber.level > 0 &&
-      ants.eggsAndLarvae.count(_.isEgg) < nest.maxEggsCount &&
-      ants.populationCount < nest.maxAntsCount && resources.hasResources(eggCost)
+      ants.standardWorkersUnlocked && ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < BroodProgression.capacity(nest) &&
+      ants.populationCount + ants.eggOrders < nest.maxAntsCount && resources.hasResources(eggCost)
   }
 
   def raise(allData: AllData): AllData =
     if (!canRaise(allData)) allData
     else allData.spendResources(eggCost)
       .modify(_.ants.eggsAndLarvae)
-      .using(_ :+ AntBrood.ScoutEgg(allData.currentTick))
+      .using(_ :+ AntBrood.Developing(allData.currentTick, "scout"))
+      .modify(_.ants.layingCooldown).setTo(BroodProgression.interval(allData.ants, allData.nestAttributes))
       .modify(_.statistics.eggsCount).using(_.addValue(1))
 
   def growBrood(allData: AllData): AllData = {

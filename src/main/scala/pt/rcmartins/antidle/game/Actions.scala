@@ -72,30 +72,14 @@ object Actions {
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 
-  val layEggActionEnabled: Signal[Boolean] =
-    sugarSignal
-      .combineWith(eggsCountSignal, maxEggs, antAndBroodCount, maxAnts)
-      .map { case (sugar, eggsCount, maxEggs, antCount, maxAnt) =>
-        sugar >= Constants.LayEggSugarCost && eggsCount < maxEggs && antCount < maxAnt
-      }
-
-  def workerEggAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int = {
-    val slots = Math.min(nest.maxEggsCount - ants.eggsAndLarvae.count(_.isEgg), nest.maxAntsCount - ants.populationCount)
-    Math.max(0L, Math.min(requested.toLong, Math.min(slots.toLong, sugar / Constants.LayEggSugarCost))).toInt
+  def assignSmallWorker(task: AntTask, delta: Long): Unit = actionUpdater.writer.onNext(BroodProgression.assignSmall(_, task, delta))
+  def cancelEggOrders(): Unit = actionUpdater.writer.onNext(BroodProgression.cancel)
+  val layEggActionEnabled: Signal[Boolean] = antsSignal.combineWith(nestSignal, sugarSignal).map {
+    case (ants, nest, sugar) => BroodProgression.orderAmount(ants, nest, sugar.amount, 1) > 0
   }
-
-  def layEggAction(maxMultiplierUsed: Int): Unit =
-    actionUpdater.writer.onNext { allData =>
-      val mult = workerEggAmount(allData.ants, allData.nestAttributes, allData.basicResources.sugar.amount, maxMultiplierUsed)
-
-      allData
-        .modify(_.basicResources.sugar)
-        .using(_ - Constants.LayEggSugarCost * mult)
-        .modify(_.ants.eggsAndLarvae)
-        .using(_ ++ Seq.fill(mult)(AntBrood.Egg(allData.world.currentTick)))
-        .modify(_.statistics.eggsCount)
-        .using(_.addValue(mult))
-    }
+  def workerEggAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int =
+    BroodProgression.orderAmount(ants, nest, sugar, requested)
+  def layEggAction(maxMultiplierUsed: Int): Unit = actionUpdater.writer.onNext(BroodProgression.order(_, maxMultiplierUsed))
 
   def addBuildTask(buildTask: BuildTask): Unit =
     actionUpdater.writer.onNext(Construction.enqueue(_, buildTask.chamberType))
