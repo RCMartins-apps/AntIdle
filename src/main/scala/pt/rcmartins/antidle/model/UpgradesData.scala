@@ -43,6 +43,14 @@ object UpgradesData {
       data.nestAttributes.chambers.nestChamber.level > 0 || data.unlocks.tabs.upgradesTabUnlocked || data.unlocks.resources.showKnowledge ||
         data.basicResources.knowledge.amount > 0
 
+    case object StandardWorkers extends UpgradeType {
+      val name = "StandardWorkers"
+      val title = "Standard Worker Development"
+      val cost = ActionCost(sugar = 75 * u, tunnelingSpace = 10 * u)
+      val description = "Future eggs become full-sized workers: twice a small worker's task output, with longer lives. Standard brood needs sugar, protein and more time. Existing adults and laid brood keep their type. Unlocks nearby scraps gathering for protein."
+      def shouldShow(data: AllData): Boolean = !data.ants.standardWorkersUnlocked && data.ants.smallWorkers >= 5 * u
+    }
+
     case object UnlockQueensChamber extends UpgradeType {
       def shouldShow(data: AllData): Boolean = earlyUpgradesAvailable(data)
       val name: String = "UnlockQueensChamber"
@@ -225,6 +233,7 @@ object UpgradesData {
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
     val all: Seq[UpgradeType] = Seq(
+      StandardWorkers,
       UnlockQueensChamber,
       ImproveSugarCollectorTask1,
       ImproveSugarCollectorTask2,

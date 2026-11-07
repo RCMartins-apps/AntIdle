@@ -1,20 +1,17 @@
 # Handoff
 
-## Last verified: 2026-11-07
+## Last verified: 2026-11-07 — work in progress
 
-- Main `0803328` includes merged territorial-contest PR #39.
-- Branch `design/brood-development` records the next design discussion only.
-- Owner approved a brood redesign: gradual laying, whole-development capacity,
-  larval feeding and nurse-supported throughput; automation uses that pipeline.
-- Latest idea: fast small founding workers initially, then an unlock changes
-  subsequent production to ordinary workers, avoiding a multi-minute opening.
-- D16 separates approved direction, the proposed small-worker bridge and
-  unsettled rules. Existing adults/brood transition, unlock, worker abilities,
-  rates, food costs and staffing still need design. Do not treat suggested
-  timings or caste restrictions as accepted numbers. No brood gameplay changed.
-- Next discuss the opening/transition, then balance early play against replacing
-  sustained territory losses before implementation. Temporary food opportunities
-  and soldiers remain deferred in VISION/D15.
-- Documentation-only checks: whitespace and local Markdown links. Previous
-  merged feature passed 188 engine tests and mobile/desktop checks; not rerun.
+- Branch `design/brood-development` continues from merged main `0803328` (PR #39).
+- Owner approved founding small workers, 50% task output, shorter but forgiving
+  lives, permanent switch for future eggs, and the broader brood pipeline.
+- Draft core/UI implemented: small-worker counters/cohorts/jobs, 30–40 minute
+  lives, half upkeep/output, standard research, queued laying, full-development
+  brood beds, staged care/feeding, shared capped nurse/scavenger jobs and rates.
+- Existing standard adults/legacy brood retain type; fresh games/prestige use
+  small founding workers. D16 documents current balance choices.
+- Development build succeeds. First regression run passed 183/188; five
+  existing tests still assume instant batches/ten-second adult replacements.
+  Test updates, dedicated opening/lifecycle tests, browser checks, release build,
+  README and final review remain. This checkpoint is not ready to merge.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

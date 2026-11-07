@@ -50,7 +50,7 @@ object CarcassProgression {
 
   def foodOffset(exploration: ExplorationData, ants: AntsData): Long =
     Math.min(exploration.carcasses.map(_.foodRemaining).sum,
-      ScoutProgression.upkeepCount(ants, exploration) * antsSugarUpkeepTick)
+      ScoutProgression.upkeepPerTick(ants, exploration))
 
   // Consume the oldest reserves first, including across carcasses within one tick.
   def consumeFood(allData: AllData): (AllData, Long) = {

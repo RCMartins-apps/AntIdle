@@ -32,6 +32,18 @@ object PopulationAging {
     }.filter(_.count > 0L)
   }
 
+  private def smallNewborn(count: Long, data: AllData): List[AgeCohort] =
+    newborn(count, data.currentTick, data.world.saveSeed + data.currentTick + 29L, data.upgrades)
+      .map(c => c.copy(expiresAt = data.currentTick + (c.expiresAt - data.currentTick) * 2L / 3L))
+
+  def loseSmall(ants: AntsData, requested: Long): AntsData = {
+    val count = Math.max(0L, ants.smallWorkers - requested * u)
+    val tunnelers = Math.min(ants.smallTunnelers, count)
+    val scavengers = Math.min(ants.smallScavengers, count - tunnelers)
+    val nurses = Math.min(ants.smallNurses, count - tunnelers - scavengers)
+    ants.copy(smallWorkers = count, smallTunnelers = tunnelers, smallScavengers = scavengers, smallNurses = nurses)
+  }
+
   private def take(cohorts: List[AgeCohort], count: Long): (List[AgeCohort], List[AgeCohort]) = {
     val (_, kept, taken) = grouped(cohorts).foldLeft((Math.max(0L, count), List.empty[AgeCohort], List.empty[AgeCohort])) {
       case ((needed, kept, taken), cohort) =>
@@ -44,8 +56,10 @@ object PopulationAging {
   def homeWorkers(ants: AntsData): Long =
     Math.max(0L, (ants.workers - ants.tasks.filterNot(_._1.agesAtHome).map(_._2).sum) / u)
 
+  private def readySmallCount(ants: AntsData): Long = ants.smallWorkers / u
+
   def reconcile(data: AllData): AllData = {
-    if (!data.ants.ages.active && data.nestAttributes.chambers.nurseryChamber.level == 0) data
+    if (!data.ants.ages.active && data.nestAttributes.chambers.nurseryChamber.level == 0 && data.ants.smallWorkers == 0L) data
     else {
       def fit(cohorts: List[AgeCohort], count: Long, seed: Long, longLived: Boolean = false): List[AgeCohort] = {
         val total = cohorts.map(_.count).sum
@@ -58,6 +72,12 @@ object PopulationAging {
       }
       val ages = data.ants.ages
       val updated = data.modify(_.ants.ages).setTo(ages.copy(active = true,
+        smallWorkers = {
+          val count = readySmallCount(data.ants)
+          val total = ages.smallWorkers.map(_.count).sum
+          if (total > count) take(ages.smallWorkers, total - count)._1
+          else grouped(ages.smallWorkers ++ smallNewborn(count - total, data))
+        },
         workers = fit(ages.workers, homeWorkers(data.ants), data.world.saveSeed + data.currentTick),
         scouts = fit(ages.scouts, ScoutProgression.atHome(data.ants, data.exploration) / u, data.world.saveSeed + data.currentTick + 7L),
         repletes = fit(ages.repletes, data.ants.repletes / u, data.world.saveSeed + data.currentTick + 13L, longLived = true)))
@@ -100,7 +120,8 @@ object PopulationAging {
   }
 
   def starveOne(data: AllData): AntsData = {
-    val ants = if (homeWorkers(data.ants) > 0L) loseWorkers(data.ants, 1L)
+    val ants = if (data.ants.smallWorkers >= u) loseSmall(data.ants, 1L)
+    else if (homeWorkers(data.ants) > 0L) loseWorkers(data.ants, 1L)
     else if (data.ants.taskWorkers(AntTask.TerritoryForager) >= u)
       data.ants.copy(workers = data.ants.workers - u).removeFromTask(AntTask.TerritoryForager, u)
     else if (ScoutProgression.atHome(data.ants, data.exploration) >= u) data.ants.copy(scouts = data.ants.scouts - u)
@@ -117,17 +138,19 @@ object PopulationAging {
     if (!ready.ants.ages.active) ready
     else {
       val ages = ready.ants.ages
+      val (deadSmall, smallWorkers) = ages.smallWorkers.partition(_.expiresAt <= ready.currentTick)
+      val smallLosses = deadSmall.map(_.count).sum
       val (deadWorkers, workers) = ages.workers.partition(_.expiresAt <= ready.currentTick)
       val (deadScouts, scouts) = ages.scouts.partition(_.expiresAt <= ready.currentTick)
       val (deadRepletes, repletes) = ages.repletes.partition(_.expiresAt <= ready.currentTick)
       val repleteLosses = deadRepletes.map(_.count).sum
       val workerLosses = deadWorkers.map(_.count).sum
       val scoutLosses = deadScouts.map(_.count).sum
-      val nextAges = ages.copy(workers = workers, scouts = scouts, repletes = repletes, pendingRepletes = ages.pendingRepletes + repleteLosses,
-        pendingWorkers = ages.pendingWorkers + workerLosses, pendingScouts = ages.pendingScouts + scoutLosses)
-      val updated = RepleteProgression.reconcile(ready.modify(_.ants).using(a => loseWorkers(a, workerLosses)
+      val nextAges = ages.copy(smallWorkers = smallWorkers, workers = workers, scouts = scouts, repletes = repletes, pendingRepletes = ages.pendingRepletes + repleteLosses,
+        pendingWorkers = ages.pendingWorkers + workerLosses + smallLosses, pendingScouts = ages.pendingScouts + scoutLosses)
+      val updated = RepleteProgression.reconcile(ready.modify(_.ants).using(a => loseSmall(loseWorkers(a, workerLosses), smallLosses)
         .copy(scouts = a.scouts - scoutLosses * u, repletes = a.repletes - repleteLosses * u, ages = nextAges))
-        .modify(_.statistics.workersLostToAging).using(_.addValue(workerLosses))
+        .modify(_.statistics.workersLostToAging).using(_.addValue(workerLosses + smallLosses))
         .modify(_.statistics.scoutsLostToAging).using(_.addValue(scoutLosses))
         .modify(_.statistics.repletesLostToAging).using(_.addValue(repleteLosses)))
       if (summarize && ready.currentTick % Minute == 0L && (nextAges.pendingWorkers > 0L || nextAges.pendingScouts > 0L || nextAges.pendingRepletes > 0L)) {

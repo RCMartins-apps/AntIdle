@@ -289,26 +289,34 @@ storage and aging warnings are visible. Exact numbers are current balance
 choices, not a finalized economy. This is current-colony content, not a new
 Understanding or a challenge-prestige implementation.
 
-## D16: Brood pipeline redesign and small founding workers — design in progress
+## D16: Brood pipeline and small founding workers — implementation approved
 
-The owner approved the direction of replacing instant egg batches with a
-rate-limited queen, brood capacity occupied through development, larval feeding
-and nurse-supported throughput. Queen's Routine should use the same pipeline.
-This is not implemented; opening pacing and mature-colony sustainability must
-be balanced together before replacing existing mechanics.
+The owner approved gradual laying, whole-development brood capacity, larval
+feeding and nurse throughput, with Queen's Routine using the same pipeline.
+They approved a fast small-worker opening followed by an unlock switching
+future eggs to standard workers. Existing adults and already-laid brood keep
+their type. Small workers must perform tasks at exactly half standard output,
+and have shorter lifespans with ample time to unlock standard workers.
 
-To avoid making the opening wait several minutes, the owner proposed an initial
-small worker, with an unlock switching subsequent production to ordinary
-workers. This is the current proposed bridge to the longer development pipeline.
-Exact unlock, timings, feeding, productivity, upkeep, task restrictions and
-transition handling remain undecided. Earlier suggestions of founding reserves,
-three initial brood places, 20–30-second laying intervals and two-minute normal
-development are illustrative, not approved numeric rules.
+Current implementation choices: small workers develop in about 15 seconds,
+lay at a base 5-second interval, cost 5 sugar per egg, and live 30–40 simulated
+minutes (36–48 with Colony Nutrition). They have 50% task output and upkeep.
+Safe founding tasks are sugar, tunnelling, nearby scraps and brood nursing;
+standard worker pools alone staff expeditions, territories and promotions.
+Standard Worker Development becomes visible after five small workers and
+costs 75 sugar plus 10 tunnelling space. It opens capped nearby scraps gathering
+to supply protein before scouts/expedition resources are required.
 
-Recommended for discussion: model these as small founding workers (nanitics),
-leave existing adults small, and switch newly laid brood to ordinary workers
-after the unlock rather than instantly transforming adults or existing brood.
-Give small workers lower output/upkeep and reserve dangerous work for ordinary
-workers, so fast founding brood cannot replace the later throughput challenge.
-Whether small workers remain selectable is unchosen; avoid assuming a
-permanent fast-breeding alternative. These recommendations are not settled rules.
+Standard workers take about two simulated minutes without nurses, with 10
+sugar per egg and 20 sugar/2 protein in larval care. Scouts use the same brood
+space/care system. Queen laying is rate-limited; manual batch actions queue
+orders instead of creating instant eggs, and costs are charged when laid.
+All stages occupy brood places, increased by Queen chambers and Nurseries.
+Nurse throughput competes for workers; small nurses contribute half standard
+care. Existing Brood Care speeds care; Queen chamber levels improve laying.
+These quantities are balance choices under test, not final economy promises.
+
+Preserve existing standard adults and legacy already-laid brood on old saves;
+fresh colonies and prestige start with the founding phase. Opening and mature
+replacement throughput must both be tested. Temporary food opportunities and
+soldiers remain deferred. Prior example opening timings were not binding rules.

@@ -109,7 +109,9 @@ that feature, and exact rules remain proposals.
 
 The owner approved redesigning brood around gradual laying, development-space
 limits, larval feeding and nurse throughput, with Queen's Routine using the same
-pipeline. A proposed small founding worker phase would keep the opening quick
-before an unlock switches future brood to ordinary workers. Exact caste rules,
+pipeline. An approved small founding worker phase keeps the opening quick before an
+unlock switches future brood to ordinary workers. Small workers provide half
+standard task output and live somewhat shorter lives, with a generous transition
+window. Existing adults retain their type. Exact caste rules,
 transition and balance are still being discussed; current brood mechanics have
 not yet been replaced. See D16 in DECISIONS.

@@ -16,14 +16,26 @@ case class AntsData(
     royalBrood: Option[RoyalBrood] = None,
     daughterQueens: Long = 0L,
     lineage: Lineage = Lineage(),
+    standardWorkersUnlocked: Boolean = true,
+    smallWorkers: Long = 0L,
+    smallTunnelers: Long = 0L,
+    smallScavengers: Long = 0L,
+    smallNurses: Long = 0L,
+    eggOrders: Int = 0,
+    layingCooldown: Long = 0L,
+    broodCursor: Int = 0,
 ) {
 
   lazy val idleWorkersCount: Long =
     workers - tasks.map(_._2).sum
 
+  lazy val smallCollectors: Long = Math.max(0L, smallWorkers - smallTunnelers - smallScavengers - smallNurses)
+  lazy val totalWorkers: Long = workers + smallWorkers
+  lazy val totalWorkersCount: Int = (totalWorkers / u).toInt
+
   lazy val workersCount: Int = (workers / u).toInt
 
-  lazy val populationCount: Int = workersCount + (scouts / u).toInt + (repletes / u).toInt +
+  lazy val populationCount: Int = totalWorkersCount + (scouts / u).toInt + (repletes / u).toInt +
     (daughterQueens / u).toInt + eggsAndLarvae.length + royalBrood.size
 
   lazy val upkeepWorkersCount: Long =
@@ -112,6 +124,6 @@ object AntsData {
   implicit val decoder: JsonDecoder[AntsData] = DeriveJsonDecoder.gen[AntsData]
   implicit val encoder: JsonEncoder[AntsData] = DeriveJsonEncoder.gen[AntsData]
 
-  val initial: AntsData = AntsData()
+  val initial: AntsData = AntsData(standardWorkersUnlocked = false)
 
 }
