@@ -1102,3 +1102,11 @@ Scout eggs also honor the Nest action amount and desktop modifiers. Their
 batch badge and total laying costs reflect the affordable batch, limited by
 sugar, protein and future housing. Ordered scouts share the normal laying queue
 and consume supplies only as laid.
+
+Chamber [i] panels show numeric bonuses without descriptive prose. Capacity,
+place and slot labels are consistent, including Nursery brood/nurse places and
+the Queen's next laying-interval reduction. These previews include derived
+effects without changing saved capacities. Exploration [i] shows outcome
+chances without repeating the duration/reward line visible above its button.
+`python3 tests/chamber_details_smoke.py` checks every chamber and expedition
+help at phone/desktop widths.

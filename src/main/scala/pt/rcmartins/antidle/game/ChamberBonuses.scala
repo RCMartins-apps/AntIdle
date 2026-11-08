@@ -2,7 +2,7 @@ package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.{ActionBonus, AllData, BasicResources, UpgradesData}
+import pt.rcmartins.antidle.model.{ActionBonus, AllData, AntsData, BasicResources, NestAttributes, UpgradesData}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.ProteinStorage
 
 object ChamberBonuses {
@@ -32,6 +32,19 @@ object ChamberBonuses {
       case ChamberType.RoyalNursery =>
         ActionBonus(royalBroodSlots = 1)
     }
+
+  // Includes derived effects without adding them again to saved base capacities.
+  def forDisplay(chamberType: ChamberType, ants: AntsData, nest: NestAttributes, upgrades: UpgradesData): ActionBonus = {
+    val bonus = forChamber(chamberType, upgrades)
+    chamberType match {
+      case ChamberType.Nursery => bonus.copy(maxEggs = 3L * Constants.u, broodNurseSlots = 5)
+      case ChamberType.Queen =>
+        val next = nest.copy(chambers = nest.chambers.copy(
+          queenChamber = nest.chambers.queenChamber.copy(level = nest.chambers.queenChamber.level + 1)))
+        bonus.copy(layingIntervalReduction = BroodProgression.interval(ants, nest) - BroodProgression.interval(ants, next))
+      case _ => bonus
+    }
+  }
 
   def reconcileProteinCapacity(data: AllData): AllData =
     if (!data.upgrades(ProteinStorage).unlocked) data

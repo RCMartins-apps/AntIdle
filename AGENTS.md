@@ -60,6 +60,11 @@ Related action descriptions must use the same fields in the same order. Use a
 shared renderer for action families (egg actions use eggDescription), derive
 numbers from gameplay data, and distinguish upfront costs, later care, required
 capacity and result. Do not hand-write unrelated paragraphs for sibling actions.
+Chamber action help contains numeric bonuses only, without prose descriptions.
+Use consistent capacity/place/slot names and include derived effects (Nursery
+care places and Queen laying interval) without applying them twice to saved
+capacities. Expedition help explains finds/chances without repeating the visible
+duration/reward summary.
 The common detail layout orders explanation, Requires, then Result; omit empty
 sections and keep costs visible beside the button.
 

@@ -1,51 +1,25 @@
 # Handoff
 
-## Last verified: 2026-11-08 — consistent action details
+## Last verified: 2026-11-08 — chamber/exploration consistency pass
 
-- Branch `ui/consistent-action-details` starts from merged main `82ff73b`
-  (PR #47, mobile expedition picker). User requested logically consistent action
-  descriptions after comparing worker/scout eggs.
-- Worker, scout and emergency egg help now share Queue / Development / Larval
-  care fields via eggDescription. Base duration derives from Developing.totalCare;
-  worker caste changes update it. Clarifies laying costs versus later larval care.
-- Common action panels order explanation, Requires, then Result, omitting empty
-  sections. Left aligned help/results, egg actions omit redundant
-  result counts (including scouts and emergency). Help stays behind [i], costs stay visible.
-- D24 and AGENTS record shared-family formatting as a lasting rule. README
-  documents behavior. No engine, balance or save changes.
-- Verified development and production builds (Closure clean), all 238 engine
-  tests and compact_ui_smoke at 320/390/1920px. action_details_smoke checks
-  shared field order, times, care and results for worker/scout/small/emergency
-  eggs at the same widths. Browser assertions use the new shared queue wording.
-- Branch committed and pushed by standing authorization; no PR requested yet.
+- Ongoing branch `ui/consistent-action-details` from merged main `82ff73b`
+  (PR #47). Contains shared egg fields, no redundant egg result rows, independent
+  mobile Nest/Tasks amounts, non-overlapping task help, and scout batch ordering.
+  Prior changes passed builds/239 engine tests and relevant mobile/desktop checks.
+- Current pass: chamber actions have numeric bonus lists, no prose descriptions.
+  Labels consistently use resource capacity, colony slots, brood places and
+  named slots with singular/plural agreement. Nursery adds its previously prose-
+  only +3 brood/+5 nurse places; Queen shows the next laying-interval reduction.
+- ChamberBonuses.forDisplay includes derived effects without changing forChamber
+  or completed-upgrade behavior. New ActionBonus fields are preview-only.
+- Exploration [i] now shows Finds/outcome rules rather than repeating its visible
+  duration/rewards. Removed generic no-carcass-storage filler and shortened raid
+  explanation; chance distributions and combat modifiers stay in help, visible
+  danger/costs/rewards stay beside launch. Compatibility preview includes summary.
+- D25, AGENTS and README record the rule. No balance or save format changes.
+- Verified development/production builds (Closure clean), all 240 engine tests,
+  chamber_details_smoke for all seven chambers/all ten destinations, and
+  protein_storage_smoke at 320/390/1920px. Final wording builds and all-route
+  browser checks pass; visually inspected the 390px Nursery bonus panel.
+- Changes committed/pushed on the ongoing branch. No new PR requested.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.
-
-- Follow-up: kept Gather Sugar after checking the opening: zero sugar/workers
-  initially, emergency recovery gated by standard workers. Slow queen foraging
-  is only a suggestion. Removed redundant egg result rows; batch badges remain.
-  Follow-up verified with fastOptJS and action_details_smoke; engine unchanged.
-
-- Follow-up: separate broodMultiplier/tasksMultiplier UI state. Each selector
-  controls only its screen and retains its session choice across tab switches.
-  Desktop Ctrl/Shift behavior is unchanged. General batch-parity test now selects
-  the Tasks amount explicitly instead of depending on the old coupling.
-  Verified fastOptJS and action_amount_smoke at 320/390/1920px: independent
-  values, tab retention, actual orders/assignments and desktop shortcuts.
-
-- Follow-up: fixed overlapping mobile task help. Passive rows no longer collapse
-  below their absolute info button: task rows reserve 52px, and info controls
-  align with the assignment buttons' 4px inset. Expanded help stays in flow.
-  compact_ui_smoke now checks row containment, neighboring button separation,
-  assignment alignment and every task disclosure on phone/desktop. CSS only;
-  no engine or save changes, no rebuild needed.
-  Verified expanded compact_ui_smoke at 320/390/1920px and visually inspected
-  the 390px Tasks screenshot, including all three consecutive passive jobs.
-
-- Follow-up: scout egg actions now honor brood amounts and desktop modifiers,
-  with an actual-batch badge and total sugar/protein costs. ScoutProgression
-  clamps to supplies/housing and appends the batch in shared FIFO, preserving
-  one immediate lay when ready. No save changes. BroodPipelineSuite covers
-  caps, FIFO, saved orders and immediate laying; action_amount_smoke covers
-  mobile batch prices/badges/orders and desktop Ctrl-scout batches.
-  Verified fastOptJS/fullOptJS (Closure clean), all 239 engine tests, and
-  action_amount_smoke/scout_queue_smoke at 320/390/1920px.

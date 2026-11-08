@@ -494,3 +494,20 @@ actual badge and total laying costs. Append the batch to shared FIFO, preserving
 worker orders ahead of it. Only the first scout may lay immediately; remaining
 orders wait for normal cooldown, brood space and supplies. Charge on laying.
 No new save format or accelerated development.
+
+
+## D25: Numeric chamber help and concise exploration outcomes — approved
+
+The owner requested that chamber actions show only bonus lists, with consistent
+names and numbers, instead of prose. Resource storage uses “sugar/protein/water/
+tunneling space capacity”; population uses “colony slots”; brood uses “brood
+places”; job/storage slots use consistent singular/plural labels. Show all
+useful effects: Nursery +3 brood places/+5 Brood Nurse slots, and the Queen's
+actual reduction to the next laying interval, alongside existing bonuses.
+Derive preview-only effects from the model; do not add derived capacity to saved
+base values or alter gameplay.
+
+Exploration retains its visible duration/reward summary, cost and danger. Its
+[i] shows Finds/outcome chances without repeating that summary or generic
+“no carcass storage needed” prose. Keep raid distribution and combat-modifier
+rules in help while keeping danger visible before departure.

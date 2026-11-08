@@ -109,7 +109,9 @@ object Actions {
     }
 
   def getActionBonus(chamberType: ChamberType): Signal[ActionBonus] =
-    upgradesSignal.map(upgrades => ChamberBonuses.forChamber(chamberType, upgrades)).distinct
+    antsSignal.combineWith(nestSignal, upgradesSignal).map { case (ants, nest, upgrades) =>
+      ChamberBonuses.forDisplay(chamberType, ants, nest, upgrades)
+    }.distinct
 
   def buildChamberCost(chamberType: ChamberType): Signal[ActionCost] =
     nestSignal.map(nest => Construction.nextCost(nest, chamberType)).distinct

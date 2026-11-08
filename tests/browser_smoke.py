@@ -90,7 +90,7 @@ def check_nest_capacity(page, initial):
     assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_label("Details for Expand Nest", exact=True).click()
-    expect(page.locator("details[open]")).to_contain_text("+500 max tunneling space")
+    expect(page.locator("details[open]")).to_contain_text("+500 tunneling space capacity")
     page.get_by_role("button", name="Expand Nest", exact=False).click()
     page.clock.run_for(400)
     upgraded = save_game(page)
@@ -153,11 +153,11 @@ def check_chamber_bonuses(page, initial):
 
     for name, chamber, increases, details in (
         ("Expand Nest", "nestChamber", {"ants": 10, "tunneling": 500},
-         ("+10 max ants", "+500 max tunneling space")),
+         ("+10 colony slots", "+500 tunneling space capacity")),
         ("Queen's Chamber", "queenChamber", {"ants": 5, "eggs": 2},
-         ("+5 max ants", "+2 brood places")),
+         ("+5 colony slots", "+2 brood places")),
         ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
-         ("+1000 max sugar",)),
+         ("+1000 sugar capacity",)),
     ):
         game = progressed_game(initial)
         game["ants"]["workers"] = 0

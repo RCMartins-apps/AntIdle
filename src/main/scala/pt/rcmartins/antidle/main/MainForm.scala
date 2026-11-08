@@ -874,7 +874,7 @@ object MainForm {
             chamberSignal.map(_.level).distinct.map(Some(_).filter(_ > 0).map(span(_))),
           enabledSignal = constructionBlockedSignal(chamberType).map(_.isEmpty),
           blockedReasonSignal = constructionBlockedSignal(chamberType),
-          descriptionSignal = Val(Option.when(chamberType == ChamberType.Queen)(div("Adds brood places and speeds laying."))),
+          descriptionSignal = Val(None),
           costSignal = actionCost,
           bonusSignal = Actions.getActionBonus(chamberType),
           onClickAction = _ =>
@@ -1008,7 +1008,7 @@ object MainForm {
                 blockedReasonSignal = constructionBlockedSignal(ChamberType.RoyalNursery),
                 costSignal = Val(RoyalNurseryProgression.buildCost),
                 bonusSignal = Val(ChamberBonuses.forChamber(ChamberType.RoyalNursery)),
-                descriptionSignal = Val(Some(div("A protected, resin-lined chamber for royal brood."))),
+                descriptionSignal = Val(None),
                 onClickAction = _ => Actions.addBuildTask(BuildTask(ChamberType.RoyalNursery, RoyalNurseryProgression.buildCost)),
               ),
             ),
@@ -1103,7 +1103,7 @@ object MainForm {
               name = ChamberType.Replete.name,
               enabledSignal = constructionBlockedSignal(ChamberType.Replete).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Replete),
-              descriptionSignal = Val(Some(div("Houses promoted repletes."))),
+              descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Replete),
               topRightBadgeSignal = chambersSignal.map(c => Option.when(c.repleteChamber.level > 0)(span(c.repleteChamber.level))),
@@ -1116,7 +1116,7 @@ object MainForm {
               name = ChamberType.Aphid.name,
               enabledSignal = constructionBlockedSignal(ChamberType.Aphid).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Aphid),
-              descriptionSignal = Val(Some(div("Adds space for an Aphid Tender."))),
+              descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1131,7 +1131,7 @@ object MainForm {
               name = "Nursery Chamber",
               enabledSignal = constructionBlockedSignal(ChamberType.Nursery).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Nursery),
-              descriptionSignal = Val(Some(div("+3 brood places · +5 nurse places per level."))),
+              descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1572,17 +1572,19 @@ object MainForm {
           if (bonus != ActionBonus.empty) div(className := "small text-muted", "Result") else emptyNode,
           ifGreater0(bonus.sugar)(prettyNumberSimple("+", _, " sugar")),
           ifGreater0(bonus.eggs)(value => s"+${value / u} ${if (value == u) "egg" else "eggs"}"),
-          ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
-          ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
-          ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),
-          ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " max water")),
-          ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete slot"),
+          ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " tunneling space capacity")),
+          ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " sugar capacity")),
+          ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " protein capacity")),
+          ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " water capacity")),
+          ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.broodNurseSlots.toLong)(value => s"+$value Brood Nurse ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.layingIntervalReduction)(ticks => s"−${prettyTimeFromTicks(ticks)} laying interval"),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " brood places")),
-          ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
-          ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
-          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
-          ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager slots"),
-          ifGreater0(bonus.royalBroodSlots.toLong)(value => s"+$value royal brood slot"),
+          ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " colony slots")),
+          ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value Aphid Tender ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.royalBroodSlots.toLong)(value => s"+$value royal brood ${if (value == 1) "slot" else "slots"}"),
         )
       },
     )
@@ -1902,7 +1904,7 @@ object MainForm {
                     resources.hasResources(ExplorationHelper.cost(workers, destination, extra))
                 },
               descriptionSignal = amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
-                case (workers, data, extra) => Some(div(ExplorationHelper.preview(data, workers, destination, extra)))
+                case (workers, data, extra) => Some(div(className := "exploration-outcomes", b("Finds: "), ExplorationHelper.outcomePreview(data, workers, destination)))
               },
               costSignal = cost,
               bonusSignal = Val(ActionBonus.empty),
