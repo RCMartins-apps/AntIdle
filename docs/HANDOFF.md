@@ -24,3 +24,10 @@
   initially, emergency recovery gated by standard workers. Slow queen foraging
   is only a suggestion. Removed redundant egg result rows; batch badges remain.
   Follow-up verified with fastOptJS and action_details_smoke; engine unchanged.
+
+- Follow-up: separate broodMultiplier/tasksMultiplier UI state. Each selector
+  controls only its screen and retains its session choice across tab switches.
+  Desktop Ctrl/Shift behavior is unchanged. General batch-parity test now selects
+  the Tasks amount explicitly instead of depending on the old coupling.
+  Verified fastOptJS and action_amount_smoke at 320/390/1920px: independent
+  values, tab retention, actual orders/assignments and desktop shortcuts.

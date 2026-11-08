@@ -266,6 +266,8 @@ def run_checks(browser, url):
                 expect(page.locator("details[open] .action-result")).to_be_empty()
             page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=modifiers)
             page.get_by_role("tab", name="Tasks").click()
+            if width <= 767:
+                page.locator("#tasks-action-amount").select_option(str(multiplier))
             page.get_by_role("button", name="Assign Sugar Collector", exact=True).click(modifiers=modifiers)
             page.get_by_role("button", name="Remove Sugar Collector", exact=True).click(modifiers=modifiers)
             page.get_by_role("button", name="Assign Tunneler", exact=True).click(modifiers=modifiers)

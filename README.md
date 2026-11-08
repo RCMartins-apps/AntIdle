@@ -1092,3 +1092,8 @@ on phone and desktop after `sbt fastOptJS`.
 
 Egg action details omit redundant result counts; the action name and batch badge
 identify the order. Manual Gather Sugar remains necessary for the zero-worker opening.
+
+Nest and Tasks have independent mobile action amounts, initially ×1, retained
+while switching tabs. Desktop Ctrl/Shift shortcuts are unchanged.
+`python3 tests/action_amount_smoke.py` verifies separate choices and actual
+egg orders/worker assignments on phone and desktop.

@@ -61,11 +61,12 @@ object MainForm {
   private val shiftPressedVar = Var(false)
 
   private val windowWidthVar: Var[Long] = Var(window.innerWidth.toLong)
-  private val mobileMultiplier = Var(1)
+  private val broodMultiplier = Var(1)
+  private val tasksMultiplier = Var(1)
 
   private val modifiersMultiplierSignal: Signal[Int] =
     ctrlPressedVar.signal
-      .combineWith(shiftPressedVar.signal, mobileMultiplier.signal, windowWidthVar.signal)
+      .combineWith(shiftPressedVar.signal, broodMultiplier.signal, windowWidthVar.signal)
       .map { case (ctrl, shift, mobile, width) =>
         if (width <= 767) mobile else getMouseEventMultiplier(ctrl, shift)
       }
@@ -787,7 +788,7 @@ object MainForm {
     }
   }
 
-  private def actionAmountControl(controlId: String): ReactiveHtmlElement[HTMLDivElement] =
+  private def actionAmountControl(controlId: String, amountVar: Var[Int]): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "mobile-only batch-controls",
       label(
@@ -800,8 +801,8 @@ object MainForm {
         Seq(1, 10, 25, 250).map { amount =>
           option(value := amount.toString, s"×$amount")
         },
-        value <-- mobileMultiplier.signal.map(_.toString),
-        onChange.mapToValue.map(_.toInt) --> mobileMultiplier.writer,
+        value <-- amountVar.signal.map(_.toString),
+        onChange.mapToValue.map(_.toInt) --> amountVar.writer,
       ),
     )
 
@@ -957,7 +958,7 @@ object MainForm {
             ),
           )
         } },
-        actionAmountControl("brood-action-amount"),
+        actionAmountControl("brood-action-amount", broodMultiplier),
         div(
           className := "row",
           child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
@@ -1585,7 +1586,7 @@ object MainForm {
   private def tasksDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "d-grid gap-2",
-      actionAmountControl("tasks-action-amount"),
+      actionAmountControl("tasks-action-amount", tasksMultiplier),
       child.maybe <-- upgradesSignal.map(_(UpgradeType.DefaultWorkers).unlocked).distinct.map {
         unlocked => Option.when(unlocked) {
           div(
@@ -1655,7 +1656,7 @@ object MainForm {
   )
 
   private def taskMultiplier(event: MouseEvent): Int =
-    if (window.innerWidth <= 767) mobileMultiplier.now() else getMouseEventMultiplier(event)
+    if (window.innerWidth <= 767) tasksMultiplier.now() else getMouseEventMultiplier(event)
 
   private def taskDiv(antTask: AntTask, idSuffix: String = ""): ReactiveHtmlElement[HTMLDivElement] = {
     val amountSignal: Signal[Long] =

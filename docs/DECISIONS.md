@@ -467,3 +467,11 @@ names and batch badges identify the order. Keep Gather Sugar for now: fresh
 colonies start with no sugar or workers, and emergency recovery requires standard
 workers. Replacing clicking with slow queen foraging is a suggestion only, not
 an approved or implemented opening change.
+
+
+### D24 follow-up: action amounts belong to their screen
+
+Nest brood batches and Tasks assignments use independent mobile amounts, both
+initially ×1. Tab switches retain each choice without changing the other.
+Desktop Ctrl/Shift shortcuts are unchanged. These are session UI values, not
+saved gameplay settings.
