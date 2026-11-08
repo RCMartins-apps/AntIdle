@@ -1,5 +1,6 @@
 """Fast founding workers, half-efficiency tasks and the staged replacement pipeline."""
 import copy
+import re
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
@@ -22,8 +23,8 @@ def check_brood(page, width, url):
     page.get_by_role("tab", name="Nest", exact=True).click()
     for _ in range(5):
         page.get_by_role("button", name="Gather Sugar", exact=True).click()
-    raise_egg = page.get_by_role("button", name="Raise Worker Egg", exact=True)
-    expect(raise_egg).to_be_enabled()
+    raise_egg = page.get_by_role("button", name=re.compile(r"^Raise (?:Small )?Worker Egg"))
+    expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
     expect(page.locator(".brood-feeding")).to_contain_text("5 sugar")
     raise_egg.click()
     ordered = save_game(page)
@@ -67,6 +68,8 @@ def check_brood(page, width, url):
     assert upgraded["ants"]["eggsAndLarvae"] == prepared["ants"]["eggsAndLarvae"]
     page.get_by_role("tab", name="Nest", exact=True).click()
     expect(page.locator(".brood-feeding")).to_contain_text("20 sugar + 2 protein")
+    expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_have_count(0)
+    expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_enabled()
     raise_egg.click()
     page.clock.run_for(200)
     mixed = save_game(page)

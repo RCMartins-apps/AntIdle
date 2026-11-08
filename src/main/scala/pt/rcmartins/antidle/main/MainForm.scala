@@ -71,6 +71,10 @@ object MainForm {
         if (width <= 767) mobile else getMouseEventMultiplier(ctrl, shift)
       }
 
+  private val lineageVisibleSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+    nest.royalBroodSlots > 0 || ants.daughterQueens > 0L || ants.lineage.foundings > 0
+  }.distinct
+
   private val ResourcesWidth = 500
   private val NestWidth = 800
   private val MessagesWidth = 575
@@ -305,6 +309,11 @@ object MainForm {
               a(className := "nav-link", idAttr := "discoveries-tab", dataAttr("bs-toggle") := "tab",
                 href := "#discoveriesContent", role := "tab", "Discoveries")),
           ),
+          child.maybe <-- ifUnlockedOpt(lineageVisibleSignal)(
+            li(className := "nav-item",
+              a(className := "nav-link", idAttr := "lineage-tab", dataAttr("bs-toggle") := "tab",
+                href := "#lineageContent", role := "tab", "Lineage")),
+          ),
           li(
             className := "nav-item",
             a(
@@ -357,6 +366,9 @@ object MainForm {
           ),
           child.maybe <-- ifUnlockedOpt(discoveriesVisibleSignal)(
             div(className := "tab-pane", idAttr := "discoveriesContent", role := "tabpanel", discoveriesDiv),
+          ),
+          child.maybe <-- ifUnlockedOpt(lineageVisibleSignal)(
+            div(className := "tab-pane", idAttr := "lineageContent", role := "tabpanel", prestigeDiv),
           ),
           div(
             className := "tab-pane",
@@ -690,7 +702,7 @@ object MainForm {
           resourceSignal = antsSignal.map(a => BasicResource(a.smallWorkers, 0L)),
           resourceEstimationSignal = Val(div()),
           showSignal = unlocksSignal.map(_.resources.showSmallWorkers),
-          tooltipOpt = Some(div("Small founding workers: 50% task output and upkeep; live 30–40 simulated minutes (36–48 with Colony Nutrition). Safe founding jobs only. Existing adults stay small after Standard Worker Development.")),
+          tooltipOpt = Some(div("Small founding workers: 50% task output and upkeep; live 30–40 simulated minutes.")),
         ),
         child.maybe <-- createResourceDiv(
           name = "Workers",
@@ -887,7 +899,6 @@ object MainForm {
 
     div(
       className := "row",
-      prestigeDiv,
       actionButton(
         name = GatherSugarAction,
         enabledSignal = Val(true),
@@ -967,6 +978,8 @@ object MainForm {
             }.distinct
             actionButton(
               name = LayEggAction,
+              displayNameSignal = Some(antsSignal.map(_.standardWorkersUnlocked).distinct.map(
+                standard => if (standard) LayEggAction else "Raise Small Worker Egg")),
               topLeftBadgeSignal = displayedBatch.map {
                 case 1    => None
                 case mult => Some(span(s"x$mult"))
@@ -1029,7 +1042,7 @@ object MainForm {
               requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
                 List(ActionRequirement("replete slots", Math.max(0L, nest.chambers.repleteChamber.level.toLong * u - ants.repletes)))
               },
-              descriptionSignal = Val(Some(div("Promote the oldest home worker into a replete with a fresh 90–120 minute lifespan, improved by Colony Nutrition. It consumes normal sugar upkeep and cannot perform worker tasks. Stored water is retained if capacity later falls."))),
+              descriptionSignal = Val(Some(div("Promote the oldest home worker into a replete with a fresh 90–120 minute lifespan. It consumes normal sugar upkeep and cannot perform worker tasks. Stored water is retained if capacity later falls."))),
               onClickAction = _ => Actions.promoteReplete(),
             ),
           ),
@@ -1232,10 +1245,14 @@ object MainForm {
 
   private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = div(
     className := "col-12 lineage-section",
-    child.maybe <-- antsSignal.map(a => a.daughterQueens > 0L || a.lineage.foundings > 0).distinct.map {
+    child.maybe <-- lineageVisibleSignal.map {
       visible => Option.when(visible) {
-        div(className := "border rounded p-2 my-2",
-          h5("Queen's lineage"),
+        div(className := "lineage-overview",
+          infoHeading("Queen's lineage", div("Daughter queens found new colonies. DNA buys permanent Understandings.")),
+          child.maybe <-- antsSignal.map(_.daughterQueens < u).distinct.map { notReady => Option.when(notReady) {
+            div(className := "lineage-queen-status small text-body-secondary mb-2",
+              child.text <-- antsSignal.map(ants => if (ants.royalBrood.nonEmpty) "Daughter queen: rearing" else "Daughter queen: not ready").distinct)
+          } },
           div(child.text <-- antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1L} · DNA: ${a.lineage.dna} · +${a.lineage.foundings.toLong * 10L}% sugar production")),
           child.maybe <-- antsSignal.map(_.lineage).distinct.map { lineage =>
             Option.when(lineage.foundings > 0 && !lineage.sharedPaths) {
@@ -1462,6 +1479,7 @@ object MainForm {
       topRightBadgeSignal: Signal[Option[ReactiveHtmlElement[HTMLElement]]] = Val(None),
       requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
       blockedReasonSignal: Signal[Option[String]] = Val(None),
+      displayNameSignal: Option[Signal[String]] = None,
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "col-6 px-3 py-2 d-grid action-cell",
@@ -1469,7 +1487,7 @@ object MainForm {
         className := "btn btn-primary position-relative",
         className := "fs-4",
         `type` := "button",
-        name,
+        child.text <-- displayNameSignal.getOrElse(Val(name)),
         disabled <-- enabledSignal.map(!_),
         onClick --> { _ =>
           useSignalValue[Int](modifiersMultiplierSignal, mult => onClickAction(mult))
@@ -1499,8 +1517,8 @@ object MainForm {
           detailsTag(
             className := "action-details",
             summaryTag(
-              aria.label := s"Details for $name",
-              title := s"Details for $name",
+              aria.label <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
+              title <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
               span(aria.hidden := true,
                 svg.svg(svg.viewBox := "0 0 24 24",
                   svg.path(svg.d := "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 11v6M12 7h.01")),

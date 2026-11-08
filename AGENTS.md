@@ -51,6 +51,9 @@ Validate gameplay rules in the engine, not only by disabling UI buttons.
 
 Keep default screens compact. Show counts, rates, costs, progress and relevant
 blocking/risk warnings directly. Remove explanations that repeat those values.
+Describe base/current behavior concisely. Do not append obvious claims such as
+“improved by [upgrade]” or enumerate hypothetical upgraded variants in general
+help. Upgrade actions still need their concrete effects and costs.
 Put important mechanics behind explicit [i] controls on phone and desktop;
 use MainForm's infoHeading/infoDetails helpers for sections/tasks and the shared
 action details control for actions. Do not add always-visible tutorial paragraphs

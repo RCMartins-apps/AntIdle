@@ -541,3 +541,21 @@ Outpost sections project only visibility, established state and expansion
 availability before distinct/rendering. Tick-by-tick exploration updates must
 not recreate their action controls and close help. Costs, eligibility, level,
 capacity and production remain reactive inside the stable section.
+
+
+## D28: Concise current facts, dedicated Lineage and caste-aware actions — approved
+
+Use the owner's shorter copy verbatim: “Small founding workers: 50% task output
+and upkeep; live 30–40 simulated minutes.” General help should not append obvious
+upgrade-improves-this claims or potential upgraded number variants. Keep concrete
+upgrade effects on their own upgrade actions and important mechanics behind [i].
+Removed the equivalent Colony Nutrition qualifier from replete promotion help.
+
+Queen's lineage is its own Lineage tab, with generation/DNA/production, daughter-
+queen readiness, Understandings and founding review/reset disclosures. Reveal
+the tab when the Royal Nursery exists, a daughter queen is ready or a previous
+founding exists; keep it across founding resets. Royal rearing stays in Nest.
+
+The worker action says Raise Small Worker Egg during founding, then Raise Worker
+Egg after Standard Worker Development. Its help label/title change with it.
+Names reflect newly raised caste, without changing existing adults or gameplay.
