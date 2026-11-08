@@ -69,7 +69,10 @@ object ExplorationHelper {
     s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $xp XP · ${UINumbersUtils.prettyNumberStr(knowledge)} knowledge$sugar$protein$water$resin"
   }
 
-  def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String = {
+  def preview(data: ExplorationData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String =
+    s"${summary(data, workers, destination, extraScouts)} · ${outcomePreview(data, workers, destination)}"
+
+  def outcomePreview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String = {
     val rank = ExplorationProgression.suppliesRank(data)
     val party = ExplorationParty(workers, 0L, destination.duration,
       scouts = destination.scouts, destination = destination.id, suppliesLevel = rank)
@@ -78,24 +81,24 @@ object ExplorationHelper {
     def amount(base: Long): String = UINumbersUtils.prettyNumberStr(
       ExplorationProgression.expeditionReward(base, experience, workers, rank))
     val result = if (RaidProgression.isRaid(destination))
-      RaidProgression.risk(workers) + " Protein reward is uniformly rolled at 200–350 per ten workers, limited by free storage. Loss counts are uniformly distributed over the displayed range. Extra scouts and supplies do not reduce casualties or increase raid protein. Surviving ants retain their lifespans."
+      "200–350 protein per 10 workers; limited by protein capacity. Rewards and losses are uniformly rolled. Extra scouts and supplies do not change combat outcomes."
     else if (destination.resinReward > 0L)
-      "Resin guaranteed; stored up to resin capacity"
+      "Resin guaranteed"
     else if (destination.waterReward > 0L)
-      "Water guaranteed; stored up to water capacity"
+      "Water guaranteed"
     else if (destination.proteinReward > 0L)
-      "Protein guaranteed; no carcass storage needed"
+      "Protein guaranteed"
     else if (destination.sugarReward > 0L)
-      "Sugar guaranteed; no carcass storage needed"
+      "Sugar guaranteed"
     else if (destination.carcassSize == 0)
-      "Knowledge guaranteed; no carcass storage needed"
+      "Knowledge guaranteed"
     else {
       val carcass = s"${amount(CarcassProtein * destination.carcassSize)} protein + ${amount(CarcassFood * destination.carcassSize)} sugar reserve"
       if (destination == ExplorationDestination.WoodlandEdge || !data.carcassDiscovered)
         s"Carcass guaranteed: $carcass"
       else s"45% carcass ($carcass); 44% sugar (${amount(u)}–${amount(20L * u)}); 11% no resources"
     }
-    s"${summary(data, workers, destination, extraScouts)} · $result"
+    result
   }
 
   def exploreBonus(initial: AllData, party: ExplorationParty): AllData =

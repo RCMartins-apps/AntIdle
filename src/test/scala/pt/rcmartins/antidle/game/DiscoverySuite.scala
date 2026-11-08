@@ -128,4 +128,17 @@ class DiscoverySuite extends FunSuite {
     val task = AntTask.AphidTender: AntTask
     assertEquals(task.toJson.fromJson[AntTask], Right(task))
   }
+  test("discovery indicators identify only destinations with unfinished discoveries") {
+    val empty = ExplorationData()
+    assert(!hasUnfound(empty, Surroundings))
+    assert(!hasUnfound(empty, CollectResin))
+    DiscoveryProgression.all.foreach { discovery =>
+      val destination = ExplorationDestination.all.find(_.id == discovery.destination).get
+      assert(hasUnfound(empty, destination))
+      assert(hasUnfound(empty.copy(surveys = Map(discovery.destination -> (discovery.trips - 1))), destination))
+      assert(!hasUnfound(empty.copy(surveys = Map(discovery.destination -> discovery.trips)), destination))
+      assert(!hasUnfound(empty.copy(surveys = Map(discovery.destination -> (discovery.trips + 1))), destination))
+    }
+  }
+
 }

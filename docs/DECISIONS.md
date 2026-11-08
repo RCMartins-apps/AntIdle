@@ -442,3 +442,94 @@ without silently changing the chosen party. Keep the 37-worker cap and stepper.
 Place active expeditions and secondary trail/XP/supply panels after launch.
 Desktop retains all unlocked cards for comparison. This changes layout only,
 not expedition mechanics, automation or saves.
+
+
+## D24: Action descriptions follow shared schemas — approved
+
+The owner reported inconsistent worker/scout egg help. Related actions must
+show equivalent information in the same order, using shared rendering instead
+of independently written prose. Egg details use Queue, Development and Larval
+care; times derive from Developing.totalCare and are explicitly base times
+because nurses, research, competition and supply affect actual development.
+Worker caste changes update the displayed values. Emergency exceptions occupy
+the same fields. Laying costs remain next to the button, with later larval
+resource costs identified separately.
+
+Common action help orders explanation, Requires, then Result, omitting empty
+sections. Egg actions omit the redundant result count: their names identify the egg. Keep default screens concise and action-family schemas in code; future
+actions must follow their family's structure. No gameplay or save changes.
+
+
+### D24 follow-up: redundant egg results and manual sugar
+
+Remove the extra +1 egg result from worker/scout/emergency actions; action
+names and batch badges identify the order. Keep Gather Sugar for now: fresh
+colonies start with no sugar or workers, and emergency recovery requires standard
+workers. Replacing clicking with slow queen foraging is a suggestion only, not
+an approved or implemented opening change.
+
+
+### D24 follow-up: action amounts belong to their screen
+
+Nest brood batches and Tasks assignments use independent mobile amounts, both
+initially ×1. Tab switches retain each choice without changing the other.
+Desktop Ctrl/Shift shortcuts are unchanged. These are session UI values, not
+saved gameplay settings.
+
+
+### D24 follow-up: reserve touch-control height
+
+Task rows must reserve enough height for their 44px info control even without
+assignment buttons or an output rate. Reserve a 52px row and align the info
+control's 4px top inset with the assignment-button margin. Expanded help stays
+in flow. Geometry checks cover passive and assignable jobs, adjacent controls,
+phone bounds and opening/closing each task disclosure.
+
+
+### D24 follow-up: scout eggs honor the brood batch amount
+
+Scout ordering uses Nest's amount and desktop modifiers, like workers. Clamp
+the batch to available sugar, protein and future colony slots, displaying its
+actual badge and total laying costs. Append the batch to shared FIFO, preserving
+worker orders ahead of it. Only the first scout may lay immediately; remaining
+orders wait for normal cooldown, brood space and supplies. Charge on laying.
+No new save format or accelerated development.
+
+
+## D25: Numeric chamber help and concise exploration outcomes — approved
+
+The owner requested that chamber actions show only bonus lists, with consistent
+names and numbers, instead of prose. Resource storage uses “sugar/protein/water/
+tunneling space capacity”; population uses “colony slots”; brood uses “brood
+places”; job/storage slots use consistent singular/plural labels. Show all
+useful effects: Nursery +3 brood places/+5 Brood Nurse slots, and the Queen's
+actual reduction to the next laying interval, alongside existing bonuses.
+Derive preview-only effects from the model; do not add derived capacity to saved
+base values or alter gameplay.
+
+Exploration retains its visible duration/reward summary, cost and danger. Its
+[i] shows Finds/outcome chances without repeating that summary or generic
+“no carcass storage needed” prose. Keep raid distribution and combat-modifier
+rules in help while keeping danger visible before departure.
+
+
+## D26: Mark exploration destinations with discoveries remaining — approved
+
+Show a compact Discovery badge on unlocked expedition cards while any mapped
+discovery is unfinished. Also mark those destinations in the mobile picker so
+players can choose without opening every card. Do not disclose discovery names,
+rewards or locked destinations. Derive the indicator from the discovery catalog
+and saved survey counts; update it after completion and on load. No extra save
+field or gameplay rule.
+
+
+## D27: Replace the mobile destination picker with a carousel — approved
+
+The owner found the picker too many taps for comparing actions. Supersedes the
+mobile selector in D23 and picker hints in D26. Keep one visible destination
+card below shared party controls, with swipe navigation and previous/next buttons
+immediately above the card. Show destination name and current/unlocked count;
+wrap at the ends. Preserve party choices, Min presets, costs, outcomes, danger
+and the card's Discovery badge. Locked destinations remain absent; desktop keeps
+its comparison grid. Horizontal gestures navigate; vertical movement scrolls
+normally. No engine or save changes.

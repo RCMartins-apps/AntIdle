@@ -35,15 +35,24 @@ def load_game(page, game):
 
 
 def select_expedition(page, destination):
-    """Choose an unlocked mobile route; desktop retains the comparison grid."""
-    picker = page.locator("#expedition-destination")
-    if not picker.is_visible():
+    """Move the mobile carousel; desktop retains the comparison grid."""
+    carousel = page.locator(".destination-carousel")
+    if not carousel.is_visible():
         return
     name = destination.removeprefix("Explore ").removeprefix("Raid ")
-    options = picker.locator("option").evaluate_all("nodes => nodes.map(n => ({value: n.value, name: n.textContent.split(' · ')[0]}))")
-    chosen = next((o["value"] for o in options if o["value"] == destination or o["name"] == name), None)
-    if chosen is not None:
-        picker.select_option(chosen)
+    cards = page.locator(".exploration-destination").evaluate_all(
+        "nodes => nodes.map(n => ({id: n.dataset.destination, name: n.querySelector('button').textContent.trim().replace(/^(Explore|Raid) /, '')}))")
+    target = next((i for i, card in enumerate(cards) if card["id"] == destination or card["name"] == name), None)
+    if target is None:
+        return
+    selected = page.locator(".exploration-destination.destination-selected").get_attribute("data-destination")
+    current = next(i for i, card in enumerate(cards) if card["id"] == selected)
+    forward = (target - current) % len(cards)
+    backward = (current - target) % len(cards)
+    control = "Next destination" if forward <= backward else "Previous destination"
+    for _ in range(min(forward, backward)):
+        page.get_by_role("button", name=control, exact=True).click()
+
 
 
 def assert_fits(page, width):
@@ -90,7 +99,7 @@ def check_nest_capacity(page, initial):
     assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
     page.get_by_label("Details for Expand Nest", exact=True).click()
-    expect(page.locator("details[open]")).to_contain_text("+500 max tunneling space")
+    expect(page.locator("details[open]")).to_contain_text("+500 tunneling space capacity")
     page.get_by_role("button", name="Expand Nest", exact=False).click()
     page.clock.run_for(400)
     upgraded = save_game(page)
@@ -132,7 +141,7 @@ def check_compact_details(page):
     toggle.focus()
     toggle.press("Space")
     expect(panel).to_have_attribute("open", "")
-    expect(panel).to_contain_text("Order worker eggs")
+    expect(panel).to_contain_text("Shared laying queue")
     assert action.bounding_box()["height"] > closed_height
     expect(action.locator(".action-costs")).to_be_visible()
     toggle.press("Enter")
@@ -153,11 +162,11 @@ def check_chamber_bonuses(page, initial):
 
     for name, chamber, increases, details in (
         ("Expand Nest", "nestChamber", {"ants": 10, "tunneling": 500},
-         ("+10 max ants", "+500 max tunneling space")),
+         ("+10 colony slots", "+500 tunneling space capacity")),
         ("Queen's Chamber", "queenChamber", {"ants": 5, "eggs": 2},
-         ("+5 max ants", "+2 brood places")),
+         ("+5 colony slots", "+2 brood places")),
         ("Food Storage Chamber", "foodStorageChamber", {"sugar": 1000},
-         ("+1000 max sugar",)),
+         ("+1000 sugar capacity",)),
     ):
         game = progressed_game(initial)
         game["ants"]["workers"] = 0
@@ -263,9 +272,11 @@ def run_checks(browser, url):
                 page.locator(".nest-brood").get_by_label("Action amount").select_option(str(multiplier))
                 modifiers = []
                 page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-                expect(page.locator("details[open]")).to_contain_text(f"+{multiplier} eggs")
+                expect(page.locator("details[open] .action-result")).to_be_empty()
             page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=modifiers)
             page.get_by_role("tab", name="Tasks").click()
+            if width <= 767:
+                page.locator("#tasks-action-amount").select_option(str(multiplier))
             page.get_by_role("button", name="Assign Sugar Collector", exact=True).click(modifiers=modifiers)
             page.get_by_role("button", name="Remove Sugar Collector", exact=True).click(modifiers=modifiers)
             page.get_by_role("button", name="Assign Tunneler", exact=True).click(modifiers=modifiers)
@@ -314,18 +325,18 @@ def run_checks(browser, url):
             load_game(page, blocked)
             expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_disabled()
             page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-            expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
+            expect(page.locator(".action-details[open]")).to_contain_text("Shared laying queue")
             load_game(page, game)
 
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
         page.get_by_role("tab", name="Nest", exact=True).click()
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-        expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
+        expect(page.locator(".action-details[open]")).to_contain_text("Shared laying queue")
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
         page.set_viewport_size({"width": 390, "height": 844})
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-        expect(page.locator("details[open]")).to_contain_text("Order worker eggs")
+        expect(page.locator("details[open]")).to_contain_text("Shared laying queue")
         assert_fits(page, 390)
         if width == 390:
             check_nest_capacity(page, initial)

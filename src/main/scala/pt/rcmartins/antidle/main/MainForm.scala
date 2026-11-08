@@ -61,11 +61,12 @@ object MainForm {
   private val shiftPressedVar = Var(false)
 
   private val windowWidthVar: Var[Long] = Var(window.innerWidth.toLong)
-  private val mobileMultiplier = Var(1)
+  private val broodMultiplier = Var(1)
+  private val tasksMultiplier = Var(1)
 
   private val modifiersMultiplierSignal: Signal[Int] =
     ctrlPressedVar.signal
-      .combineWith(shiftPressedVar.signal, mobileMultiplier.signal, windowWidthVar.signal)
+      .combineWith(shiftPressedVar.signal, broodMultiplier.signal, windowWidthVar.signal)
       .map { case (ctrl, shift, mobile, width) =>
         if (width <= 767) mobile else getMouseEventMultiplier(ctrl, shift)
       }
@@ -787,7 +788,7 @@ object MainForm {
     }
   }
 
-  private def actionAmountControl(controlId: String): ReactiveHtmlElement[HTMLDivElement] =
+  private def actionAmountControl(controlId: String, amountVar: Var[Int]): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "mobile-only batch-controls",
       label(
@@ -800,8 +801,8 @@ object MainForm {
         Seq(1, 10, 25, 250).map { amount =>
           option(value := amount.toString, s"×$amount")
         },
-        value <-- mobileMultiplier.signal.map(_.toString),
-        onChange.mapToValue.map(_.toInt) --> mobileMultiplier.writer,
+        value <-- amountVar.signal.map(_.toString),
+        onChange.mapToValue.map(_.toInt) --> amountVar.writer,
       ),
     )
 
@@ -873,7 +874,7 @@ object MainForm {
             chamberSignal.map(_.level).distinct.map(Some(_).filter(_ > 0).map(span(_))),
           enabledSignal = constructionBlockedSignal(chamberType).map(_.isEmpty),
           blockedReasonSignal = constructionBlockedSignal(chamberType),
-          descriptionSignal = Val(Option.when(chamberType == ChamberType.Queen)(div("Adds brood places and speeds laying."))),
+          descriptionSignal = Val(None),
           costSignal = actionCost,
           bonusSignal = Actions.getActionBonus(chamberType),
           onClickAction = _ =>
@@ -950,14 +951,14 @@ object MainForm {
             actionButton(
               name = "Raise Emergency Worker",
               enabledSignal = antsSignal.combineWith(sugarSignal).map { case (ants, sugar) => EmergencyRecovery.canRaise(ants, sugar.amount) },
-              descriptionSignal = Val(Some(div("The queen rears one small sugar collector without protein, even with full brood places. Development takes about 15s. Queen's Routine can gather protected supplies for this egg; existing brood and research are kept."))),
+              descriptionSignal = Val(Some(eggDescription(EmergencyRecovery.Kind))),
               costSignal = Val(ActionCost(sugar = EmergencyRecovery.EggCost)),
-              bonusSignal = Val(ActionBonus(eggs = u)),
+              bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseEmergencyWorker(),
             ),
           )
         } },
-        actionAmountControl("brood-action-amount"),
+        actionAmountControl("brood-action-amount", broodMultiplier),
         div(
           className := "row",
           child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
@@ -971,22 +972,26 @@ object MainForm {
                 case mult => Some(span(s"x$mult"))
               },
               enabledSignal = Actions.layEggActionEnabled,
-              descriptionSignal = Val(Some(div("Order worker eggs. Sugar is charged as they are laid."))),
+              descriptionSignal = antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Some(eggDescription(if (standard) "worker" else "small"))),
               costSignal = displayedBatch.combineWith(antsSignal).map { case (mult, ants) => ActionCost(sugar = mult * BroodProgression.eggCost(ants)) },
-              bonusSignal = displayedBatch.map(mult => ActionBonus(eggs = mult * u)),
+              bonusSignal = Val(ActionBonus.empty),
               onClickAction = mult => Actions.layEggAction(mult),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
           },
           child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
+            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal, resourcesSignal).map {
+              case (requested, ants, nest, resources) => Math.max(1, ScoutProgression.orderAmount(ants, nest, resources, requested))
+            }.distinct
             actionButton(
               name = "Raise Scout Egg",
+              topLeftBadgeSignal = displayedBatch.map(amount => Option.when(amount > 1)(span(s"x$amount"))),
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-              descriptionSignal = Val(Some(div("Shares the laying queue. Develops in about 90s; larval care costs 20 sugar + 2 protein."))),
-              costSignal = Val(ScoutProgression.eggCost),
+              descriptionSignal = Val(Some(eggDescription("scout"))),
+              costSignal = displayedBatch.map(amount => ActionCost(sugar = amount * ScoutProgression.eggCost.sugar, protein = amount * ScoutProgression.eggCost.protein)),
               bonusSignal = Val(ActionBonus.empty),
-              onClickAction = _ => Actions.raiseScout(),
+              onClickAction = amount => Actions.raiseScout(amount),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
           },
@@ -1003,7 +1008,7 @@ object MainForm {
                 blockedReasonSignal = constructionBlockedSignal(ChamberType.RoyalNursery),
                 costSignal = Val(RoyalNurseryProgression.buildCost),
                 bonusSignal = Val(ChamberBonuses.forChamber(ChamberType.RoyalNursery)),
-                descriptionSignal = Val(Some(div("A protected, resin-lined chamber for royal brood."))),
+                descriptionSignal = Val(None),
                 onClickAction = _ => Actions.addBuildTask(BuildTask(ChamberType.RoyalNursery, RoyalNurseryProgression.buildCost)),
               ),
             ),
@@ -1098,7 +1103,7 @@ object MainForm {
               name = ChamberType.Replete.name,
               enabledSignal = constructionBlockedSignal(ChamberType.Replete).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Replete),
-              descriptionSignal = Val(Some(div("Houses promoted repletes."))),
+              descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Replete),
               topRightBadgeSignal = chambersSignal.map(c => Option.when(c.repleteChamber.level > 0)(span(c.repleteChamber.level))),
@@ -1111,7 +1116,7 @@ object MainForm {
               name = ChamberType.Aphid.name,
               enabledSignal = constructionBlockedSignal(ChamberType.Aphid).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Aphid),
-              descriptionSignal = Val(Some(div("Adds space for an Aphid Tender."))),
+              descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1126,7 +1131,7 @@ object MainForm {
               name = "Nursery Chamber",
               enabledSignal = constructionBlockedSignal(ChamberType.Nursery).map(_.isEmpty),
               blockedReasonSignal = constructionBlockedSignal(ChamberType.Nursery),
-              descriptionSignal = Val(Some(div("+3 brood places · +5 nurse places per level."))),
+              descriptionSignal = Val(None),
               costSignal = cost,
               bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
               topRightBadgeSignal = chambersSignal.map(chambers =>
@@ -1514,6 +1519,20 @@ object MainForm {
   ): EventListener[MouseEvent, MouseEvent] =
     setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts))
 
+  // Related actions share fields and order; values come from the gameplay model.
+  private def eggDescription(kind: String): ReactiveHtmlElement[HTMLDivElement] = {
+    val brood = AntBrood.Developing(0L, kind)
+    div(className := "egg-description text-start",
+      div(className := "action-detail-row", b("Queue: "),
+        if (kind == EmergencyRecovery.Kind) "Immediate; bypasses brood limit."
+        else "Shared laying queue; costs paid when laid."),
+      div(className := "action-detail-row", b("Development: "),
+        s"${prettyTimeFromTicks(brood.totalCare / u)} base; varies with care."),
+      div(className := "action-detail-row", b("Larval care: "),
+        if (brood.small) "No resources." else "20 sugar · 2 protein per egg."),
+    )
+  }
+
   private def actionDetails(
       descriptionSignal: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
       costSignal: Signal[ActionCost],
@@ -1526,7 +1545,7 @@ object MainForm {
       child.maybe <-- descriptionSignal.map {
         _.map { descriptionDiv =>
           div(
-            className := "text-center",
+            className := "text-start action-description",
             maxWidth.px := 350,
             descriptionDiv,
             hr(),
@@ -1535,8 +1554,11 @@ object MainForm {
       },
       if (includeCosts) actionCosts(costSignal, requirementsSignal) else emptyNode,
       div(
-        className := "d-flex flex-column text-center action-requirements",
-        children <-- requirementsSignal.map(_.filterNot(_.isCost).map(requirement => requirementLabel(requirement))),
+        className := "d-flex flex-column text-start action-requirements",
+        children <-- requirementsSignal.map { requirements =>
+          val visible = requirements.filterNot(_.isCost)
+          if (visible.isEmpty) Nil else List(div(className := "small text-muted text-start", "Requires")) ++ visible.map(requirement => requirementLabel(requirement))
+        },
       ),
       child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
         if (!includeCosts || cost == ActionCost.empty || bonus == ActionBonus.empty)
@@ -1546,20 +1568,23 @@ object MainForm {
       },
       child <-- bonusSignal.map { bonus =>
         div(
-          className := "d-flex flex-column justify-content-center text-center",
+          className := "d-flex flex-column justify-content-center text-start action-result",
+          if (bonus != ActionBonus.empty) div(className := "small text-muted", "Result") else emptyNode,
           ifGreater0(bonus.sugar)(prettyNumberSimple("+", _, " sugar")),
-          ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
-          ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
-          ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
-          ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),
-          ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " max water")),
-          ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete slot"),
+          ifGreater0(bonus.eggs)(value => s"+${value / u} ${if (value == u) "egg" else "eggs"}"),
+          ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " tunneling space capacity")),
+          ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " sugar capacity")),
+          ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " protein capacity")),
+          ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " water capacity")),
+          ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.broodNurseSlots.toLong)(value => s"+$value Brood Nurse ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.layingIntervalReduction)(ticks => s"−${prettyTimeFromTicks(ticks)} laying interval"),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " brood places")),
-          ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " max ants")),
-          ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass slot"),
-          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid tender slot"),
-          ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager slots"),
-          ifGreater0(bonus.royalBroodSlots.toLong)(value => s"+$value royal brood slot"),
+          ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " colony slots")),
+          ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value Aphid Tender ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.royalBroodSlots.toLong)(value => s"+$value royal brood ${if (value == 1) "slot" else "slots"}"),
         )
       },
     )
@@ -1567,7 +1592,7 @@ object MainForm {
   private def tasksDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
     div(
       className := "d-grid gap-2",
-      actionAmountControl("tasks-action-amount"),
+      actionAmountControl("tasks-action-amount", tasksMultiplier),
       child.maybe <-- upgradesSignal.map(_(UpgradeType.DefaultWorkers).unlocked).distinct.map {
         unlocked => Option.when(unlocked) {
           div(
@@ -1637,7 +1662,7 @@ object MainForm {
   )
 
   private def taskMultiplier(event: MouseEvent): Int =
-    if (window.innerWidth <= 767) mobileMultiplier.now() else getMouseEventMultiplier(event)
+    if (window.innerWidth <= 767) tasksMultiplier.now() else getMouseEventMultiplier(event)
 
   private def taskDiv(antTask: AntTask, idSuffix: String = ""): ReactiveHtmlElement[HTMLDivElement] = {
     val amountSignal: Signal[Long] =
@@ -1804,6 +1829,16 @@ object MainForm {
     val selectedDestinationSignal = chosenDestinationVar.signal.combineWith(unlockedDestinationsSignal).map {
       case (id, unlocked) => unlocked.find(_.id == id).getOrElse(ExplorationDestination.Surroundings)
     }.distinct
+    def moveDestination(direction: Int): Unit =
+      useSignalValue[(List[ExplorationDestination], ExplorationDestination)](
+        unlockedDestinationsSignal.combineWith(selectedDestinationSignal), { case (destinations, selected) =>
+          if (destinations.nonEmpty) {
+            val index = destinations.indexOf(selected)
+            chosenDestinationVar.set(destinations(Math.floorMod(index + direction, destinations.size)).id)
+          }
+        })
+    var swipeStart: Option[(Double, Double)] = None
+
     val amountOfExplorersVar = Var(1L * u)
     val amountOfExplorersSignal = amountOfExplorersVar.signal.combineWith(availableWorkersCountSignal)
       .map { case (requested, available) => ExplorationProgression.selectedWorkers(requested, available) }.distinct
@@ -1831,12 +1866,37 @@ object MainForm {
         className := "col-12 col-md-6 px-3 py-2 exploration-destination",
         className <-- selectedDestinationSignal.map(selected => if (selected == destination) "destination-selected" else ""),
         dataAttr("destination") := destination.id,
+        onTouchStart --> { event =>
+          if (window.innerWidth <= 767 && event.touches.length == 1) {
+            val touch = event.touches(0)
+            swipeStart = Some((touch.clientX, touch.clientY))
+          } else swipeStart = None
+        },
+        onTouchCancel --> (_ => swipeStart = None),
+        onTouchEnd --> { event =>
+          swipeStart.foreach { case (x, y) =>
+            if (window.innerWidth <= 767 && event.changedTouches.length == 1) {
+              val touch = event.changedTouches(0)
+              val dx = touch.clientX - x
+              val dy = touch.clientY - y
+              if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                event.preventDefault()
+                moveDestination(if (dx < 0) 1 else -1)
+              }
+            }
+          }
+          swipeStart = None
+        },
         div(
           className := "card p-2 h-100",
           p(
             className := "mb-1 destination-preview",
             child.text <-- amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
               case (workers, data, extra) => ExplorationHelper.summary(data, workers, destination, extra)
+            },
+            child.maybe <-- explorationSignal.map(data => DiscoveryProgression.hasUnfound(data, destination)).distinct.map { remaining =>
+              Option.when(remaining)(span(className := "badge text-bg-info ms-2 discovery-badge",
+                aria.label := "Discovery still to find", "Discovery"))
             },
           ),
           if (RaidProgression.isRaid(destination)) div(
@@ -1879,7 +1939,7 @@ object MainForm {
                     resources.hasResources(ExplorationHelper.cost(workers, destination, extra))
                 },
               descriptionSignal = amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
-                case (workers, data, extra) => Some(div(ExplorationHelper.preview(data, workers, destination, extra)))
+                case (workers, data, extra) => Some(div(className := "exploration-outcomes", b("Finds: "), ExplorationHelper.outcomePreview(data, workers, destination)))
               },
               costSignal = cost,
               bonusSignal = Val(ActionBonus.empty),
@@ -1895,15 +1955,6 @@ object MainForm {
       className := "row exploration-layout",
       div(
         className := "col-12 px-3 py-2 expedition-setup",
-        div(className := "mobile-only destination-picker mb-2",
-          label(forId := "expedition-destination", "Destination"),
-          select(idAttr := "expedition-destination", className := "form-select",
-            children <-- unlockedDestinationsSignal.map(_.map(destination =>
-              option(value := destination.id, destination.name + (if (RaidProgression.isRaid(destination)) " · Dangerous" else "")))),
-            value <-- selectedDestinationSignal.map(_.id),
-            onChange.mapToValue --> chosenDestinationVar.writer,
-          ),
-        ),
         label(forId := "explorer-count", "Workers"),
         div(className := "expedition-worker-stepper",
           button(className := "btn btn-outline-secondary", typ := "button",
@@ -1953,6 +2004,20 @@ object MainForm {
             ),
           )
         },
+      ),
+      div(className := "mobile-only col-12 px-3 destination-carousel",
+        aria.label := "Exploration destinations",
+        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Previous destination", "‹",
+          disabled <-- unlockedDestinationsSignal.map(_.size <= 1), onClick --> (_ => moveDestination(-1))),
+        div(className := "carousel-caption-text", aria.live := "polite",
+          div(className := "carousel-destination-name", child.text <-- selectedDestinationSignal.map(_.name)),
+          div(className := "carousel-position small text-body-secondary",
+            child.text <-- unlockedDestinationsSignal.combineWith(selectedDestinationSignal).map { case (destinations, selected) =>
+              s"${destinations.indexOf(selected) + 1} / ${destinations.size}"
+            }),
+        ),
+        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Next destination", "›",
+          disabled <-- unlockedDestinationsSignal.map(_.size <= 1), onClick --> (_ => moveDestination(1))),
       ),
       ExplorationDestination.all.map { destination =>
         child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {

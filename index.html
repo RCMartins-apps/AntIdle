@@ -47,12 +47,12 @@
         .antidle-app .info-content p:last-child { margin-bottom: 0; }
         .antidle-app .info-heading > .info-details > .info-summary { position: absolute; top: 0; right: 0; }
         .antidle-app .info-heading > .info-details > .info-content { margin-right: -48px; }
-        .antidle-app .task-row { position: relative; padding-right: 48px; }
+        .antidle-app .task-row { position: relative; min-height: 52px; padding-right: 48px; align-items: center; }
         .antidle-app .task-rate { flex: 0 0 100%; width: 100%; }
         .antidle-app .task-rate:empty { display: none; }
         .antidle-app .task-info { flex: 0 0 0; width: 0; height: 0; padding: 0; }
         .antidle-app .task-info:has(.info-details[open]) { flex: 0 0 100%; width: 100%; height: auto; padding: 0 .75rem; }
-        .antidle-app .task-info .info-summary { position: absolute; top: 0; right: 0; }
+        .antidle-app .task-info .info-summary { position: absolute; top: 4px; right: 0; }
         .antidle-app .task-info .info-content { margin-right: -48px; }
         .antidle-app .action-cell { position: relative; }
         .antidle-app .action-cell:has(> .action-details) > button { margin-right: 3.5rem; }
@@ -114,7 +114,11 @@
             .antidle-app #exploreContent .col-6 { width: 100%; }
             .antidle-app .exploration-destination:not(.destination-selected) { display: none; }
             .antidle-app .expedition-setup .expedition-worker-stepper { max-width: none; margin-bottom: .35rem; }
-            .antidle-app .destination-picker select { min-height: 48px; }
+            .antidle-app .destination-carousel { display: flex; align-items: center; gap: .5rem; margin-bottom: .25rem; }
+            .antidle-app .destination-carousel .btn { flex: 0 0 44px; font-size: 1.5rem; line-height: 1; }
+            .antidle-app .carousel-caption-text { flex: 1; min-width: 0; text-align: center; }
+            .antidle-app .carousel-destination-name { font-weight: 600; }
+            .antidle-app .exploration-destination { touch-action: pan-y pinch-zoom; }
             .antidle-app .worker-presets .btn { flex: 1; padding-left: .35rem; padding-right: .35rem; }
             .antidle-app .expedition-setup { padding-bottom: .25rem !important; }
             .antidle-app .exploration-destination.destination-selected { padding-top: .25rem !important; }

@@ -99,4 +99,17 @@ class ColonyDevelopmentSuite extends FunSuite {
     val party = loaded.exploration.explorationParties.head
     assertEquals(ExplorationHelper.exploreBonus(loaded, party).basicResources, ExplorationHelper.exploreBonus(sent, party).basicResources)
   }
+  test("chamber previews include derived nursery places and actual laying interval reduction") {
+    val d = colony()
+    val nursery = ChamberBonuses.forDisplay(Chamber.ChamberType.Nursery, d.ants, d.nestAttributes, d.upgrades)
+    val built = ChamberBonuses.completeUpgrade(d, Chamber.ChamberType.Nursery)
+    assertEquals(nursery.maxEggs / u, (BroodProgression.capacity(built.nestAttributes) - BroodProgression.capacity(d.nestAttributes)).toLong)
+    assertEquals(nursery.broodNurseSlots, 5)
+    assertEquals(built.nestAttributes.maxEggs, d.nestAttributes.maxEggs)
+    val queen = ChamberBonuses.forDisplay(Chamber.ChamberType.Queen, d.ants, d.nestAttributes, d.upgrades)
+    val expanded = ChamberBonuses.completeUpgrade(d, Chamber.ChamberType.Queen)
+    assertEquals(queen.layingIntervalReduction,
+      BroodProgression.interval(d.ants, d.nestAttributes) - BroodProgression.interval(d.ants, expanded.nestAttributes))
+  }
+
 }

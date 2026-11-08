@@ -34,10 +34,17 @@ object ScoutProgression {
       ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < BroodProgression.capacity(nest) &&
       ants.populationCount < nest.maxAntsCount && resources.hasResources(eggCost)
 
-  def raise(allData: AllData): AllData = {
-    if (!canRaise(allData)) allData
+  def orderAmount(ants: AntsData, nest: NestAttributes, resources: BasicResources, requested: Int): Int =
+    if (!canRaise(ants, nest, resources)) 0
+    else Math.max(0L, Math.min(Math.max(0, requested).toLong,
+      Math.min(BroodProgression.availableColonySlots(ants, nest) / u,
+        Math.min(resources.sugar.amount / eggCost.sugar, resources.protein.amount / eggCost.protein)))).toInt
+
+  def raise(allData: AllData, requested: Int = 1): AllData = {
+    val amount = orderAmount(allData.ants, allData.nestAttributes, allData.basicResources, requested)
+    if (amount == 0) allData
     else {
-      val ordered = allData.modify(_.ants.scoutEggOrders).using(_ :+ allData.ants.eggOrders)
+      val ordered = allData.modify(_.ants.scoutEggOrders).using(_ ++ Seq.fill(amount)(allData.ants.eggOrders))
       // Preserve immediate laying when the queen is ready and no earlier orders exist.
       if (allData.ants.queuedEggs == 0) BroodProgression.layOrdered(ordered) else ordered
     }

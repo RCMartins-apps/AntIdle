@@ -7,7 +7,7 @@ import os
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save_game, progressed_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save_game, progressed_game, select_expedition
 
 
 def check_mobile_explore(page, width, url):
@@ -38,7 +38,7 @@ def check_mobile_explore(page, width, url):
 
     def choose(destination):
         if width <= 767:
-            page.locator("#expedition-destination").select_option(destination)
+            select_expedition(page, destination)
 
     early = copy.deepcopy(game)
     early["exploration"].update(experience=0, surveys={})
@@ -47,23 +47,58 @@ def check_mobile_explore(page, width, url):
     load_game(page, early)
     explore()
     expect(page.locator(".exploration-destination")).to_have_count(1)
-    picker = page.locator("#expedition-destination")
-    assert picker.locator("option").evaluate_all("nodes => nodes.map(n => n.value)") == ["surroundings"]
+    carousel = page.locator(".destination-carousel")
+    expect(page.locator(".carousel-position")).to_have_text("1 / 1")
+    if width <= 767:
+        expect(page.get_by_role("button", name="Next destination")).to_be_disabled()
     load_game(page, game)
     explore()
     expect(page.locator(".exploration-destination")).to_have_count(10)
     if width <= 767:
-        expect(picker).to_be_visible()
+        expect(carousel).to_be_visible()
         expect(page.locator(".exploration-destination:visible")).to_have_count(1)
-        for destination in picker.locator("option").evaluate_all("nodes => nodes.map(n => n.value)"):
+        for destination in page.locator(".exploration-destination").evaluate_all("nodes => nodes.map(n => n.dataset.destination)"):
             choose(destination)
             expect(card(destination)).to_be_visible()
             expect(card(destination).locator(".action-costs")).to_be_visible()
             expect(page.locator(".exploration-destination:visible")).to_have_count(1)
             assert_fits(page, width)
-        expect(picker.locator('option[value="rival-food-cache"]')).to_contain_text("Dangerous")
+        choose("surroundings")
+        page.get_by_role("button", name="Previous destination", exact=True).click()
+        expect(card("collect-resin")).to_be_visible()
+        page.get_by_role("button", name="Next destination", exact=True).focus()
+        page.keyboard.press("Enter")
+        expect(card("surroundings")).to_be_visible()
+        # Swipe detection distinguishes deliberate horizontal movement from scrolling/jitter.
+        def swipe(dx, dy):
+            selected = page.locator(".exploration-destination.destination-selected")
+            selected.evaluate("""(el, delta) => {
+                const start = new Touch({identifier: 1, target: el, clientX: 180, clientY: 300});
+                const end = new Touch({identifier: 1, target: el, clientX: 180 + delta[0], clientY: 300 + delta[1]});
+                el.dispatchEvent(new TouchEvent('touchstart', {bubbles: true, touches: [start]}));
+                el.dispatchEvent(new TouchEvent('touchend', {bubbles: true, cancelable: true, changedTouches: [end]}));
+            }""", [dx, dy])
+        swipe(-100, 5)
+        expect(card("woodland-edge")).to_be_visible()
+        swipe(100, 5)
+        expect(card("surroundings")).to_be_visible()
+        swipe(-100, 150)
+        swipe(-20, 0)
+        expect(card("surroundings")).to_be_visible()
+        # A real Chromium touch gesture must navigate without launching the card.
+        card("surroundings").scroll_into_view_if_needed()
+        bounds = card("surroundings").bounding_box()
+        touch = page.context.new_cdp_session(page)
+        y = bounds["y"] + 15
+        x = bounds["x"] + bounds["width"] - 30
+        touch.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": x, "y": y}]})
+        for step in (30, 60, 100):
+            touch.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": x - step, "y": y}]})
+        touch.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
+        expect(card("woodland-edge")).to_be_visible()
+        touch.detach()
     else:
-        expect(picker).not_to_be_visible()
+        expect(carousel).not_to_be_visible()
         expect(page.locator(".exploration-destination:visible")).to_have_count(10)
 
     choose("rival-food-cache")
@@ -92,6 +127,10 @@ def check_mobile_explore(page, width, url):
     else:
         page.locator("#explorer-count").fill("10")
     page.locator("#extra-scouts").select_option("1")
+    choose("surroundings")
+    choose("collect-resin")
+    expect(page.locator("#explorer-count")).to_have_value("10")
+    expect(page.locator("#extra-scouts")).to_have_value("1")
     expect(card("collect-resin").locator(".action-costs")).to_contain_text("/360 sugar")
     expect(card("collect-resin").locator(".action-costs")).to_contain_text("/3 scouts")
     page.locator("#exploreContent").screenshot(path=f"/tmp/antidle-mobile-explore-{width}.png")
@@ -120,7 +159,7 @@ def check_mobile_explore(page, width, url):
     expect(card("surroundings").locator('.action-cost[aria-label^="Sugar Collector workers"] .text-danger')).to_have_text("0")
     assert_fits(page, width)
     assert not errors, errors
-    print(f"PASS {width}px: unlocked destination picker/grid, one mobile action, nearby controls, minimum presets, visible risk/costs, capped workers, actual launch, slots and empty workforce", flush=True)
+    print(f"PASS {width}px: unlocked destination carousel/grid, one mobile action, nearby controls, minimum presets, visible risk/costs, capped workers, actual launch, slots and empty workforce", flush=True)
 
 
 if __name__ == "__main__":
@@ -138,7 +177,7 @@ if __name__ == "__main__":
             browser = p.chromium.launch(**launch)
             try:
                 for width in (320, 390, 844, 1920):
-                    context = browser.new_context(viewport={"width": width, "height": 844})
+                    context = browser.new_context(viewport={"width": width, "height": 844}, has_touch=width <= 767, is_mobile=width <= 767)
                     check_mobile_explore(context.new_page(), width, f"http://127.0.0.1:{server.server_port}")
                     context.close()
             finally:

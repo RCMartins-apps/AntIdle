@@ -14,6 +14,8 @@ case class ActionBonus(
     aphidSlots: Int = 0,
     seedForagerSlots: Int = 0,
     royalBroodSlots: Int = 0,
+    broodNurseSlots: Int = 0,
+    layingIntervalReduction: Long = 0L,
 )
 
 object ActionBonus {

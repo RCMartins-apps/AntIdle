@@ -109,13 +109,15 @@ object Actions {
     }
 
   def getActionBonus(chamberType: ChamberType): Signal[ActionBonus] =
-    upgradesSignal.map(upgrades => ChamberBonuses.forChamber(chamberType, upgrades)).distinct
+    antsSignal.combineWith(nestSignal, upgradesSignal).map { case (ants, nest, upgrades) =>
+      ChamberBonuses.forDisplay(chamberType, ants, nest, upgrades)
+    }.distinct
 
   def buildChamberCost(chamberType: ChamberType): Signal[ActionCost] =
     nestSignal.map(nest => Construction.nextCost(nest, chamberType)).distinct
 
-  def raiseScout(): Unit =
-    actionUpdater.writer.onNext(ScoutProgression.raise)
+  def raiseScout(amount: Int = 1): Unit =
+    actionUpdater.writer.onNext(data => ScoutProgression.raise(data, amount))
 
   def explore(workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Unit =
     actionUpdater.writer.onNext(ExplorationHelper.start(_, workers, destination, extraScouts))

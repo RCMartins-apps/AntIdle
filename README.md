@@ -1065,16 +1065,55 @@ expedition losses remain visible. No game balance, automation or save changes.
 keyboard interaction, visible costs/rates/warnings and phone/desktop layout.
 
 
-## Mobile expedition selection
+## Mobile expedition carousel
 
-On phones, Explore starts with an unlocked-destination picker, worker stepper,
-party presets and extra scouts, followed by the selected launch card. Its costs,
-rewards and danger remain visible. The minimum preset matches the destination;
-choosing a destination preserves your party size. Workers remain capped at 37.
-Active trips, pheromone trails, XP and supplies follow the launch controls.
-Desktop keeps the comparison grid of all unlocked destinations.
+On phones, Explore keeps worker/scout controls above a single destination card.
+Swipe horizontally across the card, or tap previous/next, to compare unlocked
+destinations without opening a menu. The title and position counter identify the
+current destination; arrows wrap, and keyboard Enter/Space works on them. Vertical
+swipes scroll normally. Costs, rewards, discovery badges and danger remain visible.
+Changing destinations preserves the party; the Min preset matches each route.
+Workers remain capped at 37. Active trips, trails, XP and supplies follow launch.
+Desktop keeps the grid of all unlocked destinations.
 
 `python3 tests/mobile_explore_smoke.py` checks 320/390/844/1920px layouts,
-unlock visibility, minimum presets, worker caps, danger, costs, launches, full
-slots and missing workers. Existing browser route helpers select the destination
-on mobile before interacting with its card.
+unlock visibility, arrow/keyboard/touch navigation, scroll/jitter discrimination,
+minimum presets, worker caps, danger, costs, launches, full slots and missing
+workers. Browser route helpers navigate the carousel on mobile.
+
+
+## Consistent action details
+
+Action [i] panels order explanation, requirements and results consistently,
+omitting empty sections. Related actions share a renderer: worker, scout and
+emergency eggs show Queue, Development and Larval care in that order. Base
+development times come from the brood model; actual speed depends on care.
+Laying costs stay beside the button; larval costs are identified separately.
+`python3 tests/action_details_smoke.py` checks matching egg fields and results
+on phone and desktop after `sbt fastOptJS`.
+
+Egg action details omit redundant result counts; the action name and batch badge
+identify the order. Manual Gather Sugar remains necessary for the zero-worker opening.
+
+Nest and Tasks have independent mobile action amounts, initially ×1, retained
+while switching tabs. Desktop Ctrl/Shift shortcuts are unchanged.
+`python3 tests/action_amount_smoke.py` verifies separate choices and actual
+egg orders/worker assignments on phone and desktop.
+
+Scout eggs also honor the Nest action amount and desktop modifiers. Their
+batch badge and total laying costs reflect the affordable batch, limited by
+sugar, protein and future housing. Ordered scouts share the normal laying queue
+and consume supplies only as laid.
+
+Chamber [i] panels show numeric bonuses without descriptive prose. Capacity,
+place and slot labels are consistent, including Nursery brood/nurse places and
+the Queen's next laying-interval reduction. These previews include derived
+effects without changing saved capacities. Exploration [i] shows outcome
+chances without repeating the duration/reward line visible above its button.
+`python3 tests/chamber_details_smoke.py` checks every chamber and expedition
+help at phone/desktop widths.
+
+Exploration destinations with unfinished discoveries show a **Discovery** badge.
+It disappears when the destination's discoveries are complete. Locked routes and discovery identities stay hidden.
+`python3 tests/discovery_badge_smoke.py` checks live completion, carousel selection stability,
+save/reload and early-route hiding on phone and desktop.
