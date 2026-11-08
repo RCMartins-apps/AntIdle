@@ -1139,3 +1139,7 @@ facts, and XP help omits repeated next-level forecasts. Royal brood help stays
 open across unrelated chamber/research updates.
 `python3 tests/concise_ui_smoke.py` checks those details and live panel stability
 at 320/390/1920px; outpost progression checks cover upgraded rates and staffing.
+
+After founding, remembered protein stays visible but does not reveal Nursery
+Chamber during the small-worker phase. Normal Nursery access returns with
+standard-worker progression; already-built Nurseries remain visible.

@@ -45,6 +45,9 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at
 `Constants.TicksPerSecond = 5`. Check units when changing counts, costs or rates.
 Keep engine rules, displayed costs, previews and income estimates consistent.
+Permanent resource visibility is history, not a current-colony mechanic unlock.
+After founding, keep known resources visible while applying current research/
+worker/chamber requirements to action visibility separately.
 Validate gameplay rules in the engine, not only by disabling UI buttons.
 
 ## UI copy and information

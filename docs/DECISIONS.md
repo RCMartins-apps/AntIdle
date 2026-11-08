@@ -575,3 +575,14 @@ without a redundant next-level forecast.
 Royal brood follows the same structural projection rule as outposts: unrelated
 construction or research updates must preserve open help and control identity.
 No balance, costs, unlock rules or save-format changes.
+
+
+## D29: Resource visibility must not bypass founding progression — Nursery fix
+
+Protein's discovered flag intentionally survives prestige so the resource never
+disappears. It must not reveal Nursery Chamber immediately in the new small-
+worker colony. Nursery visibility now requires standard workers and known protein,
+or an already-built Nursery. Standard Worker Development restores normal access;
+existing chambers are retained. No resource history is cleared and no new save
+field is needed. Regression coverage includes actual founding/reload and the
+subsequent standard-worker research transition.

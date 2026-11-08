@@ -632,7 +632,7 @@ object MainForm {
           netRateSignal = Some(TickCalculator.proteinTickGain.sum),
           resourceSignal = proteinSignal,
           resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal)),
-          showSignal = nurseryUnlockedSignal,
+          showSignal = proteinVisibleSignal,
         ),
         child.maybe <-- createResourceDiv(
           name = "Water",

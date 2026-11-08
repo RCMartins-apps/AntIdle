@@ -15,9 +15,16 @@
   care, future-only aging and retroactive storage behavior remain explained.
 - Royal brood projects only structural visibility/built state; unrelated chamber
   and research changes no longer recreate its help/controls. D28 records the pass.
-- Verified development/production builds (Closure clean), all 241 engine tests,
+- Verified development/production builds (Closure clean), all 242 engine tests,
   concise_ui_smoke and outpost_progression_smoke at 320/390/1920px. Source affects
-  UI/copy only; no balance, costs, unlock rules or save-format changes.
+  UI/copy plus corrected Nursery availability; no balance, costs or save-format changes.
 - Owner requested PR creation and merge after checks. Check GitHub for final PR
   state; CI must pass before merging. Branch changes are committed/pushed.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.
+
+- Added the reported post-prestige Nursery fix to PR #49: nurseryAvailable
+  separates current standard-worker progression from inherited protein history;
+  Protein resource visibility has its own signal. Existing chambers remain.
+  D29/AGENTS record the distinction. Verified final fastOptJS/fullOptJS (Closure
+  clean), all 242 engine tests, and actual prestige/reload plus standard-worker
+  research browser checks at 320/390/1920px. Updated head must pass CI before merge.
