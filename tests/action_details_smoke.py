@@ -26,7 +26,7 @@ def check_details(page, width, url):
         expect(panel).to_contain_text("Shared laying queue; costs paid when laid.")
         expect(panel).to_contain_text(duration + " base; varies with care.")
         expect(panel).to_contain_text("20 sugar · 2 protein per egg.")
-        expect(panel.locator(".action-result")).to_contain_text("+1 egg")
+        expect(panel.locator(".action-result")).to_be_empty()
         expect(panel).to_contain_text("Requires")
         assert_fits(page, width)
         page.get_by_label("Details for " + name, exact=True).click()

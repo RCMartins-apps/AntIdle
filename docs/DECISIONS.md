@@ -456,6 +456,14 @@ the same fields. Laying costs remain next to the button, with later larval
 resource costs identified separately.
 
 Common action help orders explanation, Requires, then Result, omitting empty
-sections. Worker and scout results both show egg count, with singular/plural
-labels. Keep default screens concise and action-family schemas in code; future
+sections. Egg actions omit the redundant result count: their names identify the egg. Keep default screens concise and action-family schemas in code; future
 actions must follow their family's structure. No gameplay or save changes.
+
+
+### D24 follow-up: redundant egg results and manual sugar
+
+Remove the extra +1 egg result from worker/scout/emergency actions; action
+names and batch badges identify the order. Keep Gather Sugar for now: fresh
+colonies start with no sugar or workers, and emergency recovery requires standard
+workers. Replacing clicking with slow queen foraging is a suggestion only, not
+an approved or implemented opening change.

@@ -952,7 +952,7 @@ object MainForm {
               enabledSignal = antsSignal.combineWith(sugarSignal).map { case (ants, sugar) => EmergencyRecovery.canRaise(ants, sugar.amount) },
               descriptionSignal = Val(Some(eggDescription(EmergencyRecovery.Kind))),
               costSignal = Val(ActionCost(sugar = EmergencyRecovery.EggCost)),
-              bonusSignal = Val(ActionBonus(eggs = u)),
+              bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseEmergencyWorker(),
             ),
           )
@@ -973,7 +973,7 @@ object MainForm {
               enabledSignal = Actions.layEggActionEnabled,
               descriptionSignal = antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Some(eggDescription(if (standard) "worker" else "small"))),
               costSignal = displayedBatch.combineWith(antsSignal).map { case (mult, ants) => ActionCost(sugar = mult * BroodProgression.eggCost(ants)) },
-              bonusSignal = displayedBatch.map(mult => ActionBonus(eggs = mult * u)),
+              bonusSignal = Val(ActionBonus.empty),
               onClickAction = mult => Actions.layEggAction(mult),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
@@ -985,7 +985,7 @@ object MainForm {
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
               descriptionSignal = Val(Some(eggDescription("scout"))),
               costSignal = Val(ScoutProgression.eggCost),
-              bonusSignal = Val(ActionBonus(eggs = u)),
+              bonusSignal = Val(ActionBonus.empty),
               onClickAction = _ => Actions.raiseScout(),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )

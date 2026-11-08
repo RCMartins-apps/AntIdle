@@ -9,8 +9,8 @@
   care fields via eggDescription. Base duration derives from Developing.totalCare;
   worker caste changes update it. Clarifies laying costs versus later larval care.
 - Common action panels order explanation, Requires, then Result, omitting empty
-  sections. Left aligned help/results, consistent egg singular/plural; scout
-  result now shows +1 egg as worker does. Help stays behind [i], costs stay visible.
+  sections. Left aligned help/results, egg actions omit redundant
+  result counts (including scouts and emergency). Help stays behind [i], costs stay visible.
 - D24 and AGENTS record shared-family formatting as a lasting rule. README
   documents behavior. No engine, balance or save changes.
 - Verified development and production builds (Closure clean), all 238 engine
@@ -19,3 +19,8 @@
   eggs at the same widths. Browser assertions use the new shared queue wording.
 - Branch committed and pushed by standing authorization; no PR requested yet.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.
+
+- Follow-up: kept Gather Sugar after checking the opening: zero sugar/workers
+  initially, emergency recovery gated by standard workers. Slow queen foraging
+  is only a suggestion. Removed redundant egg result rows; batch badges remain.
+  Follow-up verified with fastOptJS and action_details_smoke; engine unchanged.

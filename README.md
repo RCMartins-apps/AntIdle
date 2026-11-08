@@ -1089,3 +1089,6 @@ development times come from the brood model; actual speed depends on care.
 Laying costs stay beside the button; larval costs are identified separately.
 `python3 tests/action_details_smoke.py` checks matching egg fields and results
 on phone and desktop after `sbt fastOptJS`.
+
+Egg action details omit redundant result counts; the action name and batch badge
+identify the order. Manual Gather Sugar remains necessary for the zero-worker opening.

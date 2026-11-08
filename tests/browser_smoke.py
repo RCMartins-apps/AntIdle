@@ -263,7 +263,7 @@ def run_checks(browser, url):
                 page.locator(".nest-brood").get_by_label("Action amount").select_option(str(multiplier))
                 modifiers = []
                 page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-                expect(page.locator("details[open]")).to_contain_text(f"+{multiplier} eggs")
+                expect(page.locator("details[open] .action-result")).to_be_empty()
             page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=modifiers)
             page.get_by_role("tab", name="Tasks").click()
             page.get_by_role("button", name="Assign Sugar Collector", exact=True).click(modifiers=modifiers)
