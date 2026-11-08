@@ -1863,6 +1863,10 @@ object MainForm {
             child.text <-- amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
               case (workers, data, extra) => ExplorationHelper.summary(data, workers, destination, extra)
             },
+            child.maybe <-- explorationSignal.map(data => DiscoveryProgression.hasUnfound(data, destination)).distinct.map { remaining =>
+              Option.when(remaining)(span(className := "badge text-bg-info ms-2 discovery-badge",
+                aria.label := "Discovery still to find", "Discovery"))
+            },
           ),
           if (RaidProgression.isRaid(destination)) div(
             className := "raid-risk text-danger small mb-2",
@@ -1924,7 +1928,10 @@ object MainForm {
           label(forId := "expedition-destination", "Destination"),
           select(idAttr := "expedition-destination", className := "form-select",
             children <-- unlockedDestinationsSignal.map(_.map(destination =>
-              option(value := destination.id, destination.name + (if (RaidProgression.isRaid(destination)) " · Dangerous" else "")))),
+              option(value := destination.id,
+                child.text <-- explorationSignal.map(data => destination.name +
+                  (if (RaidProgression.isRaid(destination)) " · Dangerous" else "") +
+                  (if (DiscoveryProgression.hasUnfound(data, destination)) " · Discovery" else "")).distinct))),
             value <-- selectedDestinationSignal.map(_.id),
             onChange.mapToValue --> chosenDestinationVar.writer,
           ),

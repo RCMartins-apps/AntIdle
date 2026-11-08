@@ -511,3 +511,13 @@ Exploration retains its visible duration/reward summary, cost and danger. Its
 [i] shows Finds/outcome chances without repeating that summary or generic
 “no carcass storage needed” prose. Keep raid distribution and combat-modifier
 rules in help while keeping danger visible before departure.
+
+
+## D26: Mark exploration destinations with discoveries remaining — approved
+
+Show a compact Discovery badge on unlocked expedition cards while any mapped
+discovery is unfinished. Also mark those destinations in the mobile picker so
+players can choose without opening every card. Do not disclose discovery names,
+rewards or locked destinations. Derive the indicator from the discovery catalog
+and saved survey counts; update it after completion and on load. No extra save
+field or gameplay rule.

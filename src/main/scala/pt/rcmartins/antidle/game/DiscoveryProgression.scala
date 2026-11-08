@@ -23,6 +23,9 @@ object DiscoveryProgression {
     "A rival colony contests a rich food source. Hold it from Territory for recurring protein and disclosed losses.")
   val all: List[Discovery] = List(ContestedGround, WildAphids, SeedCache, DryTrail, DewPlants, ResinSeep)
 
+  def hasUnfound(data: ExplorationData, destination: ExplorationDestination): Boolean =
+    all.exists(discovery => discovery.destination == destination.id && !discovery.found(data))
+
   def has(data: ExplorationData, id: String): Boolean = all.exists(d => d.id == id && d.found(data))
 
   def recordReturn(data: AllData, destination: ExplorationDestination): AllData =

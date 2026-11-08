@@ -1110,3 +1110,9 @@ effects without changing saved capacities. Exploration [i] shows outcome
 chances without repeating the duration/reward line visible above its button.
 `python3 tests/chamber_details_smoke.py` checks every chamber and expedition
 help at phone/desktop widths.
+
+Exploration destinations with unfinished discoveries show a **Discovery** badge
+and a matching mobile-picker hint. Both disappear when the destination's
+discoveries are complete. Locked routes and discovery identities stay hidden.
+`python3 tests/discovery_badge_smoke.py` checks live completion, picker stability,
+save/reload and early-route hiding on phone and desktop.

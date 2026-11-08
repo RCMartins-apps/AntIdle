@@ -23,3 +23,12 @@
   browser checks pass; visually inspected the 390px Nursery bonus panel.
 - Changes committed/pushed on the ongoing branch. No new PR requested.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.
+
+- Follow-up: Discovery badge on expedition preview lines plus mobile picker hints
+  for sites with unfinished discoveries. DiscoveryProgression.hasUnfound uses
+  the catalog and saved survey progress, with no extra state or spoilers. Option
+  text updates in place so completion does not reset the selected destination.
+  Verified development/production builds (Closure clean), all 241 engine tests,
+  discovery_badge_smoke at 320/390/1920px, and mobile_explore_smoke at
+  320/390/844/1920px. Visually inspected the 390px badge; live completion,
+  selection stability, save/load and locked-route hiding all pass.
