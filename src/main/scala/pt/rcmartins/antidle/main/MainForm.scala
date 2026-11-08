@@ -1010,11 +1010,12 @@ object MainForm {
           },
         ),
       ),
-      child.maybe <-- nestSignal.combineWith(upgradesSignal).distinct.map { case (nest, upgrades) =>
-        Option.when(upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0) {
+      child.maybe <-- nestSignal.combineWith(upgradesSignal).map { case (nest, upgrades) =>
+        Option.when(upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0)(nest.royalBroodSlots > 0)
+      }.distinct.map(_.map { built =>
           div(className := "col-12 nest-royal-nursery border-top my-2 py-2",
             infoHeading("Royal brood", div("Up to five Royal Nurses tend one daughter queen. Full staffing takes about 10 minutes. Care pauses when supplies run out; progress is kept.")),
-            if (nest.royalBroodSlots > 0) royalRearingDiv else div(className := "row",
+            if (built) royalRearingDiv else div(className := "row",
               actionButton(
                 name = "Royal Nursery",
                 enabledSignal = constructionBlockedSignal(ChamberType.RoyalNursery).map(_.isEmpty),
@@ -1026,8 +1027,7 @@ object MainForm {
               ),
             ),
           )
-        }
-      },
+      }),
       child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)) {
         div(className := "col-12 nest-repletes border-top my-2 py-2",
           h5("Living water storage"),
@@ -1042,7 +1042,13 @@ object MainForm {
               requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
                 List(ActionRequirement("replete slots", Math.max(0L, nest.chambers.repleteChamber.level.toLong * u - ants.repletes)))
               },
-              descriptionSignal = Val(Some(div("Promote the oldest home worker into a replete with a fresh 90–120 minute lifespan. It consumes normal sugar upkeep and cannot perform worker tasks. Stored water is retained if capacity later falls."))),
+              descriptionSignal = Val(Some(div(
+                actionFact("Worker", "Oldest available home worker"),
+                actionFact("Lifespan", "Fresh 90–120 simulated minutes"),
+                actionFact("Upkeep", s"${resourceRateStr(antsSugarUpkeepSecond)} sugar/s"),
+                actionFact("Role", "Water storage; no worker tasks"),
+                actionFact("Storage", "Water kept if capacity falls"),
+              ))),
               onClickAction = _ => Actions.promoteReplete(),
             ),
           ),
@@ -1071,7 +1077,7 @@ object MainForm {
                   enabledSignal = nestSignal.combineWith(explorationSignal, resourcesSignal).map { case (n, e, r) => OutpostProgression.canExpand(n, e, r) },
                   costSignal = nestSignal.map(OutpostProgression.expansionCost),
                   bonusSignal = Val(ActionBonus(maxAnts = OutpostProgression.ExpansionHousing, seedForagerSlots = 5)),
-                  descriptionSignal = Val(Some(div("Excavate more sheltered nest space near the seed patches."))),
+                  descriptionSignal = Val(None),
                   onClickAction = _ => Actions.expandDryClearingOutpost(),
                 ),
               ) else emptyNode,
@@ -1080,8 +1086,8 @@ object MainForm {
                 name = "Establish Dry Clearing Outpost",
                 enabledSignal = nestSignal.combineWith(explorationSignal, resourcesSignal).map { case (n, e, r) => OutpostProgression.canEstablish(n, e, r) },
                 costSignal = Val(OutpostProgression.cost),
-                bonusSignal = Val(ActionBonus(maxAnts = OutpostProgression.Housing)),
-                descriptionSignal = Val(Some(div("Adds 5 Seed Forager slots. Each worker gathers 0.04 protein/s and drinks 0.02 water/s, with normal sugar upkeep. Foraging pauses without water or when protein storage is full. No population reset."))),
+                bonusSignal = Val(ActionBonus(maxAnts = OutpostProgression.Housing, seedForagerSlots = (OutpostProgression.ForagerSlots / u).toInt)),
+                descriptionSignal = Val(None),
                 onClickAction = _ => Actions.establishDryClearingOutpost(),
               ),
             ),
@@ -1538,16 +1544,19 @@ object MainForm {
   ): EventListener[MouseEvent, MouseEvent] =
     setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts))
 
+  private def actionFact(label: String, text: String): ReactiveHtmlElement[HTMLDivElement] =
+    div(className := "action-detail-row", b(s"$label: "), text)
+
   // Related actions share fields and order; values come from the gameplay model.
   private def eggDescription(kind: String): ReactiveHtmlElement[HTMLDivElement] = {
     val brood = AntBrood.Developing(0L, kind)
     div(className := "egg-description text-start",
-      div(className := "action-detail-row", b("Queue: "),
+      actionFact("Queue",
         if (kind == EmergencyRecovery.Kind) "Immediate; bypasses brood limit."
         else "Shared laying queue; costs paid when laid."),
-      div(className := "action-detail-row", b("Development: "),
+      actionFact("Development",
         s"${prettyTimeFromTicks(brood.totalCare / u)} base; varies with care."),
-      div(className := "action-detail-row", b("Larval care: "),
+      actionFact("Larval care",
         if (brood.small) "No resources." else "20 sugar · 2 protein per egg."),
     )
   }
@@ -2077,11 +2086,9 @@ object MainForm {
             child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
           p(child.text <-- explorationSignal.map { data =>
             val bonus = ExplorationProgression.bonusPercent(data.experience)
-            val next = if (ExplorationProgression.level(data.experience) < ExplorationProgression.MaxLevel)
-              s" Next level: +${bonus + 25}%." else ""
-            s"Reward bonus: +$bonus% sugar, carcass sugar and protein.$next"
+            s"Reward bonus: +$bonus% sugar, carcass sugar and protein."
           }),
-          p("Every trip earns XP. Level costs increase by 100 XP each time. Larger parties improve XP and rewards, up to 4× at the 37-worker party limit. Extra scouts add 25% travel speed each, up to three."),
+          p("Level costs rise by 100 XP. Party bonuses: 2× at 5 workers, 3× at 17, 4× at 37. Extra scouts: +25% speed each (max 3)."),
         )),
         p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
       ),

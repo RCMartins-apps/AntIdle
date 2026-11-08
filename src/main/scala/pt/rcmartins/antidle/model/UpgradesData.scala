@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.model
 
-import pt.rcmartins.antidle.game.Constants.u
+import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import zio.json._
 
@@ -47,7 +47,7 @@ object UpgradesData {
       val name = "StandardWorkers"
       val title = "Standard Worker Development"
       val cost = ActionCost(sugar = 75 * u, tunnelingSpace = 10 * u)
-      val description = "Future eggs become full-sized workers: twice a small worker's task output, with longer lives. Standard brood needs sugar, protein and more time. Existing adults and laid brood keep their type. Unlocks nearby scraps gathering for protein."
+      val description = "Future worker eggs: full-sized workers (2× small-worker output). Brood requires protein. Unlocks Scraps Gatherers. Existing ants and brood keep their caste."
       def shouldShow(data: AllData): Boolean = !data.ants.standardWorkersUnlocked && data.ants.smallWorkers >= 5 * u
     }
 
@@ -56,7 +56,7 @@ object UpgradesData {
       val name: String = "UnlockQueensChamber"
       val cost: ActionCost = ActionCost(sugar = 100 * u)
       val title: String = "Unlock Queen's Chamber"
-      val description: String = "Unlock the ability to improves the queen's chamber abilities."
+      val description: String = "Chamber upgrades: more brood places and faster laying."
     }
 
     case object ImproveSugarCollectorTask1 extends UpgradeType {
@@ -64,7 +64,7 @@ object UpgradesData {
       val name: String = "ImproveSugarCollectorTask1"
       val cost: ActionCost = ActionCost(sugar = 150 * u)
       val title: String = "Foraging Techniques 1"
-      val description: String = "Improves the ants sugar collecting amount by 15%."
+      val description: String = "+15% sugar collection."
     }
 
     case object ImproveSugarCollectorTask2 extends UpgradeType {
@@ -73,7 +73,7 @@ object UpgradesData {
       val name: String = "ImproveSugarCollectorTask2"
       val cost: ActionCost = ActionCost(sugar = 750 * u, knowledge = 75 * u)
       val title: String = "Foraging Techniques 2"
-      val description: String = "Improves the ants sugar collecting amount by 15%."
+      val description: String = "+15% sugar collection."
     }
 
     case object ImproveSugarCollectorTask3 extends UpgradeType {
@@ -81,7 +81,7 @@ object UpgradesData {
       val name: String = "ImproveSugarCollectorTask3"
       val cost: ActionCost = ActionCost(sugar = 2500 * u, knowledge = 300 * u)
       val title: String = "Foraging Techniques 3"
-      val description: String = "Improves the ants sugar collecting amount by 15%."
+      val description: String = "+15% sugar collection."
     }
 
     case object UnlockFoodStorageChamber extends UpgradeType {
@@ -89,7 +89,7 @@ object UpgradesData {
       val name: String = "UnlockFoodStorageChamber"
       val cost: ActionCost = ActionCost(sugar = 400 * u)
       val title: String = "Unlock Food Storage Chamber"
-      val description: String = "Unlock the ability to increase food storage capacity."
+      val description: String = s"Food Storage Chamber: +${FoodStorageChamberBonusMaxSugar / u} sugar capacity per level."
     }
 
     case object UnlockExplorerTask extends UpgradeType {
@@ -97,7 +97,7 @@ object UpgradesData {
       val name: String = "UnlockExplorerTask"
       val cost: ActionCost = ActionCost(sugar = 750 * u)
       val title: String = "Unlock Explorer Task"
-      val description: String = "Unlock the ability to send ants to explore the surroundings."
+      val description: String = "Unlocks exploration expeditions."
     }
 
     case object DefaultWorkers extends UpgradeType {
@@ -105,7 +105,7 @@ object UpgradesData {
       val name: String = "DefaultWorkers"
       val cost: ActionCost = ActionCost(sugar = 500 * u, knowledge = 50 * u)
       val title: String = "Default Workers"
-      val description: String = "Choose a default task for available workers. Its workers can be used wherever idle workers are required."
+      val description: String = "Idle workers join a chosen default task and remain available for colony actions."
     }
 
     case object AdditionalExpeditionSlot extends UpgradeType {
@@ -114,7 +114,7 @@ object UpgradesData {
       val name: String = "AdditionalExpeditionSlot"
       val cost: ActionCost = ActionCost(sugar = 1000 * u, knowledge = 100 * u)
       val title: String = "Expedition Coordination"
-      val description: String = "Adds one expedition slot, in addition to slots unlocked by exploration levels."
+      val description: String = "+1 expedition slot."
     }
 
     case object EstablishedTrails extends UpgradeType {
@@ -123,7 +123,7 @@ object UpgradesData {
       val name: String = "EstablishedTrails"
       val cost: ActionCost = ActionCost(sugar = 600 * u, knowledge = 60 * u)
       val title: String = "Established Trails"
-      val description: String = "Reduces the loss in sugar yield per additional collector by 20%, allowing more productive collectors."
+      val description: String = "−20% sugar-yield loss per added collector."
     }
 
     case object ReinforcedMandibles extends UpgradeType {
@@ -132,7 +132,7 @@ object UpgradesData {
       val name: String = "ReinforcedMandibles"
       val cost: ActionCost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u)
       val title: String = "Reinforced Mandibles"
-      val description: String = "Tunnelers produce 50% more tunneling space."
+      val description: String = "+50% Tunneler output."
     }
 
     case object BroodCare extends UpgradeType {
@@ -142,7 +142,7 @@ object UpgradesData {
       val name: String = "BroodCare"
       val cost: ActionCost = ActionCost(sugar = 2000 * u, protein = 40 * u, knowledge = 180 * u)
       val title: String = "Brood Care"
-      val description: String = "Worker and scout eggs mature in 20% less time, including growing eggs."
+      val description: String = "−20% worker/scout development time; includes growing brood."
     }
 
     case object AphidTending extends UpgradeType {
@@ -151,7 +151,7 @@ object UpgradesData {
       val name: String = "AphidTending"
       val cost: ActionCost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 100 * u)
       val title: String = "Aphid Tending"
-      val description: String = "Unlock the Aphid Chamber. Each level supports one tender producing 0.8 sugar/s while consuming 0.01 protein/s."
+      val description: String = "Unlocks Aphid Chamber: +1 Aphid Tender slot per level. Tenders: +0.8 sugar/s · −0.01 protein/s each."
     }
 
     case object ProteinStorage extends UpgradeType {
@@ -160,7 +160,7 @@ object UpgradesData {
       val name: String = "ProteinStorage"
       val cost: ActionCost = ActionCost(sugar = 1000 * u, protein = 25 * u, knowledge = 75 * u)
       val title: String = "Protein Storage"
-      val description: String = "Each Food Storage Chamber level also adds 100 protein capacity, including levels already built."
+      val description: String = "+100 protein capacity per Food Storage Chamber level; includes existing levels."
     }
 
     case object QueensRoutine extends UpgradeType {
@@ -170,7 +170,7 @@ object UpgradesData {
       val name: String = "QueensRoutine"
       val cost: ActionCost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u)
       val title: String = "Queen's Routine"
-      val description: String = "Automatically raise worker eggs toward a population target while keeping a sugar reserve. Refill jobs lost to aging from the idle/default pool. Configure in Brood."
+      val description: String = "Automatic worker eggs and aging-job replacements. Set a population target and sugar reserve in Brood."
     }
 
     case object ConstructionPlanning extends UpgradeType {
@@ -179,7 +179,7 @@ object UpgradesData {
       val name: String = "ConstructionPlanning"
       val cost: ActionCost = ActionCost(sugar = 500 * u, knowledge = 50 * u)
       val title: String = "Construction Planning"
-      val description: String = "Expand the construction queue from one to three chamber upgrades."
+      val description: String = "+2 construction queue slots (3 total)."
     }
 
     case object ColonyNutrition extends UpgradeType {
@@ -189,7 +189,7 @@ object UpgradesData {
       val name: String = "ColonyNutrition"
       val cost: ActionCost = ActionCost(sugar = 2500 * u, protein = 60 * u, knowledge = 200 * u)
       val title: String = "Colony Nutrition"
-      val description: String = "New workers and scouts live 20% longer: 54–72 minutes."
+      val description: String = "New workers and scouts: +20% lifespan."
     }
 
     case object RepleteStorage extends UpgradeType {
@@ -198,7 +198,7 @@ object UpgradesData {
       val name: String = "RepleteStorage"
       val cost: ActionCost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 150 * u)
       val title: String = "Replete Storage"
-      val description: String = "Unlock the Replete Chamber and promote workers into living water storage."
+      val description: String = "Unlocks Replete Chamber and worker promotion for water storage."
     }
 
     case object CoveredTrails extends UpgradeType {
@@ -207,7 +207,7 @@ object UpgradesData {
       val name: String = "CoveredTrails"
       val cost: ActionCost = ActionCost(sugar = 3000 * u, protein = 60 * u, knowledge = 300 * u, water = 100 * u)
       val title: String = "Covered Trails"
-      val description: String = "Shelter outpost foraging routes from the dry air. Seed Foragers use 25% less water: 0.015 water/s each."
+      val description: String = "−25% Seed Forager water use (0.015 water/s each)."
     }
 
     case object SeedProcessing extends UpgradeType {
@@ -216,7 +216,7 @@ object UpgradesData {
       val name: String = "SeedProcessing"
       val cost: ActionCost = ActionCost(sugar = 6000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u)
       val title: String = "Seed Processing"
-      val description: String = "Specialize workers in husking and processing gathered seeds. Seed Foragers yield 50% more protein: 0.06 protein/s each."
+      val description: String = "+50% Seed Forager protein output (0.06 protein/s each)."
     }
 
     case object RoyalNurseryPlanning extends UpgradeType {
@@ -226,7 +226,7 @@ object UpgradesData {
       val name: String = "RoyalNurseryPlanning"
       val title: String = "Royal Nursery Planning"
       val cost: ActionCost = ActionCost(sugar = 5000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u)
-      val description: String = "Plan a protected, resin-lined chamber for royal brood. Unlocks Royal Nursery construction."
+      val description: String = "Unlocks Royal Nursery construction."
     }
 
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]

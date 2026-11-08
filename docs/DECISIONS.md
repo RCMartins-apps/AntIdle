@@ -559,3 +559,19 @@ founding exists; keep it across founding resets. Royal rearing stays in Nest.
 The worker action says Raise Small Worker Egg during founding, then Raise Worker
 Egg after Standard Worker Development. Its help label/title change with it.
 Names reflect newly raised caste, without changing existing adults or gameplay.
+
+
+### D28 follow-up: concise effect-first research and action facts
+
+Implemented a further UI pass requested by the owner. Research descriptions
+lead with concrete percentage/capacity/slot effects rather than generic prose
+or flavor; retain relevant tradeoffs, future-only scope and retroactive effects.
+Outpost establishment/expansion use bonus lists (including the formerly omitted
+5 Seed Forager slots); ongoing rates belong to the live job/outpost display.
+Replete promotion uses short Worker/Lifespan/Upkeep/Role/Storage facts, with
+upkeep drawn from the shared constant. XP help keeps current bonus and thresholds
+without a redundant next-level forecast.
+
+Royal brood follows the same structural projection rule as outposts: unrelated
+construction or research updates must preserve open help and control identity.
+No balance, costs, unlock rules or save-format changes.

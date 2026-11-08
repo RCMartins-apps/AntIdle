@@ -1132,3 +1132,10 @@ and upkeep; live 30–40 simulated minutes.”
 `python3 tests/lineage_ui_smoke.py` checks founding labels/help, concise copy,
 Lineage visibility and inherited access. Brood/prestige checks cover the live
 caste transition, founding and DNA purchases from the new tab.
+
+Research help leads with concrete effects and keeps important scope/tradeoffs.
+Outpost construction uses numeric bonus lists; promotion help uses compact
+facts, and XP help omits repeated next-level forecasts. Royal brood help stays
+open across unrelated chamber/research updates.
+`python3 tests/concise_ui_smoke.py` checks those details and live panel stability
+at 320/390/1920px; outpost progression checks cover upgraded rates and staffing.
