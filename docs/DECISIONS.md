@@ -484,3 +484,13 @@ assignment buttons or an output rate. Reserve a 52px row and align the info
 control's 4px top inset with the assignment-button margin. Expanded help stays
 in flow. Geometry checks cover passive and assignable jobs, adjacent controls,
 phone bounds and opening/closing each task disclosure.
+
+
+### D24 follow-up: scout eggs honor the brood batch amount
+
+Scout ordering uses Nest's amount and desktop modifiers, like workers. Clamp
+the batch to available sugar, protein and future colony slots, displaying its
+actual badge and total laying costs. Append the batch to shared FIFO, preserving
+worker orders ahead of it. Only the first scout may lay immediately; remaining
+orders wait for normal cooldown, brood space and supplies. Charge on laying.
+No new save format or accelerated development.

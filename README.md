@@ -1097,3 +1097,8 @@ Nest and Tasks have independent mobile action amounts, initially ×1, retained
 while switching tabs. Desktop Ctrl/Shift shortcuts are unchanged.
 `python3 tests/action_amount_smoke.py` verifies separate choices and actual
 egg orders/worker assignments on phone and desktop.
+
+Scout eggs also honor the Nest action amount and desktop modifiers. Their
+batch badge and total laying costs reflect the affordable batch, limited by
+sugar, protein and future housing. Ordered scouts share the normal laying queue
+and consume supplies only as laid.

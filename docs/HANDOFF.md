@@ -40,3 +40,12 @@
   no engine or save changes, no rebuild needed.
   Verified expanded compact_ui_smoke at 320/390/1920px and visually inspected
   the 390px Tasks screenshot, including all three consecutive passive jobs.
+
+- Follow-up: scout egg actions now honor brood amounts and desktop modifiers,
+  with an actual-batch badge and total sugar/protein costs. ScoutProgression
+  clamps to supplies/housing and appends the batch in shared FIFO, preserving
+  one immediate lay when ready. No save changes. BroodPipelineSuite covers
+  caps, FIFO, saved orders and immediate laying; action_amount_smoke covers
+  mobile batch prices/badges/orders and desktop Ctrl-scout batches.
+  Verified fastOptJS/fullOptJS (Closure clean), all 239 engine tests, and
+  action_amount_smoke/scout_queue_smoke at 320/390/1920px.

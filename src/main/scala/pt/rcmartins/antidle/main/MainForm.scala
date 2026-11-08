@@ -980,14 +980,18 @@ object MainForm {
             )
           },
           child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
+            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal, resourcesSignal).map {
+              case (requested, ants, nest, resources) => Math.max(1, ScoutProgression.orderAmount(ants, nest, resources, requested))
+            }.distinct
             actionButton(
               name = "Raise Scout Egg",
+              topLeftBadgeSignal = displayedBatch.map(amount => Option.when(amount > 1)(span(s"x$amount"))),
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
               descriptionSignal = Val(Some(eggDescription("scout"))),
-              costSignal = Val(ScoutProgression.eggCost),
+              costSignal = displayedBatch.map(amount => ActionCost(sugar = amount * ScoutProgression.eggCost.sugar, protein = amount * ScoutProgression.eggCost.protein)),
               bonusSignal = Val(ActionBonus.empty),
-              onClickAction = _ => Actions.raiseScout(),
+              onClickAction = amount => Actions.raiseScout(amount),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
           },

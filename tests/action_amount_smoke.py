@@ -17,6 +17,7 @@ def check_amounts(page, width, url):
     page.goto(url, wait_until="networkidle")
     game = progressed_game(save_game(page))
     game["ants"].update(eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
+    game["nestAttributes"]["chambers"]["nurseryChamber"]["level"] = 1
     load_game(page, game)
     nest = page.get_by_role("tab", name="Nest", exact=True)
     tasks = page.get_by_role("tab", name="Tasks")
@@ -33,6 +34,16 @@ def check_amounts(page, width, url):
         expect(page.locator("#brood-action-amount")).to_have_value("25")
         page.get_by_role("button", name="Raise Worker Egg", exact=False).click()
         assert save_game(page)["ants"]["eggOrders"] == 25
+        nest.click()
+        page.locator("#brood-action-amount").select_option("10")
+        scout = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Raise Scout Egg", exact=False))
+        expect(scout.locator(".badge")).to_have_text("x10")
+        expect(scout.locator(".action-costs")).to_contain_text("/500 sugar")
+        expect(scout.locator(".action-costs")).to_contain_text("/20 protein")
+        scout.get_by_role("button").click()
+        assert save_game(page)["ants"]["scoutEggOrders"] == [25] * 10
+        nest.click()
+        page.locator("#brood-action-amount").select_option("25")
         tasks.click()
         expect(page.locator("#tasks-action-amount")).to_have_value("10")
         page.locator("#tasks-action-amount").select_option("1")
@@ -42,6 +53,9 @@ def check_amounts(page, width, url):
         expect(page.locator("#brood-action-amount")).not_to_be_visible()
         page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=["Control"])
         assert save_game(page)["ants"]["eggOrders"] == 10
+        nest.click()
+        page.get_by_role("button", name="Raise Scout Egg", exact=False).click(modifiers=["Control"])
+        assert save_game(page)["ants"]["scoutEggOrders"] == [10] * 10
         tasks.click()
         expect(page.locator("#tasks-action-amount")).not_to_be_visible()
         page.get_by_role("button", name="Assign Sugar Collector", exact=True).click(modifiers=["Shift"])
