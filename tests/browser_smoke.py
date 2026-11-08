@@ -34,6 +34,18 @@ def load_game(page, game):
     expect(page.get_by_role("button", name="Gather Sugar", exact=True)).to_be_visible()
 
 
+def select_expedition(page, destination):
+    """Choose an unlocked mobile route; desktop retains the comparison grid."""
+    picker = page.locator("#expedition-destination")
+    if not picker.is_visible():
+        return
+    name = destination.removeprefix("Explore ").removeprefix("Raid ")
+    options = picker.locator("option").evaluate_all("nodes => nodes.map(n => ({value: n.value, name: n.textContent.split(' · ')[0]}))")
+    chosen = next((o["value"] for o in options if o["value"] == destination or o["name"] == name), None)
+    if chosen is not None:
+        picker.select_option(chosen)
+
+
 def assert_fits(page, width):
     assert page.evaluate("document.documentElement.scrollWidth") <= width
     for button in page.get_by_role("button").all():

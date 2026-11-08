@@ -1063,3 +1063,18 @@ Larval/royal material costs, live shortages, imminent aging warnings and dangero
 expedition losses remain visible. No game balance, automation or save changes.
 `python3 tests/compact_ui_smoke.py` checks collapsed defaults, information controls,
 keyboard interaction, visible costs/rates/warnings and phone/desktop layout.
+
+
+## Mobile expedition selection
+
+On phones, Explore starts with an unlocked-destination picker, worker stepper,
+party presets and extra scouts, followed by the selected launch card. Its costs,
+rewards and danger remain visible. The minimum preset matches the destination;
+choosing a destination preserves your party size. Workers remain capped at 37.
+Active trips, pheromone trails, XP and supplies follow the launch controls.
+Desktop keeps the comparison grid of all unlocked destinations.
+
+`python3 tests/mobile_explore_smoke.py` checks 320/390/844/1920px layouts,
+unlock visibility, minimum presets, worker caps, danger, costs, launches, full
+slots and missing workers. Existing browser route helpers select the destination
+on mobile before interacting with its card.

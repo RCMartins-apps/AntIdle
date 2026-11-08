@@ -9,7 +9,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -44,6 +44,7 @@ def check_royal_nursery(page, width, url):
         page.get_by_role("tab", name="Nest", exact=True).click()
 
     def route(destination):
+        select_expedition(page, destination)
         return page.locator(f'.exploration-destination[data-destination="{destination}"]')
 
     def resin_row():

@@ -429,3 +429,16 @@ on desktop as well as mobile; action/task prose no longer appears on hover.
 Material care costs and danger disclosures remain direct, not hidden in help.
 Mechanics and saves are unchanged. Existing smoke checks should open [i] when
 asserting explanatory content rather than depending on old always-visible prose.
+
+
+## D23: Keep mobile expedition selection and launch together — implemented
+
+The owner reported excessive scrolling between party controls and expedition
+actions. On phones, use an unlocked-destination picker and show only its action
+card directly below workers/scouts. Preserve visible prices, risk and shortages;
+keep locked routes absent. Provide a destination-specific minimum-worker preset
+without silently changing the chosen party. Keep the 37-worker cap and stepper.
+
+Place active expeditions and secondary trail/XP/supply panels after launch.
+Desktop retains all unlocked cards for comparison. This changes layout only,
+not expedition mechanics, automation or saves.

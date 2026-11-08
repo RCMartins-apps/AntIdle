@@ -9,7 +9,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -74,16 +74,18 @@ def check_polish(page, width, url):
 
     load_game(page, game)
     explore_tab(page)
+    select_expedition(page, "rotten-log")
     rotten = page.locator(".exploration-destination").filter(has=page.get_by_role("button", name="Explore Rotten Log", exact=True))
     expect(rotten.get_by_role("button", name="Explore Rotten Log", exact=True)).to_be_disabled()
     expect(rotten.locator(".destination-minimum.text-danger")).to_have_text("5 workers minimum")
     page.get_by_role("button", name="Send 5 workers", exact=True).click()
     expect(rotten.locator(".destination-minimum")).to_have_count(0)
     expect(rotten.get_by_role("button", name="Explore Rotten Log", exact=True)).to_be_enabled()
-    assert page.locator(".expedition-status").bounding_box()["y"] < page.locator(".exploration-destination").first.bounding_box()["y"]
+    assert page.locator(".expedition-setup").bounding_box()["y"] < rotten.bounding_box()["y"]
     # At level 3 there is one slot: a launched trip explains other disabled actions.
     rotten.get_by_role("button", name="Explore Rotten Log", exact=True).click()
     expect(page.locator(".expedition-status .text-danger")).to_contain_text("All slots in use")
+    select_expedition(page, "surroundings")
     expect(page.get_by_role("button", name="Explore Surroundings", exact=True)).to_be_disabled()
     assert_fits(page, width)
     page.clock.run_for(60000)

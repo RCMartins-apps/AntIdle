@@ -7,7 +7,7 @@ import os
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -36,10 +36,12 @@ def check_raid(page, width, url):
     raid = page.get_by_role("button", name="Raid Rival Food Cache", exact=True)
     load_game(page, game)
     explore_tab(page)
+    select_expedition(page, "rival-food-cache")
     expect(card).to_have_count(0)
     game["exploration"]["experience"] = 1000
     load_game(page, game)
     explore_tab(page)
+    select_expedition(page, "rival-food-cache")
     expect(card).to_be_visible()
     page.locator("#explorer-count").fill("5")
     expect(raid).to_be_disabled()
@@ -98,6 +100,7 @@ def check_raid(page, width, url):
     cramped["ants"]["ages"]["scouts"] = [{"expiresAt": 200, "count": 1}, {"expiresAt": 10000, "count": 2}]
     load_game(page, cramped)
     explore_tab(page)
+    select_expedition(page, "rival-food-cache")
     page.locator("#explorer-count").fill("10")
     expect(card.locator(".raid-storage")).to_contain_text("10")
     expect(card.locator(".raid-storage")).to_have_class("raid-storage small mb-1 text-danger")

@@ -9,7 +9,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -37,6 +37,7 @@ def check_water(page, width, url):
         upgrade["unlocked"] = False
 
     def route(name):
+        select_expedition(page, name)
         return page.locator(".exploration-destination").filter(has=page.get_by_role("button", name="Explore " + name, exact=True))
 
     def water_row():

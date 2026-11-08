@@ -9,7 +9,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -111,6 +111,7 @@ def check_lifecycle(page, width, url):
     load_game(page, traveling)
     explore_tab(page)
     page.locator("#explorer-count").fill("5")
+    select_expedition(page, "nectar-meadow")
     page.get_by_role("button", name="Explore Nectar Meadow", exact=True).click()
     saved_trip = save_game(page)
     assert sum(c["count"] for c in saved_trip["exploration"]["explorationParties"][0]["ages"]["workers"]) == 5

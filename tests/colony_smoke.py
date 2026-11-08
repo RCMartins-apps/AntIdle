@@ -9,7 +9,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 from progression_smoke import explore_tab
 
 
@@ -39,6 +39,7 @@ def check_colony(page, width, url):
         page.get_by_role("tab", name="Upgrades", exact=True).click()
 
     def route():
+        select_expedition(page, "nectar-meadow")
         return page.locator(".exploration-destination").filter(has=page.get_by_role("button", name="Explore Nectar Meadow", exact=True))
 
     def purchase(title, sugar, protein, knowledge):
