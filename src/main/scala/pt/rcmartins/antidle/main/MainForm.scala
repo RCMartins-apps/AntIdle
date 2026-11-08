@@ -1036,12 +1036,14 @@ object MainForm {
         )
       },
       child.maybe <-- nestSignal.combineWith(explorationSignal).map { case (nest, exploration) =>
-        Option.when(nest.dryClearingOutpost || OutpostProgression.visible(exploration)) {
+        Option.when(nest.dryClearingOutpost || OutpostProgression.visible(exploration))(
+          (nest.dryClearingOutpost, OutpostProgression.expansionVisible(nest, exploration)))
+      }.distinct.map(_.map { case (established, expansionVisible) =>
           div(className := "col-12 nest-outposts border-top my-2 py-2",
             h5("Outposts"),
-            if (nest.dryClearingOutpost) div(className := "dry-clearing-outpost",
-              b(s"Dry Clearing Outpost · Level ${OutpostProgression.level(nest)}"),
-              div(s"+${OutpostProgression.housing(nest) / u} colony capacity · ${OutpostProgression.capacity(nest) / u} Seed Forager slots"),
+            if (established) div(className := "dry-clearing-outpost",
+              b(child.text <-- nestSignal.map(nest => s"Dry Clearing Outpost · Level ${OutpostProgression.level(nest)}").distinct),
+              div(child.text <-- nestSignal.map(nest => s"+${OutpostProgression.housing(nest) / u} colony capacity · ${OutpostProgression.capacity(nest) / u} Seed Forager slots").distinct),
               div(child.text <-- antsSignal.combineWith(resourcesSignal, upgradesSignal, nestSignal).map { case (ants, resources, upgrades, currentNest) =>
                 val harvest = OutpostProgression.harvestPerTick(ants, currentNest, upgrades, resources)
                 val state = if (ants.taskWorkers(AntTask.SeedForager) == 0L) "0 Seed Foragers"
@@ -1050,7 +1052,7 @@ object MainForm {
                   else s"+${preciseRateStr(harvest.protein * TicksPerSecond)} protein/s · −${preciseRateStr(harvest.water * TicksPerSecond)} water/s"
                 state
               }),
-              if (OutpostProgression.expansionVisible(nest, exploration)) div(className := "row mt-2",
+              if (expansionVisible) div(className := "row mt-2",
                 actionButton(
                   name = "Expand Dry Clearing Outpost",
                   enabledSignal = nestSignal.combineWith(explorationSignal, resourcesSignal).map { case (n, e, r) => OutpostProgression.canExpand(n, e, r) },
@@ -1071,8 +1073,7 @@ object MainForm {
               ),
             ),
           )
-        }
-      },
+      }),
       div(
         className := "col-12 nest-chambers",
         display <-- unlocksSignal.combineWith(nurseryUnlockedSignal).map { case (unlocks, nursery) =>

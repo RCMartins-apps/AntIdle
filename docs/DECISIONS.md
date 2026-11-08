@@ -533,3 +533,11 @@ wrap at the ends. Preserve party choices, Min presets, costs, outcomes, danger
 and the card's Discovery badge. Locked destinations remain absent; desktop keeps
 its comparison grid. Horizontal gestures navigate; vertical movement scrolls
 normally. No engine or save changes.
+
+
+### D21 follow-up: outpost disclosure stability
+
+Outpost sections project only visibility, established state and expansion
+availability before distinct/rendering. Tick-by-tick exploration updates must
+not recreate their action controls and close help. Costs, eligibility, level,
+capacity and production remain reactive inside the stable section.

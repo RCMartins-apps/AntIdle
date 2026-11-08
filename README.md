@@ -1117,3 +1117,8 @@ Exploration destinations with unfinished discoveries show a **Discovery** badge.
 It disappears when the destination's discoveries are complete. Locked routes and discovery identities stay hidden.
 `python3 tests/discovery_badge_smoke.py` checks live completion, carousel selection stability,
 save/reload and early-route hiding on phone and desktop.
+
+Outpost action help stays open during live simulation updates. Costs, production
+and level labels continue updating in place. `python3 tests/outpost_info_smoke.py`
+checks establishment/expansion panels, live costs, level transitions and closing
+help manually at phone/desktop widths.

@@ -1,24 +1,20 @@
 # Handoff
 
-## Last verified: 2026-11-08 — mobile exploration carousel
+## Last verified: 2026-11-08 — outpost info stability
 
-- Ongoing branch `ui/consistent-action-details` from merged main `82ff73b`
-  (PR #47). Includes shared egg descriptions, independent Nest/Tasks amounts,
-  scout batches, task help alignment, numeric chamber bonuses, concise expedition
-  outcomes and unfinished-discovery badges. Prior engine baseline: 241 passing.
-- Owner requested replacing the mobile picker with a carousel for comparisons.
-  D27 supersedes D23's selector and D26's picker hints. Cards keep Discovery badges.
-- Workers/scouts remain above a single card. Arrows, keyboard and horizontal
-  swipes change destinations without altering the party. Arrows wrap; title and
-  unlocked-position counter identify selection. Vertical gestures scroll; short
-  or diagonal movement does not navigate. Single-destination arrows disable.
-- Mobile navigation sits immediately above launch; desktop retains the grid.
-  Tests use select_expedition to navigate the carousel instead of a native select.
-- No engine/save changes. Verified development/production builds (Closure clean),
-  mobile_explore_smoke at 320/390/844/1920px and discovery_badge_smoke at
-  320/390/1920px. Includes arrows/wrap, keyboard, real Chromium touch gestures,
-  vertical/jitter discrimination, locked routes, party amounts, costs and launches.
-  Visually inspected the 390px Explore layout. Vertical scroll/pinch zoom remain
-  available. Prior 241 engine tests were not rerun for this UI-only change.
-- Changes committed/pushed on the ongoing branch; no new PR requested.
+- Branch `fix/outpost-info-stability` from merged main `76a89f5` (PR #48).
+  The previous UI consistency/carousel work is merged; baseline 241 engine tests.
+- Reproduced Establish Dry Clearing Outpost help closing during live ticks.
+  Its outer nest/exploration map rebuilt the entire section on exploration updates.
+- Project only visibility/established/expansion flags, distinct before rendering.
+  Levels/capacity now bind inside the stable section; costs, eligibility and
+  production remain live. Expansion help also stays open across a level change
+  while its action remains available. Actual structural transitions still render.
+- AGENTS/D21 record the reactive UI rule. No engine, balance or save changes.
+- Verified development/production builds (Closure clean), outpost_info_smoke
+  and outpost_smoke at 320/390/1920px. The new check failed on the old code,
+  then passed tick stability, live prices, establishment/expansion, level labels
+  and manual closing. Existing costs, staffing, production and saves still pass.
+  Engine tests were not rerun for this UI-only change.
+- Fix committed and pushed on this branch; no PR requested for this fix yet.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.
