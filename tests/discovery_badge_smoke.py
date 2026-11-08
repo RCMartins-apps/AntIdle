@@ -29,17 +29,16 @@ def check_badges(page, width, url):
     expect(woodland.locator(".discovery-badge")).to_have_text("Discovery")
     expect(woodland.locator(".discovery-badge")).to_have_attribute("aria-label", "Discovery still to find")
     expect(woodland).not_to_contain_text("Wild Aphids")
-    option = page.locator('#expedition-destination option[value="woodland-edge"]')
-    expect(option).to_contain_text("Discovery")
+    if width <= 767:
+        expect(page.locator(".carousel-destination-name")).to_have_text("Woodland Edge")
     assert_fits(page, width)
     if width == 390:
         woodland.screenshot(path="/tmp/discovery-badge-390.png")
     woodland.get_by_role("button").click()
     page.clock.run_for(120000)
     expect(page.locator(".discovery-badge")).to_have_count(0)
-    expect(option).not_to_contain_text("Discovery")
     if width <= 767:
-        expect(page.locator("#expedition-destination")).to_have_value("woodland-edge")
+        expect(page.locator(".carousel-destination-name")).to_have_text("Woodland Edge")
     completed = save_game(page)
     assert completed["exploration"]["surveys"]["woodland-edge"] == 5
     load_game(page, completed)
@@ -53,9 +52,9 @@ def check_badges(page, width, url):
     page.get_by_role("tab", name="Explore", exact=True).click()
     expect(page.locator(".exploration-destination")).to_have_count(1)
     expect(page.locator(".discovery-badge")).to_have_count(0)
-    expect(page.locator('#expedition-destination option[value="woodland-edge"]')).to_have_count(0)
+    expect(page.locator('.exploration-destination[data-destination="woodland-edge"]')).to_have_count(0)
     assert_fits(page, width)
-    print(f"PASS {width}px: remaining discovery indicator, mobile picker hint, live completion, selection stability, save/reload and hidden locked routes", flush=True)
+    print(f"PASS {width}px: remaining discovery indicator, mobile carousel, live completion, selection stability, save/reload and hidden locked routes", flush=True)
 
 
 if __name__ == "__main__":

@@ -521,3 +521,15 @@ players can choose without opening every card. Do not disclose discovery names,
 rewards or locked destinations. Derive the indicator from the discovery catalog
 and saved survey counts; update it after completion and on load. No extra save
 field or gameplay rule.
+
+
+## D27: Replace the mobile destination picker with a carousel — approved
+
+The owner found the picker too many taps for comparing actions. Supersedes the
+mobile selector in D23 and picker hints in D26. Keep one visible destination
+card below shared party controls, with swipe navigation and previous/next buttons
+immediately above the card. Show destination name and current/unlocked count;
+wrap at the ends. Preserve party choices, Min presets, costs, outcomes, danger
+and the card's Discovery badge. Locked destinations remain absent; desktop keeps
+its comparison grid. Horizontal gestures navigate; vertical movement scrolls
+normally. No engine or save changes.

@@ -1065,19 +1065,21 @@ expedition losses remain visible. No game balance, automation or save changes.
 keyboard interaction, visible costs/rates/warnings and phone/desktop layout.
 
 
-## Mobile expedition selection
+## Mobile expedition carousel
 
-On phones, Explore starts with an unlocked-destination picker, worker stepper,
-party presets and extra scouts, followed by the selected launch card. Its costs,
-rewards and danger remain visible. The minimum preset matches the destination;
-choosing a destination preserves your party size. Workers remain capped at 37.
-Active trips, pheromone trails, XP and supplies follow the launch controls.
-Desktop keeps the comparison grid of all unlocked destinations.
+On phones, Explore keeps worker/scout controls above a single destination card.
+Swipe horizontally across the card, or tap previous/next, to compare unlocked
+destinations without opening a menu. The title and position counter identify the
+current destination; arrows wrap, and keyboard Enter/Space works on them. Vertical
+swipes scroll normally. Costs, rewards, discovery badges and danger remain visible.
+Changing destinations preserves the party; the Min preset matches each route.
+Workers remain capped at 37. Active trips, trails, XP and supplies follow launch.
+Desktop keeps the grid of all unlocked destinations.
 
 `python3 tests/mobile_explore_smoke.py` checks 320/390/844/1920px layouts,
-unlock visibility, minimum presets, worker caps, danger, costs, launches, full
-slots and missing workers. Existing browser route helpers select the destination
-on mobile before interacting with its card.
+unlock visibility, arrow/keyboard/touch navigation, scroll/jitter discrimination,
+minimum presets, worker caps, danger, costs, launches, full slots and missing
+workers. Browser route helpers navigate the carousel on mobile.
 
 
 ## Consistent action details
@@ -1111,8 +1113,7 @@ chances without repeating the duration/reward line visible above its button.
 `python3 tests/chamber_details_smoke.py` checks every chamber and expedition
 help at phone/desktop widths.
 
-Exploration destinations with unfinished discoveries show a **Discovery** badge
-and a matching mobile-picker hint. Both disappear when the destination's
-discoveries are complete. Locked routes and discovery identities stay hidden.
-`python3 tests/discovery_badge_smoke.py` checks live completion, picker stability,
+Exploration destinations with unfinished discoveries show a **Discovery** badge.
+It disappears when the destination's discoveries are complete. Locked routes and discovery identities stay hidden.
+`python3 tests/discovery_badge_smoke.py` checks live completion, carousel selection stability,
 save/reload and early-route hiding on phone and desktop.

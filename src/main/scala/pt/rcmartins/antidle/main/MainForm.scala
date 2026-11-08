@@ -1829,6 +1829,16 @@ object MainForm {
     val selectedDestinationSignal = chosenDestinationVar.signal.combineWith(unlockedDestinationsSignal).map {
       case (id, unlocked) => unlocked.find(_.id == id).getOrElse(ExplorationDestination.Surroundings)
     }.distinct
+    def moveDestination(direction: Int): Unit =
+      useSignalValue[(List[ExplorationDestination], ExplorationDestination)](
+        unlockedDestinationsSignal.combineWith(selectedDestinationSignal), { case (destinations, selected) =>
+          if (destinations.nonEmpty) {
+            val index = destinations.indexOf(selected)
+            chosenDestinationVar.set(destinations(Math.floorMod(index + direction, destinations.size)).id)
+          }
+        })
+    var swipeStart: Option[(Double, Double)] = None
+
     val amountOfExplorersVar = Var(1L * u)
     val amountOfExplorersSignal = amountOfExplorersVar.signal.combineWith(availableWorkersCountSignal)
       .map { case (requested, available) => ExplorationProgression.selectedWorkers(requested, available) }.distinct
@@ -1856,6 +1866,27 @@ object MainForm {
         className := "col-12 col-md-6 px-3 py-2 exploration-destination",
         className <-- selectedDestinationSignal.map(selected => if (selected == destination) "destination-selected" else ""),
         dataAttr("destination") := destination.id,
+        onTouchStart --> { event =>
+          if (window.innerWidth <= 767 && event.touches.length == 1) {
+            val touch = event.touches(0)
+            swipeStart = Some((touch.clientX, touch.clientY))
+          } else swipeStart = None
+        },
+        onTouchCancel --> (_ => swipeStart = None),
+        onTouchEnd --> { event =>
+          swipeStart.foreach { case (x, y) =>
+            if (window.innerWidth <= 767 && event.changedTouches.length == 1) {
+              val touch = event.changedTouches(0)
+              val dx = touch.clientX - x
+              val dy = touch.clientY - y
+              if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                event.preventDefault()
+                moveDestination(if (dx < 0) 1 else -1)
+              }
+            }
+          }
+          swipeStart = None
+        },
         div(
           className := "card p-2 h-100",
           p(
@@ -1924,18 +1955,6 @@ object MainForm {
       className := "row exploration-layout",
       div(
         className := "col-12 px-3 py-2 expedition-setup",
-        div(className := "mobile-only destination-picker mb-2",
-          label(forId := "expedition-destination", "Destination"),
-          select(idAttr := "expedition-destination", className := "form-select",
-            children <-- unlockedDestinationsSignal.map(_.map(destination =>
-              option(value := destination.id,
-                child.text <-- explorationSignal.map(data => destination.name +
-                  (if (RaidProgression.isRaid(destination)) " · Dangerous" else "") +
-                  (if (DiscoveryProgression.hasUnfound(data, destination)) " · Discovery" else "")).distinct))),
-            value <-- selectedDestinationSignal.map(_.id),
-            onChange.mapToValue --> chosenDestinationVar.writer,
-          ),
-        ),
         label(forId := "explorer-count", "Workers"),
         div(className := "expedition-worker-stepper",
           button(className := "btn btn-outline-secondary", typ := "button",
@@ -1985,6 +2004,20 @@ object MainForm {
             ),
           )
         },
+      ),
+      div(className := "mobile-only col-12 px-3 destination-carousel",
+        aria.label := "Exploration destinations",
+        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Previous destination", "‹",
+          disabled <-- unlockedDestinationsSignal.map(_.size <= 1), onClick --> (_ => moveDestination(-1))),
+        div(className := "carousel-caption-text", aria.live := "polite",
+          div(className := "carousel-destination-name", child.text <-- selectedDestinationSignal.map(_.name)),
+          div(className := "carousel-position small text-body-secondary",
+            child.text <-- unlockedDestinationsSignal.combineWith(selectedDestinationSignal).map { case (destinations, selected) =>
+              s"${destinations.indexOf(selected) + 1} / ${destinations.size}"
+            }),
+        ),
+        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Next destination", "›",
+          disabled <-- unlockedDestinationsSignal.map(_.size <= 1), onClick --> (_ => moveDestination(1))),
       ),
       ExplorationDestination.all.map { destination =>
         child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {

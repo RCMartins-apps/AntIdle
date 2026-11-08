@@ -35,15 +35,24 @@ def load_game(page, game):
 
 
 def select_expedition(page, destination):
-    """Choose an unlocked mobile route; desktop retains the comparison grid."""
-    picker = page.locator("#expedition-destination")
-    if not picker.is_visible():
+    """Move the mobile carousel; desktop retains the comparison grid."""
+    carousel = page.locator(".destination-carousel")
+    if not carousel.is_visible():
         return
     name = destination.removeprefix("Explore ").removeprefix("Raid ")
-    options = picker.locator("option").evaluate_all("nodes => nodes.map(n => ({value: n.value, name: n.textContent.split(' · ')[0]}))")
-    chosen = next((o["value"] for o in options if o["value"] == destination or o["name"] == name), None)
-    if chosen is not None:
-        picker.select_option(chosen)
+    cards = page.locator(".exploration-destination").evaluate_all(
+        "nodes => nodes.map(n => ({id: n.dataset.destination, name: n.querySelector('button').textContent.trim().replace(/^(Explore|Raid) /, '')}))")
+    target = next((i for i, card in enumerate(cards) if card["id"] == destination or card["name"] == name), None)
+    if target is None:
+        return
+    selected = page.locator(".exploration-destination.destination-selected").get_attribute("data-destination")
+    current = next(i for i, card in enumerate(cards) if card["id"] == selected)
+    forward = (target - current) % len(cards)
+    backward = (current - target) % len(cards)
+    control = "Next destination" if forward <= backward else "Previous destination"
+    for _ in range(min(forward, backward)):
+        page.get_by_role("button", name=control, exact=True).click()
+
 
 
 def assert_fits(page, width):
