@@ -442,3 +442,20 @@ without silently changing the chosen party. Keep the 37-worker cap and stepper.
 Place active expeditions and secondary trail/XP/supply panels after launch.
 Desktop retains all unlocked cards for comparison. This changes layout only,
 not expedition mechanics, automation or saves.
+
+
+## D24: Action descriptions follow shared schemas — approved
+
+The owner reported inconsistent worker/scout egg help. Related actions must
+show equivalent information in the same order, using shared rendering instead
+of independently written prose. Egg details use Queue, Development and Larval
+care; times derive from Developing.totalCare and are explicitly base times
+because nurses, research, competition and supply affect actual development.
+Worker caste changes update the displayed values. Emergency exceptions occupy
+the same fields. Laying costs remain next to the button, with later larval
+resource costs identified separately.
+
+Common action help orders explanation, Requires, then Result, omitting empty
+sections. Worker and scout results both show egg count, with singular/plural
+labels. Keep default screens concise and action-family schemas in code; future
+actions must follow their family's structure. No gameplay or save changes.

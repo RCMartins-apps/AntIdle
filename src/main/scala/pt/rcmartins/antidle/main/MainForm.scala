@@ -950,7 +950,7 @@ object MainForm {
             actionButton(
               name = "Raise Emergency Worker",
               enabledSignal = antsSignal.combineWith(sugarSignal).map { case (ants, sugar) => EmergencyRecovery.canRaise(ants, sugar.amount) },
-              descriptionSignal = Val(Some(div("The queen rears one small sugar collector without protein, even with full brood places. Development takes about 15s. Queen's Routine can gather protected supplies for this egg; existing brood and research are kept."))),
+              descriptionSignal = Val(Some(eggDescription(EmergencyRecovery.Kind))),
               costSignal = Val(ActionCost(sugar = EmergencyRecovery.EggCost)),
               bonusSignal = Val(ActionBonus(eggs = u)),
               onClickAction = _ => Actions.raiseEmergencyWorker(),
@@ -971,7 +971,7 @@ object MainForm {
                 case mult => Some(span(s"x$mult"))
               },
               enabledSignal = Actions.layEggActionEnabled,
-              descriptionSignal = Val(Some(div("Order worker eggs. Sugar is charged as they are laid."))),
+              descriptionSignal = antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Some(eggDescription(if (standard) "worker" else "small"))),
               costSignal = displayedBatch.combineWith(antsSignal).map { case (mult, ants) => ActionCost(sugar = mult * BroodProgression.eggCost(ants)) },
               bonusSignal = displayedBatch.map(mult => ActionBonus(eggs = mult * u)),
               onClickAction = mult => Actions.layEggAction(mult),
@@ -983,9 +983,9 @@ object MainForm {
               name = "Raise Scout Egg",
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
                 .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
-              descriptionSignal = Val(Some(div("Shares the laying queue. Develops in about 90s; larval care costs 20 sugar + 2 protein."))),
+              descriptionSignal = Val(Some(eggDescription("scout"))),
               costSignal = Val(ScoutProgression.eggCost),
-              bonusSignal = Val(ActionBonus.empty),
+              bonusSignal = Val(ActionBonus(eggs = u)),
               onClickAction = _ => Actions.raiseScout(),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
             )
@@ -1514,6 +1514,20 @@ object MainForm {
   ): EventListener[MouseEvent, MouseEvent] =
     setTooltip(elem, actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts))
 
+  // Related actions share fields and order; values come from the gameplay model.
+  private def eggDescription(kind: String): ReactiveHtmlElement[HTMLDivElement] = {
+    val brood = AntBrood.Developing(0L, kind)
+    div(className := "egg-description text-start",
+      div(className := "action-detail-row", b("Queue: "),
+        if (kind == EmergencyRecovery.Kind) "Immediate; bypasses brood limit."
+        else "Shared laying queue; costs paid when laid."),
+      div(className := "action-detail-row", b("Development: "),
+        s"${prettyTimeFromTicks(brood.totalCare / u)} base; varies with care."),
+      div(className := "action-detail-row", b("Larval care: "),
+        if (brood.small) "No resources." else "20 sugar · 2 protein per egg."),
+    )
+  }
+
   private def actionDetails(
       descriptionSignal: Signal[Option[ReactiveHtmlElement[HTMLDivElement]]],
       costSignal: Signal[ActionCost],
@@ -1526,7 +1540,7 @@ object MainForm {
       child.maybe <-- descriptionSignal.map {
         _.map { descriptionDiv =>
           div(
-            className := "text-center",
+            className := "text-start action-description",
             maxWidth.px := 350,
             descriptionDiv,
             hr(),
@@ -1535,8 +1549,11 @@ object MainForm {
       },
       if (includeCosts) actionCosts(costSignal, requirementsSignal) else emptyNode,
       div(
-        className := "d-flex flex-column text-center action-requirements",
-        children <-- requirementsSignal.map(_.filterNot(_.isCost).map(requirement => requirementLabel(requirement))),
+        className := "d-flex flex-column text-start action-requirements",
+        children <-- requirementsSignal.map { requirements =>
+          val visible = requirements.filterNot(_.isCost)
+          if (visible.isEmpty) Nil else List(div(className := "small text-muted text-start", "Requires")) ++ visible.map(requirement => requirementLabel(requirement))
+        },
       ),
       child.maybe <-- costSignal.combineWith(bonusSignal).map { case (cost, bonus) =>
         if (!includeCosts || cost == ActionCost.empty || bonus == ActionBonus.empty)
@@ -1546,9 +1563,10 @@ object MainForm {
       },
       child <-- bonusSignal.map { bonus =>
         div(
-          className := "d-flex flex-column justify-content-center text-center",
+          className := "d-flex flex-column justify-content-center text-start action-result",
+          if (bonus != ActionBonus.empty) div(className := "small text-muted", "Result") else emptyNode,
           ifGreater0(bonus.sugar)(prettyNumberSimple("+", _, " sugar")),
-          ifGreater0(bonus.eggs)(prettyNumberSimple("+", _, " eggs")),
+          ifGreater0(bonus.eggs)(value => s"+${value / u} ${if (value == u) "egg" else "eggs"}"),
           ifGreater0(bonus.maxTunnelingSpace)(prettyNumberSimple("+", _, " max tunneling space")),
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " max sugar")),
           ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " max protein")),

@@ -85,7 +85,7 @@ def check_compact(page, width, url):
     expect(help_panel("Brood").locator(".info-content")).not_to_be_visible()
     action = page.get_by_label("Details for Raise Worker Egg", exact=True)
     action.click()
-    expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
+    expect(page.locator(".action-details[open]")).to_contain_text("Shared laying queue")
     assert_fits(page, width)
     action.click()
     page.locator("#nestContent").screenshot(path=f"/tmp/antidle-compact-nest-{width}.png")

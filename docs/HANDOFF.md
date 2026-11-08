@@ -1,23 +1,21 @@
 # Handoff
 
-## Last verified: 2026-11-07 — mobile expedition picker
+## Last verified: 2026-11-08 — consistent action details
 
-- Branch `ui/mobile-expedition-picker` starts from merged main `2e7cc6f`
-  (PR #46, compact UI/help). Owner asked to reduce scrolling in Explore.
-- Mobile Explore now shows an unlocked-destination select, worker/scout controls
-  and only the selected action card. Prices, rewards, shortages and dangerous
-  losses stay visible. Destination-specific Min presets preserve explicit party
-  choice; stepper and 37-worker cap remain. Desktop retains all unlocked cards.
-- Active expeditions, trail, XP and supplies follow launch. D23 and README
-  record the layout. No engine, balance, automation or save changes.
-- New mobile_explore_smoke passes 320/390/844/1920px: early locked-route hiding,
-  picker/card agreement, minimum presets, capped workers, visible costs/risk,
-  launches, extra scouts, full slots and missing workforce. Inspected 320px image.
-- Development/production builds and all 238 engine tests passed. Exploration
-  and dangerous-raid/staffing regressions pass at 320/390/1920px. General browser
-  checks pass all seven widths from 320 to 1920px, including resize behavior.
-- Existing route helpers now select mobile destinations before interacting;
-  desktop helpers keep using the comparison grid. Other helper adaptations were
-  syntax checked, not all older suites were rerun.
-- Branch committed and pushed by standing authorization. No PR requested yet.
+- Branch `ui/consistent-action-details` starts from merged main `82ff73b`
+  (PR #47, mobile expedition picker). User requested logically consistent action
+  descriptions after comparing worker/scout eggs.
+- Worker, scout and emergency egg help now share Queue / Development / Larval
+  care fields via eggDescription. Base duration derives from Developing.totalCare;
+  worker caste changes update it. Clarifies laying costs versus later larval care.
+- Common action panels order explanation, Requires, then Result, omitting empty
+  sections. Left aligned help/results, consistent egg singular/plural; scout
+  result now shows +1 egg as worker does. Help stays behind [i], costs stay visible.
+- D24 and AGENTS record shared-family formatting as a lasting rule. README
+  documents behavior. No engine, balance or save changes.
+- Verified development and production builds (Closure clean), all 238 engine
+  tests and compact_ui_smoke at 320/390/1920px. action_details_smoke checks
+  shared field order, times, care and results for worker/scout/small/emergency
+  eggs at the same widths. Browser assertions use the new shared queue wording.
+- Branch committed and pushed by standing authorization; no PR requested yet.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

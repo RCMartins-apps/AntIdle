@@ -132,7 +132,7 @@ def check_compact_details(page):
     toggle.focus()
     toggle.press("Space")
     expect(panel).to_have_attribute("open", "")
-    expect(panel).to_contain_text("Order worker eggs")
+    expect(panel).to_contain_text("Shared laying queue")
     assert action.bounding_box()["height"] > closed_height
     expect(action.locator(".action-costs")).to_be_visible()
     toggle.press("Enter")
@@ -314,18 +314,18 @@ def run_checks(browser, url):
             load_game(page, blocked)
             expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_disabled()
             page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-            expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
+            expect(page.locator(".action-details[open]")).to_contain_text("Shared laying queue")
             load_game(page, game)
 
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
         page.get_by_role("tab", name="Nest", exact=True).click()
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-        expect(page.locator(".action-details[open]")).to_contain_text("Order worker eggs")
+        expect(page.locator(".action-details[open]")).to_contain_text("Shared laying queue")
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
         page.set_viewport_size({"width": 390, "height": 844})
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
-        expect(page.locator("details[open]")).to_contain_text("Order worker eggs")
+        expect(page.locator("details[open]")).to_contain_text("Shared laying queue")
         assert_fits(page, 390)
         if width == 390:
             check_nest_capacity(page, initial)

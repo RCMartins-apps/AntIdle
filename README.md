@@ -1078,3 +1078,14 @@ Desktop keeps the comparison grid of all unlocked destinations.
 unlock visibility, minimum presets, worker caps, danger, costs, launches, full
 slots and missing workers. Existing browser route helpers select the destination
 on mobile before interacting with its card.
+
+
+## Consistent action details
+
+Action [i] panels order explanation, requirements and results consistently,
+omitting empty sections. Related actions share a renderer: worker, scout and
+emergency eggs show Queue, Development and Larval care in that order. Base
+development times come from the brood model; actual speed depends on care.
+Laying costs stay beside the button; larval costs are identified separately.
+`python3 tests/action_details_smoke.py` checks matching egg fields and results
+on phone and desktop after `sbt fastOptJS`.
