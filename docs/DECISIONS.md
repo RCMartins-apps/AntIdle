@@ -475,3 +475,12 @@ Nest brood batches and Tasks assignments use independent mobile amounts, both
 initially ×1. Tab switches retain each choice without changing the other.
 Desktop Ctrl/Shift shortcuts are unchanged. These are session UI values, not
 saved gameplay settings.
+
+
+### D24 follow-up: reserve touch-control height
+
+Task rows must reserve enough height for their 44px info control even without
+assignment buttons or an output rate. Reserve a 52px row and align the info
+control's 4px top inset with the assignment-button margin. Expanded help stays
+in flow. Geometry checks cover passive and assignable jobs, adjacent controls,
+phone bounds and opening/closing each task disclosure.

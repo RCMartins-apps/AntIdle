@@ -22,7 +22,7 @@ def check_compact(page, width, url):
     game["world"].update(currentTick=100, targetTick=100, saveSeed=42)
     game["ants"].update(workers=50 * UNIT, scouts=2 * UNIT, smallWorkers=6 * UNIT,
         smallTunnelers=UNIT, smallScavengers=0, smallNurses=0,
-        tasks=[[{name: {}}, amount * UNIT] for name, amount in (("SugarCollector", 40), ("Tunneler", 3), ("Scavenger", 2), ("BroodNurse", 2), ("AphidTender", 1), ("SeedForager", 1), ("RoyalNurse", 1))],
+        tasks=[[{name: {}}, amount * UNIT] for name, amount in (("SugarCollector", 40), ("Tunneler", 3), ("Scavenger", 2), ("BroodNurse", 2), ("AphidTender", 1), ("SeedForager", 1), ("RoyalNurse", 1), ("CarcassCarrier", 0), ("TerritoryForager", 0), ("Explorer", 0))],
         defaultTask={"SugarCollector": {}}, eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[],
         lineage={"foundings": 1, "dna": 0, "sharedPaths": True},
         ages={"active": True, "workers": [{"expiresAt": 30000, "count": 50}], "smallWorkers": [{"expiresAt": 10000, "count": 6}], "scouts": [{"expiresAt": 30000, "count": 2}]})
@@ -58,6 +58,27 @@ def check_compact(page, width, url):
         expect(details.locator(".info-content")).not_to_be_visible()
 
     tab("Tasks")
+    # Absolute help controls must reserve their full height, even for passive jobs.
+    rows = page.locator(".task-row:visible")
+    assert rows.count() >= 10
+    previous_bottom = None
+    for row in rows.all():
+        control = row.locator(".info-summary")
+        box = control.bounding_box()
+        bounds = row.bounding_box()
+        assert bounds["y"] <= box["y"] and box["y"] + box["height"] <= bounds["y"] + bounds["height"] + 1
+        if previous_bottom is not None:
+            assert box["y"] + page.evaluate("scrollY") >= previous_bottom
+        previous_bottom = box["y"] + box["height"] + page.evaluate("scrollY")
+        buttons = row.locator(".task-controls button:visible")
+        if width <= 767 and buttons.count():
+            assert abs(buttons.first.bounding_box()["y"] - box["y"]) <= 1
+        control.click()
+        expect(row.locator(".info-content")).to_be_visible()
+        assert_fits(page, width)
+        control.click()
+    if width == 390:
+        page.locator("#tasksContent").screenshot(path="/tmp/task-info-alignment-390.png")
     visible = page.locator("#tasksContent").inner_text()
     for redundant in ("Small nurses provide half the care", "half a standard nurse", "New and returning workers join", "Unassigned small workers", "two shared scraps-gathering places"):
         assert redundant not in visible, redundant

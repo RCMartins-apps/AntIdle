@@ -31,3 +31,12 @@
   the Tasks amount explicitly instead of depending on the old coupling.
   Verified fastOptJS and action_amount_smoke at 320/390/1920px: independent
   values, tab retention, actual orders/assignments and desktop shortcuts.
+
+- Follow-up: fixed overlapping mobile task help. Passive rows no longer collapse
+  below their absolute info button: task rows reserve 52px, and info controls
+  align with the assignment buttons' 4px inset. Expanded help stays in flow.
+  compact_ui_smoke now checks row containment, neighboring button separation,
+  assignment alignment and every task disclosure on phone/desktop. CSS only;
+  no engine or save changes, no rebuild needed.
+  Verified expanded compact_ui_smoke at 320/390/1920px and visually inspected
+  the 390px Tasks screenshot, including all three consecutive passive jobs.
