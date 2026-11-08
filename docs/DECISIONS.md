@@ -533,3 +533,56 @@ wrap at the ends. Preserve party choices, Min presets, costs, outcomes, danger
 and the card's Discovery badge. Locked destinations remain absent; desktop keeps
 its comparison grid. Horizontal gestures navigate; vertical movement scrolls
 normally. No engine or save changes.
+
+
+### D21 follow-up: outpost disclosure stability
+
+Outpost sections project only visibility, established state and expansion
+availability before distinct/rendering. Tick-by-tick exploration updates must
+not recreate their action controls and close help. Costs, eligibility, level,
+capacity and production remain reactive inside the stable section.
+
+
+## D28: Concise current facts, dedicated Lineage and caste-aware actions — approved
+
+Use the owner's shorter copy verbatim: “Small founding workers: 50% task output
+and upkeep; live 30–40 simulated minutes.” General help should not append obvious
+upgrade-improves-this claims or potential upgraded number variants. Keep concrete
+upgrade effects on their own upgrade actions and important mechanics behind [i].
+Removed the equivalent Colony Nutrition qualifier from replete promotion help.
+
+Queen's lineage is its own Lineage tab, with generation/DNA/production, daughter-
+queen readiness, Understandings and founding review/reset disclosures. Reveal
+the tab when the Royal Nursery exists, a daughter queen is ready or a previous
+founding exists; keep it across founding resets. Royal rearing stays in Nest.
+
+The worker action says Raise Small Worker Egg during founding, then Raise Worker
+Egg after Standard Worker Development. Its help label/title change with it.
+Names reflect newly raised caste, without changing existing adults or gameplay.
+
+
+### D28 follow-up: concise effect-first research and action facts
+
+Implemented a further UI pass requested by the owner. Research descriptions
+lead with concrete percentage/capacity/slot effects rather than generic prose
+or flavor; retain relevant tradeoffs, future-only scope and retroactive effects.
+Outpost establishment/expansion use bonus lists (including the formerly omitted
+5 Seed Forager slots); ongoing rates belong to the live job/outpost display.
+Replete promotion uses short Worker/Lifespan/Upkeep/Role/Storage facts, with
+upkeep drawn from the shared constant. XP help keeps current bonus and thresholds
+without a redundant next-level forecast.
+
+Royal brood follows the same structural projection rule as outposts: unrelated
+construction or research updates must preserve open help and control identity.
+No balance, costs, unlock rules or save-format changes.
+
+
+## D29: Resource visibility must not bypass founding progression — Nursery fix
+
+Protein's discovered flag intentionally survives prestige so the resource never
+disappears. It must not reveal Nursery Chamber immediately in the new small-
+worker colony. Nursery visibility now requires standard workers and known protein,
+or an already-built Nursery. Standard Worker Development restores normal access;
+existing chambers are retained. No resource history is cleared and no new save
+field is needed. Regression coverage includes actual founding/reload and the
+subsequent standard-worker research transition.

@@ -75,7 +75,10 @@ object Utils {
 
   val sugarSignal: Signal[BasicResource] = resourcesSignal.map(_.sugar).distinct
   val proteinSignal: Signal[BasicResource] = resourcesSignal.map(_.protein).distinct
-  val nurseryUnlockedSignal: Signal[Boolean] = explorationSignal.map(_.proteinDiscovered).distinct
+  val proteinVisibleSignal: Signal[Boolean] = explorationSignal.map(_.proteinDiscovered).distinct
+  val nurseryUnlockedSignal: Signal[Boolean] = antsSignal.combineWith(nestSignal, explorationSignal).map {
+    case (ants, nest, exploration) => BroodProgression.nurseryAvailable(ants, nest, exploration)
+  }.distinct
   val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
   val resinSignal: Signal[BasicResource] = resourcesSignal.map(_.resin).distinct
   val tunnelingSpaceSignal: Signal[BasicResource] = resourcesSignal.map(_.tunnelingSpace).distinct

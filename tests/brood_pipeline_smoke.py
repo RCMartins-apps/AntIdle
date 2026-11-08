@@ -1,5 +1,6 @@
 """Fast founding workers, half-efficiency tasks and the staged replacement pipeline."""
 import copy
+import re
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
@@ -13,7 +14,7 @@ from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save
 def check_brood(page, width, url):
     now = datetime(2026, 11, 7, tzinfo=timezone.utc)
     page.clock.install(time=now)
-    page.clock.pause_at(now + timedelta(milliseconds=100))
+    page.clock.pause_at(now + timedelta(seconds=1))
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(url, wait_until="networkidle")
@@ -22,8 +23,8 @@ def check_brood(page, width, url):
     page.get_by_role("tab", name="Nest", exact=True).click()
     for _ in range(5):
         page.get_by_role("button", name="Gather Sugar", exact=True).click()
-    raise_egg = page.get_by_role("button", name="Raise Worker Egg", exact=True)
-    expect(raise_egg).to_be_enabled()
+    raise_egg = page.get_by_role("button", name=re.compile(r"^Raise (?:Small )?Worker Egg"))
+    expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
     expect(page.locator(".brood-feeding")).to_contain_text("5 sugar")
     raise_egg.click()
     ordered = save_game(page)
@@ -52,7 +53,10 @@ def check_brood(page, width, url):
     prepared["nestAttributes"]["maxAnts"] = 20 * UNIT
     prepared["basicResources"].update(sugar={"amount": 100 * UNIT, "maxAmount": 1000 * UNIT},
         tunnelingSpace={"amount": 10 * UNIT, "maxAmount": 1000 * UNIT})
+    prepared["exploration"]["proteinDiscovered"] = True
+    prepared["ants"]["lineage"] = {"foundings": 1, "dna": 0, "sharedPaths": False}
     load_game(page, prepared)
+    expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_have_count(0)
     page.get_by_role("tab", name="Upgrades", exact=True).click()
     research = page.get_by_role("button", name="Standard Worker Development", exact=True)
     expect(research).to_be_enabled()
@@ -67,6 +71,9 @@ def check_brood(page, width, url):
     assert upgraded["ants"]["eggsAndLarvae"] == prepared["ants"]["eggsAndLarvae"]
     page.get_by_role("tab", name="Nest", exact=True).click()
     expect(page.locator(".brood-feeding")).to_contain_text("20 sugar + 2 protein")
+    expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_have_count(0)
+    expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_enabled()
+    expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_be_visible()
     raise_egg.click()
     page.clock.run_for(200)
     mixed = save_game(page)

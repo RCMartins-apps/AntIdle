@@ -45,12 +45,18 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at
 `Constants.TicksPerSecond = 5`. Check units when changing counts, costs or rates.
 Keep engine rules, displayed costs, previews and income estimates consistent.
+Permanent resource visibility is history, not a current-colony mechanic unlock.
+After founding, keep known resources visible while applying current research/
+worker/chamber requirements to action visibility separately.
 Validate gameplay rules in the engine, not only by disabling UI buttons.
 
 ## UI copy and information
 
 Keep default screens compact. Show counts, rates, costs, progress and relevant
 blocking/risk warnings directly. Remove explanations that repeat those values.
+Describe base/current behavior concisely. Do not append obvious claims such as
+“improved by [upgrade]” or enumerate hypothetical upgraded variants in general
+help. Upgrade actions still need their concrete effects and costs.
 Put important mechanics behind explicit [i] controls on phone and desktop;
 use MainForm's infoHeading/infoDetails helpers for sections/tasks and the shared
 action details control for actions. Do not add always-visible tutorial paragraphs
@@ -67,6 +73,11 @@ capacities. Expedition help explains finds/chances without repeating the visible
 duration/reward summary.
 The common detail layout orders explanation, Requires, then Result; omit empty
 sections and keep costs visible beside the button.
+
+Preserve disclosure/control nodes across live ticks. Project minimal visibility
+and structural flags, then apply distinct before creating their DOM. Bind live
+costs, rates, levels and labels inside that stable structure; do not recreate an
+entire section for unrelated model updates and reset its open/focus state.
 
 ## Verification
 

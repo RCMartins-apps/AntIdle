@@ -14,7 +14,7 @@ from progression_smoke import explore_tab
 def check_prestige(page, width, url):
     now = datetime(2026, 11, 7, tzinfo=timezone.utc)
     page.clock.install(time=now)
-    page.clock.pause_at(now + timedelta(milliseconds=100))
+    page.clock.pause_at(now + timedelta(seconds=1))
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(url, wait_until="networkidle")
@@ -33,14 +33,16 @@ def check_prestige(page, width, url):
     def nest():
         page.get_by_role("tab", name="Nest", exact=True).click()
 
-    nest()
+    page.get_by_role("tab", name="Lineage", exact=True).click()
     expect(page.locator(".lineage-section")).to_contain_text("Generation 1 · DNA: 0 · +0% sugar production")
     page.get_by_text("Review founding", exact=True).click()
     expect(page.locator(".founding-preview")).to_contain_text("Keep: DNA, Understandings, lifetime statistics")
+    if width == 390:
+        page.locator("#lineageContent").screenshot(path="/tmp/lineage-review-390.png")
     page.once("dialog", lambda dialog: dialog.dismiss())
     page.get_by_role("button", name="Found daughter colony", exact=True).click()
     assert save_game(page)["ants"]["daughterQueens"] == UNIT
-    nest()
+    page.get_by_role("tab", name="Lineage", exact=True).click()
     page.once("dialog", lambda dialog: dialog.accept())
     page.get_by_role("button", name="Found daughter colony", exact=True).click()
     page.clock.run_for(1)
@@ -51,8 +53,16 @@ def check_prestige(page, width, url):
     assert founded["basicResources"]["sugar"]["amount"] == 0
     assert founded["statistics"]["sugarU"] == {"thisRun": 0, "total": 300 * UNIT}
     assert founded["exploration"]["experience"] == 0
-    assert not any(u["unlocked"] for u in founded["upgrades"]["upgrades"])
+    assert founded["exploration"]["proteinDiscovered"]
     nest()
+    expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_have_count(0)
+    expect(page.locator(".resource-row").filter(has=page.get_by_text("Protein", exact=True))).to_be_visible()
+    page.reload(wait_until="networkidle")
+    nest()
+    expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_have_count(0)
+    expect(page.locator(".resource-row").filter(has=page.get_by_text("Protein", exact=True))).to_be_visible()
+    assert not any(u["unlocked"] for u in founded["upgrades"]["upgrades"])
+    page.get_by_role("tab", name="Lineage", exact=True).click()
     page.get_by_role("button", name="Learn Shared Paths", exact=True).click()
     expect(page.locator(".lineage-section")).to_contain_text("DNA: 0")
     expect(page.get_by_role("button", name="Learn Shared Paths", exact=True)).to_have_count(0)
@@ -64,8 +74,8 @@ def check_prestige(page, width, url):
     nest()
     for _ in range(30):
         page.get_by_role("button", name="Gather Sugar", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_enabled()
-    page.get_by_role("button", name="Raise Worker Egg", exact=True).click()
+    expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
+    page.get_by_role("button", name="Raise Small Worker Egg", exact=True).click()
     page.clock.run_for(60000)
     expect(page.locator("#tasks-tab")).to_be_visible()
     page.locator("#tasks-tab").click()

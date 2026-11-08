@@ -6,6 +6,10 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 
 object BroodProgression {
   def capacity(nest: NestAttributes): Int = nest.maxEggsCount + Math.max(0, nest.chambers.nurseryChamber.level) * 3
+  // Remembering protein across foundings must not bypass current-colony progression.
+  def nurseryAvailable(ants: AntsData, nest: NestAttributes, exploration: ExplorationData): Boolean =
+    nest.chambers.nurseryChamber.level > 0 || (ants.standardWorkersUnlocked && exploration.proteinDiscovered)
+
   def eggCost(ants: AntsData): Long = if (ants.standardWorkersUnlocked) LayEggSugarCost else LayEggSugarCost / 2L
   def interval(ants: AntsData, nest: NestAttributes): Long = {
     val base = (if (ants.standardWorkersUnlocked) 20L else 5L) * TicksPerSecond

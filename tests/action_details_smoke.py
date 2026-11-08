@@ -37,7 +37,7 @@ def check_details(page, width, url):
             upgrade["unlocked"] = False
     load_game(page, small)
     page.get_by_role("tab", name="Nest", exact=True).click()
-    page.get_by_label("Details for Raise Worker Egg", exact=True).click()
+    page.get_by_label("Details for Raise Small Worker Egg", exact=True).click()
     expect(page.locator(".egg-description:visible")).to_contain_text("15.0s base")
     expect(page.locator(".egg-description:visible")).to_contain_text("No resources.")
     collapsed = copy.deepcopy(game)

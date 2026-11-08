@@ -165,4 +165,15 @@ class PrestigeSuite extends FunSuite {
       production - data.ants.upkeepWorkersCount * antsSugarUpkeepTick - predicted.cost.sugar)
   }
 
+  test("remembered protein does not reveal Nursery before standard workers in a new founding") {
+    val next = Prestige.found(colony)
+    assert(next.exploration.proteinDiscovered)
+    assert(!BroodProgression.nurseryAvailable(next.ants, next.nestAttributes, next.exploration))
+    val developed = BroodProgression.reconcile(next.copy(upgrades = next.upgrades.unlock(UpgradesData.UpgradeType.StandardWorkers)))
+    assert(BroodProgression.nurseryAvailable(developed.ants, developed.nestAttributes, developed.exploration))
+    val legacy = next.nestAttributes.copy(chambers = next.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1)))
+    assert(BroodProgression.nurseryAvailable(next.ants, legacy, next.exploration))
+    assert(!BroodProgression.nurseryAvailable(AntsData(), NestAttributes.initial, ExplorationData()))
+  }
+
 }

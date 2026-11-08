@@ -712,7 +712,9 @@ staffing, costs, stages, rates, shortages, pause/reload and completion checks.
 
 ## First prestige: DNA and Shared Paths
 
-A mature daughter queen unlocks **Review founding** in Nest. The preview and
+The **Lineage** tab appears with a Royal Nursery, a mature daughter queen or a
+previous founding. It holds generation/DNA, readiness, Understandings and
+**Review founding**, which unlocks with a mature daughter queen. The preview and
 confirmation list the reset before **Found daughter colony** takes effect:
 
 - Reset colony resources, ants/brood, chambers, research, expedition XP,
@@ -906,7 +908,8 @@ scraps are limited in staffing, leaving larger expedition/outpost sources useful
 
 ### Orders, laying and development
 
-**Raise Worker Egg** now queues the chosen number of orders instead of creating
+**Raise Small Worker Egg** (then **Raise Worker Egg** after Standard Worker
+Development) queues the chosen number of orders instead of creating
 an instant batch. Orders are limited by currently affordable egg costs and
 future housing space; sugar is charged only as each egg is actually laid.
 The visible cost is the queued batch's current egg price. Orders can be
@@ -1117,3 +1120,26 @@ Exploration destinations with unfinished discoveries show a **Discovery** badge.
 It disappears when the destination's discoveries are complete. Locked routes and discovery identities stay hidden.
 `python3 tests/discovery_badge_smoke.py` checks live completion, carousel selection stability,
 save/reload and early-route hiding on phone and desktop.
+
+Outpost action help stays open during live simulation updates. Costs, production
+and level labels continue updating in place. `python3 tests/outpost_info_smoke.py`
+checks establishment/expansion panels, live costs, level transitions and closing
+help manually at phone/desktop widths.
+
+General help states concise base/current facts without listing hypothetical
+upgraded variants. Small-worker help is “Small founding workers: 50% task output
+and upkeep; live 30–40 simulated minutes.”
+`python3 tests/lineage_ui_smoke.py` checks founding labels/help, concise copy,
+Lineage visibility and inherited access. Brood/prestige checks cover the live
+caste transition, founding and DNA purchases from the new tab.
+
+Research help leads with concrete effects and keeps important scope/tradeoffs.
+Outpost construction uses numeric bonus lists; promotion help uses compact
+facts, and XP help omits repeated next-level forecasts. Royal brood help stays
+open across unrelated chamber/research updates.
+`python3 tests/concise_ui_smoke.py` checks those details and live panel stability
+at 320/390/1920px; outpost progression checks cover upgraded rates and staffing.
+
+After founding, remembered protein stays visible but does not reveal Nursery
+Chamber during the small-worker phase. Normal Nursery access returns with
+standard-worker progression; already-built Nurseries remain visible.
