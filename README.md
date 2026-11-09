@@ -4,7 +4,10 @@ For development context, start with [AGENTS.md](AGENTS.md). The repository keeps
 the [game vision](docs/VISION.md), [agreed design decisions](docs/DECISIONS.md)
 and [latest handoff](docs/HANDOFF.md) so work can continue across Codex sessions.
 These distinguish implemented behavior, approved direction and tentative ideas;
-the sections below document existing mechanics and setup.
+the sections below document existing mechanics and setup. The dated
+[game-state review](docs/GAME_REVIEW.md) separates current strengths from proposed
+priorities; [recorded ideas](docs/IDEAS.md) preserves possibilities without
+turning them into implementation commitments.
 
 A Scala.js incremental game. Build with Java and the sbt version pinned in
 `project/build.properties`:
@@ -35,7 +38,7 @@ keyboard activation; closed details add no extra row, even for disabled actions.
 Resource totals use compact numbers and negative income is red. Upgrades use
 one column on phones and two on larger screens, with a short empty state when
 there is no research to buy. Explore shows unmet party minimums beside routes
-and fleet availability above destinations.
+and expedition-slot availability below the launch area.
 Resource limits and game rules are shared across both layouts. Game saves remain
 in the browser's local storage.
 

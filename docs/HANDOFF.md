@@ -1,22 +1,22 @@
 # Handoff
 
-## Last verified: 2026-11-09 — documentation-only workflow skips
+## Last verified: 2026-11-09 — waste design/review documentation
 
-- Branch `ci/docs-only-skips` from main `a3b5ac1` (merged PR #49).
-- User asked to skip game tests/deploy for docs-only changes before merging the
-  waste idea/review documents, then work on improvements needing no new design.
-- Shared reusable game-changes workflow and scripts/ci_changes.py classify
-  `docs/**` and root Markdown as docs. PR merge-base comparison; whole push range;
-  no rename collapsing; unknown/empty comparisons run validation. Manual test
-  dispatch always runs. Job-level skips preserve completed required statuses.
-- Main and same-repository debug* deployment rules remain; normal non-debug PRs
-  skip deployment classification too. Policy unit checks run only for non-doc work.
-- Verified six policy tests, real temporary Git PR/push/rename cases, output and
-  unknown-input fallback, YAML parsing and git diff --check. Workflow/code change
-  must pass real CI before merge. No game rebuild needed locally.
-- Pending docs branch `docs/game-state-and-waste` (7dd3792) records the waste idea
-  and source review. Rebase/merge current main before its docs-only PR so it uses
-  the updated workflows; reconcile D30 numbering/HANDOFF. User authorizes its PR
-  and merge. Waste introduction and mechanics remain undecided, not an instruction
-  to implement gameplay. Consider a small browser CI gate as the next safe step.
+- Branch `docs/game-state-and-waste` now includes main `ba09da5` (PR #50), whose
+  shared workflow classifier skips expensive game jobs for docs-only changes.
+  Code-change classification and full engine/build CI passed before merge.
+- Owner requested recording waste interest, then authorized this documentation
+  PR and merge. D31/IDEAS preserve undecided timing and tentative mechanics;
+  this is not authorization to implement waste gameplay.
+- GAME_REVIEW is a dated source/design assessment against gameplay main `a3b5ac1`:
+  strong first-colony foundation; next prestige step is the main content gap.
+  Whole-run balance still needs measurement. Recommendations are not approved
+  new gameplay tasks. Waste stays tentative until its role/timing is chosen.
+- Local Markdown links and git diff --check passed. This branch's diff from main
+  must contain docs/root Markdown only. Its PR and resulting main push should
+  exercise the new skip behavior; verify game test/deploy jobs are skipped.
+- User also asked for safe improvements without further design feedback. A small
+  production browser CI gate is being prepared next; draft tests passed locally
+  at 390/1280px and cover disclosures, task geometry, navigation, launch and reset.
+- Prior merged engine baseline: 242. No game builds/tests rerun for docs alone.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

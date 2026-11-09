@@ -598,3 +598,13 @@ instead of remaining pending. PR comparison uses the merge base; pushes compare
 the entire before/after range. Include both sides of renames. Unknown/empty
 comparisons conservatively validate; manual test dispatch always validates.
 Preserve main and same-repository debug* deployment restrictions.
+
+
+## D31: Record waste management; introduction timing remains undecided
+
+On 2026-11-09 the owner requested preserving the waste/colony-maintenance idea
+without choosing when it should enter the game, then authorized a PR and merge
+for that design record. See [IDEAS.md](IDEAS.md). Waste carriers, refuse chambers
+funded by tunnelling space and capped overflow effects remain proposals, not
+approved implementation requirements. Do not infer a Nursery-stage unlock or
+a prestige placement from the earlier discussion.
