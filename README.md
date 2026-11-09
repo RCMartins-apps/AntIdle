@@ -1168,3 +1168,6 @@ Run `python3 scripts/balance.py --out /tmp/antidle-balance` for seeded real-engi
 strategy comparisons, a portable interactive report and importable milestone saves.
 See [Balance lab](tools/balance/README.md) for setup, assumptions and how to combine
 simulation with short normal-speed playtests.
+
+For code locations and examples of changing unlock timing, costs and exploration
+requirements, see [Changing balance](docs/BALANCING.md).

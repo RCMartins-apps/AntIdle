@@ -110,8 +110,8 @@ object Strategy {
 
     val orders = p.upgradeOrder.flatMap(name => UpgradeType.all.find(_.name == name))
     val research = orders.find(t => !d.upgrades(t).unlocked && d.upgrades(t).show)
-    research.filter(t => d.hasResources(t.cost)).foreach { t =>
-      return done(Choice(s"Research ${t.title}", "research", x => UpgradeVisibility.reconcile(x.spendResources(t.cost).copy(upgrades = x.upgrades.unlock(t)))))
+    research.filter(t => UpgradeResearch.canPurchase(d, t)).foreach { t =>
+      return done(Choice(s"Research ${t.title}", "research", UpgradeResearch.purchase(_, t)))
     }
     val target = workforceTarget(d, p)
     if (d.upgrades(QueensRoutine).unlocked && (!a.queenRoutine.enabled || a.queenRoutine.targetWorkers != target))

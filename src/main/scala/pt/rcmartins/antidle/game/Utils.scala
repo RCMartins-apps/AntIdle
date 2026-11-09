@@ -267,6 +267,11 @@ object Utils {
         case true  => Some(value)
       }
 
+  def canPurchaseUpgradeSignal(upgrade: UpgradesData.UpgradeType): Signal[Boolean] =
+    allDataSignals.map { case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
+      UpgradeResearch.canPurchase(AllData.simple(world, ants, basic, nest, unlocks, upgrades, exploration, statistics, Seq.empty), upgrade)
+    }.distinct
+
   def hasResourcesSignal(costSignal: Signal[ActionCost]): Signal[Boolean] =
     resourcesSignal.combineWith(antsSignal, costSignal).map { case (resources, ants, cost) =>
       resources.hasResources(cost) && ants.hasIdleWorkersForCost(cost)

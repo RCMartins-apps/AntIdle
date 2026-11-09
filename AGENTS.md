@@ -38,6 +38,9 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/PheromoneTrails.scala`: finite nectar sources, guide reservations and trail workers.
 - `game/TerritoryProgression.scala`: held crews, pending hauls, recurring contests and withdrawal.
   Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
+- `game/balance/UpgradeBalance.scala`: upgrade prices, help and structured reveal prerequisites; see docs/BALANCING.md.
+- `game/UpgradeResearch.scala`: shared visibility/purchase validation for UI, actions and simulator.
+- `game/ExplorationDestination.scala`, `ExplorationProgression.scala`: explicit destination values, shared progression gate and supplies tiers.
 - `game/UpgradeVisibility.scala`, `ResourceVisibility.scala`: visibility reconciliation.
 - `game/saves/`: serialization, restoration and load-time reconciliation.
 - `tools/balance/` (repository root): seeded real-engine pacing runner, policy config, portable reports and checkpoint saves; see its README.

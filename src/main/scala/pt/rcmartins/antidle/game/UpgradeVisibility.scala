@@ -9,9 +9,7 @@ object UpgradeVisibility {
   def reconcile(data: AllData): AllData =
     BroodProgression.reconcile(TerritoryProgression.reconcile(PheromoneTrails.reconcile(RoyalBroodProgression.reconcile(OutpostProgression.reconcile(RepleteProgression.reconcile(Construction.reconcile(ChamberBonuses.reconcileProteinCapacity(DiscoveryProgression.unlockTasks(UpgradeType.all.foldLeft(data) { (current, upgrade) =>
       val status = current.upgrades(upgrade)
-      val explorationUnlocked = current.unlocks.tabs.exploreTabUnlocked || current.upgrades(UpgradeType.UnlockExplorerTask).unlocked
-      val visible = status.unlocked || ((status.show || upgrade.shouldShow(current)) &&
-        (upgrade.cost.knowledge == 0L || explorationUnlocked))
+      val visible = UpgradeResearch.isVisible(current, upgrade)
       if (status.show != visible)
         current.modify(_.upgrades).using(_.modify(upgrade)(_.copy(show = visible)))
       else current

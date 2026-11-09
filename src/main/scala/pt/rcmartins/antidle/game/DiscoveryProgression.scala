@@ -12,13 +12,13 @@ object DiscoveryProgression {
   val WildAphids = Discovery("wild-aphids", "Wild Aphids", "woodland-edge", 5,
     "Research Aphid Tending in Upgrades to unlock a new sugar-producing worker task.")
   val SeedCache = Discovery("seed-cache", "Seed Cache", "nectar-meadow", 3,
-    "Reveals Seed Gathering at exploration level 5: guaranteed protein without carcass retrieval.")
+    s"Reveals Seed Gathering at exploration level ${ExplorationDestination.SeedGathering.requiredLevel}: guaranteed protein without carcass retrieval.")
   val DryTrail = Discovery("dry-trail", "Dry Trail", "rotten-log", 4,
-    "Reveals the Dry Clearing at exploration level 6. Survey it to locate water sources.")
+    s"Reveals the Dry Clearing at exploration level ${ExplorationDestination.DryClearing.requiredLevel}. Survey it to locate water sources.")
   val DewPlants = Discovery("dew-plants", "Dew-covered Plants", "dry-clearing", 3,
     "Unlocks water scavenging, Replete Storage research and establishing the Dry Clearing Outpost in Nest.")
   val ResinSeep = Discovery("resin-seep", "Resin Seep", "fallen-pine", 3,
-    "Reveals Collect Resin expeditions and Royal Nursery Planning research at exploration level 8.")
+    s"Reveals Collect Resin expeditions and Royal Nursery Planning research at exploration level ${UpgradesData.UpgradeType.RoyalNurseryPlanning.definition.requirements.minimumExplorationLevel}.")
   val ContestedGround = Discovery("contested-ground", "Contested Foraging Ground", "rival-food-cache", 1,
     "A rival colony contests a rich food source. Hold it from Territory for recurring protein and disclosed losses.")
   val all: List[Discovery] = List(ContestedGround, WildAphids, SeedCache, DryTrail, DewPlants, ResinSeep)

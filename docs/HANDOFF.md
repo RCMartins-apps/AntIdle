@@ -1,35 +1,31 @@
 # Handoff
 
-## Last verified: 2026-11-09 — real-engine balance lab
+## Last verified: 2026-11-09 — upgrade/exploration balance definitions
 
-- Branch `tools/balance-simulator` starts from merged PR #53 (`f550d9c`); intermediate
-  checkpoint `8c2b2cf` was pushed. User requested implementation, not a PR/merge.
-- Implemented headless Scala.js `balance` subproject reusing actual game ticks,
-  shared pure unlock/post-action rules, seeded configurable labor/research/party
-  policies, standalone interactive HTML, JSON/CSV, baseline deltas and real import
-  saves at eight milestone families. Entry: `python3 scripts/balance.py --out NEW`.
-  See tools/balance/README.md, INITIAL_RESULTS.md and D33.
-- No balance values/game content/save schema changed. Browser subscription unlocks
-  now reconcile in actions/ticks, so headless and player progression use the same
-  rules. Existing UI disclosure behavior remains covered by production tests.
-- Verified 245 engine + 4 balance tests, production fullOptJS, Python packaging
-  test, production browser gate at 390/1280px, report controls/layout and loading
-  all eight checkpoint families into production at both widths. Baseline report
-  browser check covers comparison rendering; repeated short CLI runs matched
-  exactly. CLI build/run tested with and without --skip-build.
-- Default six-run benchmark (three policies, two seeds, four-hour/run budget)
-  took ~84s excluding build: five runs reached two foundings; exploration-first/42
-  reached one and was still progressing. Zero starvation deaths. Pacing is policy
-  evidence, not optimality/fun or a proposed balance target. Baselines are
-  informational; human normal-speed checks remain needed. Initial measured
-  results persist in tools/balance/INITIAL_RESULTS.md; generated reports stay /tmp.
-- PR workflow now runs balance/test and Python report packaging alongside normal
-  validation. Not yet verified by a new GitHub PR; docs-only skip policy unchanged.
-- Follow-up D34 records the owner's ≥80% enjoyment aspiration and priority of
-  easily editable balance/unlock definitions. VISION and AGENTS reflect it;
-  no satisfaction percentage measured and no wider configuration refactor done.
-  This follow-up is documentation-only: relative paths and diff whitespace checked.
-- No waste mechanic/new Understanding authorized by this work; those remain
-  separate design tasks. Main's earlier CI/docs work is merged.
-- Preserve unrelated untracked `work/` and `tests/__pycache__/`; scripts/__pycache__
-  is a generated local Python cache, not source. No generated builds/reports staged.
+- Main baseline: PR #54 merged the balance lab as `f7a29c5`; its GitHub production
+  build, engine, balance, packaging and phone/desktop browser checks all passed.
+- Completed branch `refactor/balance-unlock-definitions` starts from that main.
+  Owner approved implementation; no PR/merge requested for this branch yet.
+- UpgradeBalance centralizes upgrade prices/help and structured reveal conditions.
+  UpgradeType save IDs and display order stay stable. UpgradeResearch shares
+  visibility and validated one-time purchasing across UI, actions and simulator;
+  engine rejects locked/unaffordable/repeated purchases. Earned visibility and
+  Knowledge gating remain unchanged, including legacy/load reconciliation.
+- Destination tuning uses named arguments; UI and departure checks share the
+  level/discovery gate. Supplies levels/prices share tier definitions; milestone
+  and discovery hints derive levels rather than repeating numbers.
+- docs/BALANCING.md maps editing locations, units and effect modules, explains
+  visibility versus affordability and gives a baseline/playtest workflow. See D35.
+  Effects stay with mechanics; no universal configuration framework added.
+- Verified production fullOptJS (zero Closure errors/warnings), 251 engine tests
+  (six new catalog/requirements/purchase/persistence/route/supplies tests), four
+  balance tests, and production browser checks at 390/1280px. Browser CI now also
+  checks research visible-but-unaffordable, enabling at its price, charging once
+  and hiding the purchased action; advanced Knowledge research stays hidden.
+- Fresh before/after six-run comparisons matched complete Run results exactly:
+  milestones/events/samples/waits/deaths/decisions. All 100 checkpoint states
+  matched except export timestamps. No balance/content/save-schema changes.
+  Generated reports/logs remain /tmp; new GitHub PR CI not run yet.
+- Wider effect/chamber/brood consolidation, waste, new Understandings and actual
+  pacing changes remain separate work. The ≥80% enjoyment goal needs real feedback.
+- Preserve unrelated untracked work/ and Python caches; none are staged.
