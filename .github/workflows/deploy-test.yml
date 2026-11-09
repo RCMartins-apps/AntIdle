@@ -6,8 +6,16 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
+  changes:
+    uses: ./.github/workflows/game-changes.yml
+
   test:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.run_game_jobs == 'true') }}
     runs-on: ubuntu-latest
 
     steps:

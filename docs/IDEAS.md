@@ -40,4 +40,5 @@ unlock maintenance mechanics early after a prestige (D29).
 
 Evaluate whether waste creates worthwhile worker/space choices beyond existing
 food upkeep and brood nursing. If it is only an additional compulsory labor tax,
-revise or defer it. The owner has authorized recording the idea, not building it.
+revise or defer it. The owner has authorized recording and merging this design proposal as
+documentation, not building the mechanic.

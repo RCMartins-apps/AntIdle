@@ -131,7 +131,8 @@ Explore and Lineage components gradually as they change, keeping domain rules
 outside UI code and sharing requirement/bonus view models. Avoid a full rewrite.
 
 The Python browser smoke suite is extensive, but `.github/workflows/deploy-test.yml`
-only runs `sbt fullOptJS` and `sbt test`. Add a small reliable mobile/desktop browser
+validates the production build and engine tests, with documentation-only skips
+now provided by PR #50. Browser checks are not yet included. Add a small reliable mobile/desktop browser
 subset to CI covering navigation, disclosure persistence and founding/reset gates.
 Prioritize these failure classes over more cosmetic snapshot tests. A concise
 next-goal indicator may help progression if playthroughs show players getting

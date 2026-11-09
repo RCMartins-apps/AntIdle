@@ -1,0 +1,27 @@
+name: Classify changed files
+
+on:
+  workflow_call:
+    outputs:
+      run_game_jobs:
+        description: Whether non-documentation files changed
+        value: ${{ jobs.classify.outputs.run_game_jobs }}
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    outputs:
+      run_game_jobs: ${{ steps.changes.outputs.run_game_jobs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Classify changes
+        id: changes
+        run: python3 scripts/ci_changes.py
+      - name: Verify classification policy
+        if: steps.changes.outputs.run_game_jobs == 'true'
+        run: python3 tests/ci_changes_test.py

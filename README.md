@@ -20,6 +20,16 @@ python3 -m http.server 8000
 Open the served `index.html`. Use `sbt '~fastOptJS'` to rebuild while developing.
 Production validation follows CI: `sbt fullOptJS test`.
 
+PR tests and deployment share a lightweight change check. Changes limited to
+`docs/**` and root Markdown files skip game builds/tests and deployment; a mixed
+or non-documentation change runs normal validation. The workflows still report
+completed/skipped job statuses, so documentation PRs do not leave required checks
+pending. Manual PR-test dispatch always validates the game. Main deployment and
+same-repository `debug*` PR deployment retain their existing branch restrictions.
+Unknown comparisons run validation conservatively. Check the policy locally with
+`python3 tests/ci_changes_test.py`.
+
+
 On phones (up to 767 CSS pixels), panels fit the screen, tabs scroll horizontally,
 and actions use full-width touch targets. Tap the **info icon** beside an action to expand its
 explanations and effects. The icon has a 44px touch target and also supports

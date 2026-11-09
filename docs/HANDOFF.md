@@ -1,25 +1,22 @@
 # Handoff
 
-## Last verified: 2026-11-09 — game review and recorded waste idea
+## Last verified: 2026-11-09 — waste design/review documentation
 
-- Branch `docs/game-state-and-waste` from merged main `a3b5ac1` (PR #49).
-  Previous Lineage/copy, outpost/Royal disclosure and Nursery-after-prestige
-  work is merged. Last merged CI passed 242 engine tests.
-- Owner asked to record waste/maintenance interest without choosing its timing.
-  D30 and [IDEAS.md](IDEAS.md) preserve that distinction. Carriers, refuse
-  chambers and capped overflow effects remain proposals; no unlock stage or
-  implementation is approved. VISION links the record under possibilities.
-- [GAME_REVIEW.md](GAME_REVIEW.md) is a dated source/design assessment, not a
-  new timed playthrough. Strong first-colony/brood/resource-chain foundation;
-  prestige depth is the main concrete content gap (one purchasable Understanding,
-  fixed 1 DNA per founding). Whole-run balance still needs measurement.
-- Proposed priorities: measure first/second runs, design the next introductory
-  prestige, add a small browser CI gate and extract UI incrementally, deepen one
-  exploration/outpost branch, then reassess waste placement. These are review
-  recommendations, not authorized implementation tasks.
-- Reviewed economy, discoveries, prestige, outpost, recovery, statistics, save
-  loading and CI configuration. Documentation only; no game build/tests rerun.
-  Local Markdown link targets and git diff --check passed.
-- Documentation committed/pushed on this branch by standing authorization.
-  No PR/merge requested for this task.
+- Branch `docs/game-state-and-waste` now includes main `ba09da5` (PR #50), whose
+  shared workflow classifier skips expensive game jobs for docs-only changes.
+  Code-change classification and full engine/build CI passed before merge.
+- Owner requested recording waste interest, then authorized this documentation
+  PR and merge. D31/IDEAS preserve undecided timing and tentative mechanics;
+  this is not authorization to implement waste gameplay.
+- GAME_REVIEW is a dated source/design assessment against gameplay main `a3b5ac1`:
+  strong first-colony foundation; next prestige step is the main content gap.
+  Whole-run balance still needs measurement. Recommendations are not approved
+  new gameplay tasks. Waste stays tentative until its role/timing is chosen.
+- Local Markdown links and git diff --check passed. This branch's diff from main
+  must contain docs/root Markdown only. Its PR and resulting main push should
+  exercise the new skip behavior; verify game test/deploy jobs are skipped.
+- User also asked for safe improvements without further design feedback. A small
+  production browser CI gate is being prepared next; draft tests passed locally
+  at 390/1280px and cover disclosures, task geometry, navigation, launch and reset.
+- Prior merged engine baseline: 242. No game builds/tests rerun for docs alone.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.
