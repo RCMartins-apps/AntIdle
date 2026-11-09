@@ -608,3 +608,14 @@ for that design record. See [IDEAS.md](IDEAS.md). Waste carriers, refuse chamber
 funded by tunnelling space and capped overflow effects remain proposals, not
 approved implementation requirements. Do not infer a Nursery-stage unlock or
 a prestige placement from the earlier discussion.
+
+
+## D32: Add a focused production browser CI gate — implemented improvement
+
+For the owner's request to work on improvements needing no new gameplay design,
+add a small phone/desktop regression gate to non-doc PR validation. It serves the
+production bundle at 390/1280px and covers founding labels/help, stable outpost
+details, task-info geometry, navigation/launch and prestige/reset resource gates.
+Use existing save/clock helpers; upload screenshots on failure. Keep larger
+feature-specific suites available separately. Docs-only PRs still skip the whole
+game test job, including browser installation and checks. No gameplay changes.

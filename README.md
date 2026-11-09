@@ -26,7 +26,12 @@ or non-documentation change runs normal validation. The workflows still report
 completed/skipped job statuses, so documentation PRs do not leave required checks
 pending. Manual PR-test dispatch always validates the game. Main deployment and
 same-repository `debug*` PR deployment retain their existing branch restrictions.
-Unknown comparisons run validation conservatively. Check the policy locally with
+Unknown comparisons run validation conservatively. Non-documentation PRs also
+run a small production-bundle browser gate at 390px and 1280px, covering navigation,
+disclosure stability, task controls, launching, founding and remembered resources.
+Failure screenshots are uploaded as workflow artifacts. The broader smoke suite
+remains available for feature-specific checks. Run this gate locally after
+`fullOptJS` with `python3 tests/ci_browser_smoke.py`. Check the change policy with
 `python3 tests/ci_changes_test.py`.
 
 
