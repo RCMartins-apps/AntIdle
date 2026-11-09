@@ -1,25 +1,20 @@
 # Handoff
 
-## Last verified: 2026-11-09 — CI improvements and waste record merged
+## Work in progress: 2026-11-09 — balance lab
 
-- Gameplay baseline includes merged PR #49 (Lineage/copy and Nursery reset fix).
-- PR #50 (`ba09da5`) merged shared documentation-only detection: `docs/**` and
-  root Markdown skip game tests/build/deploy; mixed/code/config/test changes run.
-  Job-level skips preserve completed statuses; unknown comparisons validate;
-  manual test dispatch validates. Main/debug deployment restrictions remain.
-- PR #51 (`23a63b6`) merged IDEAS/GAME_REVIEW and D31. Waste interest is recorded;
-  timing and exact mechanics remain undecided, with no waste gameplay authorized.
-  Real docs-only PR game tests and its main-push deployment both skipped, verified.
-- PR #52 (`d1554b9`) merged the production browser CI gate at 390/1280px. It checks
-  founding labels/help, outpost disclosure persistence, task geometry, navigation,
-  expedition launch, prestige/reset, Nursery gating and persistent protein.
-  Uses fullOptJS output, pinned Playwright and its installed browser on GitHub;
-  uploads screenshots on failure. Docs-only jobs skip browser setup too.
-- Verified local production browser gate at both widths, six classifier tests,
-  real Git range/rename cases, YAML/links/diff checks, and GitHub CI: production
-  build, all 242 engine tests and both browser viewports pass. No game/balance/save
-  changes were introduced by the CI work. Broader feature smoke suites stay manual.
-- GAME_REVIEW's main remaining recommendations are measured first/second-run
-  pacing, the next meaningful prestige goal and incremental UI extraction. They
-  do not authorize implementing a new Understanding or waste mechanic.
+- Branch `tools/balance-simulator` starts from merged PR #53 (`f550d9c`).
+- User approved a balance tool: real-engine seeded policies, milestone/wait/stock
+  reports, baseline comparisons and playable checkpoints. No balance changes.
+- First implementation under `tools/balance`, Python entry `scripts/balance.py`.
+  Three configurable population/exploration policies; standalone interactive HTML,
+  JSON/CSV and normal import saves. See tools/balance/README.md and D33.
+- Unlock rules moved from browser subscriptions to pure reconciliation shared
+  with actions and ticks; browser regression gate remains essential.
+- First build passed. Trial balanced/42 reached first founding at 7830 simulated
+  seconds. Its second run exposed an overly expensive idle-worker reservation
+  policy; strategy revised. These are preliminary policy results, not balance
+  conclusions. Full test/build/browser verification and longer runs in progress.
+- PR CI now includes balance/test and Python report packaging; not yet verified
+  on GitHub. This checkpoint is not ready to merge.
+- Waste remains recorded only; no new Understanding or gameplay balance approved.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`.

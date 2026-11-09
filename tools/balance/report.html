@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ant Idle balance lab</title>
+<style>body{font:16px system-ui;max-width:1100px;margin:auto;padding:20px;background:#111b20;color:#e7f0ed}select,button{font:inherit;padding:8px;margin:4px;background:#263b42;color:inherit}section{padding:16px;background:#192a30;margin:16px 0;border-radius:12px}table{border-collapse:collapse;width:100%;font-size:14px}td,th{text-align:left;padding:8px;border-bottom:1px solid #415258}svg{width:100%;height:250px;background:#102027}a{color:#82ded0}pre{white-space:pre-wrap;max-height:400px;overflow:auto}.scroll{overflow:auto}small{color:#b9cec8}</style>
+<h1>Ant Idle balance lab</h1><p>Real game ticks at 1× simulated speed. Policies are heuristics, not optimal players. Waiting below means this policy chose no action; it does not prove every player must wait. Fun still needs short human play sessions.</p>
+<label>Run <select id="run"></select></label><p id="summary"></p>
+<section><h2>Milestone pacing</h2><p id="comparison"></p><div class="scroll"><table><thead><tr><th>Colony</th><th>Milestone</th><th>Total time</th><th>This colony</th><th>Baseline Δ</th><th>Checkpoint</th></tr></thead><tbody id="milestones"></tbody></table></div></section>
+<section><h2>Stocks and workforce</h2><label>Measure <select id="metric"></select></label><svg id="chart" viewBox="0 0 1000 250" role="img" aria-label="Selected measure over simulated time"></svg><p id="extent"></p><small>Headcounts are adults, not equivalent output. Food workers group aphid tenders, seed foragers and scraps gatherers. Samples can hide brief spikes.</small></section>
+<section><h2>Longest policy waits</h2><div class="scroll"><table><thead><tr><th>Colony</th><th>Goal</th><th>Missing / waiting for</th><th>Duration</th></tr></thead><tbody id="waits"></tbody></table></div></section>
+<section><h2>Storage occupancy</h2><p>Measured across all ticks, including before a resource is unlocked. Knowledge has no practical cap.</p><table><thead><tr><th>Resource</th><th>At zero</th><th>At capacity</th></tr></thead><tbody id="resources"></tbody></table></section>
+<section><h2>Decision trace</h2><small>Strategic decisions include batch assignments/orders; they are not literal UI clicks. Opening manual gathering clicks are counted separately.</small><pre id="events"></pre></section>
+<section><h2>Reproducibility</h2><pre id="config"></pre></section>
+<script>
+const report=/*REPORT_DATA*/null;
+const el=id=>document.getElementById(id), time=t=>{let s=Math.round(t/report.ticksPerSecond);return `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m ${s%60}s`};
+function row(parent,values){const tr=document.createElement('tr');values.forEach(v=>{const td=document.createElement('td');if(v instanceof Node)td.append(v);else td.textContent=v;tr.append(td)});parent.append(tr)}
+report.runs.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${r.policy.name} · seed ${r.seed}`;el('run').append(o)});
+['sugar','protein','knowledge','water','resin','tunneling','workers','smallWorkers','scouts','sugarWorkers','foodWorkers','careWorkers','tunnelers','awayWorkers'].forEach(k=>{let o=document.createElement('option');o.textContent=k;el('metric').append(o)});
+function render(){const r=report.runs[+el('run').value],base=report.baseline?.runs.find(b=>b.policy.name===r.policy.name&&b.seed===r.seed);
+el('summary').textContent=`${r.status} · ${time(r.ticks)} · ${r.completedFoundings} foundings · ${r.actions} strategic decisions · ${r.manualClicks} gathering clicks · ${r.agingDeaths} aging deaths · ${r.starvationDeaths} starvation deaths`;
+el('comparison').textContent=report.baseline?(base?(JSON.stringify(base.policy)!==JSON.stringify(r.policy)||report.baseline.config.decisionTicks!==report.config.decisionTicks||report.baseline.config.openingClicks!==report.config.openingClicks?'Warning: policy or decision/click assumptions differ. Deltas are not a controlled comparison.':'Matching policy/decision/click assumptions. Deltas are informational; check complete configurations and observation budgets.'):'No matching baseline run.'):'No baseline supplied.';
+['milestones','waits','resources'].forEach(id=>el(id).replaceChildren());
+r.milestones.forEach(m=>{let a=document.createElement('a');a.href=`checkpoints/${m.checkpoint.replace(/\.json$/,'.save.txt')}`;a.textContent='Import save';a.download='';let b=base?.milestones.find(x=>x.colony===m.colony&&x.name===m.name);row(el('milestones'),[m.colony+1,m.name,time(m.tick),time(m.colonyTicks),b?`${m.colonyTicks>=b.colonyTicks?'+':'−'}${time(Math.abs(m.colonyTicks-b.colonyTicks))}`:'—',a])});
+[...r.waits].sort((a,b)=>(b.end-b.start)-(a.end-a.start)).slice(0,15).forEach(w=>row(el('waits'),[w.colony+1,w.goal,w.missing.join(', ')||'policy prerequisites',time(w.end-w.start)]));
+r.resourceTimes.forEach(x=>row(el('resources'),[x.name,time(x.emptyTicks),time(x.fullTicks)]));
+el('events').textContent=r.events.map(e=>`${time(e.tick)} [colony ${e.colony+1}] ${e.action}`).join('\n')+(r.eventTraceTruncated?'\nTrace truncated at 20,000; counts include all decisions.':'');
+el('config').textContent=JSON.stringify({provenance:report.provenance,config:report.config,policy:r.policy},null,2);
+chart()}
+function chart(){const r=report.runs[+el('run').value],k=el('metric').value,values=r.samples.map(s=>s[k]),max=Math.max(1,...values),svg=el('chart');svg.replaceChildren();const path=document.createElementNS('http://www.w3.org/2000/svg','polyline');path.setAttribute('points',r.samples.map(s=>`${30+940*s.tick/Math.max(1,r.ticks)},${220-190*s[k]/max}`).join(' '));path.setAttribute('fill','none');path.setAttribute('stroke','#72dbbd');path.setAttribute('stroke-width','2');svg.append(path);el('extent').textContent=`${k}: 0–${max.toFixed(1)} · time: 0–${time(r.ticks)}`}
+el('run').onchange=render;el('metric').onchange=chart;render();
+</script></html>

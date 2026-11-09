@@ -1161,3 +1161,10 @@ at 320/390/1920px; outpost progression checks cover upgraded rates and staffing.
 After founding, remembered protein stays visible but does not reveal Nursery
 Chamber during the small-worker phase. Normal Nursery access returns with
 standard-worker progression; already-built Nurseries remain visible.
+
+## Balance experiments
+
+Run `python3 scripts/balance.py --out /tmp/antidle-balance` for seeded real-engine
+strategy comparisons, a portable interactive report and importable milestone saves.
+See [Balance lab](tools/balance/README.md) for setup, assumptions and how to combine
+simulation with short normal-speed playtests.

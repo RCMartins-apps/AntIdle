@@ -1,155 +1,46 @@
 package pt.rcmartins.antidle.game
 
-import com.raquo.airstream.ownership.Subscription
-import com.raquo.laminar.api.L.{u => _, _}
-import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants.u
-import pt.rcmartins.antidle.game.Utils._
-import pt.rcmartins.antidle.model.BasicResources.BasicResource
-import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 import pt.rcmartins.antidle.model._
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 
-import scala.util.chaining.scalaUtilChainingOps
-
+/** Pure progression shared by the browser and headless balance runs. */
 object UnlockUtils {
-
-  def checkUnlocks(initialAllData: AllData)(implicit owner: SubscriptionManager): Unit = {
-    unlockSubscription[BasicResource](
-      sugarSignal,
-      _ >= 5 * u,
-      _ =>
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.actions.canLayEggs).setTo(true)),
-        ),
-      initialAllData.unlocks.actions.canLayEggs,
-    )
-
-    unlockSubscription[AntsData](
-      antsSignal,
-      _.eggsAndLarvae.nonEmpty,
-      _ =>
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.resources.showEggs).setTo(true))
-        ),
-      initialAllData.unlocks.resources.showEggs,
-    )
-
-    unlockSubscription[Long](
-      workersSignal,
-      _ >= 1 * u,
-      _ => {
-        Var.update(
-          unlocksData ->
-            ((_: Unlocks).modifyAll(_.tabs.antTasksUnlocked, _.resources.showWorkers).setTo(true)),
-          antsData -> ((_: AntsData).unlockTask(AntTask.SugarCollector)),
-        )
-        addMessage("We should give our ants some tasks to do. Let's start with collecting sugars.")
-      },
-      initialAllData.unlocks.tabs.antTasksUnlocked,
-    )
-
-    unlockSubscription[Long](
-      antAndBroodCount,
-      _ >= 5 * u,
-      _ => {
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.actions.canBuildNestUpgrade).setTo(true)),
-        )
-        addMessage("We should upgrade our nest to be able to hold more ants.")
-      },
-      initialAllData.unlocks.actions.canBuildNestUpgrade,
-    )
-
-    unlockSubscription[Seq[BuildTask]](
-      buildQueueSignal,
-      _.nonEmpty,
-      _ => {
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.tabs.buildQueueUnlocked).setTo(true)),
-          antsData -> ((_: AntsData).unlockTask(AntTask.Tunneler)),
-        )
-        addMessage("Assign some of our ants as tunnelers.")
-      },
-      initialAllData.unlocks.tabs.buildQueueUnlocked,
-    )
-
-    unlockSubscription[BasicResource](
-      tunnelingSpaceSignal,
-      _ > 0,
-      _ => {
-        Var.update(
-          unlocksData -> ((_: Unlocks).modifyAll(_.resources.showTunnelingSpace).setTo(true)),
-        )
-        addMessage("Tunneling Space is the main resource needed to build new chambers.")
-      },
-      initialAllData.unlocks.resources.showTunnelingSpace,
-    )
-
-    unlockSubscription[Boolean](
-      nestSignal.map(_.chambers.nestChamber.level > 0),
-      identity,
-      _ => Var.update(unlocksData -> ((_: Unlocks).modify(_.tabs.upgradesTabUnlocked).setTo(true))),
-      initialAllData.unlocks.tabs.upgradesTabUnlocked,
-    )
-
-    unlockSubscription[BasicResource](
-      knowledgeSignal,
-      _ > 0,
-      _ => Var.update(unlocksData -> ((_: Unlocks).modify(_.resources.showKnowledge).setTo(true))),
-      initialAllData.unlocks.resources.showKnowledge,
-    )
-
-    unlockSubscription[UpgradesData](
-      upgradesSignal,
-      _(UnlockQueensChamber).unlocked,
-      _ =>
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.actions.canBuildQueenChamber).setTo(true)),
-        ),
-      initialAllData.upgrades(UnlockQueensChamber).unlocked,
-    )
-
-    unlockSubscription[UpgradesData](
-      upgradesSignal,
-      _(UnlockFoodStorageChamber).unlocked,
-      _ =>
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.actions.canBuildFoodStorageChamber).setTo(true)),
-        ),
-      initialAllData.upgrades(UnlockFoodStorageChamber).unlocked,
-    )
-
-    unlockSubscription[UpgradesData](
-      upgradesSignal,
-      _(UnlockExplorerTask).unlocked,
-      _ =>
-        Var.update(
-          unlocksData -> ((_: Unlocks).modify(_.tabs.exploreTabUnlocked).setTo(true)),
-          antsData -> ((_: AntsData).unlockTask(AntTask.Explorer)),
-        ),
-      initialAllData.upgrades(UnlockExplorerTask).unlocked,
-    )
+  def reconcile(initial: AllData): AllData = {
+    val old = initial.unlocks
+    val hasWorkers = initial.ants.workers >= u
+    val building = initial.nestAttributes.buildQueue.nonEmpty
+    val canExpand = initial.ants.populationCount >= 5
+    val dug = initial.basicResources.tunnelingSpace.amount > 0L
+    val exploring = initial.upgrades(UnlockExplorerTask).unlocked
+    val next = old.copy(
+      actions = old.actions.copy(
+        canLayEggs = old.actions.canLayEggs || initial.basicResources.sugar.amount >= 5L * u,
+        canBuildNestUpgrade = old.actions.canBuildNestUpgrade || canExpand,
+        canBuildQueenChamber = old.actions.canBuildQueenChamber || initial.upgrades(UnlockQueensChamber).unlocked,
+        canBuildFoodStorageChamber = old.actions.canBuildFoodStorageChamber || initial.upgrades(UnlockFoodStorageChamber).unlocked),
+      tabs = old.tabs.copy(
+        antTasksUnlocked = old.tabs.antTasksUnlocked || hasWorkers,
+        buildQueueUnlocked = old.tabs.buildQueueUnlocked || building,
+        upgradesTabUnlocked = old.tabs.upgradesTabUnlocked || initial.nestAttributes.chambers.nestChamber.level > 0,
+        exploreTabUnlocked = old.tabs.exploreTabUnlocked || exploring),
+      resources = old.resources.copy(
+        showEggs = old.resources.showEggs || initial.ants.eggsAndLarvae.nonEmpty,
+        showWorkers = old.resources.showWorkers || hasWorkers,
+        showTunnelingSpace = old.resources.showTunnelingSpace || dug,
+        showKnowledge = old.resources.showKnowledge || initial.basicResources.knowledge.amount > 0L))
+    var data = initial.copy(unlocks = next)
+    if (hasWorkers) data = data.copy(ants = data.ants.unlockTask(AntTask.SugarCollector))
+    if (building) data = data.copy(ants = data.ants.unlockTask(AntTask.Tunneler))
+    if (exploring) data = data.copy(ants = data.ants.unlockTask(AntTask.Explorer))
+    if (hasWorkers && !old.tabs.antTasksUnlocked)
+      data = data.addMessage("We should give our ants some tasks to do. Let's start with collecting sugars.")
+    if (canExpand && !old.actions.canBuildNestUpgrade)
+      data = data.addMessage("We should upgrade our nest to be able to hold more ants.")
+    if (building && !old.tabs.buildQueueUnlocked)
+      data = data.addMessage("Assign some of our ants as tunnelers.")
+    if (dug && !old.resources.showTunnelingSpace)
+      data = data.addMessage("Tunneling Space is the main resource needed to build new chambers.")
+    data
   }
-
-  private def unlockSubscription[A](
-      valueSignal: Signal[A],
-      triggerThreshold: A => Boolean,
-      unlock: Long => Unit,
-      alreadyUnlockedCondition: Boolean,
-  )(implicit owner: SubscriptionManager): Unit =
-    if (!alreadyUnlockedCondition) {
-      var subscription: Option[Subscription] = None
-      subscription = Some(
-        valueSignal
-          .withCurrentValueOf(currentTickSignal)
-          .foreach { case (value, currentTick) =>
-            if (triggerThreshold(value)) {
-              unlock(currentTick)
-              subscription.foreach(_.kill())
-            }
-          }
-          .tap(owner.track)
-      )
-    }
-
 }

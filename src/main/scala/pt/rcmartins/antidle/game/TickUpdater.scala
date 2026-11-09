@@ -120,6 +120,7 @@ object TickUpdater {
         PopulationAging.reconcile,
         UpgradeVisibility.reconcile,
         DefaultWorkerAssignment.normalize,
+        UnlockUtils.reconcile,
         ResourceVisibility.reconcile,
         // This is the last step to save data if necessary
         allData => {

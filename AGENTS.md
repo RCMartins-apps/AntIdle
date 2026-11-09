@@ -40,6 +40,8 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
   Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
 - `game/UpgradeVisibility.scala`, `ResourceVisibility.scala`: visibility reconciliation.
 - `game/saves/`: serialization, restoration and load-time reconciliation.
+- `tools/balance/` (repository root): seeded real-engine pacing runner, policy config, portable reports and checkpoint saves; see its README.
+- `game/UnlockUtils.scala`, `GameTransition.scala`: pure unlock and post-action rules shared by browser and balance runner.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.
 
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at
