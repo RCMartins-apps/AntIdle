@@ -21,6 +21,20 @@ carcass retrieval, aphid husbandry, finite adult lifespans and living water
 storage in repletes. Extend such connections rather than adding disconnected
 currencies and arbitrary multipliers.
 
+## Player enjoyment and balance iteration
+
+The owner aims for at least 80% of players to enjoy the game, with broader
+satisfaction preferred. This is a design aspiration, not a measured result or
+something simulation can certify. Define the playtest question, player sample
+and progression stage before interpreting a percentage; include struggling and
+less active players rather than judging only successful optimized runs.
+
+Balance must be easy for the owner to inspect and change when returning to a
+full development environment. Unlock timing and prerequisites are a particular
+priority, alongside costs, production, capacity and duration. Prefer clear,
+shared definitions and small, testable changes over scattered special cases.
+Use simulation to investigate pacing and human playtests to assess enjoyment.
+
 ## Progression and pressure
 
 The colony should need better methods because supporting growth creates natural

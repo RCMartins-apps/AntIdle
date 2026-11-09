@@ -25,6 +25,10 @@
   results persist in tools/balance/INITIAL_RESULTS.md; generated reports stay /tmp.
 - PR workflow now runs balance/test and Python report packaging alongside normal
   validation. Not yet verified by a new GitHub PR; docs-only skip policy unchanged.
+- Follow-up D34 records the owner's ≥80% enjoyment aspiration and priority of
+  easily editable balance/unlock definitions. VISION and AGENTS reflect it;
+  no satisfaction percentage measured and no wider configuration refactor done.
+  This follow-up is documentation-only: relative paths and diff whitespace checked.
 - No waste mechanic/new Understanding authorized by this work; those remain
   separate design tasks. Main's earlier CI/docs work is merged.
 - Preserve unrelated untracked `work/` and `tests/__pycache__/`; scripts/__pycache__

@@ -52,6 +52,16 @@ After founding, keep known resources visible while applying current research/
 worker/chamber requirements to action visibility separately.
 Validate gameplay rules in the engine, not only by disabling UI buttons.
 
+## Balance maintainability
+
+Make tuning straightforward for the owner, especially unlock timing and
+prerequisites. Prefer discoverable named balance values and shared predicates;
+keep visibility, engine eligibility and displayed requirements consistent.
+Distinguish visibility from affordability. Avoid duplicating balance numbers in
+UI prose or introducing a generic framework without a concrete need. Automated
+pacing results support human playtests; they do not measure the 80% enjoyment
+aspiration. See D33–D34 and tools/balance/README.md.
+
 ## UI copy and information
 
 Keep default screens compact. Show counts, rates, costs, progress and relevant
