@@ -19,7 +19,7 @@ object BalanceMain {
     require(config.policies.map(_.name).distinct.size == config.policies.size && config.seeds.distinct.size == config.seeds.size)
     config.policies.foreach { p =>
       require(p.name.matches("[a-zA-Z0-9_-]+") && p.earlyPopulation >= 5 && p.population >= 5 && p.royalPopulation >= 5)
-      require(p.partyWorkers >= 1 && p.extraScouts >= 0 && p.extraScouts <= 2 && p.tunnelers >= 0 && p.nurses >= 0 && p.aphids >= 0)
+      require(p.partyWorkers >= 1 && p.partyWorkers <= pt.rcmartins.antidle.game.ExplorationProgression.MaxWorkers / Constants.u && p.extraScouts >= 0 && p.extraScouts <= pt.rcmartins.antidle.game.ExplorationProgression.MaxExtraScouts && p.tunnelers >= 0 && p.nurses >= 0 && p.aphids >= 0)
       require(p.upgradeOrder.distinct.size == p.upgradeOrder.size && p.upgradeOrder.forall(n => pt.rcmartins.antidle.model.UpgradesData.UpgradeType.all.exists(_.name == n)), "Unknown or repeated upgrade")
     }
     def write(path: String, text: String): Unit = {

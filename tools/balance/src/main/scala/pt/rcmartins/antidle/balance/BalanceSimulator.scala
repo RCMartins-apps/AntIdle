@@ -52,7 +52,7 @@ object BalanceSimulator {
     }
     sample()
     while (data.currentTick < config.maxTicks && data.ants.lineage.foundings < config.foundings) {
-      if (colonyClicks < config.openingClicks && data.currentTick % Math.max(1, TicksPerSecond / config.clicksPerSecond) == 0L) {
+      if (colonyClicks < config.openingClicks && (data.currentTick - colonyStart) * config.clicksPerSecond >= colonyClicks.toLong * TicksPerSecond) {
         data = GameTransition.afterAction(data.giveResources(sugar = u)); clicks += 1; colonyClicks += 1
       }
       if (data.currentTick % config.decisionTicks == 0L) {

@@ -35,6 +35,11 @@ class BalanceSuite extends FunSuite {
     assertEquals(run.samples.last.smallWorkers, 0)
     assertEquals(run.waits.map(w => w.end - w.start).sum, 100L)
   }
+  test("opening clicks respect the configured rate on the five-tick grid") {
+    val run = BalanceSimulator.run(config(10), policy, 42L)
+    assertEquals(run.manualClicks, 4)
+    assertEquals(run.samples.last.sugar, 4.0)
+  }
   test("strategy research uses actual prices and only visible unlocks") {
     val initial = AllData.initial
     val d = UpgradeVisibility.reconcile(initial.copy(ants = initial.ants.copy(smallWorkers = 5L * u),

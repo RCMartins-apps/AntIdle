@@ -22,6 +22,8 @@ normal game save schema. They contain the actual simulated colony, not a staged
 approximation. Saves are stamped at export; importing days later can store offline
 time as usual, which you can choose not to spend during a pacing check.
 
+The first measured comparison is recorded in [INITIAL_RESULTS.md](INITIAL_RESULTS.md).
+
 ## What is simulated
 
 `BalanceSimulator` calls `TickUpdater.updateAllData(..., None)` at the real five
@@ -41,7 +43,7 @@ considers the first visible unfinished priority; this is intentionally inspectab
 Each policy makes at most one strategic decision every five simulated seconds.
 A decision can batch orders/assignments, so the count is **not literal UI clicks**.
 Manual sugar gathering is an explicit opening allowance: 50 one-sugar clicks per
-colony, paced at up to two clicks/second (the tick grid rounds intervals). It is
+colony, paced at up to two clicks/second (rounded to the next tick). It is
 recorded separately. There are no other injected resources. Current policies
 pursue safe exploration/discoveries, the outpost and royal brood; they don't
 model voluntary raids/territory or every possible upgrade/expansion. Targets
@@ -93,3 +95,9 @@ Tests check determinism, real resource costs, valid save round-trips, no free
 resources without gathering, and pure/browser unlock parity. PR CI runs the
 Scala suites alongside the existing production browser gate. Long progression
 benchmarks are developer experiments, not pass/fail claims about fun.
+
+For a generated report and checkpoint browser check (after `fullOptJS`):
+
+```sh
+python3 tests/balance_browser_smoke.py /tmp/balance-before
+```

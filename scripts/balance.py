@@ -93,7 +93,8 @@ def main():
         json.loads(baseline.read_text())
     if not args.skip_build:
         subprocess.run([args.sbt, 'balance/fastOptJS'], cwd=ROOT, check=True)
-    bundles = list((ROOT / 'tools/balance/target/scala-2.13').glob('*-fastopt/main.js'))
+    bundles = [path for path in (ROOT / 'tools/balance/target/scala-2.13').glob('*-fastopt/main.js')
+               if not path.parent.name.endswith('-test-fastopt')]
     if len(bundles) != 1:
         parser.error('Build balance/fastOptJS first')
     output.mkdir(parents=True)
