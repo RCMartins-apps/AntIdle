@@ -586,3 +586,15 @@ or an already-built Nursery. Standard Worker Development restores normal access;
 existing chambers are retained. No resource history is cleared and no new save
 field is needed. Regression coverage includes actual founding/reload and the
 subsequent standard-worker research transition.
+
+
+## D30: Skip expensive game jobs for documentation-only changes — approved
+
+The owner requested avoiding game tests and deploys when only documentation
+changes. Shared detection treats `docs/**` and root Markdown as documentation;
+source/build/test/workflow files and mixed changes still run validation. Use
+job-level skips after a lightweight classifier so required check statuses finish
+instead of remaining pending. PR comparison uses the merge base; pushes compare
+the entire before/after range. Include both sides of renames. Unknown/empty
+comparisons conservatively validate; manual test dispatch always validates.
+Preserve main and same-repository debug* deployment restrictions.
