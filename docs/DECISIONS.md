@@ -646,3 +646,16 @@ or purchase it. Expose the meaningful tuning points without building a generic
 configuration framework prematurely. The balance lab is implemented; a wider
 consolidation of existing gameplay definitions remains future work, not completed
 by this documentation update. No unlock or economy values change here.
+
+## D35: Consolidate upgrade and exploration unlock definitions — approved
+
+The owner approved this first maintainability pass after merging the balance lab.
+Keep upgrade save IDs stable, put prices/help and structured reveal requirements
+in `UpgradeBalance`, and share validated purchases between UI, actions and the
+simulator. Preserve earned visibility and existing Knowledge gating. Destination
+values use named arguments; UI visibility and departures share level/discovery
+checks. Supplies levels/costs and their hints share definitions too.
+
+Preserve current balance/content/save schema. This does not relocate every
+mechanic's effects into a universal configuration framework. Document tuning
+locations and verify real-engine pacing against a baseline; see BALANCING.md.

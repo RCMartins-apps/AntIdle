@@ -33,6 +33,29 @@ def check_game(page, width, url):
     page.clock.run_for(400)
     expect(page.locator('.action-details[open]')).to_have_count(1)
     assert_fits(page, width)
+    # Shared research validation: reveal independently of affordability, then
+    # enable at the displayed price and remove the one-time purchase.
+    research = progressed_game(save_game(page))
+    research['ants'].update(workers=0, smallWorkers=0, tasks=[], eggsAndLarvae=[])
+    research['nestAttributes']['chambers']['nestChamber']['level'] = 1
+    research['unlocks']['tabs']['exploreTabUnlocked'] = False
+    research['basicResources']['sugar']['amount'] = 149 * UNIT
+    for upgrade in research['upgrades']['upgrades']:
+        upgrade.update(show=False, unlocked=False)
+    load_game(page, research)
+    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    foraging = page.get_by_role('button', name='Foraging Techniques 1', exact=True)
+    expect(foraging).to_be_disabled()
+    expect(page.get_by_role('button', name='Foraging Techniques 2', exact=True)).to_have_count(0)
+    page.get_by_role('tab', name='Nest', exact=True).click()
+    page.get_by_role('button', name='Gather Sugar', exact=True).click()
+    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    expect(foraging).to_be_enabled()
+    foraging.click()
+    expect(foraging).to_have_count(0)
+    researched = save_game(page)
+    assert researched['basicResources']['sugar']['amount'] == 0
+    assert next(u for u in researched['upgrades']['upgrades'] if u['name'] == 'ImproveSugarCollectorTask1')['unlocked']
     game = progressed_game(save_game(page))
     game['ants'].update(workers=50 * UNIT, scouts=2 * UNIT, daughterQueens=UNIT,
         tasks=[[{'SugarCollector': {}}, 40 * UNIT], [{'Tunneler': {}}, 10 * UNIT], [{'Explorer': {}}, 0]],
@@ -84,7 +107,7 @@ def check_game(page, width, url):
     expect(protein).to_be_visible()
     assert_fits(page, width)
     assert not errors, errors
-    print(f'PASS production {width}px: founding labels, disclosures, task geometry, navigation/launch, prestige/reset and resource visibility', flush=True)
+    print(f'PASS production {width}px: founding labels, disclosures, task geometry, research prices/purchase, navigation/launch, prestige/reset and resource visibility', flush=True)
 
 
 if __name__ == '__main__':

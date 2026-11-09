@@ -6,7 +6,16 @@ import pt.rcmartins.antidle.model._
 
 object ExplorationProgression {
   val MaxLevel: Int = 20
-  val MaxSuppliesLevel: Int = 3
+  case class SuppliesUpgrade(requiredLevel: Int, cost: ActionCost)
+  // One row per upgrade: unlock level and actual displayed/charged price.
+  val suppliesUpgrades: Vector[SuppliesUpgrade] = Vector(
+    SuppliesUpgrade(requiredLevel = 2, cost = ActionCost(sugar = 500L * u, knowledge = 20L * u)),
+    SuppliesUpgrade(requiredLevel = 5, cost = ActionCost(sugar = 1500L * u, knowledge = 80L * u)),
+    SuppliesUpgrade(requiredLevel = 8, cost = ActionCost(sugar = 4500L * u, knowledge = 200L * u)),
+  )
+  val MaxSuppliesLevel: Int = suppliesUpgrades.size
+  val SecondExpeditionSlotLevel: Int = 5
+  val RewardPercentPerLevel: Int = 25
   val MaxWorkers: Long = 37L * u
   val MaxExtraScouts: Int = 3
   val ExtraScoutSugar: Long = 10L * u
@@ -27,7 +36,7 @@ object ExplorationProgression {
     (1 to MaxLevel).reverse.find(threshold(_) <= experience).getOrElse(1)
 
   def maxParties(experience: Long, upgrades: UpgradesData): Int =
-    (if (level(experience) >= 5) 2 else 1) +
+    (if (level(experience) >= SecondExpeditionSlotLevel) 2 else 1) +
       (if (upgrades(UpgradesData.UpgradeType.AdditionalExpeditionSlot).unlocked) 1 else 0)
 
   // 1 worker: 100%, 5: 200%, 17: 300%, 37+: 400%.
@@ -42,7 +51,7 @@ object ExplorationProgression {
   def earned(party: ExplorationParty): Long =
     partyReward(ExplorationDestination.forParty(party).baseXP, party.amountWorkers, party.suppliesLevel)
 
-  def bonusPercent(experience: Long): Int = (level(experience) - 1) * 25
+  def bonusPercent(experience: Long): Int = (level(experience) - 1) * RewardPercentPerLevel
 
   def reward(amount: Long, experience: Long): Long =
     amount + amount * bonusPercent(experience) / 100L
@@ -55,13 +64,12 @@ object ExplorationProgression {
 
   def suppliesRank(data: ExplorationData): Int = Math.max(0, Math.min(MaxSuppliesLevel, data.suppliesLevel))
 
-  def suppliesRequiredLevel(data: ExplorationData): Int = List(2, 5, 8)(Math.min(2, suppliesRank(data)))
+  private def nextSuppliesUpgrade(data: ExplorationData): SuppliesUpgrade =
+    suppliesUpgrades(Math.min(MaxSuppliesLevel - 1, suppliesRank(data)))
 
-  def suppliesCost(data: ExplorationData): ActionCost =
-    ActionCost(
-      sugar = List(500L, 1500L, 4500L)(Math.min(2, suppliesRank(data))) * u,
-      knowledge = List(20L, 80L, 200L)(Math.min(2, suppliesRank(data))) * u,
-    )
+  def suppliesRequiredLevel(data: ExplorationData): Int = nextSuppliesUpgrade(data).requiredLevel
+
+  def suppliesCost(data: ExplorationData): ActionCost = nextSuppliesUpgrade(data).cost
 
   def canUpgradeSupplies(data: ExplorationData, resources: BasicResources): Boolean =
     suppliesRank(data) < MaxSuppliesLevel && level(data.experience) >= suppliesRequiredLevel(data) &&
@@ -80,10 +88,15 @@ object ExplorationProgression {
 
   def nextMilestone(experience: Long): String = {
     val current = level(experience)
-    if (current < 2) "Level 2: expedition supplies"
-    else if (current < 3) "Level 3: Rotten Log"
-    else if (current < 5) "Level 5: second expedition slot & supplies II"
-    else if (current < 8) "Level 8: supplies III"
-    else "Every level improves resource rewards by 25%."
+    // Derive labels from the same tuning values; moving a level moves its hint.
+    val supplies = suppliesUpgrades.zipWithIndex.map { case (tier, index) =>
+      tier.requiredLevel -> (if (index == 0) "expedition supplies" else s"supplies ${"I" * (index + 1)}")
+    }
+    val milestones = List(ExplorationDestination.RottenLog.requiredLevel -> "Rotten Log",
+      SecondExpeditionSlotLevel -> "second expedition slot") ++ supplies
+    milestones.filter(_._1 > current).map(_._1).minOption match {
+      case Some(next) => s"Level $next: ${milestones.filter(_._1 == next).map(_._2).mkString(" & ")}"
+      case None => s"Every level improves resource rewards by $RewardPercentPerLevel%."
+    }
   }
 }

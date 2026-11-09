@@ -91,9 +91,8 @@ object Actions {
   def removeBuildTask(index: Int): Unit =
     actionUpdater.writer.onNext(Construction.cancel(_, index))
 
-  def unlockUpgrade(actionCost: ActionCost, unlockAction: UpgradesData => UpgradesData): Unit =
-    actionUpdater.writer.onNext(_.hasResourcesUpdate(actionCost)(allData =>
-      UpgradeVisibility.reconcile(allData.modify(_.upgrades).using(unlockAction))))
+  def unlockUpgrade(upgrade: UpgradesData.UpgradeType): Unit =
+    actionUpdater.writer.onNext(UpgradeResearch.purchase(_, upgrade))
 
   def getChamber(chamberType: ChamberType): Signal[Chamber] =
     chambersSignal.map { chambers =>

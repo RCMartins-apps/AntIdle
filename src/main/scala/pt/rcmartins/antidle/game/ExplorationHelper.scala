@@ -13,8 +13,7 @@ object ExplorationHelper {
   def canDepart(data: ExplorationData, ants: AntsData, upgrades: UpgradesData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Boolean =
     workers >= destination.minimumWorkers && workers <= ExplorationProgression.MaxWorkers && workers % u == 0 &&
       extraScouts >= 0 && extraScouts <= ExplorationProgression.MaxExtraScouts &&
-      ExplorationProgression.level(data.experience) >= destination.requiredLevel &&
-      destination.requiredDiscovery.forall(DiscoveryProgression.has(data, _)) &&
+      destination.progressionUnlocked(data) &&
       data.explorationParties.size < ExplorationProgression.maxParties(data.experience, upgrades) &&
       ants.availableWorkersCount >= workers && ScoutProgression.available(ants, data) >= destination.scouts + extraScouts.toLong * u
 

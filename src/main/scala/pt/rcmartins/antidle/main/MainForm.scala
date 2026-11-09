@@ -1803,12 +1803,11 @@ object MainForm {
       val costSignal: Signal[ActionCost] = Val(upgradeType.cost)
       actionButton(
         name = upgradeType.title,
-        enabledSignal = hasResourcesSignal(costSignal),
+        enabledSignal = canPurchaseUpgradeSignal(upgradeType),
         descriptionSignal = Val(Some(div(upgradeType.description))),
         costSignal = costSignal,
         bonusSignal = Val(ActionBonus.empty),
-        onClickAction = _ =>
-          useSignalValue[ActionCost](costSignal, cost => Actions.unlockUpgrade(cost, _.unlock(upgradeType))),
+        onClickAction = _ => Actions.unlockUpgrade(upgradeType),
       )
     }
 
