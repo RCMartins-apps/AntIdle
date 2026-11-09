@@ -105,7 +105,9 @@ abandonment works also need design before implementation.
 Further Understandings and challenge colonies follow the first founding loop. Beyond the
 royal brood humidity and feeding implemented in that step, wider humidity,
 pheromone routes, carrying capacity, waste management, injuries and chemical
-records remain suggestions rather than an approved backlog. The existing Brood
+records remain suggestions rather than an approved backlog. The owner asked to
+preserve interest in waste/maintenance on 2026-11-09; its introduction point and
+rules remain undecided. See [recorded ideas](IDEAS.md#waste-and-colony-maintenance). The existing Brood
 Care upgrade speeds ordinary brood; royal care uses its own nurse/feeding system.
 
 Deferred ideas the owner liked: temporary vulnerable food sources that reward

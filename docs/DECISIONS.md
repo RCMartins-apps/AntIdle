@@ -586,3 +586,12 @@ or an already-built Nursery. Standard Worker Development restores normal access;
 existing chambers are retained. No resource history is cleared and no new save
 field is needed. Regression coverage includes actual founding/reload and the
 subsequent standard-worker research transition.
+
+
+## D30: Record waste management; introduction timing remains undecided
+
+On 2026-11-09 the owner requested preserving the waste/colony-maintenance idea
+without choosing when it should enter the game. See [IDEAS.md](IDEAS.md). Waste
+carriers, refuse chambers funded by tunnelling space and capped overflow effects
+are design proposals, not approved implementation requirements. Do not infer a
+Nursery-stage unlock or a prestige placement from the earlier discussion.
