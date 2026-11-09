@@ -6,12 +6,24 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-deploy:
+  changes:
     if: >-
       ${{ github.event_name == 'push' ||
           (startsWith(github.head_ref, 'debug') &&
            github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/game-changes.yml
+
+  build-and-deploy:
+    needs: changes
+    if: >-
+      ${{ needs.changes.outputs.run_game_jobs == 'true' &&
+          (github.event_name == 'push' ||
+          (startsWith(github.head_ref, 'debug') &&
+           github.event.pull_request.head.repo.full_name == github.repository)) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
