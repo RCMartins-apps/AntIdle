@@ -130,11 +130,12 @@ MainForm.scala is still roughly 2,200 lines covering most screens. Extract Nest,
 Explore and Lineage components gradually as they change, keeping domain rules
 outside UI code and sharing requirement/bonus view models. Avoid a full rewrite.
 
-The Python browser smoke suite is extensive, but `.github/workflows/deploy-test.yml`
-validates the production build and engine tests, with documentation-only skips
-now provided by PR #50. Browser checks are not yet included. Add a small reliable mobile/desktop browser
-subset to CI covering navigation, disclosure persistence and founding/reset gates.
-Prioritize these failure classes over more cosmetic snapshot tests. A concise
+The Python browser smoke suite is extensive. Since this review, PR #50 added
+documentation-only job skips and a small production-bundle mobile/desktop browser
+gate has been implemented in deploy-test.yml. It covers navigation, disclosure
+persistence, controls and founding/reset visibility. Broader feature suites remain
+manual. Continue growing targeted coverage around actual regression classes
+rather than adding cosmetic snapshots. A concise
 next-goal indicator may help progression if playthroughs show players getting
 lost; avoid adding tutorials by default.
 
@@ -151,7 +152,7 @@ Keep reset/load/visibility reconciliation tests as new permanent unlocks appear.
 1. Measure a complete first and second run and identify actual pacing/economy gaps.
 2. Define the next introductory prestige reward/goal; this is the largest content
    gap. Use the measurements to place it and choose its resource demands.
-3. Add a small browser CI gate and extract UI components incrementally alongside
+3. Keep the new browser CI gate focused and extract UI components incrementally alongside
    feature work, especially shared visibility and live-control patterns.
 4. Deepen one exploration/outpost branch with distinct decisions rather than
    adding breadth everywhere.
@@ -159,5 +160,6 @@ Keep reset/load/visibility reconciliation tests as new permanent unlocks appear.
    this review does not authorize implementing it.
 
 If choosing one substantial content project now, choose the next meaningful
-prestige step. If choosing one small engineering improvement, choose the browser
-CI gate. Neither recommendation is an approved implementation task yet.
+prestige step. The small browser CI gate has since been implemented; incremental
+UI extraction is the remaining engineering recommendation. Neither the new
+prestige step nor a UI rewrite is authorized by this review.
