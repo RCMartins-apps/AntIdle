@@ -16,7 +16,6 @@ object Utils {
 
   var pause: Boolean = false
   val useCatchupTicksVar: Var[Boolean] = Var(false)
-  val unlocksOwner: SubscriptionManager = new SubscriptionManager
 
   private val defaultMode: Int = 30
   val allSaveModes: Seq[Int] = Seq(0, defaultMode, 60, 180)
@@ -127,8 +126,7 @@ object Utils {
     pause = true
     setInterval(200)(updateState())
     actionUpdater.writer.onNext(
-      _.tap(UnlockUtils.checkUnlocks(_)(unlocksOwner))
-        .tap(allData => lastSavedTick.set(allData.world.currentTick))
+      _.tap(allData => lastSavedTick.set(allData.world.currentTick))
     )
     SaveLoad.loadFromLocalStorage() match {
       case Some(allData) => SaveLoad.reloadDataFromLoadedSave(allData, messageAlert = None)
@@ -238,7 +236,7 @@ object Utils {
               statistics,
               messages,
             )
-          ResourceVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.reconcile(actionFunc(allData)))).updateVars()
+          GameTransition.afterAction(actionFunc(allData)).updateVars()
       }
 
   def giveResources(sugar: Long): Unit =

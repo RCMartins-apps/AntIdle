@@ -619,3 +619,30 @@ details, task-info geometry, navigation/launch and prestige/reset resource gates
 Use existing save/clock helpers; upload screenshots on failure. Keep larger
 feature-specific suites available separately. Docs-only PRs still skip the whole
 game test job, including browser installation and checks. No gameplay changes.
+
+## D33: Measure pacing with real-engine simulations — approved
+
+The owner requested a balance tool on 2026-11-09. Reuse real game ticks and costs,
+seed randomness, make policy assumptions explicit, report milestone pacing and
+waiting/stock/labor evidence, and export playable saves for short human checks.
+Compare controlled baselines without treating every timing change as failure.
+Automated strategies cannot establish fun or optimal play; policy waits are not
+proof of global forced waits. Do not change game balance merely to satisfy a bot.
+The headless Scala.js subproject shares pure unlock rules with the browser;
+reports and runners stay out of the deployed game. See tools/balance/README.md.
+
+## D34: Broad enjoyment and maintainable balance definitions — agreed direction
+
+On 2026-11-09 the owner set an aspiration that at least 80% of players enjoy the
+game and emphasized making balance easy to change personally, especially when
+upgrades/mechanics unlock. This is not an achieved metric or an automated test
+threshold. Player sampling, questions and stages still need definition before
+claiming a satisfaction percentage. Simulation complements real player feedback.
+
+When implementing or refactoring balance, prefer discoverable named values and
+shared prerequisite predicates; keep eligibility, visibility, costs and displayed
+numbers consistent. Distinguish revealing an upgrade from being able to afford
+or purchase it. Expose the meaningful tuning points without building a generic
+configuration framework prematurely. The balance lab is implemented; a wider
+consolidation of existing gameplay definitions remains future work, not completed
+by this documentation update. No unlock or economy values change here.

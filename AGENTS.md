@@ -40,6 +40,8 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
   Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
 - `game/UpgradeVisibility.scala`, `ResourceVisibility.scala`: visibility reconciliation.
 - `game/saves/`: serialization, restoration and load-time reconciliation.
+- `tools/balance/` (repository root): seeded real-engine pacing runner, policy config, portable reports and checkpoint saves; see its README.
+- `game/UnlockUtils.scala`, `GameTransition.scala`: pure unlock and post-action rules shared by browser and balance runner.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.
 
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at
@@ -49,6 +51,16 @@ Permanent resource visibility is history, not a current-colony mechanic unlock.
 After founding, keep known resources visible while applying current research/
 worker/chamber requirements to action visibility separately.
 Validate gameplay rules in the engine, not only by disabling UI buttons.
+
+## Balance maintainability
+
+Make tuning straightforward for the owner, especially unlock timing and
+prerequisites. Prefer discoverable named balance values and shared predicates;
+keep visibility, engine eligibility and displayed requirements consistent.
+Distinguish visibility from affordability. Avoid duplicating balance numbers in
+UI prose or introducing a generic framework without a concrete need. Automated
+pacing results support human playtests; they do not measure the 80% enjoyment
+aspiration. See D33–D34 and tools/balance/README.md.
 
 ## UI copy and information
 

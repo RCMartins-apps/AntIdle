@@ -26,3 +26,15 @@ lazy val root =
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 addCommandAlias("c", "fastOptJS")
+
+// Developer-only executable: reuses game IR without starting the browser main.
+lazy val balance = (project in file("tools/balance"))
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(root)
+  .settings(
+    name := "AntIdleBalance",
+    scalaJSUseMainModuleInitializer := true,
+    Compile / mainClass := Some("pt.rcmartins.antidle.balance.BalanceMain"),
+    scalacOptions ++= ScalacOptions.allScalacOptions,
+    libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,
+  )
