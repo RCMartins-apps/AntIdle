@@ -1714,6 +1714,7 @@ object MainForm {
               s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} tunneling space per second / ant"
             }
           )
+        case AntTask.WaterCollector => div("+0.15 water/s per worker · 5 places")
         case AntTask.SeedForager =>
           div(child.text <-- upgradesSignal.map(upgrades =>
             s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"))
@@ -1787,6 +1788,7 @@ object MainForm {
         case AntTask.Scavenger => div("+0.05 protein/s each")
         case AntTask.AphidTender => div(child.text <-- antsSignal.map(a => s"+${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s each"),
           child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
+        case AntTask.WaterCollector => div("+0.15 water/s each")
         case AntTask.SeedForager => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s each"),
           child.maybe <-- antsSignal.combineWith(resourcesSignal).map { case (ants, resources) =>
             if (ants.taskWorkers(antTask) == 0L) None
@@ -1849,276 +1851,134 @@ object MainForm {
     )
 
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
-    val chosenDestinationVar = Var(ExplorationDestination.Surroundings.id)
-    val unlockedDestinationsSignal = explorationSignal.combineWith(antsSignal, nestSignal).map {
-      case (data, ants, nest) => ExplorationDestination.all.filter(_.isUnlocked(data, ants, nest))
+    val selected = Var("surroundings")
+    val scoutCrew = Var(1)
+    val requestedWorkers = Var(5L * u)
+    val workers = requestedWorkers.signal.combineWith(availableWorkersCountSignal).map {
+      case (n, available) => ExplorationProgression.selectedWorkers(n, available)
     }.distinct
-    val selectedDestinationSignal = chosenDestinationVar.signal.combineWith(unlockedDestinationsSignal).map {
-      case (id, unlocked) => unlocked.find(_.id == id).getOrElse(ExplorationDestination.Surroundings)
-    }.distinct
-    def moveDestination(direction: Int): Unit =
-      useSignalValue[(List[ExplorationDestination], ExplorationDestination)](
-        unlockedDestinationsSignal.combineWith(selectedDestinationSignal), { case (destinations, selected) =>
-          if (destinations.nonEmpty) {
-            val index = destinations.indexOf(selected)
-            chosenDestinationVar.set(destinations(Math.floorMod(index + direction, destinations.size)).id)
-          }
-        })
-    var swipeStart: Option[(Double, Double)] = None
-
-    val amountOfExplorersVar = Var(1L * u)
-    val amountOfExplorersSignal = amountOfExplorersVar.signal.combineWith(availableWorkersCountSignal)
-      .map { case (requested, available) => ExplorationProgression.selectedWorkers(requested, available) }.distinct
-    val extraScoutsVar = Var(0)
-    val extraScoutsSignal = extraScoutsVar.signal.combineWith(availableScoutsSignal).map {
-      case (requested, available) => Math.max(0, Math.min(ExplorationProgression.MaxExtraScouts, Math.min(requested, (available / u).toInt)))
-    }.distinct
-
-    def editWorkers(field: HTMLInputElement, commitEmpty: Boolean): Unit = {
-      val parsed = field.value.toLongOption
-      if (parsed.nonEmpty || commitEmpty) {
-        val requested = parsed.map(n => Math.max(1L, Math.min(ExplorationProgression.MaxWorkers / u, n)) * u)
-          .getOrElse(amountOfExplorersVar.now())
-        useSignalValue[Long](availableWorkersCountSignal, available => {
-          val selected = ExplorationProgression.selectedWorkers(requested, available)
-          amountOfExplorersVar.set(selected)
-          field.value = (selected / u).toString
-        })
+    def scoutAction(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal).map { case (count, data) =>
+        val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings"))
+        if (id == "surroundings") s"$time · reveals one hexagon" else s"$time · ${prettyNumberStr(ExplorationMap.studyReward(data, id))} knowledge"
+      }),
+      actionButton(
+        descriptionSignal = Val(None),
+        name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
+        enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) => ExplorationMap.canScout(data, id, count) },
+        costSignal = scoutCrew.signal.map(ExplorationMap.scoutCost),
+        bonusSignal = Val(ActionBonus.empty),
+        requirementsSignal = availableScoutsSignal.combineWith(scoutCrew.signal, explorationSignal, upgradesSignal).map {
+          case (available, count, data, upgrades) => List(ActionRequirement("scouts", available, count.toLong * u, isCost = true),
+            ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u))
+        },
+        onClickAction = _ => Actions.scoutMap(id, scoutCrew.now()),
+      ).amend(className := "col-12"),
+    )
+    def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(className := "site-haul my-3",
+      b(route.actionName),
+      p(className := "mb-1", child.text <-- explorationSignal.map(data =>
+        s"${prettyNumberStr(ExplorationMap.remaining(data, route.id))} ${ExplorationHelper.resource(route)} remaining")),
+      p(className := "mission-preview", child.text <-- snapshotSignal.combineWith(workers).map { case (data, count) =>
+        ExplorationHelper.summary(data, count, route)
+      }),
+      if (RaidProgression.isRaid(route)) div(className := "text-danger raid-risk", child.text <-- workers.map(RaidProgression.risk)) else emptyNode,
+      actionButton(
+        descriptionSignal = Val(None),
+        name = route.actionName,
+        enabledSignal = snapshotSignal.combineWith(workers).map { case (data, count) => ExplorationHelper.canStart(data, count, route) },
+        costSignal = workers.map(ExplorationHelper.cost(_, route)), bonusSignal = Val(ActionBonus.empty),
+        requirementsSignal = workers.combineWith(explorationSignal, upgradesSignal).map { case (count, data, upgrades) =>
+          List(ActionRequirement("party workers", count, route.minimumWorkers),
+            ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u))
+        },
+        onClickAction = _ => useSignalValue[Long](workers, Actions.explore(_, route)),
+      ).amend(className := "col-12"),
+    )
+    def sitePanel(id: String): ReactiveHtmlElement[HTMLDivElement] = {
+      if (id == "surroundings") div(className := "map-site-card card p-3",
+        h5("Nest surroundings"),
+        p(child.text <-- explorationSignal.map(data => s"${data.revealedSites} / 6 hexagons revealed")),
+        child.maybe <-- explorationSignal.map(_.revealedSites < 6).distinct.map(more => Option.when(more)(scoutAction(id))),
+        child.maybe <-- explorationSignal.map(_.revealedSites >= 6).distinct.map(done => Option.when(done)(span("First ring mapped"))),
+      ) else {
+        val site = ExplorationMap.site(id)
+        div(className := "map-site-card card p-3", h5(site.name),
+          p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
+          child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
+          div(className := "site-worker-controls my-2",
+            label(forId := "map-worker-count", "Collection crew"),
+            div(className := "d-flex gap-2 align-items-center",
+              button(className := "btn btn-outline-secondary", aria.label := "Decrease collection workers", "−",
+                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.max(u, n - u))))),
+              input(idAttr := "map-worker-count", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "1", maxAttr := "37",
+                value <-- workers.map(n => (n / u).toString),
+                onChange --> (event => {
+                  val field = event.target.asInstanceOf[HTMLInputElement]
+                  requestedWorkers.set(Math.max(1L, Math.min(37L, field.value.toLongOption.getOrElse(1L))) * u)
+                })),
+              button(className := "btn btn-outline-secondary", aria.label := "Increase collection workers", "+",
+                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.min(37L * u, n + u))))),
+            ),
+          ),
+          site.routes.flatMap(route => ExplorationDestination.all.find(_.id == route)).map { route =>
+            child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
+              route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L
+            }.distinct.map(available => Option.when(available)(haul(route)))
+          },
+          child.maybe <-- explorationSignal.map(data => ExplorationMap.exhausted(data, id)).distinct.map(done => Option.when(done)(p("Site exhausted"))),
+        )
       }
     }
-
-    def area(destination: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = {
-      val cost = amountOfExplorersSignal.combineWith(extraScoutsSignal).map { case (workers, extra) => ExplorationHelper.cost(workers, destination, extra) }
-      div(
-        className := "col-12 col-md-6 px-3 py-2 exploration-destination",
-        className <-- selectedDestinationSignal.map(selected => if (selected == destination) "destination-selected" else ""),
-        dataAttr("destination") := destination.id,
-        onTouchStart --> { event =>
-          if (window.innerWidth <= 767 && event.touches.length == 1) {
-            val touch = event.touches(0)
-            swipeStart = Some((touch.clientX, touch.clientY))
-          } else swipeStart = None
-        },
-        onTouchCancel --> (_ => swipeStart = None),
-        onTouchEnd --> { event =>
-          swipeStart.foreach { case (x, y) =>
-            if (window.innerWidth <= 767 && event.changedTouches.length == 1) {
-              val touch = event.changedTouches(0)
-              val dx = touch.clientX - x
-              val dy = touch.clientY - y
-              if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-                event.preventDefault()
-                moveDestination(if (dx < 0) 1 else -1)
-              }
-            }
-          }
-          swipeStart = None
-        },
-        div(
-          className := "card p-2 h-100",
-          p(
-            className := "mb-1 destination-preview",
-            child.text <-- amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
-              case (workers, data, extra) => ExplorationHelper.summary(data, workers, destination, extra)
-            },
-            child.maybe <-- explorationSignal.map(data => DiscoveryProgression.hasUnfound(data, destination)).distinct.map { remaining =>
-              Option.when(remaining)(span(className := "badge text-bg-info ms-2 discovery-badge",
-                aria.label := "Discovery still to find", "Discovery"))
-            },
-          ),
-          if (RaidProgression.isRaid(destination)) div(
-            className := "raid-risk text-danger small mb-2",
-            child.text <-- amountOfExplorersSignal.map(workers =>
-              if (workers < destination.minimumWorkers) "Dangerous raid · 10 workers minimum. Combat losses are guaranteed."
-              else RaidProgression.risk(workers)),
-          ) else emptyNode,
-          if (RaidProgression.isRaid(destination)) div(
-            className := "raid-aging text-danger small mb-1",
-            child.text <-- antsSignal.combineWith(currentTickSignal, amountOfExplorersSignal, extraScoutsSignal).map {
-              case (ants, tick, workers, extra) => RaidProgression.ageWarning(ants, tick, workers, extra)
-            },
-          ) else emptyNode,
-          if (RaidProgression.isRaid(destination)) div(
-            className := "raid-storage small mb-1",
-            child.text <-- proteinSignal.map(p => s"Protein storage room: ${prettyNumberStr(p.freeSpace)}"),
-            className <-- proteinSignal.combineWith(amountOfExplorersSignal).map { case (p, workers) =>
-              if (p.freeSpace < RaidProgression.rewardRange(workers)._2) "text-danger" else ""
-            },
-          ) else emptyNode,
-          child.maybe <-- amountOfExplorersSignal.map(workers =>
-            Option.when(workers < destination.minimumWorkers)(
-              small(className := "text-danger destination-minimum mb-1",
-                s"${destination.minimumWorkers / u} workers minimum"))),
-          div(
-            className := "row",
-            actionButton(
-              name = destination.actionName,
-              requirementsSignal = explorationSignal.combineWith(availableScoutsSignal, amountOfExplorersSignal, upgradesSignal, extraScoutsSignal).map {
-                case (data, scouts, workers, upgrades, extra) =>
-                  List(ActionRequirement("expedition slots",
-                    Math.max(0L, ExplorationProgression.maxParties(data.experience, upgrades).toLong - data.explorationParties.size) * u)) ++
-                    Option.when(destination.scouts + extra.toLong * u > 0)(ActionRequirement("scouts", scouts, destination.scouts + extra.toLong * u, isCost = true)) ++
-                    Option.when(destination.minimumWorkers > u)(ActionRequirement("party workers", workers, destination.minimumWorkers))
-              }.distinct,
-              enabledSignal = amountOfExplorersSignal.combineWith(explorationSignal, antsSignal, resourcesSignal, upgradesSignal, extraScoutsSignal)
-                .map { case (workers, data, ants, resources, upgrades, extra) =>
-                  ExplorationHelper.canDepart(data, ants, upgrades, workers, destination, extra) &&
-                    resources.hasResources(ExplorationHelper.cost(workers, destination, extra))
-                },
-              descriptionSignal = amountOfExplorersSignal.combineWith(explorationSignal, extraScoutsSignal).map {
-                case (workers, data, extra) => Some(div(className := "exploration-outcomes", b("Finds: "), ExplorationHelper.outcomePreview(data, workers, destination)))
-              },
-              costSignal = cost,
-              bonusSignal = Val(ActionBonus.empty),
-              onClickAction = _ => useSignalValue[(Long, Int)](amountOfExplorersSignal.combineWith(extraScoutsSignal),
-                selection => Actions.explore(selection._1, destination, selection._2)),
-            ).amend(className := "col-12"),
-          ),
+    div(className := "row exploration-layout hex-exploration",
+      div(className := "col-12 p-3",
+        infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
+        div(className := "d-flex gap-2 align-items-center mb-2",
+          label(forId := "scout-crew", "Scout crew"),
+          select(idAttr := "scout-crew", className := "form-select w-auto",
+            (1 to 3).map(n => option(value := n.toString, n.toString)), value <-- scoutCrew.signal.map(_.toString),
+            onChange.mapToValue.map(_.toInt) --> scoutCrew.writer),
+          span(child.text <-- availableScoutsSignal.combineWith(scoutsSignal).map { case (available, total) => s"${available / u} / ${total / u} available" }),
         ),
-      )
-    }
-
-    div(
-      className := "row exploration-layout",
-      div(
-        className := "col-12 px-3 py-2 expedition-setup",
-        label(forId := "explorer-count", "Workers"),
-        div(className := "expedition-worker-stepper",
-          button(className := "btn btn-outline-secondary", typ := "button",
-            aria.label := "Decrease expedition workers", "−",
-            disabled <-- amountOfExplorersSignal.map(_ <= u),
-            onClick --> (_ => useSignalValue[Long](amountOfExplorersSignal, n => amountOfExplorersVar.set(n - u))),
-          ),
-          input(
-            idAttr := "explorer-count", className := "form-control text-center", typ := "number",
-            inputMode := "numeric", minAttr := "1", stepAttr := "1",
-            maxAttr <-- availableWorkersCountSignal.map(amount => Math.max(1L, Math.min(ExplorationProgression.MaxWorkers / u, amount / u)).toString),
-            disabled <-- availableWorkersCountSignal.map(_ < u),
-            value <-- amountOfExplorersSignal.map(amount => (amount / u).toString),
-            onInput --> (event => editWorkers(event.target.asInstanceOf[HTMLInputElement], commitEmpty = false)),
-            onBlur --> (event => editWorkers(event.target.asInstanceOf[HTMLInputElement], commitEmpty = true)),
-          ),
-          button(className := "btn btn-outline-secondary", typ := "button",
-            aria.label := "Increase expedition workers", "+",
-            disabled <-- amountOfExplorersSignal.combineWith(availableWorkersCountSignal).map {
-              case (amount, available) => amount >= Math.min(ExplorationProgression.MaxWorkers, available / u * u)
-            },
-            onClick --> (_ => useSignalValue[Long](amountOfExplorersSignal, n => amountOfExplorersVar.set(n + u))),
-          ),
-        ),
-        div(className := "d-flex gap-2 flex-wrap worker-presets",
-          children <-- selectedDestinationSignal.combineWith(windowWidthVar.signal.map(_ <= 767).distinct).map { case (destination, mobile) =>
-            val minimum = if (mobile) (destination.minimumWorkers / u).toInt else 1
-            (List(minimum) ++ List(5, 17, 37).filter(_ >= minimum)).distinct.map { workers =>
-              val multiplier = if (workers >= 37) 4 else if (workers >= 17) 3 else if (workers >= 5) 2 else 1
-              button(className := "btn btn-outline-secondary", aria.label := s"Send $workers workers",
-                if (mobile && workers == minimum) s"Min: $workers" else s"$workers · $multiplier×",
-                disabled <-- availableWorkersCountSignal.map(_ < workers.toLong * u),
-                onClick --> (_ => amountOfExplorersVar.set(workers.toLong * u)),
-              )
-            }
+        div(className := "hex-map", role := "group", aria.label := "First exploration ring",
+          button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent := 50,
+            aria.label := "Nest surroundings", "Nest", onClick --> (_ => selected.set("surroundings"))),
+          ExplorationMap.sites.map { site =>
+            button(className := "map-hex", typ := "button", dataAttr("site") := site.id,
+              left.percent := site.x, top.percent := site.y,
+              disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
+              aria.label <-- explorationSignal.map(data => if (ExplorationMap.revealed(data, site.id)) site.name else "Unexplored hexagon"),
+              aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
+              className <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "unexplored" else if (ExplorationMap.exhausted(data, site.id)) "exhausted" else "revealed"),
+              span(child.text <-- explorationSignal.map(data => if (ExplorationMap.revealed(data, site.id)) site.name else "?")),
+              small(child.text <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "" else if (ExplorationMap.exhausted(data, site.id)) "Exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else "Collect")),
+              onClick --> (_ => selected.set(site.id)),
+            )
           },
         ),
-        child.maybe <-- ifUnlockedOpt(unlocksSignal.map(_.resources.showScouts)) {
-          div(className := "mt-2 expedition-scouts",
-            label(forId := "extra-scouts", "Extra scouts (+10 sugar each)"),
-            select(idAttr := "extra-scouts", className := "form-select",
-              (0 to ExplorationProgression.MaxExtraScouts).map(extra =>
-                option(value := extra.toString, if (extra == 0) "0" else s"$extra · +${extra * 25}% speed",
-                  disabled <-- availableScoutsSignal.map(_ < extra.toLong * u))),
-              value <-- extraScoutsSignal.map(_.toString),
-              onChange.mapToValue.map(_.toInt) --> extraScoutsVar.writer,
-            ),
-          )
-        },
-      ),
-      div(className := "mobile-only col-12 px-3 destination-carousel",
-        aria.label := "Exploration destinations",
-        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Previous destination", "‹",
-          disabled <-- unlockedDestinationsSignal.map(_.size <= 1), onClick --> (_ => moveDestination(-1))),
-        div(className := "carousel-caption-text", aria.live := "polite",
-          div(className := "carousel-destination-name", child.text <-- selectedDestinationSignal.map(_.name)),
-          div(className := "carousel-position small text-body-secondary",
-            child.text <-- unlockedDestinationsSignal.combineWith(selectedDestinationSignal).map { case (destinations, selected) =>
-              s"${destinations.indexOf(selected) + 1} / ${destinations.size}"
-            }),
+        child <-- selected.signal.map(sitePanel),
+        div(className := "mission-status my-3",
+          b("Missions "), span(child.text <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) => s"${data.explorationParties.size} / ${ExplorationProgression.maxParties(data, upgrades)}" }),
+          children <-- explorationSignal.map(_.explorationParties.map(party =>
+            div(className := "map-mission p-2",
+              b(if (party.mission == "reveal") "Exploring surroundings" else if (party.mission == "study") s"Studying ${ExplorationMap.site(party.destination).name}" else ExplorationDestination.forParty(party).name),
+              s" · ${party.scouts / u} scouts · ${party.amountWorkers / u} workers · ",
+              span(child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick)))),
+            )
+          )),
         ),
-        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Next destination", "›",
-          disabled <-- unlockedDestinationsSignal.map(_.size <= 1), onClick --> (_ => moveDestination(1))),
-      ),
-      ExplorationDestination.all.map { destination =>
-        child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map {
-          case (data, ants, nest) => destination.isUnlocked(data, ants, nest)
-        }.distinct.map(unlocked => Option.when(unlocked)(area(destination)))
-      },
-      div(
-        className := "col-12 px-3 py-2 expedition-status",
-        div(
-          className <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) =>
-            if (data.explorationParties.size >= ExplorationProgression.maxParties(data.experience, upgrades)) "text-danger" else ""
-          },
-          "Expeditions: ", child.text <-- explorationSignal.map(_.explorationParties.size),
-          " / ", child.text <-- explorationSignal.combineWith(upgradesSignal).map {
-            case (data, upgrades) => ExplorationProgression.maxParties(data.experience, upgrades)
-          },
-          child.maybe <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) =>
-            Option.when(data.explorationParties.size >= ExplorationProgression.maxParties(data.experience, upgrades))(
-              small(" · All slots in use"))
-          },
-        ),
-        children <-- explorationSignal.map(_.explorationParties.map { party =>
-          div(
-            b(s"${ExplorationDestination.forParty(party).name}: "),
-            s"${prettyNumberStr(party.amountWorkers)} workers",
-            if (party.scouts > 0L) s" · ${prettyNumberStr(party.scouts)} scouts" else "", ", ",
-            child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))),
-            if (RaidProgression.isRaid(ExplorationDestination.forParty(party)))
-              div(className := "text-danger small", RaidProgression.risk(party.amountWorkers)) else emptyNode,
-          )
-        }),
       ),
       pheromoneTrailDiv,
-      div(
-        className := "col-12 px-3 py-2 exploration-progress",
-        infoHeading("Exploration experience", div(
-          p(className := "mb-1 exploration-milestone",
-            child.text <-- explorationSignal.map(data => ExplorationProgression.nextMilestone(data.experience))),
-          p(child.text <-- explorationSignal.map { data =>
-            val bonus = ExplorationProgression.bonusPercent(data.experience)
-            s"Reward bonus: +$bonus% sugar, carcass sugar and protein."
-          }),
-          p("Level costs rise by 100 XP. Party bonuses: 2× at 5 workers, 3× at 17, 4× at 37. Extra scouts: +25% speed each (max 3)."),
+      child.maybe <-- explorationSignal.map(_.revealedSites > 0).distinct.map(visible => Option.when(visible)(div(className := "col-12 p-3 expedition-supplies",
+        infoHeading("Expedition supplies", div("+20% haul capacity per rank. Does not create resources or increase knowledge.")),
+        p(child.text <-- explorationSignal.map(data => s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel}")),
+        child.maybe <-- explorationSignal.map(data => ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel).distinct.map(more => Option.when(more)(
+          actionButton(name = "Improve Expedition Supplies", descriptionSignal = Val(None),
+            enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) => ExplorationProgression.canUpgradeSupplies(data, resources) },
+            costSignal = explorationSignal.map(ExplorationProgression.suppliesCost), bonusSignal = Val(ActionBonus.empty),
+            onClickAction = _ => Actions.upgradeExpeditionSupplies()),
         )),
-        p(className := "mb-1", child.text <-- explorationSignal.map(data => ExplorationProgression.progressText(data.experience))),
-      ),
-      child.maybe <-- ifUnlockedOpt(explorationSignal.map(data => ExplorationProgression.level(data.experience) >= 2)) {
-        div(
-          className := "col-12 px-3 py-2 expedition-supplies",
-          h5("Expedition supplies"),
-          p(className := "mb-1", child.text <-- explorationSignal.map(data =>
-            s"Rank ${ExplorationProgression.suppliesRank(data)} · +${ExplorationProgression.suppliesRank(data) * 20}% XP and rewards")),
-          child.maybe <-- explorationSignal.map(data =>
-            ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel &&
-              ExplorationProgression.level(data.experience) >= ExplorationProgression.suppliesRequiredLevel(data)
-          ).distinct.map {
-            available => Option.when(available) {
-              div(
-                className := "row",
-                actionButton(
-                  name = "Improve Expedition Supplies",
-                  enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) =>
-                    ExplorationProgression.canUpgradeSupplies(data, resources)
-                  },
-                  descriptionSignal = Val(Some(div("Permanent +20% XP and rewards for future departures."))),
-                  costSignal = explorationSignal.map(ExplorationProgression.suppliesCost),
-                  bonusSignal = Val(ActionBonus.empty),
-                  onClickAction = _ => Actions.upgradeExpeditionSupplies(),
-                ),
-              )
-            }
-          },
-        )
-      },
+      ))),
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
           className := "col-12 px-3 py-2 carcass-panel",

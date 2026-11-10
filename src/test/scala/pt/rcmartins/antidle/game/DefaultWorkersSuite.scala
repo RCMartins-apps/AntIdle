@@ -18,7 +18,7 @@ class DefaultWorkersSuite extends FunSuite {
       upgrades = initial.upgrades.unlock(UpgradeType.DefaultWorkers),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
-      exploration = ExplorationData(experience = 1000L),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
     )
   }
 

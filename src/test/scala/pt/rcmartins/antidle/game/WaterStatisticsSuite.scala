@@ -13,7 +13,7 @@ class WaterStatisticsSuite extends FunSuite {
   def colony: AllData = {
     val initial = AllData.initial
     initial.copy(ants = AntsData(workers = 30 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
-      exploration = ExplorationData(experience = 1500L),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
       nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
@@ -46,7 +46,7 @@ class WaterStatisticsSuite extends FunSuite {
 
   test("water forecast matches rewards, actual collection obeys capacity, visibility and saves persist") {
     val initial = colony.copy(exploration = colony.exploration.copy(surveys = Map(DryClearing.id -> 3)))
-    assert(ExplorationHelper.summary(initial.exploration, 5 * u, ScavengeWater).contains("90 water"))
+    assert(ExplorationHelper.summary(initial, 5 * u, ScavengeWater).contains("90 water"))
     assertEquals(ExplorationHelper.cost(5 * u, ScavengeWater).sugar, 125L * u)
     val result = ResourceVisibility.reconcile(trip(initial, ScavengeWater))
     assertEquals(result.basicResources.water.amount, 90L * u)

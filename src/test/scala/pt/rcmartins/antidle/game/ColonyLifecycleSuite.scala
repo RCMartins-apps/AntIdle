@@ -18,7 +18,7 @@ class ColonyLifecycleSuite extends FunSuite {
       basicResources = initial.basicResources.copy(sugar = BasicResource(5000 * u, 10000 * u)),
       nestAttributes = initial.nestAttributes.copy(maxAnts = 1000 * u, maxEggs = 10 * u,
         chambers = initial.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
-      exploration = ExplorationData(experience = 1000L),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       unlocks = initial.unlocks.copy(actions = initial.unlocks.actions.copy(canLayEggs = true),
         tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )

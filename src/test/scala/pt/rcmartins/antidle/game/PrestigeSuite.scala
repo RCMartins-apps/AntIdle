@@ -139,7 +139,7 @@ class PrestigeSuite extends FunSuite {
   }
   test("a guide cannot be booked onto an expedition or protected from starvation") {
     val marked = PheromoneTrails.mark(known.copy(exploration = known.exploration.copy(
-      experience = ExplorationProgression.threshold(4))))
+      revealedSites = 6)))
     val sent = ExplorationHelper.start(marked, 5 * u, ExplorationDestination.NectarMeadow)
     assertEquals(sent.exploration.explorationParties.size, 1)
     assertEquals(ScoutProgression.available(sent.ants, sent.exploration), 0L)

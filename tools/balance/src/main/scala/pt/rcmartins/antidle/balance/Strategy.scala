@@ -72,6 +72,7 @@ object Strategy {
         Scavenger -> (if (n >= 6) 2 else if (n >= 1) 1 else 0),
         Tunneler -> (if (digging) Math.min(p.tunnelers, n / 6) else 0),
         BroodNurse -> (if (care) Math.min(p.nurses, n / 10) else 0),
+        WaterCollector -> (if (a.tasks.exists(_._1 == WaterCollector) && d.basicResources.water.amount < 170L * u) Math.min(3, n / 10) else 0),
         SeedForager -> (if (d.nestAttributes.dryClearingOutpost && d.basicResources.water.amount > 5 * u) Math.min(5, n / 5) else 0),
         AphidTender -> (if (protein >= (if (a.taskWorkers(AphidTender) > 0L) 5L else 15L) * u) Math.min(p.aphids, d.nestAttributes.chambers.aphidChamber.level) else 0),
         RoyalNurse -> (if (d.nestAttributes.royalBroodSlots > 0) Math.min(5, n / 5) else 0),
@@ -139,7 +140,7 @@ object Strategy {
       select(build(d, ChamberType.RoyalNursery)).foreach(x => return x)
 
     val scoutBrood = a.eggsAndLarvae.count { case b: AntBrood.Developing => b.kind == "scout"; case _ => false }
-    val scoutTarget = (if (ExplorationProgression.level(e.experience) >= 6) 2 else 1) + p.extraScouts + (if (a.lineage.sharedPaths) 1 else 0)
+    val scoutTarget = 2 + p.extraScouts + (if (a.lineage.sharedPaths) 1 else 0)
     if (d.unlocks.tabs.exploreTabUnlocked && a.scouts / u + a.scoutEggOrders.size + scoutBrood < scoutTarget && ScoutProgression.canRaise(d))
       return done(Choice("Order Scout Egg", "brood", x => ScoutProgression.raise(x)))
     val incoming = a.totalWorkersCount + BroodProgression.incoming(a) + a.eggOrders
@@ -158,27 +159,26 @@ object Strategy {
       return done(Choice("Assign trail workers", "trail", PheromoneTrails.assign(_, Math.min(5L * u - PheromoneTrails.workers(a), a.availableWorkersCount))))
 
     if (d.unlocks.tabs.exploreTabUnlocked) {
-      val surveys = List(DiscoveryProgression.WildAphids, DiscoveryProgression.DryTrail,
-        DiscoveryProgression.SeedCache, DiscoveryProgression.DewPlants, DiscoveryProgression.ResinSeep)
-      val survey = surveys.filterNot(_.found(e)).flatMap(x => ExplorationDestination.all.find(_.id == x.destination))
-        .find(_.isUnlocked(e, a, nest))
-      val route =
-        if (ScavengeWater.isUnlocked(e, a, nest) && d.basicResources.water.amount < 160L * u && a.repletes > 0L) ScavengeWater
-        else if (CollectResin.isUnlocked(e, a, nest) && d.basicResources.resin.amount < 80L * u && d.upgrades(RoyalNurseryPlanning).unlocked) CollectResin
-        else survey.getOrElse {
-          if (NectarMeadow.isUnlocked(e, a, nest) && d.basicResources.sugar.amount < Math.min(1500L * u, stockNeeded)) NectarMeadow
-          else if (SeedGathering.isUnlocked(e, a, nest) && d.basicResources.protein.amount < 60L * u) SeedGathering
-          else if (RottenLog.isUnlocked(e, a, nest)) RottenLog
-          else if (WoodlandEdge.isUnlocked(e, a, nest)) WoodlandEdge else Surroundings
-        }
-      val workers = Math.min(Math.max(p.partyWorkers.toLong, route.minimumWorkers / u), a.availableWorkersCount / u) * u
-      val extra = Math.min(p.extraScouts, Math.max(0L, (ScoutProgression.available(a, e) - route.scouts) / u).toInt)
-      if (workers >= route.minimumWorkers && ExplorationHelper.canStart(d, workers, route, extra))
-        return done(Choice(s"Expedition: ${route.name} (${workers / u} workers, $extra extra scouts)", "expedition", ExplorationHelper.start(_, workers, route, extra)))
-      if (e.explorationParties.nonEmpty) return Decision(None, s"Await ${e.explorationParties.head.destination} return", List("travel time"))
-      return Decision(None, s"Depart for ${route.name}", missing(d, ExplorationHelper.cost(Math.max(route.minimumWorkers, workers), route, extra)) ++
-        Option.when(workers < route.minimumWorkers)("available workers") ++ Option.when(ScoutProgression.available(a, e) < route.scouts)("scouts"))
+      val crew = Math.min(3, (ScoutProgression.available(a, e) / u).toInt)
+      val study = ExplorationMap.sites.take(e.revealedSites).find(site => ExplorationMap.canScout(d, site.id, crew))
+      if (study.nonEmpty) return done(Choice(s"Study ${study.get.name}", "scouting", ExplorationMap.scout(_, study.get.id, crew)))
+      if (ExplorationMap.canScout(d, "surroundings", crew))
+        return done(Choice("Reveal next hexagon", "scouting", ExplorationMap.scout(_, "surroundings", crew)))
+      val routes = List(ScavengeWater, CollectResin, SeedGathering, NectarMeadow, WoodlandEdge, RottenLog)
+      val needed = routes.filter { route =>
+        if (route == ScavengeWater) d.basicResources.water.amount < 170L * u
+        else if (route == CollectResin) d.basicResources.resin.amount < 100L * u
+        else if (route == NectarMeadow) d.basicResources.sugar.amount < Math.min(2000L * u, stockNeeded)
+        else d.basicResources.protein.amount < 120L * u
+      }
+      needed.foreach { route =>
+        val workers = Math.min(Math.max(p.partyWorkers.toLong, route.minimumWorkers / u), a.availableWorkersCount / u) * u
+        if (ExplorationHelper.canStart(d, workers, route))
+          return done(Choice(s"Collect ${route.name}", "expedition", ExplorationHelper.start(_, workers, route)))
+      }
+      return Decision(None, "Maintain colony or await scout/collection returns", List("scouts, supplies or storage"))
     }
+
     research.map(t => Decision(None, s"Research ${t.title}", missing(d, t.cost))).getOrElse(
       Decision(None, "Grow founding workforce", List("brood development or housing")))
   }

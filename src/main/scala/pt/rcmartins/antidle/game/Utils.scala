@@ -267,6 +267,10 @@ object Utils {
         case true  => Some(value)
       }
 
+  val snapshotSignal: Signal[AllData] = allDataSignals.map { case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
+    AllData.simple(world, ants, basic, nest, unlocks, upgrades, exploration, statistics, Seq.empty)
+  }
+
   def canPurchaseUpgradeSignal(upgrade: UpgradesData.UpgradeType): Signal[Boolean] =
     allDataSignals.map { case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
       UpgradeResearch.canPurchase(AllData.simple(world, ants, basic, nest, unlocks, upgrades, exploration, statistics, Seq.empty), upgrade)

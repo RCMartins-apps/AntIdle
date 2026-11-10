@@ -130,7 +130,21 @@
             .antidle-app .modal-content { max-height: calc(100dvh - 1rem); overflow-y: auto; }
             .antidle-app textarea { min-width: 0; width: 100%; }
         }
-    </style>
+    
+.hex-map {position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto 1rem}
+.map-hex {position:absolute;transform:translate(-50%,-50%);width:29%;height:31%;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border:0;background:#d9e8d0;color:#183722;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px 8px;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;gap:3px;cursor:pointer}
+.map-hex small {font-size:.7rem;font-weight:400}
+.map-hex.unexplored {background:#e4e6e8;color:#657078;opacity:1}
+.map-hex.exhausted {background:#e9e6df;color:#72716b}
+.map-hex.nest-hex {background:#87623e;color:white}
+.map-hex[aria-pressed="true"] {background:#c3e3ff;color:#08477b;box-shadow:inset 0 0 0 5px #087cf1}
+.map-hex:focus-visible {background:#b7d8ff;outline:4px solid #087cf1;outline-offset:-6px}
+.map-site-card {max-width:600px;margin:auto}
+.map-site-card .action-cell {margin-bottom:.5rem}
+.site-worker-controls input {max-width:110px;text-align:center}
+.mission-preview {font-size:.9rem;margin-bottom:.4rem}
+.map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
+</style>
 </head>
 <body>
 <div id="root"></div>

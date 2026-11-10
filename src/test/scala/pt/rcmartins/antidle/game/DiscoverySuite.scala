@@ -15,7 +15,7 @@ class DiscoverySuite extends FunSuite {
     val initial = AllData.initial
     initial.copy(
       ants = AntsData(workers = 40 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
-      exploration = ExplorationData(experience = 1000L),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = initial.basicResources.copy(sugar = BasicResource(5000 * u, 10000 * u)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
@@ -72,13 +72,13 @@ class DiscoverySuite extends FunSuite {
     assert(SeedGathering.isUnlocked(third.exploration, third.ants, third.nestAttributes))
     assert(ExplorationHelper.canStart(third, 10 * u, SeedGathering))
     assert(!ExplorationHelper.canStart(third, 9 * u, SeedGathering))
-    val low = third.copy(exploration = third.exploration.copy(experience = 999L))
+    val low = third.copy(exploration = third.exploration.copy(revealedSites = 6))
     assert(!ExplorationHelper.canStart(low, 10 * u, SeedGathering))
     assert(!SeedGathering.isUnlocked(low.exploration, low.ants, low.nestAttributes))
   }
 
   test("seed gathering preview matches guaranteed protein without requiring carcass slots") {
-    val initial = colony.copy(exploration = ExplorationData(experience = 1000L, surveys = Map(NectarMeadow.id -> 3)))
+    val initial = colony.copy(exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map(NectarMeadow.id -> 3)))
     val sent = ExplorationHelper.start(initial, 10 * u, SeedGathering)
     val party = sent.exploration.explorationParties.head
     val xp = ExplorationProgression.earned(party)
@@ -87,8 +87,8 @@ class DiscoverySuite extends FunSuite {
     assertEquals(result.basicResources.protein.amount, expected)
     assert(result.exploration.proteinDiscovered)
     assert(result.exploration.discoveredCarcasses.isEmpty && result.exploration.carcasses.isEmpty)
-    assert(ExplorationHelper.summary(initial.exploration, 10 * u, SeedGathering).contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein"))
-    assert(ExplorationHelper.preview(initial.exploration, 10 * u, SeedGathering).contains("Protein guaranteed"))
+    assert(ExplorationHelper.summary(initial, 10 * u, SeedGathering).contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein"))
+    assert(ExplorationHelper.outcomePreview(initial.exploration, 10 * u, SeedGathering).contains("Protein guaranteed"))
     val nearlyFull = sent.copy(basicResources = sent.basicResources.copy(protein = BasicResource(99 * u, 100 * u)))
     assertEquals(ExplorationHelper.exploreBonus(nearlyFull, party).basicResources.protein.amount, 100L * u)
   }

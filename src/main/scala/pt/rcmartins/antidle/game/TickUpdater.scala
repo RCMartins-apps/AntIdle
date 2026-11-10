@@ -45,6 +45,7 @@ object TickUpdater {
           allData.modify(_.basicResources.protein).using(_ - proteinUsed)
             .modify(_.basicResources.water).using(_ - harvest.water).giveResources(
             sugar = sugarToGive,
+            water = OutpostProgression.dewPerTick(allData.ants),
             tunnelingSpace = tunnelingSpaceToGive,
             protein = harvest.protein + BroodProgression.scavenged(allData.ants, allData.basicResources.protein.freeSpace - harvest.protein + proteinUsed),
           )

@@ -13,7 +13,7 @@ class ColonyDevelopmentSuite extends FunSuite {
     val initial = AllData.initial
     initial.copy(
       ants = AntsData(workers = 20 * u, scouts = u, tasks = Seq(AntTask.Explorer -> 0L)),
-      exploration = ExplorationData(experience = xp),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = initial.basicResources.copy(sugar = BasicResource(3000 * u, 10000 * u)),
       nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
         nurseryChamber = initial.nestAttributes.chambers.nurseryChamber.copy(level = 1))),

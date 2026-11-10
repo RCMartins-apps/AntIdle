@@ -65,6 +65,17 @@ outpost are built. The outpost extends shared colony housing and supports a
 team gathering protein-rich seeds with a water cost. The outpost now has a
 small expansion and research path; additional locations remain future work.
 
+## Exploration map
+
+Exploration is a visible landscape centered on the nest. The first six neighboring
+hexagons are handcrafted with a fixed reveal order and safe progression, rather
+than random access to essential resources. Scouts exclusively reveal and study
+sites; workers collect deposits. Knowledge declines with repeated study and is
+finite per site; resource reserves are finite too. Exhausted places remain visible
+as colony history. Managed aphids/outposts and renewable worker jobs retain value.
+Exploration XP is removed. Further rings can open through future range research
+or Understandings; those later unlocks are not designed or implemented yet.
+
 ## Understandings and prestige
 
 **Understandings** is the reserved player-facing term for the most powerful
@@ -77,8 +88,8 @@ carries the previous generation's Understandings into a new colony. The owner
 specifically chose queens as the bridge between generations, adapting the
 uplifting inspiration to ants and the incremental prestige structure.
 
-Knowledge is the existing colony's research resource. Ordinary upgrades,
-discoveries and exploration XP are distinct from inherited Understandings.
+Knowledge is the existing colony's research resource. Ordinary upgrades and
+map discoveries are distinct from inherited Understandings.
 Do not relabel those systems as Understandings or imply that current research
 is already a prestige system.
 

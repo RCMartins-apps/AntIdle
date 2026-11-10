@@ -14,7 +14,7 @@ class ExpeditionStaffingSuite extends FunSuite {
     initial.copy(ants = AntsData(workers = 100 * u, scouts = 5 * u, tasks = Seq(AntTask.Explorer -> 0L),
       ages = ColonyAges(active = true, workers = List(AgeCohort(300L, 100L)), scouts = List(AgeCohort(300L, 5L)))),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
-      exploration = ExplorationData(experience = 1500L, surveys = Map(RottenLog.id -> 4)),
+      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map(RottenLog.id -> 4)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
 
@@ -37,7 +37,7 @@ class ExpeditionStaffingSuite extends FunSuite {
     assertEquals(party.targetTick, 129L)
     assertEquals(boosted.basicResources.sugar.amount, 9870L * u)
     assertEquals(ExplorationProgression.earned(party), ExplorationProgression.earned(original.exploration.explorationParties.head))
-    assert(ExplorationHelper.summary(colony.exploration, 5 * u, WoodlandEdge, 3).startsWith("25.8s"))
+    assert(ExplorationHelper.summary(colony, 5 * u, WoodlandEdge, 3).startsWith("25.8s"))
   }
 
   test("scout reservations include the route minimum plus extras and prevent overbooking") {

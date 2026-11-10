@@ -18,7 +18,7 @@ class UnlockDefinitionsSuite extends FunSuite {
         nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)),
       upgrades = UpgradeType.all.foldLeft(d.upgrades)((upgrades, t) => upgrades.unlock(t)),
-      exploration = d.exploration.copy(experience = ExplorationProgression.threshold(10), proteinDiscovered = true,
+      exploration = d.exploration.copy(revealedSites = 6, proteinDiscovered = true,
         surveys = DiscoveryProgression.all.map(_.destination -> 100).toMap))
   }
 
@@ -42,7 +42,7 @@ class UnlockDefinitionsSuite extends FunSuite {
       val r = upgrade.definition.requirements
       assert(upgrade.shouldShow(d), upgrade.name)
       if (r.minimumExplorationLevel > 1) {
-        val before = d.copy(exploration = d.exploration.copy(experience = ExplorationProgression.threshold(r.minimumExplorationLevel) - 1L))
+        val before = d.copy(exploration = d.exploration.copy(revealedSites = 6))
         assert(!upgrade.shouldShow(before), upgrade.name)
         assert(upgrade.shouldShow(before.copy(exploration = before.exploration.copy(experience = before.exploration.experience + 1L))), upgrade.name)
       }
@@ -95,7 +95,7 @@ class UnlockDefinitionsSuite extends FunSuite {
     val d = ready
     val ants = AntsData(workers = 37L * u, scouts = 5L * u)
     ExplorationDestination.all.foreach { route =>
-      val unlocked = d.exploration.copy(experience = ExplorationProgression.threshold(route.requiredLevel), explorationParties = Nil)
+      val unlocked = d.exploration.copy(revealedSites = 6, explorationParties = Nil)
       assert(route.isUnlocked(unlocked, ants, d.nestAttributes), route.id)
       assert(ExplorationHelper.canDepart(unlocked, ants, d.upgrades, route.minimumWorkers, route), route.id)
       if (route.requiredLevel > 1) {
@@ -115,7 +115,7 @@ class UnlockDefinitionsSuite extends FunSuite {
   test("supplies catalog drives actual price, unlock boundary, and milestone hints") {
     val fresh = AllData.initial
     ExplorationProgression.suppliesUpgrades.zipWithIndex.foreach { case (tier, rank) =>
-      val d = fresh.copy(exploration = fresh.exploration.copy(suppliesLevel = rank, experience = ExplorationProgression.threshold(tier.requiredLevel)),
+      val d = fresh.copy(exploration = fresh.exploration.copy(suppliesLevel = rank, revealedSites = 6),
         basicResources = fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = tier.cost.sugar),
           knowledge = fresh.basicResources.knowledge.copy(amount = tier.cost.knowledge)))
       assertEquals(ExplorationProgression.suppliesCost(d.exploration), tier.cost)

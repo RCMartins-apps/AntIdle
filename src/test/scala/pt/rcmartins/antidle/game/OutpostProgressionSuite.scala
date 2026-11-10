@@ -18,16 +18,16 @@ class OutpostProgressionSuite extends FunSuite {
       basicResources = initial.basicResources.copy(sugar = BasicResource(30000 * u, 40000 * u),
         protein = BasicResource(500 * u, 1000 * u), water = BasicResource(1000 * u, 1000 * u),
         tunnelingSpace = BasicResource(4000 * u, 4000 * u), knowledge = BasicResource(3000 * u, Long.MaxValue)),
-      exploration = ExplorationData(experience = ExplorationProgression.threshold(7), surveys = Map("dry-clearing" -> 3)),
+      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map("dry-clearing" -> 3)),
       upgrades = initial.upgrades.unlock(DefaultWorkers),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true))))
   }
 
-  def levelEight(data: AllData): AllData = data.copy(exploration = data.exploration.copy(experience = ExplorationProgression.threshold(8)))
+  def levelEight(data: AllData): AllData = data.copy(exploration = data.exploration.copy(revealedSites = 6))
 
   test("expansions appear one at a time at their levels and stop after level three") {
     val initial = colony
-    val early = initial.copy(exploration = initial.exploration.copy(experience = ExplorationProgression.threshold(7) - 1L))
+    val early = initial.copy(exploration = initial.exploration.copy(revealedSites = 6))
     assert(!OutpostProgression.expansionVisible(early.nestAttributes, early.exploration))
     assertEquals(OutpostProgression.expand(early), early)
     val absent = initial.copy(nestAttributes = initial.nestAttributes.copy(dryClearingOutpost = false))
@@ -89,7 +89,7 @@ class OutpostProgressionSuite extends FunSuite {
     val absent = levelEight(initial).copy(nestAttributes = initial.nestAttributes.copy(dryClearingOutpost = false))
     assert(!CoveredTrails.shouldShow(absent))
     assert(!SeedProcessing.shouldShow(absent))
-    val early = initial.copy(exploration = initial.exploration.copy(experience = ExplorationProgression.threshold(7) - 1L))
+    val early = initial.copy(exploration = initial.exploration.copy(revealedSites = 6))
     assert(!CoveredTrails.shouldShow(early))
     assert(UpgradeVisibility.reconcile(initial).upgrades(CoveredTrails).show)
     assert(!UpgradeVisibility.reconcile(initial).upgrades(SeedProcessing).show)

@@ -68,7 +68,7 @@ class KnowledgeEconomySuite extends FunSuite {
     assert(ExplorationDestination.RottenLog.knowledge > ExplorationDestination.WoodlandEdge.knowledge)
     ExplorationDestination.all.foreach { destination =>
       val ants = AntsData(workers = 20 * u, scouts = u, tasks = Seq(AntTask.Explorer -> 0L))
-      val initial = AllData.initial.copy(ants = ants, exploration = ExplorationData(experience = 300L))
+      val initial = AllData.initial.copy(ants = ants, exploration = MapFixture.explored.copy(revealedSites = 6))
       val party = ExplorationParty(5 * u, 0L, destination.duration, destination.scouts, destination.id)
       val returned = ExplorationHelper.exploreBonus(initial.copy(ants = ants.addToTask(AntTask.Explorer, 5 * u), exploration = initial.exploration.copy(explorationParties = List(party))), party)
       assert(returned.basicResources.knowledge.amount > 0)
@@ -80,8 +80,8 @@ class KnowledgeEconomySuite extends FunSuite {
       knowledge = BasicResource(5000 * u, Long.MaxValue)))
     val saved = AllDataForSave.fromAllData(game)
     val loaded = pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.toJson).get
-    assertEquals(saved.version, 6)
+    assertEquals(saved.version, AllData.CurrentVersion)
     assertEquals(loaded.basicResources, game.basicResources)
-    assertEquals(pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.copy(version = 5).toJson), None)
+    assertEquals(pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.copy(version = 6).toJson), None)
   }
 }

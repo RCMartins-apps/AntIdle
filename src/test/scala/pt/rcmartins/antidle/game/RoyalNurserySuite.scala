@@ -24,13 +24,13 @@ class RoyalNurserySuite extends FunSuite {
       nestAttributes = initial.nestAttributes.copy(maxBuildQueue = 3,
         chambers = initial.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1),
           repleteChamber = Chamber.RepleteChamber(3))),
-      exploration = ExplorationData(experience = ExplorationProgression.threshold(7)),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       upgrades = initial.upgrades.unlock(DefaultWorkers, ConstructionPlanning, RepleteStorage),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
 
   def discovered: AllData = colony.copy(exploration = colony.exploration.copy(
-    experience = ExplorationProgression.threshold(8), surveys = Map("fallen-pine" -> 3)))
+    revealedSites = 6, surveys = Map("fallen-pine" -> 3)))
 
   def researched: AllData = discovered.copy(upgrades = discovered.upgrades.unlock(RoyalNurseryPlanning))
 
@@ -41,7 +41,7 @@ class RoyalNurserySuite extends FunSuite {
   }
 
   test("woodland surveys reveal resin once, with collection hidden until its discovery and level") {
-    val early = colony.copy(exploration = colony.exploration.copy(experience = ExplorationProgression.threshold(7) - 1L))
+    val early = colony.copy(exploration = colony.exploration.copy(revealedSites = 6))
     assert(!FallenPine.isUnlocked(early.exploration, early.ants, early.nestAttributes))
     assert(!CollectResin.isUnlocked(colony.exploration, colony.ants, colony.nestAttributes))
     assertEquals(ExplorationHelper.start(colony, 10 * u, CollectResin), colony)
@@ -76,8 +76,8 @@ class RoyalNurserySuite extends FunSuite {
     val party = sent.exploration.explorationParties.head
     val expected = ExplorationProgression.expeditionReward(CollectResin.resinReward,
       initial.exploration.experience + ExplorationProgression.earned(party), 10 * u, 2)
-    assert(ExplorationHelper.summary(initial.exploration, 10 * u, CollectResin).contains(s"${UINumbersUtils.prettyNumberStr(expected)} resin"))
-    assert(ExplorationHelper.preview(initial.exploration, 10 * u, CollectResin).contains("Resin guaranteed"))
+    assert(ExplorationHelper.summary(initial, 10 * u, CollectResin).contains(s"${UINumbersUtils.prettyNumberStr(expected)} resin"))
+    assert(ExplorationHelper.outcomePreview(initial.exploration, 10 * u, CollectResin).contains("Resin guaranteed"))
     val almostFull = sent.copy(basicResources = sent.basicResources.copy(resin = BasicResource(199 * u, 200 * u)))
     val result = ExplorationHelper.exploreBonus(almostFull, party)
     assertEquals(result.basicResources.resin.amount, 200L * u)
@@ -93,7 +93,7 @@ class RoyalNurserySuite extends FunSuite {
     val noNursery = discovered.copy(nestAttributes = discovered.nestAttributes.copy(
       chambers = discovered.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(0))))
     assert(!RoyalNurseryPlanning.shouldShow(noNursery))
-    val early = discovered.copy(exploration = discovered.exploration.copy(experience = ExplorationProgression.threshold(8) - 1L))
+    val early = discovered.copy(exploration = discovered.exploration.copy(revealedSites = 6))
     assert(!RoyalNurseryPlanning.shouldShow(early))
     assert(UpgradeVisibility.reconcile(discovered).upgrades(RoyalNurseryPlanning).show)
   }
