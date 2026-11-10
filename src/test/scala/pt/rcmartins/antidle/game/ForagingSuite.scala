@@ -79,38 +79,38 @@ class ForagingSuite extends FunSuite {
     assertEquals(Foraging.productionPerTick(Long.MaxValue, trails), Foraging.productionPerTick(100L, trails))
     assertEquals((1L to 200L).filter(n => Foraging.productionPerTick(n, trails) >= n * antsSugarUpkeepTick).last, 101L)
     val colony = AllData.initial.copy(unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
-    assert(!EstablishedTrails.shouldShow(colony.copy(exploration = ExplorationData(experience = 99L))))
-    assert(EstablishedTrails.shouldShow(colony.copy(exploration = ExplorationData(experience = 100L))))
+    assert(!EstablishedTrails.shouldShow(colony.copy(exploration = MapFixture.explored.copy(revealedSites = 0))))
+    assert(EstablishedTrails.shouldShow(colony.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
     assertEquals(EstablishedTrails.cost, ActionCost(sugar = 600 * u, knowledge = 60 * u))
     assert(AllDataForSave.fromAllData(colony.copy(upgrades = trails)).toAllData.upgrades(EstablishedTrails).unlocked)
   }
 
-  test("paid expedition slot is revealed at level three and stacks with the level-five slot") {
+  test("paid mission slot requires two revealed sites and stacks with the fourth-reveal slot") {
     val initial = AllData.initial.copy(unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
-    assert(!AdditionalExpeditionSlot.shouldShow(initial.copy(exploration = ExplorationData(experience = 299L))))
-    assert(AdditionalExpeditionSlot.shouldShow(initial.copy(exploration = ExplorationData(experience = 300L))))
+    assert(!AdditionalExpeditionSlot.shouldShow(initial.copy(exploration = MapFixture.explored.copy(revealedSites = 1))))
+    assert(AdditionalExpeditionSlot.shouldShow(initial.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
     val purchased = plain.unlock(AdditionalExpeditionSlot)
-    assertEquals(ExplorationProgression.maxParties(300L, plain), 1)
-    assertEquals(ExplorationProgression.maxParties(300L, purchased), 2)
-    assertEquals(ExplorationProgression.maxParties(1000L, purchased), 3)
+    assertEquals(ExplorationProgression.maxParties(ExplorationData(revealedSites = 2), plain), 1)
+    assertEquals(ExplorationProgression.maxParties(ExplorationData(revealedSites = 2), purchased), 2)
+    assertEquals(ExplorationProgression.maxParties(ExplorationData(revealedSites = 4), purchased), 3)
     val saved = AllDataForSave.fromAllData(initial.copy(upgrades = purchased))
-    assertEquals(ExplorationProgression.maxParties(1000L, saved.toAllData.upgrades), 3)
+    assertEquals(ExplorationProgression.maxParties(ExplorationData(revealedSites = 4), saved.toAllData.upgrades), 3)
   }
 
   test("the engine enforces the purchased slot limit and releases slots on return") {
     val initial = AllData.initial.copy(
       ants = AntsData(workers = 20 * u, tasks = Seq(AntTask.Explorer -> 0L)),
       upgrades = plain.unlock(AdditionalExpeditionSlot),
-      exploration = ExplorationData(experience = 1000L),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = AllData.initial.basicResources.copy(sugar = BasicResource(1000 * u, 1000 * u)),
       unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
-    val three = (1 to 3).foldLeft(initial)((data, _) => ExplorationHelper.start(data, u, ExplorationDestination.Surroundings))
+    val three = (1 to 3).foldLeft(initial)((data, _) => ExplorationHelper.start(data, u, ExplorationDestination.WoodlandEdge))
     assertEquals(three.exploration.explorationParties.size, 3)
-    assertEquals(ExplorationHelper.start(three, u, ExplorationDestination.Surroundings), three)
-    val returned = TickUpdater.updateAllData(three.copy(world = three.world.copy(currentTick = ExplorationTimeTicks - 1L)), None)
+    assertEquals(ExplorationHelper.start(three, u, ExplorationDestination.WoodlandEdge), three)
+    val returned = TickUpdater.updateAllData(three.copy(world = three.world.copy(currentTick = ExplorationDestination.WoodlandEdge.duration - 1L)), None)
     assert(returned.exploration.explorationParties.isEmpty)
     assertEquals(returned.ants.idleWorkersCount, 20L * u)
-    assert(ExplorationHelper.canStart(returned, u, ExplorationDestination.Surroundings))
+    assert(ExplorationHelper.canStart(returned, u, ExplorationDestination.WoodlandEdge))
   }
 }

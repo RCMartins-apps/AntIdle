@@ -3,149 +3,167 @@ package pt.rcmartins.antidle.game
 import munit.FunSuite
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.game.ExplorationDestination._
+import pt.rcmartins.antidle.game.saves.{AllDataForSave, SaveLoad}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.BasicResources.BasicResource
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import zio.json._
 
 class ExplorationSuite extends FunSuite {
-  def colony(xp: Long = 0L): AllData = {
-    val initial = AllData.initial
-    initial.copy(
-      ants = AntsData(workers = 100 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
-      basicResources = initial.basicResources.copy(
-        sugar = BasicResource(10000 * u, 10000 * u), knowledge = BasicResource(0L, 10000 * u)),
-      exploration = ExplorationData(experience = xp),
-      unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
-    )
+  def colony: AllData = {
+    val d = AllData.initial
+    d.copy(world = d.world.copy(currentTick = 0L, targetTick = 0L, saveSeed = 42L),
+      ants = AntsData(workers = 50L * u, scouts = 3L * u),
+      basicResources = d.basicResources.copy(sugar = BasicResource(10000L * u, 30000L * u)),
+      unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
-
-  test("locked routes are undiscovered until their level and scout training unlocks") {
-    val ants = AntsData(workers = u)
-    val nest = NestAttributes.initial
-    assert(Surroundings.isUnlocked(ExplorationData(), ants, nest))
-    assert(!WoodlandEdge.isUnlocked(ExplorationData(), ants, nest))
-    assert(!RottenLog.isUnlocked(ExplorationData(experience = 300L), ants, nest))
-    val nursery = nest.copy(chambers = nest.chambers.copy(nurseryChamber = nest.chambers.nurseryChamber.copy(level = 1)))
-    assert(WoodlandEdge.isUnlocked(ExplorationData(), ants, nursery))
-    assert(!RottenLog.isUnlocked(ExplorationData(experience = 299L), ants, nursery))
-    assert(RottenLog.isUnlocked(ExplorationData(experience = 300L), ants, nursery))
-    val away = ExplorationData(experience = 300L, explorationParties = List(ExplorationParty(u, 0L, 225L, u, WoodlandEdge.id)))
-    val trained = ants.copy(scouts = u)
-    assertEquals(ScoutProgression.available(trained, away), 0L)
-    assert(WoodlandEdge.isUnlocked(away, trained, nursery))
-    assert(RottenLog.isUnlocked(away, trained, nursery))
+  def finish(d: AllData): AllData = {
+    val party = d.exploration.explorationParties.head
+    ExplorationHelper.exploreBonus(d.copy(world = d.world.copy(currentTick = party.targetTick)), party)
   }
+  def ready: AllData = colony.copy(exploration = MapFixture.explored)
 
-  test("compact summaries show only duration, XP and Knowledge; forecasts keep reward explanations") {
-    assertEquals(ExplorationHelper.summary(ExplorationData(), u, Surroundings), "15.0s · 10 XP · 2 knowledge")
-    assert(ExplorationHelper.preview(ExplorationData(), u, Surroundings).contains("Carcass guaranteed"))
-    assert(!ExplorationHelper.summary(ExplorationData(carcassDiscovered = true), u, Surroundings).contains("45%"))
+  test("scouts reveal exactly six fixed neighboring sites without workers or random results") {
+    assertEquals(ExplorationMap.sites.map(s => (s.q, s.r)).distinct.size, 6)
+    assert(ExplorationMap.sites.forall(_.distance == 1))
+    val d = colony.copy(ants = colony.ants.copy(workers = 0L))
+    val mapped = (1 to 6).foldLeft(d) { (state, count) =>
+      val sent = ExplorationMap.scout(state, "surroundings", 1)
+      assertEquals(sent.exploration.revealedSites, count - 1)
+      assertEquals(sent.exploration.explorationParties.head.amountWorkers, 0L)
+      assertEquals(ScoutProgression.available(sent.ants, sent.exploration), 2L * u)
+      assertEquals(ExplorationMap.scout(sent, "surroundings", 1), sent)
+      val returned = finish(sent)
+      assertEquals(ExplorationMap.finishScout(returned, sent.exploration.explorationParties.head), returned)
+      assertEquals(returned.exploration.revealedSites, count)
+      assert(ExplorationMap.revealed(returned.exploration, ExplorationMap.sites(count - 1).id))
+      returned
+    }
+    assertEquals(ExplorationMap.scout(mapped, "surroundings", 1), mapped)
+    assertEquals(mapped.ants.workers, 0L)
   }
-
-  test("gentle thresholds retain total XP and unlock milestones") {
-    assertEquals((1 to 5).map(ExplorationProgression.threshold), Seq(0L, 100L, 300L, 600L, 1000L))
-    assertEquals(ExplorationProgression.threshold(20), 19000L)
-    assertEquals(ExplorationProgression.level(999L), 4)
-    assertEquals(ExplorationProgression.level(1000L), 5)
-    assertEquals(ExplorationProgression.level(52428700L), 20)
-    assertEquals(ExplorationProgression.maxParties(999L, UpgradesData.initial), 1)
-    assertEquals(ExplorationProgression.maxParties(1000L, UpgradesData.initial), 2)
+  test("workers cannot scout; unknown sites and invalid crew counts cannot launch") {
+    val noScouts = colony.copy(ants = colony.ants.copy(scouts = 0L))
+    assertEquals(ExplorationMap.scout(noScouts, "surroundings", 1), noScouts)
+    assertEquals(ExplorationMap.scout(colony, "fallen-pine", 1), colony)
+    for (count <- List(0, -1, 4)) assertEquals(ExplorationMap.scout(colony, "surroundings", count), colony)
+    assertEquals(ExplorationMap.scout(colony, "unknown", 1), colony)
   }
-
-  test("party bonuses grow with diminishing returns and cap at 37 workers") {
-    assertEquals(List(1L, 5L, 17L, 37L, 1000L).map(n => ExplorationProgression.partyPercent(n * u)),
-      List(100L, 200L, 300L, 400L, 400L))
-    val growth = (1L to 37L).map(n => ExplorationProgression.partyPercent(n * u))
-    assert(growth.sliding(2).forall { case Seq(a, b) => b >= a; case _ => true })
+  test("larger scout crews cost more supplies and speed missions without multiplying finite knowledge") {
+    val revealed = colony.copy(exploration = ExplorationData(revealedSites = 1))
+    val one = ExplorationMap.scout(revealed, "woodland-edge", 1)
+    val three = ExplorationMap.scout(revealed, "woodland-edge", 3)
+    assertEquals(one.exploration.explorationParties.head.targetTick, 900L)
+    assertEquals(three.exploration.explorationParties.head.targetTick, 300L)
+    assertEquals(one.basicResources.sugar.amount - three.basicResources.sugar.amount, 20L * u)
+    assertEquals(finish(one).basicResources.knowledge.amount, finish(three).basicResources.knowledge.amount)
+    assertEquals(ScoutProgression.upkeepPerTick(three.ants, three.exploration), ScoutProgression.upkeepPerTick(revealed.ants, revealed.exploration))
+    assertEquals(ExplorationMap.scout(three, "woodland-edge", 1), three)
   }
-
-  test("destination requirements are enforced by the engine") {
-    assert(!ExplorationHelper.canStart(colony(299), 5 * u, RottenLog))
-    assert(!ExplorationHelper.canStart(colony(300), 4 * u, RottenLog))
-    assert(ExplorationHelper.canStart(colony(300), 5 * u, RottenLog))
-    val noScouts = colony(300).copy(ants = colony().ants.copy(scouts = 0L))
-    assert(!ExplorationHelper.canStart(noScouts, 5 * u, RottenLog))
-    assert(!ExplorationHelper.canStart(noScouts, u, WoodlandEdge))
-    assert(ExplorationHelper.canStart(noScouts, u, Surroundings))
-    assert(!ExplorationHelper.canStart(colony(), u + 1L, Surroundings))
-    assert(!ExplorationHelper.canStart(colony(), 101 * u, Surroundings))
-    val poor = colony().copy(basicResources = colony().basicResources.copy(sugar = BasicResource(0L, 1000 * u)))
-    assertEquals(ExplorationHelper.start(poor, u, Surroundings), poor)
+  test("each site's surveys diminish, exhaust, and provide the same deterministic total for every seed") {
+    for (seed <- List(42L, 137L)) {
+      var d = colony.copy(world = colony.world.copy(saveSeed = seed), exploration = ExplorationData(revealedSites = 6))
+      ExplorationMap.sites.foreach { site =>
+        val before = d.basicResources.knowledge.amount
+        val rewards = (1 to 3).map { _ =>
+          val previous = d.basicResources.knowledge.amount
+          d = finish(ExplorationMap.scout(d, site.id, 1))
+          d.basicResources.knowledge.amount - previous
+        }
+        assert(rewards.sliding(2).forall(pair => pair(0) > pair(1)))
+        assertEquals(d.basicResources.knowledge.amount - before, site.knowledge)
+        assertEquals(ExplorationMap.knowledgeRemaining(d.exploration, site.id), 0L)
+        assertEquals(ExplorationMap.scout(d, site.id, 1), d)
+      }
+      assertEquals(d.basicResources.knowledge.amount, ExplorationMap.sites.map(_.knowledge).sum)
+    }
   }
-
-  test("level five permits two parties, reserves scouts and blocks a third") {
-    val low = ExplorationHelper.start(colony(999), u, Surroundings)
-    assert(!ExplorationHelper.canStart(low, u, Surroundings))
-    val first = ExplorationHelper.start(colony(1000), 5 * u, RottenLog)
-    val second = ExplorationHelper.start(first, u, WoodlandEdge)
-    assertEquals(second.exploration.explorationParties.size, 2)
-    assertEquals(ScoutProgression.available(second.ants, second.exploration), 0L)
-    assertEquals(second.ants.idleWorkersCount, 94L * u)
-    assertEquals(ExplorationHelper.start(second, u, Surroundings), second)
+  test("the safe first ring funds all research, supplies and both outpost extensions with a margin") {
+    val research = UpgradeType.all.map(_.cost.knowledge).sum
+    val supplies = ExplorationProgression.suppliesUpgrades.map(_.cost.knowledge).sum
+    val nest = NestAttributes.initial.copy(dryClearingOutpost = true)
+    val extensions = (0 until OutpostProgression.MaxExtensions).map(n => OutpostProgression.expansionCost(nest.copy(dryClearingExtensions = n)).knowledge).sum
+    assert(ExplorationMap.sites.map(_.knowledge).sum > research + supplies + OutpostProgression.cost.knowledge + extensions)
+    assert(ExplorationMap.deposits("collect-resin") >= RoyalNurseryProgression.buildCost.resin)
+    assert(ExplorationMap.deposits("scavenge-water") > OutpostProgression.cost.water + RoyalNurseryProgression.buildCost.water)
   }
-
-  test("supplies charge sugar, enforce level gates and never exceed rank three") {
-    assertEquals(ExplorationProgression.upgradeSupplies(colony(99)).exploration.suppliesLevel, 0)
-    val first = ExplorationProgression.upgradeSupplies(colony(100).copy(basicResources = colony().basicResources.copy(knowledge = BasicResource(1000 * u, Long.MaxValue))))
-    assertEquals(first.exploration.suppliesLevel, 1)
-    assertEquals(first.basicResources.sugar.amount, 9500L * u)
-    assertEquals(ExplorationProgression.upgradeSupplies(first), first)
-    val second = ExplorationProgression.upgradeSupplies(first.copy(exploration = first.exploration.copy(experience = 1000)))
-    assertEquals(second.exploration.suppliesLevel, 2)
-    assertEquals(second.basicResources.sugar.amount, 8000L * u)
-    val third = ExplorationProgression.upgradeSupplies(second.copy(exploration = second.exploration.copy(experience = 2800)))
-    assertEquals(third.exploration.suppliesLevel, 3)
-    assertEquals(third.basicResources.sugar.amount, 3500L * u)
-    assertEquals(ExplorationProgression.upgradeSupplies(third), third)
+  test("workers collect predictable resources but never knowledge or new surveys") {
+    val sent = ExplorationHelper.start(ready, 5L * u, RottenLog)
+    assertEquals(sent.exploration.explorationParties.size, 1)
+    val cargo = sent.exploration.explorationParties.head.cargo
+    assertEquals(cargo.protein, 40L * u)
+    val returned = finish(sent)
+    assertEquals(returned.basicResources.protein.amount, 40L * u)
+    assertEquals(returned.basicResources.knowledge.amount, 0L)
+    assertEquals(returned.exploration.surveys, ready.exploration.surveys)
+    assertEquals(ExplorationHelper.exploreBonus(returned, sent.exploration.explorationParties.head), returned)
+    assertEquals(returned.ants.idleWorkersCount, 50L * u)
   }
-
-  test("supplies are captured on departure and do not upgrade in-flight rewards") {
-    val sent = ExplorationHelper.start(colony(300), 5 * u, RottenLog)
-    val party = sent.exploration.explorationParties.head
-    val improved = ExplorationProgression.upgradeSupplies(sent.copy(basicResources = sent.basicResources.copy(knowledge = BasicResource(1000 * u, Long.MaxValue))))
-    assertEquals(improved.exploration.suppliesLevel, 1)
-    assertEquals(ExplorationProgression.earned(party), 120L)
-    val next = ExplorationHelper.start(colony(1000).copy(exploration = ExplorationData(experience = 1000, suppliesLevel = 1)), 5 * u, RottenLog)
-    assertEquals(ExplorationProgression.earned(next.exploration.explorationParties.head), 144L)
+  test("workers do not require scouts for collection, but need a revealed studied site and a valid crew") {
+    val d = ready.copy(ants = ready.ants.copy(scouts = 0L))
+    assert(ExplorationHelper.canStart(d, 5L * u, RottenLog))
+    assert(!ExplorationHelper.canStart(d, 4L * u, RottenLog))
+    assert(!ExplorationHelper.canStart(d, 38L * u, RottenLog))
+    assert(!ExplorationHelper.canStart(d, u + 1L, WoodlandEdge))
+    val hidden = d.copy(exploration = ExplorationData())
+    assertEquals(ExplorationHelper.start(hidden, 5L * u, RottenLog), hidden)
   }
-
-  test("rotten log grants knowledge and XP, returns workers, and never requires carcass slots") {
-    val sent = ExplorationHelper.start(colony(300), 5 * u, RottenLog)
-    val party = sent.exploration.explorationParties.head
-    val result = ExplorationHelper.exploreBonus(sent, party)
-    assertEquals(result.exploration.experience, 420L)
-    assertEquals(result.basicResources.knowledge.amount, 60L * u)
-    assertEquals(result.ants.idleWorkersCount, 100L * u)
-    assert(result.exploration.discoveredCarcasses.isEmpty)
+  test("finite deposits reserve cargo on departure and return storage overflow to the site") {
+    val remaining = 5L * u
+    val d = ready.copy(exploration = ready.exploration.copy(depleted = Map("collect-resin" -> (ExplorationMap.deposits("collect-resin") - remaining))))
+    val sent = ExplorationHelper.start(d, 10L * u, CollectResin)
+    assertEquals(ExplorationMap.remaining(sent.exploration, "collect-resin"), 0L)
+    assert(!ExplorationHelper.canStart(sent, 10L * u, CollectResin))
+    val full = sent.copy(basicResources = sent.basicResources.copy(resin = BasicResource(200L * u, 200L * u)))
+    val returned = finish(full)
+    assertEquals(ExplorationMap.remaining(returned.exploration, "collect-resin"), remaining)
+    assertEquals(returned.statistics.resinU.total, 0L)
   }
-
-  test("large woodland parties improve protein and reserves without raising retrieval costs") {
-    val sent = ExplorationHelper.start(colony(), 5 * u, WoodlandEdge)
-    val result = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
-    val carcass = result.exploration.discoveredCarcasses.head
-    assertEquals(result.exploration.experience, 60L)
-    assertEquals(carcass.proteinReward, 20L * u)
-    assertEquals(carcass.totalFood, 480L * u)
-    assertEquals(carcass.requiredWorkers, 10L * u)
-    assertEquals(carcass.retrievalTicks, 100L)
+  test("concurrent hauls never overbook deposits or destination storage") {
+    val d = ready.copy(basicResources = ready.basicResources.copy(protein = BasicResource(95L * u, 100L * u)))
+    val first = ExplorationHelper.start(d, u, WoodlandEdge)
+    assertEquals(first.exploration.explorationParties.head.cargo.protein, 5L * u)
+    assert(!ExplorationHelper.canStart(first, 5L * u, RottenLog))
+    assertEquals(finish(first).basicResources.protein.amount, 100L * u)
   }
-
-  test("the trip crossing a level receives its new resource bonus") {
-    val sent = ExplorationHelper.start(colony(90), u, Surroundings)
-    val result = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
-    assertEquals(result.exploration.experience, 100L)
-    assertEquals(result.exploration.discoveredCarcasses.head.proteinReward, 62500L)
+  test("identical simultaneous hauls each return exactly once without stranding workers") {
+    val first = ExplorationHelper.start(ready, u, WoodlandEdge)
+    val sent = ExplorationHelper.start(first, u, WoodlandEdge)
+    assertEquals(sent.exploration.explorationParties.size, 2)
+    assertEquals(sent.exploration.explorationParties.head, sent.exploration.explorationParties(1))
+    val once = finish(sent)
+    assertEquals(once.exploration.explorationParties.size, 1)
+    val twice = finish(once)
+    assertEquals(twice.ants.idleWorkersCount, 50L * u)
+    assertEquals(twice.basicResources.protein.amount, 20L * u)
+    assert(twice.exploration.explorationParties.isEmpty)
   }
-
-  test("previews account for the level reached on return and match the reward") {
-    assert(ExplorationHelper.preview(ExplorationData(experience = 90), u, Surroundings).contains("6.25 protein"))
-    assert(ExplorationHelper.preview(ExplorationData(experience = 300), 5 * u, RottenLog).contains("60 knowledge"))
+  test("exhausted sites persist without missions; managed discoveries and research remain available") {
+    val used = ExplorationMap.sites.head
+    val d = ready.copy(exploration = ready.exploration.copy(depleted = Map("woodland-edge" -> ExplorationMap.deposits("woodland-edge"))))
+    assert(ExplorationMap.exhausted(d.exploration, used.id))
+    assert(ExplorationMap.revealed(d.exploration, used.id))
+    assert(DiscoveryProgression.WildAphids.found(d.exploration))
+    assertEquals(ExplorationMap.scout(d, used.id, 1), d)
+    assertEquals(ExplorationHelper.start(d, u, WoodlandEdge), d)
   }
-
-  test("destination and supplies round-trip in current saves") {
-    val party = ExplorationParty(5 * u, 0L, 300L, u, RottenLog.id, 2)
-    assertEquals(party.toJson.fromJson[ExplorationParty], Right(party))
-    val data = ExplorationData(explorationParties = List(party), experience = 300L, suppliesLevel = 2)
-    assertEquals(data.toJson.fromJson[ExplorationData], Right(data))
+  test("map state, finite cargo and scout reservations round-trip; obsolete saves are rejected") {
+    val sent = ExplorationMap.scout(colony, "surroundings", 2)
+    val loaded = SaveLoad.loadString(AllDataForSave.fromAllData(sent).toJson).get
+    assertEquals(loaded.exploration.explorationParties, sent.exploration.explorationParties)
+    assertEquals(loaded.exploration.revealedSites, sent.exploration.revealedSites)
+    assertEquals(ScoutProgression.available(loaded.ants, loaded.exploration), u)
+    assertEquals(SaveLoad.loadString(AllDataForSave.fromAllData(sent).copy(version = 6).toJson), None)
+    assert(!AllDataForSave.fromAllData(sent).toJson.contains("experience"))
+  }
+  test("every useful nectar crew returns more sugar than its supplies cost without XP inflation") {
+    for (count <- 5L to 37L) {
+      val crew = count * u
+      val cargo = ExplorationHelper.load(ready, crew, NectarMeadow)
+      assert(cargo.sugar > ExplorationHelper.cost(crew, NectarMeadow).sugar, s"$count workers")
+    }
+  }
+  test("party bonuses remain diminishing and cap collection benefit at 37 workers") {
+    assertEquals(List(1L, 5L, 17L, 37L, 1000L).map(n => ExplorationProgression.partyPercent(n * u)), List(100L, 200L, 300L, 400L, 400L))
   }
 }

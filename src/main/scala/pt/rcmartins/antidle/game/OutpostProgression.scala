@@ -6,6 +6,8 @@ import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.{CoveredTrails, SeedProcessing}
 
 object OutpostProgression {
+  val DewPerWorkerSecond: Long = 1500L
+  def dewPerTick(ants: AntsData): Long = ants.taskWorkers(AntTask.WaterCollector) / u * DewPerWorkerSecond / TicksPerSecond
   val Housing: Long = 50L * u
   val ForagerSlots: Long = 5L * u
   val MaxExtensions: Int = 2
@@ -16,7 +18,7 @@ object OutpostProgression {
     knowledge = 300L * u, tunnelingSpace = 750L * u, water = 150L * u)
 
   def visible(exploration: ExplorationData): Boolean =
-    ExplorationProgression.level(exploration.experience) >= 6 && DiscoveryProgression.DewPlants.found(exploration)
+    DiscoveryProgression.DewPlants.found(exploration)
 
   def extensions(nest: NestAttributes): Int =
     if (nest.dryClearingOutpost) Math.max(0, Math.min(MaxExtensions, nest.dryClearingExtensions)) else 0
@@ -27,7 +29,7 @@ object OutpostProgression {
 
   def expansionVisible(nest: NestAttributes, exploration: ExplorationData): Boolean =
     nest.dryClearingOutpost && extensions(nest) < MaxExtensions &&
-      ExplorationProgression.level(exploration.experience) >= 7 + extensions(nest)
+      exploration.revealedSites >= 5 + extensions(nest)
 
   def expansionCost(nest: NestAttributes): ActionCost = {
     val rank = extensions(nest).toLong

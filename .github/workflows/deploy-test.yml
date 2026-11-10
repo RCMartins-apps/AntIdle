@@ -49,7 +49,10 @@ jobs:
       - name: Check production UI on phone and desktop
         env:
           ANTIDLE_ARTIFACTS: test-results
-        run: python3 tests/ci_browser_smoke.py
+          ANTIDLE_PRODUCTION: "1"
+        run: |
+          python3 tests/ci_browser_smoke.py
+          python3 tests/map_browser_smoke.py
 
       - name: Upload browser failure screenshots
         if: failure()

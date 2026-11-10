@@ -62,17 +62,10 @@ class KnowledgeEconomySuite extends FunSuite {
     }
   }
 
-  test("every destination earns knowledge, with Rotten Log giving the most per base trip") {
-    assert(ExplorationDestination.Surroundings.knowledge > 0)
-    assert(ExplorationDestination.WoodlandEdge.knowledge > ExplorationDestination.Surroundings.knowledge)
-    assert(ExplorationDestination.RottenLog.knowledge > ExplorationDestination.WoodlandEdge.knowledge)
-    ExplorationDestination.all.foreach { destination =>
-      val ants = AntsData(workers = 20 * u, scouts = u, tasks = Seq(AntTask.Explorer -> 0L))
-      val initial = AllData.initial.copy(ants = ants, exploration = ExplorationData(experience = 300L))
-      val party = ExplorationParty(5 * u, 0L, destination.duration, destination.scouts, destination.id)
-      val returned = ExplorationHelper.exploreBonus(initial.copy(ants = ants.addToTask(AntTask.Explorer, 5 * u), exploration = initial.exploration.copy(explorationParties = List(party))), party)
-      assert(returned.basicResources.knowledge.amount > 0)
-    }
+  test("knowledge belongs to finite scout surveys rather than worker destinations") {
+    assertEquals(ExplorationMap.sites.size, 6)
+    assert(ExplorationMap.sites.forall(_.knowledge > 0L))
+    assert(ExplorationMap.sites.forall(site => ExplorationMap.knowledgeRemaining(ExplorationData(), site.id) == site.knowledge))
   }
 
   test("version six saves round-trip, and earlier versions are rejected without migration") {
@@ -80,8 +73,8 @@ class KnowledgeEconomySuite extends FunSuite {
       knowledge = BasicResource(5000 * u, Long.MaxValue)))
     val saved = AllDataForSave.fromAllData(game)
     val loaded = pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.toJson).get
-    assertEquals(saved.version, 6)
+    assertEquals(saved.version, AllData.CurrentVersion)
     assertEquals(loaded.basicResources, game.basicResources)
-    assertEquals(pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.copy(version = 5).toJson), None)
+    assertEquals(pt.rcmartins.antidle.game.saves.SaveLoad.loadString(saved.copy(version = 6).toJson), None)
   }
 }

@@ -61,7 +61,7 @@ class PrestigeSuite extends FunSuite {
   }
   test("only known Shared Paths and Nectar Meadow returns reveal a source without refilling it") {
     assertEquals(PheromoneTrails.discover(colony, ExplorationDestination.NectarMeadow), colony)
-    val data = known.copy(exploration = ExplorationData())
+    val data = known.copy(exploration = ExplorationData(revealedSites = 2, surveys = Map("nectar-meadow" -> 1)))
     assertEquals(PheromoneTrails.discover(data, ExplorationDestination.WoodlandEdge), data)
     val found = PheromoneTrails.discover(data, ExplorationDestination.NectarMeadow)
     assertEquals(found.exploration.sugarTrail.remaining, PheromoneTrails.Supply)
@@ -139,8 +139,8 @@ class PrestigeSuite extends FunSuite {
   }
   test("a guide cannot be booked onto an expedition or protected from starvation") {
     val marked = PheromoneTrails.mark(known.copy(exploration = known.exploration.copy(
-      experience = ExplorationProgression.threshold(4))))
-    val sent = ExplorationHelper.start(marked, 5 * u, ExplorationDestination.NectarMeadow)
+      revealedSites = 6, surveys = MapFixture.explored.surveys)))
+    val sent = ExplorationHelper.start(marked, 5 * u, ExplorationDestination.NectarMeadow, 1)
     assertEquals(sent.exploration.explorationParties.size, 1)
     assertEquals(ScoutProgression.available(sent.ants, sent.exploration), 0L)
     assertEquals(ScoutProgression.atHome(sent.ants, sent.exploration), u)

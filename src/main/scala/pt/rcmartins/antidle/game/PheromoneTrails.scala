@@ -13,8 +13,9 @@ object PheromoneTrails {
     else Math.min(resources.sugar.freeSpace, Math.min(exploration.sugarTrail.remaining,
       Prestige.sugar(workers(ants) / u * 8000L / TicksPerSecond, ants.lineage)))
   def discover(data: AllData, destination: ExplorationDestination): AllData =
-    if (data.ants.lineage.sharedPaths && destination == ExplorationDestination.NectarMeadow && data.exploration.sugarTrail.remaining <= 0L)
-      data.copy(exploration = data.exploration.copy(sugarTrail = SugarTrail(Supply)))
+    if (data.ants.lineage.sharedPaths && destination == ExplorationDestination.NectarMeadow && data.exploration.sugarTrail.remaining <= 0L && data.exploration.surveys.getOrElse("nectar-meadow", 0) == 1)
+      data.copy(exploration = data.exploration.copy(sugarTrail = SugarTrail(Math.min(Supply, ExplorationMap.remaining(data.exploration, "nectar-meadow"))),
+        depleted = data.exploration.depleted.updated("nectar-meadow", data.exploration.depleted.getOrElse("nectar-meadow", 0L) + Math.min(Supply, ExplorationMap.remaining(data.exploration, "nectar-meadow")))))
         .addMessage("A nectar source was found. Mark a pheromone trail in Explore.")
     else data
   def canMark(data: AllData): Boolean = data.unlocks.tabs.exploreTabUnlocked && data.ants.lineage.sharedPaths &&

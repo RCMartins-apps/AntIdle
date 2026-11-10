@@ -9,7 +9,7 @@ object ResourceVisibility {
     val known = data.unlocks.resources
     data
       .modify(_.unlocks.resources.showTunnelingSpace).setTo(known.showTunnelingSpace || data.basicResources.tunnelingSpace.amount > 0L)
-      .modify(_.unlocks.resources.showWater).setTo(known.showWater || data.basicResources.water.amount > 0L || data.nestAttributes.dryClearingOutpost)
+      .modify(_.unlocks.resources.showWater).setTo(known.showWater || data.basicResources.water.amount > 0L || data.nestAttributes.dryClearingOutpost || DiscoveryProgression.DewPlants.found(data.exploration))
       .modify(_.unlocks.resources.showKnowledge).setTo(known.showKnowledge || data.basicResources.knowledge.amount > 0L)
       .modify(_.unlocks.resources.showResin).setTo(known.showResin || data.basicResources.resin.amount > 0L ||
         DiscoveryProgression.ResinSeep.found(data.exploration) || data.upgrades(UpgradesData.UpgradeType.RoyalNurseryPlanning).unlocked ||

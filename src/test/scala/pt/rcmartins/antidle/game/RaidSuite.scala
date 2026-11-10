@@ -17,15 +17,15 @@ class RaidSuite extends FunSuite {
       world = d.world.copy(saveSeed = 123L, currentTick = 100L),
       nestAttributes = d.nestAttributes.copy(chambers = d.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
       upgrades = d.upgrades.unlock(UpgradesData.UpgradeType.DefaultWorkers),
-      exploration = ExplorationData(experience = ExplorationProgression.threshold(5)),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = d.basicResources.copy(sugar = BasicResource(20000 * u, 30000 * u), protein = BasicResource(0L, 2000 * u)),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
   def start(data: AllData = colony, workers: Long = 10 * u): AllData = ExplorationHelper.start(data, workers, RivalFoodCache)
   def loaded(data: AllData): AllData = AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
-  test("raid stays hidden before level five and requires resources, ten workers, a scout and a slot") {
-    val early = colony.copy(exploration = ExplorationData(experience = ExplorationProgression.threshold(5) - 1L))
+  test("raid requires a studied cache, resources, ten workers, a scout guide and a slot") {
+    val early = colony.copy(exploration = ExplorationData())
     assert(!RivalFoodCache.isUnlocked(early.exploration, early.ants, early.nestAttributes))
     assertEquals(start(early), early)
     assertEquals(start(colony, 9 * u), colony)
@@ -54,7 +54,7 @@ class RaidSuite extends FunSuite {
         assert(result.workerLosses < workers)
       }
     }
-    assert(ExplorationHelper.summary(colony.exploration, 10 * u, RivalFoodCache).contains("200–350 protein"))
+    assert(ExplorationHelper.summary(colony, 10 * u, RivalFoodCache).contains("200–350 protein"))
     assert(RaidProgression.risk(37 * u).contains("4–10 of 37"))
   }
   test("departure prioritizes oldest home workers, leaving younger cohorts at home") {

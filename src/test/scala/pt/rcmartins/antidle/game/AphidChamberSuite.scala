@@ -14,6 +14,7 @@ class AphidChamberSuite extends FunSuite {
     initial.copy(
       ants = AntsData(workers = 20 * u, tasks = Seq(AntTask.SugarCollector -> 0L, AntTask.AphidTender -> 0L, AntTask.Explorer -> 0L)),
       nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(aphidChamber = AphidChamber(level))),
+      exploration = MapFixture.explored,
       upgrades = initial.upgrades.unlock(AphidTending, DefaultWorkers),
       basicResources = initial.basicResources.copy(sugar = BasicResource(500 * u, 1000 * u), protein = BasicResource(10 * u, 100 * u)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
@@ -44,7 +45,7 @@ class AphidChamberSuite extends FunSuite {
     assertEquals(selected.ants.taskWorkers(AntTask.AphidTender), 3L * u)
     assertEquals(selected.ants.idleWorkersCount, 17L * u)
     assertEquals(selected.ants.availableWorkersLabel, "available workers")
-    val sent = ExplorationHelper.start(selected, 18 * u, ExplorationDestination.Surroundings)
+    val sent = ExplorationHelper.start(selected, 18 * u, ExplorationDestination.WoodlandEdge)
     assertEquals(sent.ants.taskWorkers(AntTask.AphidTender), 2L * u)
     val returned = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
     assertEquals(returned.ants.taskWorkers(AntTask.AphidTender), 3L * u)

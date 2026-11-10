@@ -15,7 +15,7 @@ class DiscoverySuite extends FunSuite {
     val initial = AllData.initial
     initial.copy(
       ants = AntsData(workers = 40 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
-      exploration = ExplorationData(experience = 1000L),
+      exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = initial.basicResources.copy(sugar = BasicResource(5000 * u, 10000 * u)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
@@ -28,67 +28,49 @@ class DiscoverySuite extends FunSuite {
     ExplorationHelper.exploreBonus(sent, party)
   }
 
-  test("discoveries require completed trips to the correct destination and announce only once") {
-    val initial = colony
-    assert(!WildAphids.found(initial.exploration))
-    assert(!AphidTending.shouldShow(initial))
-    val departed = ExplorationHelper.start(initial, u, WoodlandEdge)
-    assertEquals(WildAphids.progress(departed.exploration), 0)
-    val elsewhere = complete(initial, RottenLog)
-    assertEquals(WildAphids.progress(elsewhere.exploration), 0)
-    val fourth = (1 to 4).foldLeft(initial)((data, _) => complete(data, WoodlandEdge, u))
-    assertEquals(WildAphids.progress(fourth.exploration), 4)
-    assert(!AphidTending.shouldShow(fourth))
-    val fifth = complete(fourth, WoodlandEdge, u)
-    assert(WildAphids.found(fifth.exploration))
-    assert(AphidTending.shouldShow(fifth))
-    assertEquals(fifth.messages.count(_.startsWith("Discovery: Wild Aphids!")), 1)
-    val sixth = complete(fifth, WoodlandEdge, u)
-    assertEquals(WildAphids.progress(sixth.exploration), 5)
-    assertEquals(sixth.messages.count(_.startsWith("Discovery: Wild Aphids!")), 1)
+  test("discoveries require scout study, not repeat worker collection") {
+    val initial = colony.copy(exploration = ExplorationData(revealedSites = 1))
+    val studied = (1 to 3).foldLeft(initial) { (data, _) =>
+      val sent = ExplorationMap.scout(data, WoodlandEdge.id, 1)
+      ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
+    }
+    assert(WildAphids.found(studied.exploration))
+    assert(AphidTending.shouldShow(studied))
+    val collected = complete(studied, WoodlandEdge, u)
+    assertEquals(collected.exploration.surveys, studied.exploration.surveys)
+    assertEquals(collected.basicResources.knowledge.amount, studied.basicResources.knowledge.amount)
   }
 
-  test("simultaneous returns complete a survey once while both parties receive rewards") {
-    val initial = colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 4)))
-    val first = ExplorationHelper.start(initial, u, WoodlandEdge)
-    val second = ExplorationHelper.start(first, u, WoodlandEdge)
-    val result = TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = WoodlandEdge.duration - 1L)), None)
-    assertEquals(result.exploration.surveys(WoodlandEdge.id), 5)
-    assertEquals(result.messages.count(_.startsWith("Discovery: Wild Aphids!")), 1)
-    assertEquals(result.exploration.discoveredCarcasses.size, 2)
-    assert(result.upgrades(AphidTending).show)
-    assert(result.exploration.explorationParties.isEmpty)
-    assertEquals(result.ants.idleWorkersCount, 40L * u)
+  test("a second scout study cannot reserve an already active site") {
+    val initial = colony.copy(exploration = ExplorationData(revealedSites = 6))
+    val sent = ExplorationMap.scout(initial, WoodlandEdge.id, 1)
+    assertEquals(ExplorationMap.scout(sent, WoodlandEdge.id, 1), sent)
+    assert(ExplorationMap.canScout(sent, NectarMeadow.id, 1))
   }
 
-  test("seed route is gated by both the discovery and level, including engine calls") {
-    val initial = colony
+  test("seed collection requires a studied meadow and the seed discovery") {
+    val initial = colony.copy(exploration = ExplorationData(revealedSites = 2))
     assert(!SeedGathering.isUnlocked(initial.exploration, initial.ants, initial.nestAttributes))
-    assertEquals(ExplorationHelper.start(initial, 10 * u, SeedGathering), initial)
-    val second = (1 to 2).foldLeft(initial)((data, _) => complete(data, NectarMeadow))
-    assert(!SeedCache.found(second.exploration))
-    val third = complete(second, NectarMeadow)
-    assert(SeedCache.found(third.exploration))
-    assert(SeedGathering.isUnlocked(third.exploration, third.ants, third.nestAttributes))
-    assert(ExplorationHelper.canStart(third, 10 * u, SeedGathering))
-    assert(!ExplorationHelper.canStart(third, 9 * u, SeedGathering))
-    val low = third.copy(exploration = third.exploration.copy(experience = 999L))
-    assert(!ExplorationHelper.canStart(low, 10 * u, SeedGathering))
-    assert(!SeedGathering.isUnlocked(low.exploration, low.ants, low.nestAttributes))
+    val found = (1 to 2).foldLeft(initial) { (data, _) =>
+      val sent = ExplorationMap.scout(data, NectarMeadow.id, 1)
+      ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
+    }
+    assert(SeedCache.found(found.exploration))
+    assert(ExplorationHelper.canStart(found, 10 * u, SeedGathering))
+    assert(!ExplorationHelper.canStart(found, 9 * u, SeedGathering))
   }
 
   test("seed gathering preview matches guaranteed protein without requiring carcass slots") {
-    val initial = colony.copy(exploration = ExplorationData(experience = 1000L, surveys = Map(NectarMeadow.id -> 3)))
+    val initial = colony.copy(exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map(NectarMeadow.id -> 3)))
     val sent = ExplorationHelper.start(initial, 10 * u, SeedGathering)
     val party = sent.exploration.explorationParties.head
-    val xp = ExplorationProgression.earned(party)
-    val expected = ExplorationProgression.expeditionReward(10 * u, 1000L + xp, 10 * u, 0)
+    val expected = ExplorationProgression.partyReward(10 * u, 10 * u, 0)
     val result = ExplorationHelper.exploreBonus(sent, party)
     assertEquals(result.basicResources.protein.amount, expected)
     assert(result.exploration.proteinDiscovered)
     assert(result.exploration.discoveredCarcasses.isEmpty && result.exploration.carcasses.isEmpty)
-    assert(ExplorationHelper.summary(initial.exploration, 10 * u, SeedGathering).contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein"))
-    assert(ExplorationHelper.preview(initial.exploration, 10 * u, SeedGathering).contains("Protein guaranteed"))
+    assert(ExplorationHelper.summary(initial, 10 * u, SeedGathering).contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein"))
+    assert(ExplorationHelper.outcomePreview(initial.exploration, 10 * u, SeedGathering).contains("Protein guaranteed"))
     val nearlyFull = sent.copy(basicResources = sent.basicResources.copy(protein = BasicResource(99 * u, 100 * u)))
     assertEquals(ExplorationHelper.exploreBonus(nearlyFull, party).basicResources.protein.amount, 100L * u)
   }
@@ -119,10 +101,10 @@ class DiscoverySuite extends FunSuite {
   }
 
   test("survey progress, research and assignments persist; saves without surveys start undiscovered") {
-    val data = UpgradeVisibility.reconcile(colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 4, NectarMeadow.id -> 2))))
+    val data = UpgradeVisibility.reconcile(colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 3, NectarMeadow.id -> 2))))
     val loaded = AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assertEquals(loaded.exploration, data.exploration)
-    val discovered = complete(loaded, WoodlandEdge, u)
+    val discovered = loaded
     assert(WildAphids.found(discovered.exploration))
     assertEquals("{}".fromJson[ExplorationData].toOption.get.surveys, Map.empty[String, Int])
     val task = AntTask.AphidTender: AntTask

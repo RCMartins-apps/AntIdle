@@ -22,7 +22,9 @@ normal game save schema. They contain the actual simulated colony, not a staged
 approximation. Saves are stamped at export; importing days later can store offline
 time as usual, which you can choose not to spend during a pacing check.
 
-The first measured comparison is recorded in [INITIAL_RESULTS.md](INITIAL_RESULTS.md).
+The historical pre-map comparison is recorded in [INITIAL_RESULTS.md](INITIAL_RESULTS.md).
+Version 7 uses the [handcrafted map](../../docs/EXPLORATION.md); rebuild before running it.
+Its first measured run is recorded in [MAP_RESULTS.md](MAP_RESULTS.md).
 
 ## What is simulated
 
@@ -34,8 +36,8 @@ world seed drives discoveries, aging and other random outcomes. Offline time
 multipliers are not spent. Prestige is the normal reset with normal inheritance.
 
 The default configuration has two seeds and three policies. They differ in
-population targets, party sizes, extra scouts and how many workers are reserved
-for digging, brood care and aphids. They share explicit research priorities.
+population targets, party sizes, additional scouts beyond a two-scout colony target and how many workers are reserved
+for digging, brood care and aphids. They share explicit research priorities and use scouts to reveal/study sites, then workers to collect needed resources.
 Change `tools/balance/default.json` or pass another file with `--config` to test
 hypotheses. Policy names are labels, not promises of optimal play. Research only
 considers the first visible unfinished priority; this is intentionally inspectable.

@@ -1,4 +1,7 @@
-# First measured pacing baseline
+# Historical pacing baseline — before the hex map
+
+These are save-version-6 XP results, retained as history. They do not describe
+the version-7 map or its finite Knowledge economy.
 
 Measured 2026-11-09 with `default.json`: three policies × seeds 42/137,
 up to four simulated hours each, targeting two foundings. The final bundle was

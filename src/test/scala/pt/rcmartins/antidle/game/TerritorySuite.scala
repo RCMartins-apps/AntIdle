@@ -18,7 +18,7 @@ class TerritorySuite extends FunSuite {
       nestAttributes = d.nestAttributes.copy(maxAnts = 100 * u, maxEggs = 5 * u,
         chambers = d.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
       upgrades = d.upgrades.unlock(UpgradesData.UpgradeType.DefaultWorkers),
-      exploration = ExplorationData(experience = ExplorationProgression.threshold(5), surveys = Map("rival-food-cache" -> 1)),
+      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map("rival-food-cache" -> 1)),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
   def held: AllData = TerritoryProgression.claim(colony, 10)
@@ -30,7 +30,7 @@ class TerritorySuite extends FunSuite {
     val undiscovered = colony.copy(exploration = colony.exploration.copy(surveys = Map.empty))
     assert(!TerritoryProgression.visible(undiscovered.exploration))
     assertEquals(TerritoryProgression.claim(undiscovered, 10), undiscovered)
-    val sent = ExplorationHelper.start(undiscovered, 10 * u, ExplorationDestination.RivalFoodCache)
+    val sent = ExplorationMap.scout(undiscovered, "rival-food-cache", 1)
     val returned = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
     assert(TerritoryProgression.visible(returned.exploration))
     assertEquals(returned.messages.count(_.startsWith("Discovery: Contested Foraging Ground!")), 1)

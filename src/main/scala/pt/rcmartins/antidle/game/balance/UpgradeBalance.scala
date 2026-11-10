@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.{DiscoveryProgression, ExplorationProgression}
+import pt.rcmartins.antidle.game.DiscoveryProgression
 import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
@@ -11,7 +11,7 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
   */
 case class UpgradeRequirements(
     upgrades: List[UpgradeType] = Nil,
-    minimumExplorationLevel: Int = 1,
+    minimumRevealedSites: Int = 0,
     explorationTab: Boolean = false,
     explorationAvailable: Boolean = false,
     discovery: Option[String] = None,
@@ -24,7 +24,7 @@ case class UpgradeRequirements(
 ) {
   def met(data: AllData): Boolean =
     upgrades.forall(data.upgrades(_).unlocked) &&
-      ExplorationProgression.level(data.exploration.experience) >= minimumExplorationLevel &&
+      data.exploration.revealedSites >= minimumRevealedSites &&
       (!explorationTab || data.unlocks.tabs.exploreTabUnlocked) &&
       (!explorationAvailable || UpgradeBalance.explorationAvailable(data)) &&
       discovery.forall(DiscoveryProgression.has(data.exploration, _)) &&
@@ -86,10 +86,10 @@ object UpgradeBalance {
       description = s"Food Storage Chamber: +${FoodStorageChamberBonusMaxSugar / u} sugar capacity per level.",
     ),
     UnlockExplorerTask -> UpgradeDefinition(
-      title = "Unlock Explorer Task",
+      title = "Local Exploration",
       cost = ActionCost(sugar = 750 * u),
       requirements = UpgradeRequirements(upgrades = List(UnlockFoodStorageChamber)),
-      description = "Unlocks exploration expeditions.",
+      description = "Unlocks the map: scouts reveal and study sites; workers collect resources.",
     ),
     DefaultWorkers -> UpgradeDefinition(
       title = "Default Workers",
@@ -100,25 +100,25 @@ object UpgradeBalance {
     AdditionalExpeditionSlot -> UpgradeDefinition(
       title = "Expedition Coordination",
       cost = ActionCost(sugar = 1000 * u, knowledge = 100 * u),
-      requirements = UpgradeRequirements(explorationTab = true, minimumExplorationLevel = 3),
+      requirements = UpgradeRequirements(explorationTab = true, minimumRevealedSites = 2),
       description = "+1 expedition slot.",
     ),
     EstablishedTrails -> UpgradeDefinition(
       title = "Established Trails",
       cost = ActionCost(sugar = 600 * u, knowledge = 60 * u),
-      requirements = UpgradeRequirements(explorationTab = true, minimumExplorationLevel = 2),
+      requirements = UpgradeRequirements(explorationTab = true, minimumRevealedSites = 1),
       description = "−20% sugar-yield loss per added collector.",
     ),
     ReinforcedMandibles -> UpgradeDefinition(
       title = "Reinforced Mandibles",
       cost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u),
-      requirements = UpgradeRequirements(explorationTab = true, minimumExplorationLevel = 3),
+      requirements = UpgradeRequirements(explorationTab = true, minimumRevealedSites = 2),
       description = "+50% Tunneler output.",
     ),
     BroodCare -> UpgradeDefinition(
       title = "Brood Care",
       cost = ActionCost(sugar = 2000 * u, protein = 40 * u, knowledge = 180 * u),
-      requirements = UpgradeRequirements(explorationTab = true, nursery = true, minimumExplorationLevel = 4),
+      requirements = UpgradeRequirements(explorationTab = true, nursery = true, minimumRevealedSites = 3),
       description = "−20% worker/scout development time; includes growing brood.",
     ),
     AphidTending -> UpgradeDefinition(
@@ -136,19 +136,19 @@ object UpgradeBalance {
     QueensRoutine -> UpgradeDefinition(
       title = "Queen's Routine",
       cost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u),
-      requirements = UpgradeRequirements(explorationTab = true, nursery = true, minimumExplorationLevel = 3),
+      requirements = UpgradeRequirements(explorationTab = true, nursery = true, minimumRevealedSites = 2),
       description = "Automatic worker eggs and aging-job replacements. Set a population target and sugar reserve in Brood.",
     ),
     ConstructionPlanning -> UpgradeDefinition(
       title = "Construction Planning",
       cost = ActionCost(sugar = 500 * u, knowledge = 50 * u),
-      requirements = UpgradeRequirements(explorationTab = true, minimumExplorationLevel = 2),
+      requirements = UpgradeRequirements(explorationTab = true, minimumRevealedSites = 1),
       description = "+2 construction queue slots (3 total).",
     ),
     ColonyNutrition -> UpgradeDefinition(
       title = "Colony Nutrition",
       cost = ActionCost(sugar = 2500 * u, protein = 60 * u, knowledge = 200 * u),
-      requirements = UpgradeRequirements(aging = true, explorationTab = true, minimumExplorationLevel = 5),
+      requirements = UpgradeRequirements(aging = true, explorationTab = true, minimumRevealedSites = 3),
       description = "New workers and scouts: +20% lifespan.",
     ),
     RepleteStorage -> UpgradeDefinition(
@@ -160,19 +160,19 @@ object UpgradeBalance {
     CoveredTrails -> UpgradeDefinition(
       title = "Covered Trails",
       cost = ActionCost(sugar = 3000 * u, protein = 60 * u, knowledge = 300 * u, water = 100 * u),
-      requirements = UpgradeRequirements(outpost = true, minimumExplorationLevel = 7),
+      requirements = UpgradeRequirements(outpost = true, minimumRevealedSites = 5),
       description = "−25% Seed Forager water use (0.015 water/s each).",
     ),
     SeedProcessing -> UpgradeDefinition(
       title = "Seed Processing",
       cost = ActionCost(sugar = 6000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u),
-      requirements = UpgradeRequirements(outpost = true, minimumExplorationLevel = 8),
+      requirements = UpgradeRequirements(outpost = true, minimumRevealedSites = 5),
       description = "+50% Seed Forager protein output (0.06 protein/s each).",
     ),
     RoyalNurseryPlanning -> UpgradeDefinition(
       title = "Royal Nursery Planning",
       cost = ActionCost(sugar = 5000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u),
-      requirements = UpgradeRequirements(nursery = true, discovery = Some("resin-seep"), minimumExplorationLevel = 8),
+      requirements = UpgradeRequirements(nursery = true, discovery = Some("resin-seep"), minimumRevealedSites = 5),
       description = "Unlocks Royal Nursery construction.",
     )
   )

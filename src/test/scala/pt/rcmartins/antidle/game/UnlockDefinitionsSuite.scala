@@ -18,7 +18,7 @@ class UnlockDefinitionsSuite extends FunSuite {
         nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)),
       upgrades = UpgradeType.all.foldLeft(d.upgrades)((upgrades, t) => upgrades.unlock(t)),
-      exploration = d.exploration.copy(experience = ExplorationProgression.threshold(10), proteinDiscovered = true,
+      exploration = d.exploration.copy(revealedSites = 6, proteinDiscovered = true,
         surveys = DiscoveryProgression.all.map(_.destination -> 100).toMap))
   }
 
@@ -29,8 +29,8 @@ class UnlockDefinitionsSuite extends FunSuite {
       assert(definition.requirements.upgrades.forall(UpgradeType.all.contains), upgrade.name)
       assert(!definition.requirements.upgrades.contains(upgrade), upgrade.name)
       assert(definition.requirements.discovery.forall(id => DiscoveryProgression.all.exists(_.id == id)), upgrade.name)
-      assert(definition.requirements.minimumExplorationLevel >= 1)
-      assert(definition.requirements.minimumExplorationLevel <= ExplorationProgression.MaxLevel)
+      assert(definition.requirements.minimumRevealedSites >= 0)
+      assert(definition.requirements.minimumRevealedSites <= ExplorationMap.sites.size)
     }
     val saved = AllDataForSave.fromAllData(ready).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assert(UpgradeType.all.forall(saved.upgrades(_).unlocked))
@@ -41,10 +41,10 @@ class UnlockDefinitionsSuite extends FunSuite {
       val d = ready
       val r = upgrade.definition.requirements
       assert(upgrade.shouldShow(d), upgrade.name)
-      if (r.minimumExplorationLevel > 1) {
-        val before = d.copy(exploration = d.exploration.copy(experience = ExplorationProgression.threshold(r.minimumExplorationLevel) - 1L))
+      if (r.minimumRevealedSites > 0) {
+        val before = d.copy(exploration = d.exploration.copy(revealedSites = r.minimumRevealedSites - 1))
         assert(!upgrade.shouldShow(before), upgrade.name)
-        assert(upgrade.shouldShow(before.copy(exploration = before.exploration.copy(experience = before.exploration.experience + 1L))), upgrade.name)
+        assert(upgrade.shouldShow(before.copy(exploration = before.exploration.copy(revealedSites = before.exploration.revealedSites + 1))), upgrade.name)
       }
       r.upgrades.foreach { required =>
         assert(!upgrade.shouldShow(d.copy(upgrades = d.upgrades.modify(required)(_.copy(unlocked = false)))), upgrade.name)
@@ -94,15 +94,13 @@ class UnlockDefinitionsSuite extends FunSuite {
   test("all destinations share their level/discovery gate between visibility and departure") {
     val d = ready
     val ants = AntsData(workers = 37L * u, scouts = 5L * u)
-    ExplorationDestination.all.foreach { route =>
-      val unlocked = d.exploration.copy(experience = ExplorationProgression.threshold(route.requiredLevel), explorationParties = Nil)
+    ExplorationDestination.all.filter(route => ExplorationMap.siteForRoute(route.id).nonEmpty).foreach { route =>
+      val unlocked = d.exploration.copy(revealedSites = 6, explorationParties = Nil)
       assert(route.isUnlocked(unlocked, ants, d.nestAttributes), route.id)
       assert(ExplorationHelper.canDepart(unlocked, ants, d.upgrades, route.minimumWorkers, route), route.id)
-      if (route.requiredLevel > 1) {
-        val below = unlocked.copy(experience = unlocked.experience - 1L)
-        assert(!route.isUnlocked(below, ants, d.nestAttributes), route.id)
-        assert(!ExplorationHelper.canDepart(below, ants, d.upgrades, route.minimumWorkers, route), route.id)
-      }
+      val below = unlocked.copy(revealedSites = 0)
+      assert(!route.isUnlocked(below, ants, d.nestAttributes), route.id)
+      assert(!ExplorationHelper.canDepart(below, ants, d.upgrades, route.minimumWorkers, route), route.id)
       route.requiredDiscovery.foreach { id =>
         val missing = DiscoveryProgression.all.find(_.id == id).get
         val below = unlocked.copy(surveys = unlocked.surveys.updated(missing.destination, missing.trips - 1))
@@ -115,18 +113,16 @@ class UnlockDefinitionsSuite extends FunSuite {
   test("supplies catalog drives actual price, unlock boundary, and milestone hints") {
     val fresh = AllData.initial
     ExplorationProgression.suppliesUpgrades.zipWithIndex.foreach { case (tier, rank) =>
-      val d = fresh.copy(exploration = fresh.exploration.copy(suppliesLevel = rank, experience = ExplorationProgression.threshold(tier.requiredLevel)),
+      val d = fresh.copy(exploration = fresh.exploration.copy(suppliesLevel = rank, revealedSites = tier.requiredSites),
         basicResources = fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = tier.cost.sugar),
           knowledge = fresh.basicResources.knowledge.copy(amount = tier.cost.knowledge)))
       assertEquals(ExplorationProgression.suppliesCost(d.exploration), tier.cost)
-      val before = d.copy(exploration = d.exploration.copy(experience = d.exploration.experience - 1L))
+      val before = d.copy(exploration = d.exploration.copy(revealedSites = d.exploration.revealedSites - 1))
       assertEquals(ExplorationProgression.upgradeSupplies(before), before)
       val upgraded = ExplorationProgression.upgradeSupplies(d)
       assertEquals(upgraded.exploration.suppliesLevel, rank + 1)
       assertEquals(upgraded.basicResources.sugar.amount, 0L)
       assertEquals(upgraded.basicResources.knowledge.amount, 0L)
     }
-    assertEquals(ExplorationProgression.nextMilestone(0L), "Level 2: expedition supplies")
-    assertEquals(ExplorationProgression.nextMilestone(300L), "Level 5: second expedition slot & supplies II")
   }
 }

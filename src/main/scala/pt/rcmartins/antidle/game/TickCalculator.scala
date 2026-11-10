@@ -129,7 +129,7 @@ object TickCalculator {
 
   val waterTickGain: BonusOriginGroup = BonusOriginGroup(
     antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal, explorationSignal).map { case (ants, nest, upgrades, resources, exploration) =>
-      List(ResourceOrigin("Seed Foragers", -OutpostProgression.harvestPerTick(ants, nest, upgrades, resources).water),
+      List(ResourceOrigin("Dew Gatherers", OutpostProgression.dewPerTick(ants)), ResourceOrigin("Seed Foragers", -OutpostProgression.harvestPerTick(ants, nest, upgrades, resources).water),
         ResourceOrigin("Royal brood", -RoyalBroodProgression.forecast(ants, nest, upgrades, exploration, resources).cost.water))
     }
   )

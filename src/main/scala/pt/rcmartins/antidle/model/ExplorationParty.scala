@@ -12,6 +12,8 @@ case class ExplorationParty(
     ages: TravelAges = TravelAges(),
     extraScouts: Int = 0,
     raidOutcome: Option[RaidOutcome] = None,
+    mission: String = "haul",
+    cargo: ActionCost = ActionCost(),
 )
 
 object ExplorationParty {

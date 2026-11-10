@@ -659,3 +659,20 @@ checks. Supplies levels/costs and their hints share definitions too.
 Preserve current balance/content/save schema. This does not relocate every
 mechanic's effects into a universal configuration framework. Document tuning
 locations and verify real-engine pacing against a baseline; see BALANCING.md.
+
+## D36: Replace exploration XP with a finite handcrafted hex map — approved
+
+On 2026-11-10 the owner approved removing exploration XP, a fixed first ring of
+six sites, deterministic required progression, finite diminishing knowledge and
+finite site resources. Scouts must have exclusive useful work beyond accompanying
+worker parties. Implement scout-only reveals and surveys, worker collection and
+existing scout-guided Shared Paths; scout crews trade upkeep/supplies for speed.
+Keep exhausted sites recognizable, with no remaining mission. Renewable colony
+jobs support ongoing maintenance; water discovery opens Dew Gatherers so finite
+water cannot permanently block outpost/royal care. Safe study provides required
+knowledge; optional combat is never required for founding.
+
+The owner explicitly authorized breaking saves for this redesign: version 7,
+no XP field or XP-based unlocks. Wider rings are a later range/prestige direction,
+not implemented in this first-ring change. Preserve current other mechanics where
+possible, but old XP pacing/results are no longer an applicable balance target.

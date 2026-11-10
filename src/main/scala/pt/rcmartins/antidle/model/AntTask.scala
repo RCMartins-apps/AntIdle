@@ -31,10 +31,10 @@ object AntTask {
     val name: String = "Aphid Tender"
   }
 
-//  case object WaterCollector extends AntTask {
-//    val uiOrder: Int = 2
-//    val name: String = "Water Collector"
-//  }
+  case object WaterCollector extends AntTask {
+    val uiOrder: Int = 4
+    val name: String = "Dew Gatherer"
+  }
 
   case object Tunneler extends AntTask {
     val uiOrder: Int = 3
@@ -88,7 +88,7 @@ object AntTask {
 
   case object Explorer extends AntTask {
     val uiOrder: Int = 100
-    val name: String = "Explorer"
+    val name: String = "Collection Crew"
     override val showButtons: Boolean = false
     override val hasAntUpkeep: Boolean = false
   }

@@ -17,7 +17,7 @@ class OutpostSuite extends FunSuite {
       basicResources = initial.basicResources.copy(sugar = BasicResource(6000 * u, 10000 * u),
         protein = BasicResource(80 * u, 100 * u), water = BasicResource(180 * u, 200 * u),
         tunnelingSpace = BasicResource(1000 * u, 1500 * u), knowledge = BasicResource(500 * u, Long.MaxValue)),
-      exploration = ExplorationData(experience = 1500L, surveys = Map("dry-clearing" -> 3)),
+      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map("dry-clearing" -> 3)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
       nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
         nurseryChamber = Chamber.NurseryChamber(1), repleteChamber = Chamber.RepleteChamber(1))),
@@ -30,7 +30,7 @@ class OutpostSuite extends FunSuite {
   test("outpost requires discovery, level and every resource in the engine") {
     assert(OutpostProgression.canEstablish(colony))
     val hidden = colony.copy(exploration = colony.exploration.copy(surveys = Map("dry-clearing" -> 2)))
-    val early = colony.copy(exploration = colony.exploration.copy(experience = 1499L))
+    val early = colony.copy(exploration = colony.exploration.copy(surveys = Map("dry-clearing" -> 1)))
     assert(!OutpostProgression.visible(hidden.exploration))
     assert(!OutpostProgression.visible(early.exploration))
     val base = colony.basicResources
@@ -69,7 +69,7 @@ class OutpostSuite extends FunSuite {
     val pooled = DefaultWorkerAssignment.select(built, Some(AntTask.SeedForager))
     assertEquals(pooled.ants.taskWorkers(AntTask.SeedForager), 5L * u)
     assertEquals(pooled.ants.idleWorkersCount, 15L * u)
-    val sent = ExplorationHelper.start(pooled, 18 * u, ExplorationDestination.Surroundings)
+    val sent = ExplorationHelper.start(pooled, 18 * u, ExplorationDestination.ScavengeWater)
     assertEquals(sent.ants.taskWorkers(AntTask.SeedForager), 2L * u)
     val returned = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
     assertEquals(returned.ants.taskWorkers(AntTask.SeedForager), 5L * u)

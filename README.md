@@ -42,8 +42,7 @@ keyboard activation; closed details add no extra row, even for disabled actions.
 ×250 options as desktop Ctrl/Shift shortcuts for laying eggs and assigning workers.
 Resource totals use compact numbers and negative income is red. Upgrades use
 one column on phones and two on larger screens, with a short empty state when
-there is no research to buy. Explore shows unmet party minimums beside routes
-and expedition-slot availability below the launch area.
+there is no research to buy. Explore shows a hex map and selected-site requirements, reserves and mission availability.
 Resource limits and game rules are shared across both layouts. Game saves remain
 in the browser's local storage.
 
@@ -52,25 +51,25 @@ includes them without an additional asset-copy step.
 
 ## Browser regression checks
 
-After `sbt fastOptJS`, install Playwright in your Python environment and a browser:
+The maintained production checks cover phone/desktop controls and the version-7 map:
 
 ```sh
-python3 -m pip install playwright
+sbt fullOptJS test balance/test
+python3 -m pip install -r tests/requirements-browser.txt
 python3 -m playwright install chromium
-python3 tests/browser_smoke.py
+python3 tests/ci_browser_smoke.py
+ANTIDLE_PRODUCTION=1 python3 tests/map_browser_smoke.py
 ```
 
-The script starts its own local static server and checks phone, tablet, and desktop
-widths, unlocked tabs, touch targets, action details, save restoration, resizing,
-and identical game results for mobile action amounts and desktop modifiers. It
-uses isolated browser contexts and simulated save data, without changing your saves.
-It uses a system `chromium` if available; `CHROMIUM_PATH` can select another binary.
-An inherited HTTPS proxy is supported, with localhost bypassed.
+The scripts serve the repository themselves, use isolated browser contexts and
+leave your own saves untouched. `CHROMIUM_PATH` can select a system browser.
+Inherited HTTPS proxies are supported, with localhost bypassed. The page loads
+Bootstrap, jQuery, Font Awesome and Popper from CDNs, so those assets need network
+access for the complete interface.
 
-The page loads Bootstrap, jQuery, Font Awesome, and Popper from external CDNs;
-network access to those assets is required for the complete interface.
-Run `python3 tests/ui_polish_smoke.py` for focused checks of readable totals,
-research layout and empty states, and expedition availability feedback.
+For fast iteration, run `sbt fastOptJS` then `python3 tests/map_browser_smoke.py`.
+See [tests/README.md](tests/README.md) before using older feature-specific browser
+scripts: XP/carousel fixtures are historical and no longer supported against v7.
 
 ## Chamber bonuses
 
@@ -79,45 +78,16 @@ completed upgrades, and capacity changes use this shared source. Balance values 
 capacity bonus or assigning it to another chamber does not require changes to
 `Actions.scala` or `TickUpdater.scala`. Saved capacities stay additive.
 
-## Exploration progression prototype
+## Handcrafted exploration map
 
-Expeditions discover dead insects in **Explore**. Select **Retrieve Carcass** to
-send idle workers: nearby insects need 5 carriers for 10 seconds; woodland
-insects need 10 carriers for 20 seconds. Carriers return automatically and cannot
-work other jobs while away. No harvesting job is required.
+Explore starts at the nest, surrounded by six hidden hexagons. Scouts reveal
+neighbors in a fixed order and study each site for diminishing, finite Knowledge.
+Workers collect finite deposits from studied sites. Exhausted hexagons remain
+visible as history; there is no exploration XP or level-based reward inflation.
 
-At base party size and level, each returned carcass grants protein immediately
-(5 nearby, 10 woodland), up to
-the protein storage limit. Its sugar reserve then feeds the colony before stored
-sugar. Nearby insects hold 120 sugar; woodland insects hold 240. Reserves drain
-oldest-first, only as needed for upkeep, and their slots free when empty.
-
-The nest starts with one carcass slot. Each Nursery level adds one slot as well
-as its shared ant capacity bonus. Returning parties reserve a slot when sent;
-new discoveries can wait outside even when storage is full.
-
-The Nursery costs 3 protein plus tunneling space. It unlocks scout eggs costing
-50 sugar and 2 protein when laid, developing in about 90 seconds at full base
-care with another 20 sugar and 2 protein in larval feeding. A scout can guide a 45-second
-woodland expedition that discovers a larger carcass. Nearby expeditions take
-15 seconds; the first guarantees a carcass, while later ones can find carcasses,
-sugar, or nothing. Scouts on expeditions and workers on retrievals remain part
-of colony population but do not consume nest sugar while away.
-
-Balance values live in `game/Constants.scala`; retrieval, scout growth, and
-expedition rules live in `CarcassProgression`, `ScoutProgression`, and
-`ExplorationHelper`.
-
-After `sbt fastOptJS` and browser setup, run:
-
-```sh
-python3 tests/browser_smoke.py
-python3 tests/progression_smoke.py
-```
-
-These cover discovery and retrieval, carrier and slot reservation, immediate
-protein, sugar priority and exhaustion, Nursery/scout progression, save reloads,
-and phone/desktop layouts.
+See [Exploration map](docs/EXPLORATION.md) for scout roles, fixed budgets,
+discoveries, deposit conservation, renewable maintenance and the first-ring design.
+This redesign uses **save version 7** and intentionally rejects older saves.
 
 ## Colony capacity
 
@@ -127,51 +97,19 @@ Nursery unlocks scout eggs without imposing a separate scout limit. Brood capaci
 limits eggs, larvae and pupae together; pending worker/scout orders reserve
 future colony housing. Save format 6 stores this as `maxAnts`; older save formats are no longer supported.
 
-## Exploration progression
+## Exploration missions
 
-Every completed expedition earns XP, even if it finds nothing. Levels cost
-100, 200, 300… XP each, with 19,000 total XP to reach the level-20 cap.
-Levels use the gentler curve.
-Every level adds 25% to resource rewards. The trip that levels up receives the
-new resource bonus. XP progress is visible in Explore; milestone hints and longer explanations stay
-inside **XP details**.
+Scout-only **Explore Surroundings** reveals one neighboring hexagon. **Study Site**
+extracts Knowledge and makes discoveries; crews of one to three scouts trade
+supplies/upkeep for faster missions. Workers cannot perform these actions.
+Worker collection never grants Knowledge or advances studies. Scout studies and
+worker hauls share mission slots; guides for optional raids and Shared Paths are
+reserved separately from available scouts.
 
-| Destination | Duration | Base XP | Base Knowledge | Main reward | Requirements |
-| --- | --- | --- | --- | --- | --- |
-| Surroundings | 15s | 10 | 2 | First trip guarantees a carcass; then 45% carcass, 44% sugar, 11% no resources | 1 worker |
-| Woodland Edge | 45s | 30 | 6 | Guaranteed carcass with 10 protein and 240 sugar reserve | 1 worker, 1 scout |
-| Rotten Log | 60s | 60 | 20 | Guaranteed 20 knowledge; no carcass storage needed | Level 3, 5 workers, 1 scout |
-
-Carcasses still need retrieval before their protein and sugar reserve are usable.
-Nearby carcasses start at 5 protein and 120 sugar reserve. Forecasts on destination
-details include selected workers, supplies, and the level reached on return.
-Cards show duration, XP, and Knowledge, with live resource and worker costs beside
-the action. Reward odds and capacity requirements are available through mobile
-**info icons** on phone and desktop. Locked destinations are
-hidden: scout routes appear after Nursery/scout training, and Rotten Log also
-requires level 3. Unlocked routes remain visible when scouts are away or resources
-are insufficient. Details omit already-satisfied unlock levels and focus on
-current costs, staffing and slots. Supplies appear at level 2; later ranks appear at their unlock
-levels rather than as locked actions.
-Sugar costs are 10, 20, and 30 per worker for the three destinations respectively.
-
-Party size improves both XP and all resource rewards, with diminishing returns:
-1 worker gives 1×, 5 give 2×, 17 give 3×, and 37 give 4×. New parties cap at 37 workers.
-Costs continue scaling with workers, so smaller parties are more sugar-efficient.
-Larger carcass rewards do not increase carrier requirements or retrieval time.
-
-Milestones unlock expedition supplies at level 2, Rotten Log at level 3, a second
-expedition slot and supplies II at level 5, and supplies III at level 8.
-Each supplies rank adds 20% XP and rewards (up to +60%), stacking with party and
-resource-level bonuses. The three ranks cost 500/20, 1,500/80, and 4,500/200 sugar/Knowledge.
-Upgrades affect future departures; trips already away retain their original supplies.
-Both workers and scouts are reserved for each expedition, independently of carcass
-retrievals and their storage reservations.
-
-
-Run `sbt test` for the exploration engine tests. After `sbt fastOptJS`, run
-`python3 tests/exploration_smoke.py` for destination gating, previews, supplies,
-concurrent parties, save reloads, and phone/desktop layouts.
+Every study and deposit is finite. Supplies/crew size improve haul capacity, not
+total resources or available Knowledge. Costs, crew requirements, duration,
+remaining reserves and combat risks are visible at the selected site. Use the
+same map on phone and desktop; no carousel or list of unrelated destinations.
 
 ## Default workers
 
@@ -208,44 +146,15 @@ never spends resources, grants purchases, or adds tutorial messages.
 
 ## Knowledge economy
 
-Knowledge replaces colony points and has no storage limit. Every expedition earns
-it, including trips that find no resources: base rewards are 2 nearby, 6 at the
-Woodland Edge, and 20 at the Rotten Log, scaled by party size, exploration level,
-and supplies. Chambers and worker population no longer generate it passively.
+Knowledge is what scouts learn from unfamiliar sites. The first ring has a fixed
+budget, claimed in three declining survey rewards per site. It has no storage cap
+and cannot be farmed from worker trips. The budget exceeds all current research,
+supplies and outpost-extension Knowledge costs, so optional research spending does
+not block founding. Sugar-only founding research still precedes exploration.
 
-The first Nest expansion reveals the early upgrades. All prerequisites for
-exploration cost only sugar, so a colony can unlock it with zero Knowledge.
-
-| Upgrade | Sugar | Knowledge |
-| --- | ---: | ---: |
-| Unlock Queen's Chamber | 100 | 0 |
-| Foraging Techniques 1 | 150 | 0 |
-| Unlock Food Storage Chamber | 400 | 0 |
-| Unlock Explorer Task | 750 | 0 |
-| Foraging Techniques 2 | 750 | 75 |
-| Foraging Techniques 3 | 2,500 | 300 |
-| Default Workers | 500 | 50 |
-| Expedition Coordination | 1,000 | 100 |
-| Expedition supplies I / II / III | 500 / 1,500 / 4,500 | 20 / 80 / 200 |
-
-Tunneling space remains capped. Every Nest level adds 500 capacity alongside its
-ant capacity bonus. Nest excavation prices taper before they exceed that capacity,
-so expansion remains possible.
-
-Save format 6 deliberately rejects earlier prototype saves. There are no legacy
-currency aliases or economy migrations; older saves start a fresh colony.
-
-Run `python3 tests/knowledge_smoke.py` after `sbt fastOptJS` to check the early
-upgrade chain, Knowledge income and display, current save restoration and Nest capacity.
-
-Action costs use the shared compact available/required display on every action
-card, including supplies, brood, chambers, upgrades, exploration, and retrieval.
-Only the available number is green/red; requirements above a storage cap are red.
-Scout reservations are visible alongside expedition costs. Free actions say
-**Free**. Supplies purchases are visible once unlocked; only their explanations
-are collapsed. Costs update with resources, party size, and action amounts. Worker egg batches
-show the affordable quantity and actual price; when none can be bought, the
-minimum one-egg cost stays visible rather than appearing free.
+Resource statistics count retained gains, not spending or discarded overflow.
+Tunnelling capacity remains limited and grows with Nest chambers. Permanent
+resource visibility is separate from current-colony unlocks and survives founding.
 
 ## Resource icons
 
@@ -278,9 +187,9 @@ visible. Yield depends on current total collectors, not worker identity or time
 assigned, so cycling assignments cannot refresh full-rate collection. No positive
 minimum yield is added for excess collectors.
 
-**Expedition Coordination** becomes available at exploration level 3 for 1,000
+**Expedition Coordination** becomes available after two hexagons are revealed for 1,000
 sugar and 100 Knowledge. It permanently adds one expedition slot on top of the
-existing level-five slot, allowing up to three expeditions with both unlocks.
+fourth-reveal mission slot, allowing up to three expeditions with both unlocks.
 Costs, availability, capacity indicators, and the engine use the same slot limit.
 The upgrade is saved and checked by the shared visibility rules.
 
@@ -289,7 +198,7 @@ actual tick income, upgrade effects, population pressure, slot purchases and
 save reloads on phone and desktop. `ForagingSuite` also tests the sustainable
 population boundaries, assignment cycling, and engine slot limits.
 
-**Established Trails** unlocks at exploration level 2 for 600 sugar and 60
+**Established Trails** unlocks after the first hexagon is revealed for 600 sugar and 60
 Knowledge. It reduces the marginal collector penalty by 20% (0.005 to 0.004
 sugar/s), expanding productive collectors from 80 to 100. Base output reaches
 20.2 sugar/s, enough for 101 workers before Foraging Techniques bonuses. Its
@@ -299,80 +208,26 @@ unpurchased upgrades revealed prematurely in an existing save.
 
 ## Colony development
 
-Exploration opens additional colony goals. All new content remains hidden until
-its level and colony prerequisites are met:
+Reinforced Mandibles requires two revealed sites and increases tunnelling output
+by 50%. Brood Care requires three revealed sites and a Nursery, increasing ordinary
+brood-care throughput by 25% when supplied. Their prices and help are in the shared
+upgrade catalog; actual effects remain in ColonyDevelopment/BroodProgression.
 
-| Unlock | Requirement | Cost | Effect |
-| --- | --- | --- | --- |
-| Reinforced Mandibles | Exploration level 3 | 1,200 sugar, 20 protein, 100 Knowledge | Tunnelers produce 50% more space |
-| Nectar Meadow | Exploration level 4 and scout training | 40 sugar per worker; at least 5 workers and 1 scout | 90-second expedition with guaranteed sugar and Knowledge |
-| Brood Care | Exploration level 4 and a Nursery | 2,000 sugar, 40 protein, 180 Knowledge | +25% brood-care throughput when supplied (about 20% less development time) |
-
-Nectar Meadow trades workers, a scout, sugar supplies and an expedition slot for
-a predictable sugar return without carcass storage. Base rewards are 300 sugar,
-8 Knowledge and 45 XP; party size, supplies and exploration level scale these
-using the existing expedition rules. A five-worker party at level 4 costs 200
-sugar and returns 1,050 sugar plus 28 Knowledge before any supplies bonus. The
-compact route summary shows the sugar return; costs stay visible on the action.
-Rewards obey normal storage caps, and in-flight expeditions survive save reload.
-
-Reinforced Mandibles updates task descriptions, resource income estimates and
-actual tick production together. Brood Care raises care throughput for existing
-and new developing brood by 25% when supplied; legacy already-laid eggs retain
-their earlier growth model. Both upgrades are permanent and saved.
-
-Run `sbt fastOptJS fullOptJS test`, then `python3 tests/colony_smoke.py` to verify
-hidden content, purchase costs, tunneling production, maturation times, meadow
-returns and save persistence on phone and desktop.
+The Nectar Meadow offers finite sugar collection after scout study. Base capacity
+is 300 sugar, scaled by workers and supplies; collection has no Knowledge reward.
+A five-worker crew pays 50 sugar and can bring back 600 when room/supply permit.
 
 ## Exploration discoveries
 
-Completed expeditions now survey their destination. Survey progress appears as
-one compact line in the Discoveries tab; discovery names and rewards are hidden
-until found. Each discovery is guaranteed after a fixed number of returns,
-announced once, and saved. There are no random discovery rolls or duplicate
-rewards. Departures and unrelated destinations do not advance surveys.
+Scout surveys make discoveries at fixed thresholds: Wild Aphids after three
+Woodland studies; Seed Cache after two Meadow studies; Dry Trail after two Log
+studies; Dew-covered Plants and Resin Seep after three studies of their respective
+sites. Observing the Rival Cache reveals contested ground without requiring combat.
 
-- **Wild Aphids:** five Woodland Edge returns reveal Aphid Tending research.
-  Pay 1,500 sugar, 20 protein and 100 Knowledge to unlock Aphid Tenders in Tasks.
-  Research opens the Aphid Chamber in Nest. Each chamber level adds exactly
-  one tender slot. Each staffed slot produces 0.8 sugar/s and consumes 0.01
-  protein/s, independently of Foraging Techniques. Tending pauses without
-  protein; a partial final feed produces proportional sugar without debt.
-  Chamber upgrades cost tunneling space (starting at 75, growing by 14%) and
-  protein (2 per target level). Assigned/capacity counts stay visible in Tasks;
-  full chambers disable assignment. Batches, default workers, returning workers,
-  new brood and save reload all enforce capacity, leaving overflow idle when
-  Aphid Tender is the default task. Sugar and protein income estimates match
-  actual fed production.
-- **Seed Cache:** three Nectar Meadow returns reveal Seed Gathering once the
-  colony reaches exploration level 5. The route needs at least ten workers and
-  one scout, costs 25 sugar per worker, and takes 120 seconds. Base rewards are
-  10 protein, 12 Knowledge and 60 XP, scaled by the existing expedition rules.
-  Protein is guaranteed, obeys its storage cap and needs no carcass retrieval.
-
-Known discoveries stay listed in the Discoveries tab, with optional [i] descriptions of what each
-unlocks. Survey counts default to empty for saves that do not contain them;
-existing XP does not automatically grant discoveries. Research restores the new
-task immediately, including on load.
-
-After `sbt fastOptJS fullOptJS test`, run `python3 tests/discovery_smoke.py` for
-phone and desktop checks of survey completion, hidden content, research costs,
-actual aphid income, default workers, seed expeditions and save/reload behavior.
-
-Resource rows remain visible permanently once unlocked, including at zero amounts.
-Visibility is reconciled on actions, ticks and save load; protein no longer depends
-on having a positive balance, and scout visibility survives losing every scout.
-
-**Protein Storage** becomes available after exploration, protein discovery and
-unlocking Food Storage. It costs 1,000 sugar, 25 protein and 75 Knowledge. Research
-makes every Food Storage Chamber level add 100 protein capacity alongside its
-sugar capacity. Existing levels count immediately: level 3 gives a 400 total
-protein cap (100 base + 300 from chambers), and level 4 gives 500. Chamber details
-show both bonuses. Capacity is derived from research and chamber level so loading
-or reconciling repeatedly never duplicates the bonus; research does not grant
-stored protein. Run `python3 tests/protein_storage_smoke.py` after `sbt fastOptJS`
-to check purchase costs, both chamber bonuses and saved capacity on phone/desktop.
+Discovery unlocks are deterministic. They enable aphid research, seeds, water,
+repletes, outposts and resin/royal-nursery progression. Water discovery also opens
+Dew Gatherers (five places), providing renewable water after the deposit runs out.
+The Discoveries tab retains learned information independently of site exhaustion.
 
 ## Colony lifecycle
 
@@ -402,7 +257,7 @@ lifespan rules under optional details. Aging deaths generate at most one summary
 per simulated minute, rather than one message per ant. Resource rows remain
 visible after the population reaches zero.
 
-**Queen's Routine** appears at exploration level 3 with a Nursery. It costs
+**Queen's Routine** appears after two hexagons are revealed with a Nursery. It costs
 1,200 sugar, 20 protein and 100 Knowledge and unlocks opt-in automatic worker
 eggs in Brood. The player sets a worker target and sugar reserve; automatic eggs
 cost the current worker type's egg price, just like manual orders. Small and
@@ -435,7 +290,7 @@ death deferral, save/reload, targets/reserves and the stored-time multiplier.
 
 ## Construction planning and colony nutrition
 
-**Construction Planning** unlocks at exploration level 2 for 500 sugar and 50
+**Construction Planning** unlocks after the first hexagon is revealed for 500 sugar and 50
 Knowledge, increasing construction queue capacity from one to three. Planned
 upgrades use the chamber level after earlier plans of the same type. Cancelling
 an entry reprices later entries, and completing construction charges the proper
@@ -445,7 +300,7 @@ A full queue disables further chamber plans. Only the first entry shows a wait
 estimate; later entries say Queued. Protein shortages now correctly show Never
 until supplies arrive, and estimates round up rather than showing zero too soon.
 
-**Colony Nutrition** unlocks at exploration level 5 once aging is active. It costs
+**Colony Nutrition** unlocks after three hexagons are revealed once aging is active. It costs
 2,500 sugar, 60 protein and 200 Knowledge. New adults live 20% longer (54–72
 simulated minutes), with the same seeded lifespan jitter. Existing expiry ticks
 stay fixed, including while traveling. Aging details show the current lifespan
@@ -455,72 +310,29 @@ Run `sbt fastOptJS fullOptJS test`, then `python3 tests/management_smoke.py` for
 phone/desktop checks of upgrade gates, queue pricing/cancellation, protein waits,
 actual spending, nutrition and saved lifespans.
 
-## Dry Clearing foundations and statistics
+## Dry Clearing and resource statistics
 
-Four Rotten Log returns discover the **Dry Trail**. It reveals **Dry Clearing**
-at exploration level 6: a 120-second survey expedition needing ten workers and
-two scouts, costing 35 sugar per worker, with 75 base XP and 25 base Knowledge.
-Three clearing surveys discover **Dew-covered Plants**, unlocking **Scavenge
-Water**. That 90-second route needs five workers and one scout, costs 25 sugar
-per worker and grants 20 base water, 5 Knowledge and 30 XP. Party size, supplies
-and exploration level scale rewards using the existing rules. Neither new route
-creates carcasses. Names and routes stay hidden until their discovery gates.
+The fourth hexagon is the Dry Clearing. Three scout studies discover Dew-covered
+Plants, opening water collection, renewable Dew Gatherers, replete research and
+the Dry Clearing Outpost. No random drop or mandatory raid gates this path.
 
-Water starts with 100 storage capacity and a local droplet SVG. Its resource row
-appears on first collection and never disappears, including at zero after a
-reload. Water is saved, storage-capped, supported by resource costs/affordability,
-and ready for future outpost projects. This step provides exploration and water
-supplies; the Dry Clearing outpost below adds water-dependent production.
+Water collection draws from a finite deposit. Empty capacity blocks departures;
+space for in-flight hauls is reserved. Storage that fills while a party travels
+leaves unused cargo at its source instead of destroying essential resources.
+Statistics count launched/completed missions, retained resource gains, births,
+age/combat/starvation losses, replete promotions and other progression events.
 
-Settings has a collapsed **Colony statistics** view. Both current-colony and
-lifetime counters are persisted for future milestones. Resource gains count what
-was actually collected, excluding discarded overflow at full stores; passive
-sugar used directly for upkeep is counted once. Spending never reduces collection
-progress. Protein from retrievals and seed missions and water from scavenging use
-the same award path as other resources. Launched and completed expeditions are
-separate counters; duplicate completion attempts cannot award progress twice.
-Maturation, retrievals, aging losses, starvation losses and observed peak workers
-are tracked as well. Counters saturate rather than wrap when reaching integer
-limits. Existing statistics are retained; missing historical events are not
-invented or reconstructed from current resource balances.
+## Scout and worker staffing
 
-Run `sbt fastOptJS fullOptJS test`, then `python3 tests/water_smoke.py` for the
-complete discovery chain, water collection/caps, permanent visibility and saved
-statistics on phone and desktop.
+Scouts have exclusive reveal/study actions. They cannot fill normal worker jobs,
+occupy housing, need larval feeding and age normally. Local scout missions continue
+charging sugar upkeep; original expiry ticks apply on return. Scouts guiding a
+nectar trail or another mission cannot be booked twice.
 
-## Expedition staffing and discovery navigation
-
-Discoveries and survey progress now live in their own **Discoveries** tab, which
-appears after the first survey progress is earned. Only unlocked areas appear as
-survey targets; discovery names stay hidden until found. Explore contains the
-party planner, route actions, supplies and active/retrieving parties.
-
-New parties are limited to 37 workers, the existing 4x reward ceiling. The numeric stepper
-and engine enforce this limit; quick picks expose the useful 1/5/17/37 worker
-reward milestones. Selection clamps to remaining available workers after a
-launch or population change, so displayed costs always match the actual party.
-Existing saved parties still return their full worker count.
-
-Players may add up to three **extra scouts**, beyond each route's required
-scouts. Each adds 25% travel speed and costs 10 sugar in expedition supplies.
-Travel time is rounded up to whole ticks: a Woodland Edge trip with its required
-scout plus three extras takes 25.8s instead of 45s. The same per-trip rewards and
-XP arrive sooner, freeing slots and advancing surveys more often. Route previews
-show the real duration and sugar cost; scout requirements show the total needed.
-The planner hides extra-scout controls until scouts are unlocked. Active trips
-show reserved scout counts; saved parties retain their speed, supplies, ages and
-reservations. Expiry ticks remain fixed and overdue ants still die on return.
-
-After `sbt fastOptJS fullOptJS test`, run `python3 tests/staffing_smoke.py` and
-`python3 tests/discovery_smoke.py` for mobile/desktop navigation, caps, costs,
-reservations, saved timing and discovery progression checks.
-
-Expedition worker selection uses a numeric field with 48px minus/plus buttons
-instead of a slider. Mobile browsers show a numeric keyboard; direct typing,
-presets and button taps update costs immediately. Invalid/out-of-range values
-clamp to available workers and the reward limit; an empty edit restores the
-current selection on blur. Buttons disable at either boundary, and the field
-disables when no workers are available.
+The map's scout-crew selector chooses 1–3 scouts. A selected site's collection
+crew uses a bounded numeric field and touch buttons, capped at 37 workers. Extra
+workers raise haul capacity with diminishing returns; they do not create a larger
+deposit. Worker controls disappear on unstudied or exhausted sites.
 
 ## Repletes: living water storage
 
@@ -555,7 +367,7 @@ capacity changes on phone and desktop.
 
 ## Dry Clearing Outpost
 
-After reaching exploration level 6 and discovering Dew-covered Plants, **Nest →
+After discovering Dew-covered Plants, **Nest →
 Outposts** reveals **Establish Dry Clearing Outpost**. Establishment costs 3,000
 sugar, 40 protein, 300 Knowledge, 750 tunneling space and 150 water. The base
 water cap is only 100, so living water storage is useful preparation. All costs
@@ -590,14 +402,14 @@ water/storage shortages, production, pause/resume, defaults and save checks.
 ## Outpost growth and specialization
 
 The Dry Clearing Outpost can grow from level 1 to level 3. Expansion actions
-stay hidden until their exploration-level gate is met. Each paid expansion adds
+stay hidden until their revealed-hexagon requirement is met. Each paid expansion adds
 25 shared colony capacity and five Seed Forager slots without creating workers.
 At level 3 the outpost contributes 100 housing and supports 15 foragers in total.
 
-| Target outpost level | Exploration level | Sugar | Protein | Knowledge | Tunneling space | Water |
+| Target outpost level | Revealed hexagons | Sugar | Protein | Knowledge | Tunneling space | Water |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 2 | 7 | 5,000 | 75 | 500 | 1,000 | 250 |
-| 3 | 8 | 8,000 | 125 | 800 | 1,500 | 350 |
+| 2 | 5 | 5,000 | 75 | 500 | 1,000 | 250 |
+| 3 | 6 | 8,000 | 125 | 800 | 1,500 | 350 |
 
 The water costs make larger living reserves useful: collecting 250 water needs
 capacity from at least two repletes above the base 100, and 350 needs three.
@@ -632,101 +444,18 @@ Run `sbt fastOptJS fullOptJS test`, then
 `python3 tests/outpost_progression_smoke.py` for level gates, purchases, staffing,
 actual upgraded production, rates, old/current saves and phone/desktop layouts.
 
-## Woodland resin and the Royal Nursery foundation
+## Resin and the Royal Nursery
 
-Resin is the first material used for advanced chamber construction. Its amber
-SVG, storage (200 resin), costs and gathered statistics use the same resource
-paths as sugar, protein and water. Discovering its source reveals the resource
-row at zero; the row remains visible after spending the last unit. Statistics
-count only material retained, excluding overflow. Existing early chambers keep
-their costs and do not require resin.
+The Fallen Pine is the fifth hexagon. Three scout studies find Resin Seep, opening
+resin collection and Royal Nursery Planning research (with an ordinary Nursery).
+Workers then collect resin from a finite deposit. The safe first ring contains
+more than the 80 resin required for Royal Nursery construction; full storage
+cannot discard that essential supply permanently.
 
-| Expedition | Unlock | Duration | Workers / scouts | Sugar per worker | Base rewards |
-| --- | --- | --- | --- | ---: | --- |
-| Fallen Pine | Exploration level 7 | 120s | 10 / 1 | 30 | 80 XP, 30 Knowledge; surveys the area |
-| Collect Resin | Level 7 and Resin Seep discovery | 120s | 10 / 2 | 35 | 5 resin, 50 XP, 10 Knowledge |
-
-Three completed Fallen Pine surveys discover **Resin Seep**, announced once.
-Collection stays hidden before the discovery; workers and scouts are reserved
-normally and return to the default worker pool. Rewards scale with party size,
-supplies and exploration level, including a level reached on return. Neither
-expedition uses carcass storage. In-flight collection trips survive saves.
-
-**Royal Nursery Planning** becomes visible at exploration level 8 after the
-resin discovery, with an ordinary Nursery already built. Research opens a
-**Royal brood** section in Nest with the one-time **Royal Nursery** build action.
-
-| Stage | Sugar | Protein | Knowledge | Water | Tunneling space | Resin |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Planning research | 5,000 | 100 | 700 | 150 | 0 | 0 |
-| Nursery construction | 3,000 | 50 | 0 | 100 | 1,500 | 80 |
-
-All costs remain visible. Construction uses the existing queue: it can be
-planned while material is missing, shows a red Never wait until resources
-arrive, and charges all costs only on completion. Duplicate royal plans and
-construction after the first nursery are rejected. Loading repairs stale costs
-and removes invalid or duplicate royal plans without spending resources.
-
-Building the nursery unlocks **Royal Nurse** in Tasks and **Raise Royal Egg**
-in Nest. It does not add ordinary egg slots or colony housing.
-
-### Raising a daughter queen
-
-Royal Nurses are assigned from ordinary workers, with a maximum of five. They
-keep normal sugar upkeep and aging, and can be selected as the default task;
-excess workers stay idle when its five slots are filled. Expeditions can borrow
-from that default pool, reducing royal care until nurses return.
-
-Raise Royal Egg costs **500 sugar, 50 protein and 20 water**. It requires a
-built nursery, at least one assigned Royal Nurse and one free colony housing
-slot. It reserves that housing slot throughout rearing; ordinary egg slots are
-independent. One royal brood or mature daughter occupies the nursery.
-
-| Stage | Time with five nurses | Sugar/s per nurse | Protein/s per nurse | Water/s per nurse |
-| --- | ---: | ---: | ---: | ---: |
-| Royal egg | 1 minute | 0 | 0 | 0.01 |
-| Royal larva | 8 minutes | 0.5 | 0.05 | 0.01 |
-| Royal pupa | 1 minute | 0 | 0 | 0.01 |
-
-Rearing uses **1,200 sugar, 120 protein and 30 water** beyond the starting cost
-and normal nurse upkeep. The total is the same with fewer nurses, but care
-takes proportionally longer: one nurse needs 50 simulated minutes. Feeding is
-charged only for care actually performed, including partial supplies and the
-last tick of each stage. Existing Brood Care research changes ordinary worker/
-scout development, not this royal timeline. Stored-time multipliers advance
-royal care with the rest of the simulation.
-
-Nest displays the current stage, overall progress, staffing, stage feeding rates
-and estimated remaining time with supplied care. Missing nurses, sugar, protein
-or water show the relevant reason; partial supplies slow care. **Pause care**
-stops feeding and preserves progress, with a saved **Resume care** control.
-Nurses remain ordinary workers with upkeep while care is paused or no brood
-exists. Adult upkeep is charged first, then royal care, then automatic worker
-eggs; fresh sugar production can feed royal brood directly even at full storage.
-Resource rate estimates include actual affordable care.
-
-Maturation replaces the brood reservation with a **daughter queen**, counts it
-in population, updates royal egg/maturation statistics and announces completion
-once. Its resource row remains visible after unlocking, including at zero. A
-daughter consumes normal adult sugar upkeep; it does not use worker aging
-cohorts, but can starve after other home adult ants. It remains in the nursery
-until a future founding feature uses it. This step grants no Understanding and
-does not reset or create a colony; the first permanent reward and reset rules
-still need design.
-
-Old saves default to zero resin, an unbuilt royal nursery and unowned planning
-research. Current saves retain material, discovery, queued costs, the completed
-chamber and resource visibility without granting anything twice. Run
-`sbt fastOptJS fullOptJS test`, then `python3 tests/royal_nursery_smoke.py` for
-hidden gates, surveys, gathering, statistics, costs, queue waits, completion,
-old/current saves and phone/desktop layouts.
-
-Royal brood uses additive save fields: older saves default to no royal brood,
-no daughters and zero royal statistics. A completed nursery restores its nurse
-task on load without assigning workers. Progress, manual pause, nurses and
-mature daughters survive reload without repeating maturation rewards. Run
-`python3 tests/royal_brood_smoke.py` after `sbt fastOptJS` for phone/desktop
-staffing, costs, stages, rates, shortages, pause/reload and completion checks.
+Royal Nursery Planning costs 5,000 sugar, 100 protein, 700 Knowledge and 150 water.
+The chamber costs 3,000 sugar, 50 protein, 100 water, 80 resin and tunnelling space.
+It opens one royal brood place and Royal Nurse jobs. Daughter-queen rearing still
+requires sustained care before founding; the map does not bypass that mechanism.
 
 ## First prestige: DNA and Shared Paths
 
@@ -735,7 +464,7 @@ previous founding. It holds generation/DNA, readiness, Understandings and
 **Review founding**, which unlocks with a mature daughter queen. The preview and
 confirmation list the reset before **Found daughter colony** takes effect:
 
-- Reset colony resources, ants/brood, chambers, research, expedition XP,
+- Reset colony resources, ants/brood, chambers, research, explored map,
   discoveries, trails, queues and worker assignments.
 - Keep DNA, purchased Understandings, lifetime statistics, discovered resource
   visibility, settings and stored simulation time. The new colony begins with
@@ -779,7 +508,7 @@ bonuses, finite supply, scout reservations, upkeep, aging and defaults.
 
 ## Dangerous expeditions: Rival Food Cache
 
-**Raid Rival Food Cache** unlocks at exploration level 5. Existing routes have
+**Raid Rival Food Cache** unlocks after scouts study its revealed hexagon. Existing routes have
 no combat losses. A raid takes 120 simulated seconds, requires 10–37 workers
 and one scout, and costs 30 sugar per worker. Extra scouts use the existing
 10-sugar cost and travel-speed bonus; they do not reduce combat losses.
@@ -792,15 +521,12 @@ and one scout, and costs 30 sugar per worker. Extra scouts use the existing
 Intermediate parties use a gradually lower percentage loss range with integer
 rounding. Counts, certainty, reward range and costs are shown directly beside
 the action, not only in Details. Protein storage room is visible and red if it
-cannot hold the maximum haul. Storage overflow is discarded; it does not reduce
-casualties. Scouts have no combat losses. The in-flight party retains its risk
+cannot hold the maximum haul. Overflow stays at the finite cache; it does not reduce casualties. Scouts have no combat losses. The in-flight party retains its risk
 notice. There is no additional confirmation dialog for an already disclosed risk.
 
 The loss count is uniform over its displayed inclusive integer range. The
 protein roll is uniform over integer values 200–350 per ten workers, then scaled
-linearly with party size. Exploration level, supplies and inherited sugar
-production do not increase this raid protein range or change casualties. Normal
-XP, Knowledge and extra-scout speed rules still apply.
+linearly with party size. Supplies and inherited sugar production do not change combat outcomes. Raids grant no Knowledge and draw from a finite cache; extra guides can still shorten travel.
 
 Departure selects the **oldest home-worker age cohorts first**. Combat deaths
 sample individual workers uniformly without replacement from that party, rather
@@ -1074,34 +800,29 @@ once in its heading; task output rates remain visible.
 
 Task and section **[i]** controls reveal useful explanations only when requested.
 This includes Brood/aging, Queen's Routine, default workers, royal care, territory,
-XP, carcass storage and individual discoveries. Action **[i]** details now work
+the local map, carcass storage and individual discoveries. Action **[i]** details now work
 on desktop too. Native disclosures support touch, Enter/Space and visible focus,
 with 44px targets and inline panels that fit narrow screens. Open discovery help
 stays open during ordinary resource updates. Action/task prose
 is no longer shown automatically on hover; resource-rate breakdown tooltips remain.
 
 Larval/royal material costs, live shortages, imminent aging warnings and dangerous
-expedition losses remain visible. No game balance, automation or save changes.
+expedition losses remain visible.
 `python3 tests/compact_ui_smoke.py` checks collapsed defaults, information controls,
 keyboard interaction, visible costs/rates/warnings and phone/desktop layout.
 
 
-## Mobile expedition carousel
+## Mobile exploration map
 
-On phones, Explore keeps worker/scout controls above a single destination card.
-Swipe horizontally across the card, or tap previous/next, to compare unlocked
-destinations without opening a menu. The title and position counter identify the
-current destination; arrows wrap, and keyboard Enter/Space works on them. Vertical
-swipes scroll normally. Costs, rewards, discovery badges and danger remain visible.
-Changing destinations preserves the party; the Min preset matches each route.
-Workers remain capped at 37. Active trips, trails, XP and supplies follow launch.
-Desktop keeps the grid of all unlocked destinations.
+The same seven-hex layout is used on phone and desktop: nest plus six neighbors.
+Unknown sites show fog; revealed sites select a single action panel; depleted
+sites retain their names without missions. Selection survives ordinary ticks.
+Costs and missing resources stay visible. All map controls support keyboard use.
 
-`python3 tests/mobile_explore_smoke.py` checks 320/390/844/1920px layouts,
-unlock visibility, arrow/keyboard/touch navigation, scroll/jitter discrimination,
-minimum presets, worker caps, danger, costs, launches, full slots and missing
-workers. Browser route helpers navigate the carousel on mobile.
-
+Run `python3 tests/map_browser_smoke.py` after `fastOptJS`, or set
+`ANTIDLE_PRODUCTION=1` after `fullOptJS`. It checks 390/1280px geometry, scout-only
+missions, deterministic reveals, finite Knowledge, capacity blocks, depletion,
+selection and reload. The production CI smoke also exercises the new map.
 
 ## Consistent action details
 
@@ -1129,15 +850,16 @@ and consume supplies only as laid.
 Chamber [i] panels show numeric bonuses without descriptive prose. Capacity,
 place and slot labels are consistent, including Nursery brood/nurse places and
 the Queen's next laying-interval reduction. These previews include derived
-effects without changing saved capacities. Exploration [i] shows outcome
-chances without repeating the duration/reward line visible above its button.
+effects without changing saved capacities. The map info control explains scout study and finite collection. Mission summaries
+show current duration/yield without an XP forecast.
 `python3 tests/chamber_details_smoke.py` checks every chamber and expedition
 help at phone/desktop widths.
 
-Exploration destinations with unfinished discoveries show a **Discovery** badge.
-It disappears when the destination's discoveries are complete. Locked routes and discovery identities stay hidden.
-`python3 tests/discovery_badge_smoke.py` checks live completion, carousel selection stability,
-save/reload and early-route hiding on phone and desktop.
+The map labels sites with remaining study/collection work and retains exhausted
+locations. Advanced collection actions stay hidden until their discoveries.
+`tests/map_browser_smoke.py` checks the current map, selection, depletion and reload.
+Older XP/carousel-specific browser scripts are historical and require new fixtures
+before use; the production CI smoke and map smoke are the maintained exploration gates.
 
 Outpost action help stays open during live simulation updates. Costs, production
 and level labels continue updating in place. `python3 tests/outpost_info_smoke.py`
@@ -1153,7 +875,7 @@ caste transition, founding and DNA purchases from the new tab.
 
 Research help leads with concrete effects and keeps important scope/tradeoffs.
 Outpost construction uses numeric bonus lists; promotion help uses compact
-facts, and XP help omits repeated next-level forecasts. Royal brood help stays
+facts. Exploration rules are explained behind the map info control. Royal brood help stays
 open across unrelated chamber/research updates.
 `python3 tests/concise_ui_smoke.py` checks those details and live panel stability
 at 320/390/1920px; outpost progression checks cover upgraded rates and staffing.
