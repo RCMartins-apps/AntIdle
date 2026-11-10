@@ -653,8 +653,8 @@ scraps are limited in staffing, leaving larger expedition/outpost sources useful
 
 **Raise Small Worker Egg** (then **Raise Worker Egg** after Standard Worker
 Development) queues the chosen number of orders instead of creating
-an instant batch. Orders are limited by currently affordable egg costs and
-future housing space; sugar is charged only as each egg is actually laid.
+an instant batch. Orders are limited by future housing space, even with no
+sugar or protein available; costs are charged only as each egg is actually laid.
 The visible cost is the queued batch's current egg price. Orders can be
 cancelled without a refund because unlaid eggs have not been paid for. If
 supplies or space later run short, orders wait rather than disappearing.

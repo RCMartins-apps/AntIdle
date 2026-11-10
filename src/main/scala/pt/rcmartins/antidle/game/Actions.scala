@@ -78,11 +78,11 @@ object Actions {
 
   def assignSmallWorker(task: AntTask, delta: Long): Unit = actionUpdater.writer.onNext(BroodProgression.assignSmall(_, task, delta))
   def cancelEggOrders(): Unit = actionUpdater.writer.onNext(BroodProgression.cancel)
-  val layEggActionEnabled: Signal[Boolean] = antsSignal.combineWith(nestSignal, sugarSignal).map {
-    case (ants, nest, sugar) => BroodProgression.orderAmount(ants, nest, sugar.amount, 1) > 0
+  val layEggActionEnabled: Signal[Boolean] = antsSignal.combineWith(nestSignal).map {
+    case (ants, nest) => BroodProgression.orderAmount(ants, nest, 1) > 0
   }
-  def workerEggAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int =
-    BroodProgression.orderAmount(ants, nest, sugar, requested)
+  def workerEggAmount(ants: AntsData, nest: NestAttributes, requested: Int): Int =
+    BroodProgression.orderAmount(ants, nest, requested)
   def layEggAction(maxMultiplierUsed: Int): Unit = actionUpdater.writer.onNext(BroodProgression.order(_, maxMultiplierUsed))
 
   def addBuildTask(buildTask: BuildTask): Unit =
