@@ -56,6 +56,15 @@ After founding, keep known resources visible while applying current research/
 worker/chamber requirements to action visibility separately.
 Validate gameplay rules in the engine, not only by disabling UI buttons.
 
+## Offline packaging
+
+`python3 scripts/package_site.py --out NEW_DIRECTORY` packages fullOptJS for
+production, including local browser libraries, manifest/icons and a release-scoped
+service worker. Use this same script in deployment and offline tests. Source-tree
+pages intentionally do not register workers, keeping dev bundles fresh. Never
+force a reload/update over a running colony or delete local saves when cleaning
+release caches. See docs/OFFLINE.md and tests/offline_browser_smoke.py.
+
 ## Balance maintainability
 
 Make tuning straightforward for the owner, especially unlock timing and

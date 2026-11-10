@@ -39,11 +39,7 @@ jobs:
         run: sbt fullOptJS
 
       - name: Prepare files for GitHub Pages
-        run: |
-          mkdir ./publish-folder
-          sed -i 's|target/scala-2.13/antidle-fastopt/||g' index.html
-          cp ./index.html ./publish-folder/
-          find ./target/scala-2.13/ -type f \( -name "*.js" -o -name "*.js.map" \) -exec cp {} ./publish-folder/ \;
+        run: python3 scripts/package_site.py --out publish-folder
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

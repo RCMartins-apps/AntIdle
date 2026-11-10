@@ -6,8 +6,10 @@ The maintained default suite for save version 7 is:
 sbt fullOptJS test balance/test
 python3 -m unittest discover -s tests -p 'balance*_test.py'
 python3 tests/ci_changes_test.py
+python3 -m unittest discover -s tests -p 'package_site_test.py'
 python3 tests/ci_browser_smoke.py
 ANTIDLE_PRODUCTION=1 python3 tests/map_browser_smoke.py
+python3 tests/offline_browser_smoke.py
 ```
 
 Install browser dependencies from requirements-browser.txt and install Playwright
@@ -35,3 +37,7 @@ Port their fixtures/selectors before using them for a new feature. browser_smoke
 also supplies common server/save/layout helpers imported by the maintained gates;
 its old standalone scenario list is historical. Do not claim every old browser
 script passes simply because the current CI and Scala suites do.
+
+Offline checks exercise real service workers in regular temporary profiles and
+the actual deployment package, including multi-window updates and failed releases.
+See [OFFLINE.md](../docs/OFFLINE.md).

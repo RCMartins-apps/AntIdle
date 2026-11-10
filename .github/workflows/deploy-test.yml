@@ -38,8 +38,10 @@ jobs:
           cache: pip
           cache-dependency-path: tests/requirements-browser.txt
 
-      - name: Check balance report packaging
-        run: python3 -m unittest discover -s tests -p "balance*_test.py"
+      - name: Check report and offline release packaging
+        run: |
+          python3 -m unittest discover -s tests -p "balance*_test.py"
+          python3 -m unittest discover -s tests -p "package_site_test.py"
 
       - name: Install browser test dependencies
         run: |
@@ -53,6 +55,7 @@ jobs:
         run: |
           python3 tests/ci_browser_smoke.py
           python3 tests/map_browser_smoke.py
+          python3 tests/offline_browser_smoke.py
 
       - name: Upload browser failure screenshots
         if: failure()
