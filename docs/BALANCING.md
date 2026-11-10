@@ -2,7 +2,7 @@
 
 This guide covers the current upgrade and exploration definitions. They are
 Scala values checked at build time; there is no separate configuration service.
-The refactor preserves current prices, levels, rewards, timings and save IDs.
+Save version 7 uses a handcrafted finite map; older XP pacing baselines are historical.
 
 ## Where to edit
 
@@ -10,26 +10,26 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 
 | Change | Definition |
 | --- | --- |
+| Map coordinates, reveal order, finite Knowledge/deposits and scout durations | `game/ExplorationMap.scala` |
 | Upgrade price, title/help or reveal prerequisites | `game/balance/UpgradeBalance.scala`, the named upgrade's row |
 | Stable upgrade/save identity and display order | `model/UpgradesData.scala`; preserve existing `name` values |
-| Destination unlock level/discovery, duration, crew, costs or rewards | `game/ExplorationDestination.scala`, the destination's named arguments |
-| Trips needed to find a discovery | `game/DiscoveryProgression.scala`, the discovery's `trips` |
-| Supplies upgrade levels/prices | `game/ExplorationProgression.scala`, `suppliesUpgrades` |
-| Natural second expedition slot | `ExplorationProgression.SecondExpeditionSlotLevel` |
-| XP curve, crew/supplies/scout multipliers and level reward bonus | `game/ExplorationProgression.scala` |
+| Collection discovery, duration, crew, costs or rewards | `game/ExplorationDestination.scala`, the destination's named arguments |
+| Scout studies needed to find a discovery | `game/DiscoveryProgression.scala`, the discovery's `trips` |
+| Supplies reveal-count requirements/prices | `game/ExplorationProgression.scala`, `suppliesUpgrades` |
+| Natural second expedition slot | `ExplorationProgression.maxParties` (four revealed sites) |
+| Crew/supplies/scout multipliers | `game/ExplorationProgression.scala` |
 
 For example, to reveal Brood Care later, change its
-`minimumExplorationLevel` in `UpgradeBalance`, retaining `nursery = true` and
-`explorationTab = true`. To change Collect Resin's access, edit its `requiredLevel`
-or `requiredDiscovery` in the destination catalog. Its UI and departure validation
-share `progressionUnlocked`; no second copy of that level check needs editing.
+`minimumRevealedSites` in `UpgradeBalance`, retaining `nursery = true` and
+`explorationTab = true`. To change Collect Resin's access, edit its site studies or `requiredDiscovery` in the destination catalog. Its UI and departure validation
+share `progressionUnlocked`; no second copy of that discovery check needs editing.
 These are examples of tuning points, not recommended balance changes.
 
 ## What an unlock means
 
 `UpgradeRequirements` describes when a colony **earns visibility**. Fields combine
 with AND. Upgrade prerequisites require purchases, not merely visible research.
-A discovery requires its survey count; an exploration level alone doesn't find it.
+A discovery requires its survey count; revealing the hex alone does not find it.
 
 Most visibility is earned history: `status.show` persists even if a prerequisite
 later falls below its threshold. For example, losing a small worker doesn't hide
@@ -52,8 +52,8 @@ normal reconciliation. UI buttons, actions and the balance runner use it. Keep
 these distinctions when adding a requirement: don't accidentally relock earned
 research or treat affordability as its reveal condition.
 
-Destination visibility checks level/discovery plus scout training (a Nursery or
-existing scouts). A visible route still requires available scouts/workers,
+Collection visibility checks revealed/studied sites and discoveries. A visible route still requires available workers,
+and scouts when a raid needs a guide,
 supplies and a free expedition slot to depart. Sending scouts away doesn't hide
 routes. Global access to the Explore tab is checked separately by the launch
 engine. Preserve this visibility-versus-current-availability distinction.
@@ -64,8 +64,8 @@ engine. Preserve this visibility-versus-current-availability distinction.
 - Destination `sugarPerWorker` is **whole sugar per worker**. The worker count is
   already in `u`; do not multiply that field by `u` a second time.
 - Durations use ticks, at five ticks/second. Prefer `seconds * TicksPerSecond`.
-- XP and exploration levels are ordinary integers, not fixed-point resources.
-- Discovery trips are completed expedition counts, not workers sent.
+- Reveal/study counts are ordinary integers, not fixed-point resources. Knowledge is fixed-point.
+- Discoveries use completed scout studies, not worker-trip counts.
 
 Descriptions in the upgrade catalog describe effects; the implementation of
 those effects stays with the relevant mechanic. Changing help text alone never
@@ -82,15 +82,14 @@ when changing an effect:
 | Covered Trails and Seed Processing | `game/OutpostProgression.scala` |
 | Default Workers, Queen's Routine, construction queue | `game/DefaultWorkerAssignment.scala`, `game/AutomaticBrood.scala`, `game/Construction.scala` |
 
-This first pass centralizes upgrade metadata/prerequisites and makes exploration
-definitions explicit. Brood, chambers, research effects and outpost mechanics
+Upgrade metadata/prerequisites and map/collection definitions remain shared. Brood, chambers, research effects and outpost mechanics
 aren't all moved into one global balance file. Keep shared values with their
 mechanic and extract further tuning points when working on that mechanic.
 
 ## A safe iteration
 
 1. Save a baseline with `python3 scripts/balance.py --out /tmp/balance-before`.
-2. Change one cost, level or prerequisite. Preserve save IDs and hidden advanced
+2. Change one cost, site threshold or prerequisite. Preserve save IDs and hidden advanced
    content. Keep displayed prices/requirements derived from the same definitions.
 3. Run `sbt fullOptJS test balance/test` and the relevant browser smoke checks.
 4. Run the same policies/seeds with a fresh build and

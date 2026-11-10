@@ -76,7 +76,7 @@ class ColonyLifecycleSuite extends FunSuite {
 
   test("workers and scouts remain safe in transit but die immediately on return after their original expiry") {
     val initial = setAge(colony(5, 1), List(AgeCohort(Minute, 5)), List(AgeCohort(Minute, 1)))
-    val sent = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.NectarMeadow)
+    val sent = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.NectarMeadow, 1)
     assert(sent.ants.ages.workers.isEmpty && sent.ants.ages.scouts.isEmpty)
     val during = PopulationAging.tick(sent.copy(world = sent.world.copy(currentTick = Minute)))
     assertEquals(during.ants.workers, 5L * u)
@@ -88,7 +88,7 @@ class ColonyLifecycleSuite extends FunSuite {
     assertEquals(returned.ants.workers, 0L)
     assertEquals(returned.ants.scouts, 0L)
     assert(returned.ants.ages.workers.isEmpty && returned.ants.ages.scouts.isEmpty)
-    assert(returned.basicResources.knowledge.amount > 0L)
+    assertEquals(returned.basicResources.knowledge.amount, 0L)
     assertEquals(returned.ants.taskWorkers(AntTask.Explorer), 0L)
   }
 
@@ -119,7 +119,7 @@ class ColonyLifecycleSuite extends FunSuite {
 
   test("home and return deaths in the same tick still produce only one periodic summary") {
     val initial = setAge(colony(2), List(AgeCohort(Minute, 2)))
-    val sent = ExplorationHelper.start(initial, u, ExplorationDestination.Surroundings)
+    val sent = ExplorationHelper.start(initial, u, ExplorationDestination.WoodlandEdge)
     val due = sent.copy(world = sent.world.copy(currentTick = Minute - 1L),
       exploration = sent.exploration.copy(explorationParties = sent.exploration.explorationParties.map(_.copy(targetTick = Minute))))
     val returned = TickUpdater.updateAllData(due, None)

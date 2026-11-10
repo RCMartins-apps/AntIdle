@@ -88,7 +88,7 @@ object AntTask {
 
   case object Explorer extends AntTask {
     val uiOrder: Int = 100
-    val name: String = "Explorer"
+    val name: String = "Collection Crew"
     override val showButtons: Boolean = false
     override val hasAntUpkeep: Boolean = false
   }

@@ -84,11 +84,11 @@ class ColonyManagementSuite extends FunSuite {
   test("new progression upgrades remain hidden until their exploration and aging gates") {
     val initial = AllData.initial
     val exploring = initial.copy(unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
-      exploration = MapFixture.explored.copy(revealedSites = 6))
+      exploration = MapFixture.explored.copy(revealedSites = 0))
     assert(!ConstructionPlanning.shouldShow(exploring))
     assert(ConstructionPlanning.shouldShow(exploring.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
     assert(!ColonyNutrition.shouldShow(exploring.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
-    val aged = exploring.copy(ants = exploring.ants.copy(ages = ColonyAges(active = true)), exploration = MapFixture.explored.copy(revealedSites = 6))
+    val aged = exploring.copy(ants = exploring.ants.copy(ages = ColonyAges(active = true)), exploration = MapFixture.explored.copy(revealedSites = 2))
     assert(!ColonyNutrition.shouldShow(aged))
     assert(ColonyNutrition.shouldShow(aged.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
   }

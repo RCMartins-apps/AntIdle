@@ -14,14 +14,14 @@ class ExpeditionStaffingSuite extends FunSuite {
     initial.copy(ants = AntsData(workers = 100 * u, scouts = 5 * u, tasks = Seq(AntTask.Explorer -> 0L),
       ages = ColonyAges(active = true, workers = List(AgeCohort(300L, 100L)), scouts = List(AgeCohort(300L, 5L)))),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
-      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map(RottenLog.id -> 4)),
+      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = MapFixture.explored.surveys),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
 
   test("new expeditions cannot waste more than the useful 37-worker reward limit") {
-    assert(ExplorationHelper.canStart(colony, 37 * u, Surroundings))
-    assert(!ExplorationHelper.canStart(colony, 38 * u, Surroundings))
-    assertEquals(ExplorationHelper.start(colony, 38 * u, Surroundings), colony)
+    assert(ExplorationHelper.canStart(colony, 37 * u, WoodlandEdge))
+    assert(!ExplorationHelper.canStart(colony, 38 * u, WoodlandEdge))
+    assertEquals(ExplorationHelper.start(colony, 38 * u, WoodlandEdge), colony)
     assertEquals(ExplorationProgression.selectedWorkers(100 * u, 100 * u), 37L * u)
     assertEquals(ExplorationProgression.selectedWorkers(37 * u, 5 * u), 5L * u)
     assertEquals(ExplorationProgression.selectedWorkers(5 * u, 0L), u)
@@ -32,24 +32,24 @@ class ExpeditionStaffingSuite extends FunSuite {
     val original = ExplorationHelper.start(colony, 5 * u, WoodlandEdge)
     val boosted = ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 3)
     val party = boosted.exploration.explorationParties.head
-    assertEquals(party.scouts, 4L * u)
+    assertEquals(party.scouts, 3L * u)
     assertEquals(party.extraScouts, 3)
     assertEquals(party.targetTick, 129L)
     assertEquals(boosted.basicResources.sugar.amount, 9870L * u)
-    assertEquals(ExplorationProgression.earned(party), ExplorationProgression.earned(original.exploration.explorationParties.head))
+    assertEquals(party.cargo, original.exploration.explorationParties.head.cargo)
     assert(ExplorationHelper.summary(colony, 5 * u, WoodlandEdge, 3).startsWith("25.8s"))
   }
 
   test("scout reservations include the route minimum plus extras and prevent overbooking") {
     val boosted = ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 3)
-    assertEquals(ScoutProgression.available(boosted.ants, boosted.exploration), u)
-    assert(!ExplorationHelper.canStart(boosted, 5 * u, WoodlandEdge, 1))
+    assertEquals(ScoutProgression.available(boosted.ants, boosted.exploration), 2L * u)
+    assert(!ExplorationHelper.canStart(boosted, 5 * u, WoodlandEdge, 3))
     assert(ExplorationHelper.canStart(boosted, 5 * u, WoodlandEdge, 0))
-    assert(ExplorationHelper.canStart(colony, 10 * u, DryClearing, 3))
-    val fewer = colony.copy(ants = colony.ants.copy(scouts = 4 * u, ages = ColonyAges()))
-    assert(!ExplorationHelper.canStart(fewer, 10 * u, DryClearing, 3))
-    assertEquals(ExplorationHelper.start(colony, u, Surroundings, -1), colony)
-    assertEquals(ExplorationHelper.start(colony, u, Surroundings, 4), colony)
+    assert(ExplorationHelper.canStart(colony, 10 * u, CollectResin, 3))
+    val fewer = colony.copy(ants = colony.ants.copy(scouts = 2 * u, ages = ColonyAges()))
+    assert(!ExplorationHelper.canStart(fewer, 10 * u, CollectResin, 3))
+    assertEquals(ExplorationHelper.start(colony, u, WoodlandEdge, -1), colony)
+    assertEquals(ExplorationHelper.start(colony, u, WoodlandEdge, 4), colony)
   }
 
   test("saved parties retain their speed and reservations, return on time, and preserve fixed age expiry") {
@@ -68,12 +68,12 @@ class ExpeditionStaffingSuite extends FunSuite {
   }
 
   test("extra scouts are optional even on the first route, and supplies remain an independent bonus") {
-    val party = ExplorationHelper.start(colony, u, Surroundings, 2).exploration.explorationParties.head
+    val party = ExplorationHelper.start(colony, u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(party.scouts, 2L * u)
-    assertEquals(party.targetTick, 50L)
+    assertEquals(party.targetTick, 150L)
     val supplied = colony.copy(exploration = colony.exploration.copy(suppliesLevel = 1))
-    val next = ExplorationHelper.start(supplied, u, Surroundings, 2).exploration.explorationParties.head
+    val next = ExplorationHelper.start(supplied, u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(next.targetTick, party.targetTick)
-    assertEquals(ExplorationProgression.earned(next), 12L)
+    assert(next.cargo.protein > party.cargo.protein)
   }
 }

@@ -1278,7 +1278,7 @@ object MainForm {
               summaryTag(minHeight.px := 44, "Review founding"),
               p(className := "small my-2", "Found with your daughter queen: +1 DNA and +10% sugar production, added to your inherited bonus."),
               p(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
-              p(className := "small", "Reset: resources, ants and brood, chambers, research, exploration levels, discoveries, trails, queues and task assignments."),
+              p(className := "small", "Reset: resources, ants and brood, chambers, research, explored map, discoveries, trails, queues and task assignments."),
               button(className := "btn btn-primary", minHeight.px := 44, typ := "button", "Found daughter colony",
                 onClick --> { _ =>
                   if (window.confirm("Found a new colony? Colony resources, ants, chambers, research and exploration will reset. DNA, Understandings, lifetime statistics, settings and stored time are kept. Gain 1 DNA and +10% sugar production."))
@@ -1731,7 +1731,7 @@ object MainForm {
         case AntTask.CarcassCarrier =>
           div("Returning with a carcass.")
         case AntTask.Explorer =>
-          div("Ants exploring the surroundings.")
+          div("Workers collecting resources at a mapped site.")
       }
 
     div(
@@ -1828,13 +1828,12 @@ object MainForm {
 
   private def discoveriesDiv: ReactiveHtmlElement[HTMLDivElement] =
     div(className := "discoveries-panel",
-      children <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
+      children <-- explorationSignal.map { data =>
         val found = DiscoveryProgression.all.filter(_.found(data))
-        val surveys = DiscoveryProgression.all.filterNot(_.found(data)).flatMap { discovery =>
-          ExplorationDestination.all.find(d => d.id == discovery.destination && d.isUnlocked(data, ants, nest)).map { destination =>
-            (destination.id, destination.name, discovery.progress(data), discovery.trips)
+        val surveys = DiscoveryProgression.all.filterNot(_.found(data))
+          .filter(discovery => ExplorationMap.revealed(data, discovery.destination)).map { discovery =>
+            (discovery.destination, ExplorationMap.site(discovery.destination).name, discovery.progress(data), discovery.trips)
           }
-        }
         (found, surveys)
       }.distinct.map { case (found, surveys) =>
         List(
@@ -1883,14 +1882,21 @@ object MainForm {
         ExplorationHelper.summary(data, count, route)
       }),
       if (RaidProgression.isRaid(route)) div(className := "text-danger raid-risk", child.text <-- workers.map(RaidProgression.risk)) else emptyNode,
+      if (RaidProgression.isRaid(route)) div(className := "text-danger raid-aging small",
+        child.text <-- antsSignal.combineWith(currentTickSignal, workers).map { case (ants, tick, count) => RaidProgression.ageWarning(ants, tick, count, 0) }) else emptyNode,
       actionButton(
         descriptionSignal = Val(None),
         name = route.actionName,
         enabledSignal = snapshotSignal.combineWith(workers).map { case (data, count) => ExplorationHelper.canStart(data, count, route) },
         costSignal = workers.map(ExplorationHelper.cost(_, route)), bonusSignal = Val(ActionBonus.empty),
-        requirementsSignal = workers.combineWith(explorationSignal, upgradesSignal).map { case (count, data, upgrades) =>
-          List(ActionRequirement("party workers", count, route.minimumWorkers),
-            ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u))
+        blockedReasonSignal = snapshotSignal.combineWith(workers).map { case (data, count) =>
+          val cargo = ExplorationHelper.load(data, count, route)
+          Option.when(cargo.sugar + cargo.protein + cargo.water + cargo.resin == 0L)("No storage room for this haul")
+        },
+        requirementsSignal = workers.combineWith(explorationSignal, upgradesSignal, availableScoutsSignal).map { case (count, data, upgrades, scouts) =>
+          List(ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u)) ++
+            Option.when(count < route.minimumWorkers)(ActionRequirement("party workers", count, route.minimumWorkers)) ++
+            Option.when(route.scouts > 0L)(ActionRequirement("scout guide", scouts, route.scouts, isCost = true))
         },
         onClickAction = _ => useSignalValue[Long](workers, Actions.explore(_, route)),
       ).amend(className := "col-12"),
@@ -1906,21 +1912,27 @@ object MainForm {
         div(className := "map-site-card card p-3", h5(site.name),
           p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
           child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
+          child.maybe <-- explorationSignal.map(data => site.routes.exists(route => ExplorationMap.remaining(data, route) > 0L) && ExplorationMap.studies(data, id) > 0).distinct.map(active => Option.when(active)(
           div(className := "site-worker-controls my-2",
             label(forId := "map-worker-count", "Collection crew"),
             div(className := "d-flex gap-2 align-items-center",
-              button(className := "btn btn-outline-secondary", aria.label := "Decrease collection workers", "−",
+              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Decrease collection workers", "−",
+                disabled <-- workers.map(_ <= u),
                 onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.max(u, n - u))))),
-              input(idAttr := "map-worker-count", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "1", maxAttr := "37",
+              input(idAttr := "map-worker-count", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "1",
+                maxAttr <-- availableWorkersCountSignal.map(n => Math.max(1L, Math.min(37L, n / u)).toString),
+                disabled <-- availableWorkersCountSignal.map(_ < u),
                 value <-- workers.map(n => (n / u).toString),
                 onChange --> (event => {
                   val field = event.target.asInstanceOf[HTMLInputElement]
                   requestedWorkers.set(Math.max(1L, Math.min(37L, field.value.toLongOption.getOrElse(1L))) * u)
                 })),
-              button(className := "btn btn-outline-secondary", aria.label := "Increase collection workers", "+",
+              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Increase collection workers", "+",
+                disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) => count >= Math.min(37L * u, available) },
                 onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.min(37L * u, n + u))))),
             ),
-          ),
+          )
+          )),
           site.routes.flatMap(route => ExplorationDestination.all.find(_.id == route)).map { route =>
             child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
               route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L
@@ -1964,6 +1976,8 @@ object MainForm {
               b(if (party.mission == "reveal") "Exploring surroundings" else if (party.mission == "study") s"Studying ${ExplorationMap.site(party.destination).name}" else ExplorationDestination.forParty(party).name),
               s" · ${party.scouts / u} scouts · ${party.amountWorkers / u} workers · ",
               span(child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick)))),
+              if (party.mission == "haul" && RaidProgression.isRaid(ExplorationDestination.forParty(party)))
+                div(className := "text-danger small", RaidProgression.risk(party.amountWorkers)) else emptyNode,
             )
           )),
         ),

@@ -40,7 +40,8 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
   Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
 - `game/balance/UpgradeBalance.scala`: upgrade prices, help and structured reveal prerequisites; see docs/BALANCING.md.
 - `game/UpgradeResearch.scala`: shared visibility/purchase validation for UI, actions and simulator.
-- `game/ExplorationDestination.scala`, `ExplorationProgression.scala`: explicit destination values, shared progression gate and supplies tiers.
+- `game/ExplorationMap.scala`: handcrafted first ring, scout-only reveals/studies, finite Knowledge/deposits; see docs/EXPLORATION.md.
+- `game/ExplorationDestination.scala`, `ExplorationHelper.scala`, `ExplorationProgression.scala`: finite collection, cargo reservations/overflow, mission slots and supplies. Save version 7 removes XP; old saves intentionally rejected.
 - `game/UpgradeVisibility.scala`, `ResourceVisibility.scala`: visibility reconciliation.
 - `game/saves/`: serialization, restoration and load-time reconciliation.
 - `tools/balance/` (repository root): seeded real-engine pacing runner, policy config, portable reports and checkpoint saves; see its README.

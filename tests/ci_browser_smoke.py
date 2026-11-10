@@ -62,7 +62,7 @@ def check_game(page, width, url):
         defaultTask={'SugarCollector': {}}, eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
     game['nestAttributes']['chambers']['nurseryChamber']['level'] = 1
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
-    game['exploration'].update(experience=6000, proteinDiscovered=True, surveys={'dry-clearing': 3})
+    game['exploration'].update(revealedSites=6, proteinDiscovered=True, surveys={'dry-clearing': 3})
     for upgrade in game['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=upgrade['name'] == 'DefaultWorkers')
     load_game(page, game)
@@ -77,19 +77,28 @@ def check_game(page, width, url):
         assert info['height'] >= 44
         assert info['y'] >= bounds['y'] and info['y'] + info['height'] <= bounds['y'] + bounds['height'] + 1
     page.get_by_role('tab', name='Explore', exact=True).click()
-    if width <= 767:
-        expect(page.locator('.destination-carousel')).to_be_visible()
-        page.get_by_role('button', name='Next destination', exact=True).click()
-        expect(page.locator('.carousel-destination-name')).to_have_text('Woodland Edge')
-        expect(page.locator('.exploration-destination:visible')).to_have_count(1)
-        select_expedition(page, 'surroundings')
-    else:
-        expect(page.locator('.destination-carousel')).not_to_be_visible()
-    expect(page.locator('.exploration-destination:visible .action-costs').first).to_be_visible()
+    # A fresh ring reveals through scout-only missions, with identical mobile/desktop rules.
+    game['exploration'].update(revealedSites=0, surveys={}, depleted={}, explorationParties=[])
+    load_game(page, game)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    expect(page.locator('.hex-map .map-hex')).to_have_count(7)
+    expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
+    expect(page.locator('.exploration-progress')).to_have_count(0)
+    page.locator('#scout-crew').select_option('2')
+    expect(page.locator('.map-site-card .action-costs').first).to_be_visible()
     assert_fits(page, width)
     page.get_by_role('button', name='Explore Surroundings', exact=True).click()
     sent = save_game(page)
-    assert sent['exploration']['explorationParties'][0]['destination'] == 'surroundings'
+    party = sent['exploration']['explorationParties'][0]
+    assert party['mission'] == 'reveal' and party['scouts'] == 2 * UNIT and party['amountWorkers'] == 0
+    assert 'experience' not in sent['exploration']
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.clock.run_for(31000)
+    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_be_enabled()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    expect(page.get_by_role('button', name='Study Site', exact=True)).to_be_enabled()
+    expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_have_count(0)
+    assert_fits(page, width)
     page.get_by_role('tab', name='Lineage', exact=True).click()
     page.get_by_text('Review founding', exact=True).click()
     expect(page.locator('.founding-preview')).to_contain_text('Reset:')
@@ -98,6 +107,7 @@ def check_game(page, width, url):
     founded = save_game(page)
     assert founded['ants']['lineage']['foundings'] == 1
     assert not founded['ants']['standardWorkersUnlocked']
+    assert founded['exploration']['revealedSites'] == 0 and not founded['exploration']['surveys']
     page.get_by_role('tab', name='Nest', exact=True).click()
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
     protein = page.locator('.resource-row').filter(has=page.get_by_text('Protein', exact=True))
@@ -107,7 +117,7 @@ def check_game(page, width, url):
     expect(protein).to_be_visible()
     assert_fits(page, width)
     assert not errors, errors
-    print(f'PASS production {width}px: founding labels, disclosures, task geometry, research prices/purchase, navigation/launch, prestige/reset and resource visibility', flush=True)
+    print(f'PASS production {width}px: founding labels, disclosures, task geometry, research prices/purchase, hex map/scout launch/reveal, prestige/reset and resource visibility', flush=True)
 
 
 if __name__ == '__main__':

@@ -24,6 +24,8 @@ class ExplorationSuite extends FunSuite {
   def ready: AllData = colony.copy(exploration = MapFixture.explored)
 
   test("scouts reveal exactly six fixed neighboring sites without workers or random results") {
+    assertEquals(ExplorationMap.sites.map(s => (s.q, s.r)).distinct.size, 6)
+    assert(ExplorationMap.sites.forall(_.distance == 1))
     val d = colony.copy(ants = colony.ants.copy(workers = 0L))
     val mapped = (1 to 6).foldLeft(d) { (state, count) =>
       val sent = ExplorationMap.scout(state, "surroundings", 1)
@@ -32,6 +34,7 @@ class ExplorationSuite extends FunSuite {
       assertEquals(ScoutProgression.available(sent.ants, sent.exploration), 2L * u)
       assertEquals(ExplorationMap.scout(sent, "surroundings", 1), sent)
       val returned = finish(sent)
+      assertEquals(ExplorationMap.finishScout(returned, sent.exploration.explorationParties.head), returned)
       assertEquals(returned.exploration.revealedSites, count)
       assert(ExplorationMap.revealed(returned.exploration, ExplorationMap.sites(count - 1).id))
       returned
@@ -123,6 +126,18 @@ class ExplorationSuite extends FunSuite {
     assert(!ExplorationHelper.canStart(first, 5L * u, RottenLog))
     assertEquals(finish(first).basicResources.protein.amount, 100L * u)
   }
+  test("identical simultaneous hauls each return exactly once without stranding workers") {
+    val first = ExplorationHelper.start(ready, u, WoodlandEdge)
+    val sent = ExplorationHelper.start(first, u, WoodlandEdge)
+    assertEquals(sent.exploration.explorationParties.size, 2)
+    assertEquals(sent.exploration.explorationParties.head, sent.exploration.explorationParties(1))
+    val once = finish(sent)
+    assertEquals(once.exploration.explorationParties.size, 1)
+    val twice = finish(once)
+    assertEquals(twice.ants.idleWorkersCount, 50L * u)
+    assertEquals(twice.basicResources.protein.amount, 20L * u)
+    assert(twice.exploration.explorationParties.isEmpty)
+  }
   test("exhausted sites persist without missions; managed discoveries and research remain available") {
     val used = ExplorationMap.sites.head
     val d = ready.copy(exploration = ready.exploration.copy(depleted = Map("woodland-edge" -> ExplorationMap.deposits("woodland-edge"))))
@@ -135,10 +150,18 @@ class ExplorationSuite extends FunSuite {
   test("map state, finite cargo and scout reservations round-trip; obsolete saves are rejected") {
     val sent = ExplorationMap.scout(colony, "surroundings", 2)
     val loaded = SaveLoad.loadString(AllDataForSave.fromAllData(sent).toJson).get
-    assertEquals(loaded.exploration, sent.exploration)
+    assertEquals(loaded.exploration.explorationParties, sent.exploration.explorationParties)
+    assertEquals(loaded.exploration.revealedSites, sent.exploration.revealedSites)
     assertEquals(ScoutProgression.available(loaded.ants, loaded.exploration), u)
     assertEquals(SaveLoad.loadString(AllDataForSave.fromAllData(sent).copy(version = 6).toJson), None)
     assert(!AllDataForSave.fromAllData(sent).toJson.contains("experience"))
+  }
+  test("every useful nectar crew returns more sugar than its supplies cost without XP inflation") {
+    for (count <- 5L to 37L) {
+      val crew = count * u
+      val cargo = ExplorationHelper.load(ready, crew, NectarMeadow)
+      assert(cargo.sugar > ExplorationHelper.cost(crew, NectarMeadow).sugar, s"$count workers")
+    }
   }
   test("party bonuses remain diminishing and cap collection benefit at 37 workers") {
     assertEquals(List(1L, 5L, 17L, 37L, 1000L).map(n => ExplorationProgression.partyPercent(n * u)), List(100L, 200L, 300L, 400L, 400L))

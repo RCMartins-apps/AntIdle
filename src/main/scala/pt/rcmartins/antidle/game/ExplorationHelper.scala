@@ -59,7 +59,11 @@ object ExplorationHelper {
     }
   def summary(data: AllData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String = {
     val cargo = load(data, workers, destination)
-    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · ${UINumbersUtils.prettyNumberStr(amount(cargo, resource(destination)))} ${resource(destination)}"
+    val reward = if (RaidProgression.isRaid(destination)) {
+      val high = load(data, workers, destination, Some(RaidProgression.rewardRange(workers)._2))
+      s"${UINumbersUtils.prettyNumberStr(cargo.protein)}–${UINumbersUtils.prettyNumberStr(high.protein)}"
+    } else UINumbersUtils.prettyNumberStr(amount(cargo, resource(destination)))
+    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $reward ${resource(destination)}"
   }
   def outcomePreview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String =
     if (RaidProgression.isRaid(destination)) RaidProgression.risk(workers) else s"${resource(destination).capitalize} guaranteed; no knowledge from collection."
@@ -70,7 +74,7 @@ object ExplorationHelper {
       val destination = ExplorationDestination.forParty(party)
       val (afterBattle, ages) = RaidProgression.resolve(initial, party)
       val removed = afterBattle.copy(ants = afterBattle.ants.removeFromTask(AntTask.Explorer, party.amountWorkers),
-        exploration = afterBattle.exploration.copy(explorationParties = afterBattle.exploration.explorationParties.filterNot(_ == party)),
+        exploration = afterBattle.exploration.copy(explorationParties = afterBattle.exploration.explorationParties.patch(afterBattle.exploration.explorationParties.indexOf(party), Nil, 1)),
         statistics = afterBattle.statistics.copy(explorationsCompleted = afterBattle.statistics.explorationsCompleted.addValue(1)))
       val cargo = party.cargo
       val received = removed.giveResources(sugar = cargo.sugar, protein = cargo.protein, water = cargo.water, resin = cargo.resin)
@@ -87,6 +91,6 @@ object ExplorationHelper {
         Math.max(0L, received.exploration.depleted.getOrElse(destination.id, 0L) - unused))))
         .addMessage(s"${destination.name}: collected ${UINumbersUtils.prettyNumberStr(retained)} $key.")
       val discovered = if (RaidProgression.isRaid(destination)) DiscoveryProgression.recordReturn(returned, destination) else returned
-      DefaultWorkerAssignment.normalize(PopulationAging.returnHome(discovered, ages))
+      ResourceVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.returnHome(discovered, ages)))
     }
 }

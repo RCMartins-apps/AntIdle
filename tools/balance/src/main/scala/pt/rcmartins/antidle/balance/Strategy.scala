@@ -168,7 +168,11 @@ object Strategy {
       val needed = routes.filter { route =>
         if (route == ScavengeWater) d.basicResources.water.amount < 170L * u
         else if (route == CollectResin) d.basicResources.resin.amount < 100L * u
-        else if (route == NectarMeadow) d.basicResources.sugar.amount < Math.min(2000L * u, stockNeeded)
+        else if (route == NectarMeadow) {
+          val royalConstruction = if (d.upgrades(RoyalNurseryPlanning).unlocked && nest.royalBroodSlots == 0)
+            RoyalNurseryProgression.buildCost.sugar else 0L
+          d.basicResources.sugar.amount < Math.max(stockNeeded, royalConstruction) + 200L * u
+        }
         else d.basicResources.protein.amount < 120L * u
       }
       needed.foreach { route =>

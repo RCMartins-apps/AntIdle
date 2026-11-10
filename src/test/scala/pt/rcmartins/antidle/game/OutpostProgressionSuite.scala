@@ -18,7 +18,7 @@ class OutpostProgressionSuite extends FunSuite {
       basicResources = initial.basicResources.copy(sugar = BasicResource(30000 * u, 40000 * u),
         protein = BasicResource(500 * u, 1000 * u), water = BasicResource(1000 * u, 1000 * u),
         tunnelingSpace = BasicResource(4000 * u, 4000 * u), knowledge = BasicResource(3000 * u, Long.MaxValue)),
-      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map("dry-clearing" -> 3)),
+      exploration = MapFixture.explored.copy(revealedSites = 5, surveys = Map("dry-clearing" -> 3)),
       upgrades = initial.upgrades.unlock(DefaultWorkers),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true))))
   }
@@ -27,7 +27,7 @@ class OutpostProgressionSuite extends FunSuite {
 
   test("expansions appear one at a time at their levels and stop after level three") {
     val initial = colony
-    val early = initial.copy(exploration = initial.exploration.copy(revealedSites = 6))
+    val early = initial.copy(exploration = initial.exploration.copy(revealedSites = 4))
     assert(!OutpostProgression.expansionVisible(early.nestAttributes, early.exploration))
     assertEquals(OutpostProgression.expand(early), early)
     val absent = initial.copy(nestAttributes = initial.nestAttributes.copy(dryClearingOutpost = false))
@@ -81,18 +81,18 @@ class OutpostProgressionSuite extends FunSuite {
     assertEquals(manual.ants.taskWorkers(AntTask.SugarCollector), 20L * u)
   }
 
-  test("new research remains hidden until an outpost and the appropriate exploration level") {
+  test("outpost research requires an established outpost and enough mapped sites") {
     val initial = colony
     assert(CoveredTrails.shouldShow(initial))
-    assert(!SeedProcessing.shouldShow(initial))
+    assert(SeedProcessing.shouldShow(initial))
     assert(SeedProcessing.shouldShow(levelEight(initial)))
     val absent = levelEight(initial).copy(nestAttributes = initial.nestAttributes.copy(dryClearingOutpost = false))
     assert(!CoveredTrails.shouldShow(absent))
     assert(!SeedProcessing.shouldShow(absent))
-    val early = initial.copy(exploration = initial.exploration.copy(revealedSites = 6))
+    val early = initial.copy(exploration = initial.exploration.copy(revealedSites = 4))
     assert(!CoveredTrails.shouldShow(early))
     assert(UpgradeVisibility.reconcile(initial).upgrades(CoveredTrails).show)
-    assert(!UpgradeVisibility.reconcile(initial).upgrades(SeedProcessing).show)
+    assert(UpgradeVisibility.reconcile(initial).upgrades(SeedProcessing).show)
   }
 
   test("research improves actual tick yields and water use, stacking with expanded staffing") {

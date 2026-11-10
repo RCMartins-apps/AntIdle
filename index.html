@@ -30,9 +30,6 @@
         .antidle-app .upgrades-grid > .action-cell { align-content: start; }
         .antidle-app .action-cost .resource-icon { align-self: center; }
         .antidle-app .action-cost > span:last-child:not(.visually-hidden) { margin-inline-start: .25em; }
-        .antidle-app .expedition-worker-stepper { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: .5rem; max-width: 22rem; margin-bottom: .5rem; }
-        .antidle-app .expedition-worker-stepper .btn,
-        .antidle-app .expedition-worker-stepper input { min-height: 48px; min-width: 0; font-size: 1.125rem; }
         .antidle-app .mobile-only { display: none; }
         .antidle-app .game-tooltip { z-index: 1080; pointer-events: none; }
 
@@ -112,16 +109,6 @@
             .antidle-app .task-controls .btn { min-width: 44px; }
             .antidle-app .build-task { display: block; min-height: 44px; padding: .625rem 0; cursor: pointer; }
             .antidle-app #exploreContent .col-6 { width: 100%; }
-            .antidle-app .exploration-destination:not(.destination-selected) { display: none; }
-            .antidle-app .expedition-setup .expedition-worker-stepper { max-width: none; margin-bottom: .35rem; }
-            .antidle-app .destination-carousel { display: flex; align-items: center; gap: .5rem; margin-bottom: .25rem; }
-            .antidle-app .destination-carousel .btn { flex: 0 0 44px; font-size: 1.5rem; line-height: 1; }
-            .antidle-app .carousel-caption-text { flex: 1; min-width: 0; text-align: center; }
-            .antidle-app .carousel-destination-name { font-weight: 600; }
-            .antidle-app .exploration-destination { touch-action: pan-y pinch-zoom; }
-            .antidle-app .worker-presets .btn { flex: 1; padding-left: .35rem; padding-right: .35rem; }
-            .antidle-app .expedition-setup { padding-bottom: .25rem !important; }
-            .antidle-app .exploration-destination.destination-selected { padding-top: .25rem !important; }
 
             .antidle-app .form-range { min-height: 44px; }
             .antidle-app .game-tooltip { display: none !important; }
@@ -130,7 +117,7 @@
             .antidle-app .modal-content { max-height: calc(100dvh - 1rem); overflow-y: auto; }
             .antidle-app textarea { min-width: 0; width: 100%; }
         }
-    
+
 .hex-map {position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto 1rem}
 .map-hex {position:absolute;transform:translate(-50%,-50%);width:29%;height:31%;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border:0;background:#d9e8d0;color:#183722;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px 8px;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;gap:3px;cursor:pointer}
 .map-hex small {font-size:.7rem;font-weight:400}
@@ -141,6 +128,8 @@
 .map-hex:focus-visible {background:#b7d8ff;outline:4px solid #087cf1;outline-offset:-6px}
 .map-site-card {max-width:600px;margin:auto}
 .map-site-card .action-cell {margin-bottom:.5rem}
+.site-worker-controls .btn {min-width:44px;min-height:44px}
+.site-worker-controls input, #scout-crew {min-height:44px}
 .site-worker-controls input {max-width:110px;text-align:center}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}

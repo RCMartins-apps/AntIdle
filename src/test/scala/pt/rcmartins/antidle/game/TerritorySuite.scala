@@ -30,7 +30,7 @@ class TerritorySuite extends FunSuite {
     val undiscovered = colony.copy(exploration = colony.exploration.copy(surveys = Map.empty))
     assert(!TerritoryProgression.visible(undiscovered.exploration))
     assertEquals(TerritoryProgression.claim(undiscovered, 10), undiscovered)
-    val sent = ExplorationHelper.start(undiscovered, 10 * u, ExplorationDestination.RivalFoodCache)
+    val sent = ExplorationMap.scout(undiscovered, "rival-food-cache", 1)
     val returned = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
     assert(TerritoryProgression.visible(returned.exploration))
     assertEquals(returned.messages.count(_.startsWith("Discovery: Contested Foraging Ground!")), 1)

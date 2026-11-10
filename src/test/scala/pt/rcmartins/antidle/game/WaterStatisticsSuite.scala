@@ -25,36 +25,31 @@ class WaterStatisticsSuite extends FunSuite {
     ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
   }
 
-  test("dry trail and dew surveys unlock routes in sequence without exposing water early") {
-    val initial = colony
-    assert(!DryClearing.isUnlocked(initial.exploration, initial.ants, initial.nestAttributes))
-    assert(!ScavengeWater.isUnlocked(initial.exploration, initial.ants, initial.nestAttributes))
-    assert(!initial.unlocks.resources.showWater)
-    val surveyed = (1 to 4).foldLeft(initial)((data, _) => trip(data, RottenLog))
-    assert(DiscoveryProgression.DryTrail.found(surveyed.exploration))
-    assert(DryClearing.isUnlocked(surveyed.exploration, surveyed.ants, surveyed.nestAttributes))
-    assert(!ExplorationHelper.canStart(surveyed, 9 * u, DryClearing))
-    val lackingScouts = surveyed.copy(ants = surveyed.ants.copy(scouts = u))
-    assert(!ExplorationHelper.canStart(lackingScouts, 10 * u, DryClearing))
-    val clearing = (1 to 3).foldLeft(surveyed)((data, _) => trip(data, DryClearing, 10 * u))
-    assert(DiscoveryProgression.DewPlants.found(clearing.exploration))
-    assert(ScavengeWater.isUnlocked(clearing.exploration, clearing.ants, clearing.nestAttributes))
-    assertEquals(clearing.basicResources.water.amount, 0L)
-    assert(!ResourceVisibility.reconcile(clearing).unlocks.resources.showWater)
-    assertEquals(clearing.statistics.explorationsCompleted.thisRun, 7)
+  test("dew study unlocks renewable gatherers without giving free water") {
+    val initial = colony.copy(exploration = ExplorationData(revealedSites = 4))
+    val studied = (1 to 3).foldLeft(initial) { (data, _) =>
+      val sent = ExplorationMap.scout(data, DryClearing.id, 1)
+      ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
+    }
+    assert(DiscoveryProgression.DewPlants.found(studied.exploration))
+    assert(studied.ants.tasks.exists(_._1 == AntTask.WaterCollector))
+    assert(studied.unlocks.resources.showWater)
+    assertEquals(studied.basicResources.water.amount, 0L)
+    val staffed = DefaultWorkerAssignment.assign(studied, AntTask.WaterCollector, u)
+    assertEquals(TickUpdater.updateAllData(staffed, None).basicResources.water.amount, 300L)
   }
 
   test("water forecast matches rewards, actual collection obeys capacity, visibility and saves persist") {
     val initial = colony.copy(exploration = colony.exploration.copy(surveys = Map(DryClearing.id -> 3)))
-    assert(ExplorationHelper.summary(initial, 5 * u, ScavengeWater).contains("90 water"))
+    assert(ExplorationHelper.summary(initial, 5 * u, ScavengeWater).contains("40 water"))
     assertEquals(ExplorationHelper.cost(5 * u, ScavengeWater).sugar, 125L * u)
     val result = ResourceVisibility.reconcile(trip(initial, ScavengeWater))
-    assertEquals(result.basicResources.water.amount, 90L * u)
-    assertEquals(result.statistics.waterU.thisRun, 90L * u)
+    assertEquals(result.basicResources.water.amount, 40L * u)
+    assertEquals(result.statistics.waterU.thisRun, 40L * u)
     assert(result.unlocks.resources.showWater)
     val second = trip(result, ScavengeWater)
-    assertEquals(second.basicResources.water.amount, 100L * u)
-    assertEquals(second.statistics.waterU.thisRun, 100L * u)
+    assertEquals(second.basicResources.water.amount, 80L * u)
+    assertEquals(second.statistics.waterU.thisRun, 80L * u)
     val full = trip(second, ScavengeWater)
     assertEquals(full.statistics.waterU.thisRun, 100L * u)
     val spent = full.spendResources(ActionCost(water = 100 * u))
@@ -89,7 +84,7 @@ class WaterStatisticsSuite extends FunSuite {
   }
 
   test("launched and completed missions are separate, and replayed completions cannot award progress twice") {
-    val sent = ExplorationHelper.start(colony, u, Surroundings)
+    val sent = ExplorationHelper.start(colony, u, WoodlandEdge)
     assertEquals(sent.statistics.explorationsCount.thisRun, 1)
     assertEquals(sent.statistics.explorationsCompleted.thisRun, 0)
     val party = sent.exploration.explorationParties.head

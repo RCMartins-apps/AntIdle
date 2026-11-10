@@ -17,10 +17,17 @@ sealed abstract class ExplorationDestination(
     val waterReward: Long = 0L,
     val resinReward: Long = 0L,
 ) {
-  def actionName: String = s"Explore $name"
+  def actionName: String = id match {
+    case "woodland-edge" => "Collect Insects"
+    case "rotten-log" => "Search Deadwood"
+    case "nectar-meadow" => "Collect Nectar"
+    case "seed-gathering" => "Gather Seeds"
+    case "scavenge-water" => "Collect Water"
+    case _ => s"Collect from $name"
+  }
 
-  // Shared by the route UI and departure validation. Scout training affects
-  // visibility below; available scouts/workers/supplies are departure checks.
+  // Shared by the map UI and departure validation. Available workers, guides
+  // and supplies are departure checks, not permanent visibility requirements.
   def progressionUnlocked(data: ExplorationData): Boolean =
     ExplorationMap.siteForRoute(id).exists(site => ExplorationMap.revealed(data, site.id) && ExplorationMap.studies(data, site.id) > 0) &&
       requiredDiscovery.forall(DiscoveryProgression.has(data, _))
@@ -69,7 +76,7 @@ object ExplorationDestination {
     id = "nectar-meadow",
     name = "Nectar Meadow",
     duration = 90L * TicksPerSecond,
-    sugarPerWorker = 40L,
+    sugarPerWorker = 10L,
     minimumWorkers = 5L * u,
     scouts = 0L,
     carcassSize = 0,
@@ -139,7 +146,7 @@ object ExplorationDestination {
     duration = 120L * TicksPerSecond,
     sugarPerWorker = 30L,
     minimumWorkers = 10L * u,
-    scouts = 0L,
+    scouts = u,
     carcassSize = 0,
   ) {
     override def actionName: String = "Raid Rival Food Cache"

@@ -62,17 +62,10 @@ class KnowledgeEconomySuite extends FunSuite {
     }
   }
 
-  test("every destination earns knowledge, with Rotten Log giving the most per base trip") {
-    assert(ExplorationDestination.Surroundings.knowledge > 0)
-    assert(ExplorationDestination.WoodlandEdge.knowledge > ExplorationDestination.Surroundings.knowledge)
-    assert(ExplorationDestination.RottenLog.knowledge > ExplorationDestination.WoodlandEdge.knowledge)
-    ExplorationDestination.all.foreach { destination =>
-      val ants = AntsData(workers = 20 * u, scouts = u, tasks = Seq(AntTask.Explorer -> 0L))
-      val initial = AllData.initial.copy(ants = ants, exploration = MapFixture.explored.copy(revealedSites = 6))
-      val party = ExplorationParty(5 * u, 0L, destination.duration, destination.scouts, destination.id)
-      val returned = ExplorationHelper.exploreBonus(initial.copy(ants = ants.addToTask(AntTask.Explorer, 5 * u), exploration = initial.exploration.copy(explorationParties = List(party))), party)
-      assert(returned.basicResources.knowledge.amount > 0)
-    }
+  test("knowledge belongs to finite scout surveys rather than worker destinations") {
+    assertEquals(ExplorationMap.sites.size, 6)
+    assert(ExplorationMap.sites.forall(_.knowledge > 0L))
+    assert(ExplorationMap.sites.forall(site => ExplorationMap.knowledgeRemaining(ExplorationData(), site.id) == site.knowledge))
   }
 
   test("version six saves round-trip, and earlier versions are rejected without migration") {

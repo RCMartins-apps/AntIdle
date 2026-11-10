@@ -24,8 +24,8 @@ class RaidSuite extends FunSuite {
   def start(data: AllData = colony, workers: Long = 10 * u): AllData = ExplorationHelper.start(data, workers, RivalFoodCache)
   def loaded(data: AllData): AllData = AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
-  test("raid stays hidden before level five and requires resources, ten workers, a scout and a slot") {
-    val early = colony.copy(exploration = MapFixture.explored.copy(revealedSites = 6))
+  test("raid requires a studied cache, resources, ten workers, a scout guide and a slot") {
+    val early = colony.copy(exploration = ExplorationData())
     assert(!RivalFoodCache.isUnlocked(early.exploration, early.ants, early.nestAttributes))
     assertEquals(start(early), early)
     assertEquals(start(colony, 9 * u), colony)

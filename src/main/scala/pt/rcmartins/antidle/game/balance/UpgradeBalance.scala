@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.{DiscoveryProgression, ExplorationProgression}
+import pt.rcmartins.antidle.game.DiscoveryProgression
 import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
@@ -86,10 +86,10 @@ object UpgradeBalance {
       description = s"Food Storage Chamber: +${FoodStorageChamberBonusMaxSugar / u} sugar capacity per level.",
     ),
     UnlockExplorerTask -> UpgradeDefinition(
-      title = "Unlock Explorer Task",
+      title = "Local Exploration",
       cost = ActionCost(sugar = 750 * u),
       requirements = UpgradeRequirements(upgrades = List(UnlockFoodStorageChamber)),
-      description = "Unlocks exploration expeditions.",
+      description = "Unlocks the map: scouts reveal and study sites; workers collect resources.",
     ),
     DefaultWorkers -> UpgradeDefinition(
       title = "Default Workers",

@@ -5,14 +5,18 @@ import pt.rcmartins.antidle.model._
 
 /** Handcrafted first ring. Knowledge belongs to scout surveys, not worker hauls. */
 object ExplorationMap {
-  case class Site(id: String, name: String, knowledge: Long, routes: List[String], x: Int, y: Int)
+  case class Site(id: String, name: String, knowledge: Long, routes: List[String], q: Int, r: Int) {
+    def distance: Int = Math.max(Math.abs(q), Math.max(Math.abs(r), Math.abs(q + r)))
+    def x: Int = 50 + 27 * q
+    def y: Int = 50 + 16 * q + 32 * r
+  }
   val sites: Vector[Site] = Vector(
-    Site("woodland-edge", "Woodland Edge", 800L * u, List("woodland-edge"), 50, 18),
-    Site("nectar-meadow", "Nectar Meadow", 1000L * u, List("nectar-meadow", "seed-gathering"), 77, 34),
-    Site("rotten-log", "Rotten Log", 1100L * u, List("rotten-log"), 77, 66),
-    Site("dry-clearing", "Dry Clearing", 1200L * u, List("scavenge-water"), 50, 82),
-    Site("fallen-pine", "Fallen Pine", 1400L * u, List("collect-resin"), 23, 66),
-    Site("rival-food-cache", "Rival Cache", 1500L * u, List("rival-food-cache"), 23, 34),
+    Site("woodland-edge", "Woodland Edge", 800L * u, List("woodland-edge"), 0, -1),
+    Site("nectar-meadow", "Nectar Meadow", 1000L * u, List("nectar-meadow", "seed-gathering"), 1, -1),
+    Site("rotten-log", "Rotten Log", 1100L * u, List("rotten-log"), 1, 0),
+    Site("dry-clearing", "Dry Clearing", 1200L * u, List("scavenge-water"), 0, 1),
+    Site("fallen-pine", "Fallen Pine", 1400L * u, List("collect-resin"), -1, 1),
+    Site("rival-food-cache", "Rival Cache", 1500L * u, List("rival-food-cache"), -1, 0),
   )
   val SurveyTicks: Long = 180L * TicksPerSecond
   val RevealTicks: Long = 60L * TicksPerSecond
@@ -54,7 +58,8 @@ object ExplorationMap {
     }
   }
   def finishScout(data: AllData, party: ExplorationParty): AllData = {
-    val removed = data.copy(exploration = data.exploration.copy(explorationParties = data.exploration.explorationParties.filterNot(_ == party)),
+    if (party.mission == "haul" || !data.exploration.explorationParties.contains(party)) return data
+    val removed = data.copy(exploration = data.exploration.copy(explorationParties = data.exploration.explorationParties.patch(data.exploration.explorationParties.indexOf(party), Nil, 1)),
       statistics = data.statistics.copy(explorationsCompleted = data.statistics.explorationsCompleted.addValue(1)))
     val rewarded = if (party.mission == "reveal") {
       val count = Math.min(sites.size, removed.exploration.revealedSites + 1)
@@ -65,10 +70,12 @@ object ExplorationMap {
       val studied = removed.giveResources(knowledge = reward).copy(exploration = removed.exploration.copy(
         surveys = removed.exploration.surveys.updated(party.destination, count)))
         .addMessage(s"${site(party.destination).name}: +${UINumbersUtils.prettyNumberStr(reward)} knowledge.")
-      val withFind = if (party.destination == "woodland-edge" && count == 1) CarcassProgression.discover(studied, 1) else studied
+      val announced = DiscoveryProgression.all.filter(discovery => !discovery.found(removed.exploration) && discovery.found(studied.exploration))
+        .foldLeft(studied)((state, discovery) => state.addMessage(s"Discovery: ${discovery.title}!"))
+      val withFind = if (party.destination == "woodland-edge" && count == 1) CarcassProgression.discover(announced, 1) else announced
       if (party.destination == "nectar-meadow" && count == 1) PheromoneTrails.discover(withFind, ExplorationDestination.NectarMeadow) else withFind
     }
-    UpgradeVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.returnHome(rewarded, party.ages)))
+    ResourceVisibility.reconcile(UpgradeVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.returnHome(rewarded, party.ages))))
   }
   def exhausted(data: ExplorationData, id: String): Boolean =
     knowledgeRemaining(data, id) == 0L && site(id).routes.forall(remaining(data, _) == 0L)
