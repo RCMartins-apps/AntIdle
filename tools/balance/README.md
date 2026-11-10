@@ -24,6 +24,7 @@ time as usual, which you can choose not to spend during a pacing check.
 
 The historical pre-map comparison is recorded in [INITIAL_RESULTS.md](INITIAL_RESULTS.md).
 Version 7 uses the [handcrafted map](../../docs/EXPLORATION.md); rebuild before running it.
+Its first measured run is recorded in [MAP_RESULTS.md](MAP_RESULTS.md).
 
 ## What is simulated
 

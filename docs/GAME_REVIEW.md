@@ -163,3 +163,6 @@ If choosing one substantial content project now, choose the next meaningful
 prestige step. The small browser CI gate has since been implemented; incremental
 UI extraction is the remaining engineering recommendation. Neither the new
 prestige step nor a UI rewrite is authorized by this review.
+
+This review predates the version-7 hex-map redesign. Its XP/carousel assessment
+is historical; see [current exploration](EXPLORATION.md) and [HANDOFF](HANDOFF.md).

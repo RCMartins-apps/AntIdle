@@ -38,6 +38,9 @@ def check_map(page, width, url):
     page.get_by_role('tab', name='Explore', exact=True).click()
     expect(page.locator('.hex-map .map-hex')).to_have_count(7)
     expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
+    for tile in page.locator('.hex-map .map-hex').all():
+        box = tile.bounding_box()
+        assert box['width'] >= 44 and box['height'] >= 44
     expect(page.locator('.exploration-progress')).to_have_count(0)
     page.locator('#scout-crew').select_option('3')
     page.get_by_role('button', name='Explore Surroundings', exact=True).click()
@@ -114,7 +117,7 @@ def main():
                 launch['proxy'] = {'server': proxy, 'bypass': '127.0.0.1,localhost'}
             browser = playwright.chromium.launch(**launch)
             try:
-                for width in (390, 1280):
+                for width in (320, 390, 1280):
                     page = browser.new_page(viewport={'width': width, 'height': 844}, has_touch=width <= 767, is_mobile=width <= 767)
                     try:
                         check_map(page, width, f'http://127.0.0.1:{server.server_port}')

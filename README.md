@@ -51,25 +51,25 @@ includes them without an additional asset-copy step.
 
 ## Browser regression checks
 
-After `sbt fastOptJS`, install Playwright in your Python environment and a browser:
+The maintained production checks cover phone/desktop controls and the version-7 map:
 
 ```sh
-python3 -m pip install playwright
+sbt fullOptJS test balance/test
+python3 -m pip install -r tests/requirements-browser.txt
 python3 -m playwright install chromium
-python3 tests/browser_smoke.py
+python3 tests/ci_browser_smoke.py
+ANTIDLE_PRODUCTION=1 python3 tests/map_browser_smoke.py
 ```
 
-The script starts its own local static server and checks phone, tablet, and desktop
-widths, unlocked tabs, touch targets, action details, save restoration, resizing,
-and identical game results for mobile action amounts and desktop modifiers. It
-uses isolated browser contexts and simulated save data, without changing your saves.
-It uses a system `chromium` if available; `CHROMIUM_PATH` can select another binary.
-An inherited HTTPS proxy is supported, with localhost bypassed.
+The scripts serve the repository themselves, use isolated browser contexts and
+leave your own saves untouched. `CHROMIUM_PATH` can select a system browser.
+Inherited HTTPS proxies are supported, with localhost bypassed. The page loads
+Bootstrap, jQuery, Font Awesome and Popper from CDNs, so those assets need network
+access for the complete interface.
 
-The page loads Bootstrap, jQuery, Font Awesome, and Popper from external CDNs;
-network access to those assets is required for the complete interface.
-Run `python3 tests/ui_polish_smoke.py` for focused checks of readable totals,
-research layout and empty states, and expedition availability feedback.
+For fast iteration, run `sbt fastOptJS` then `python3 tests/map_browser_smoke.py`.
+See [tests/README.md](tests/README.md) before using older feature-specific browser
+scripts: XP/carousel fixtures are historical and no longer supported against v7.
 
 ## Chamber bonuses
 
@@ -807,7 +807,7 @@ stays open during ordinary resource updates. Action/task prose
 is no longer shown automatically on hover; resource-rate breakdown tooltips remain.
 
 Larval/royal material costs, live shortages, imminent aging warnings and dangerous
-expedition losses remain visible. 
+expedition losses remain visible.
 `python3 tests/compact_ui_smoke.py` checks collapsed defaults, information controls,
 keyboard interaction, visible costs/rates/warnings and phone/desktop layout.
 
