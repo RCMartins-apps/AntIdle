@@ -676,3 +676,16 @@ The owner explicitly authorized breaking saves for this redesign: version 7,
 no XP field or XP-based unlocks. Wider rings are a later range/prestige direction,
 not implemented in this first-ring change. Preserve current other mechanics where
 possible, but old XP pacing/results are no longer an applicable balance target.
+
+## D37: Support offline reopening and optional browser installation — approved direction
+
+Following the Chrome install discussion, on 2026-11-10 the owner prioritized playing
+without internet because the page sometimes failed to load. Bundle current runtime
+libraries locally and cache complete production releases with a service worker;
+provide a manifest/icons for optional installation. Offline tabs should work too.
+The first online visit must finish caching before offline reopening is promised.
+
+Preserve local saves and current gameplay/offline-time mechanics. Don't silently
+reload an open game for updates: cache the new release, wait for all game windows
+to close, and keep the old release usable if an update fails. Keep development
+bundles free of service-worker caching. See OFFLINE.md for setup and verification.

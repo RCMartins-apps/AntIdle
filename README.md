@@ -63,9 +63,8 @@ ANTIDLE_PRODUCTION=1 python3 tests/map_browser_smoke.py
 
 The scripts serve the repository themselves, use isolated browser contexts and
 leave your own saves untouched. `CHROMIUM_PATH` can select a system browser.
-Inherited HTTPS proxies are supported, with localhost bypassed. The page loads
-Bootstrap, jQuery, Font Awesome and Popper from CDNs, so those assets need network
-access for the complete interface.
+Inherited HTTPS proxies are supported, with localhost bypassed. Browser libraries are bundled locally, so the published release can cache
+every runtime dependency for offline play.
 
 For fast iteration, run `sbt fastOptJS` then `python3 tests/map_browser_smoke.py`.
 See [tests/README.md](tests/README.md) before using older feature-specific browser
@@ -893,3 +892,11 @@ simulation with short normal-speed playtests.
 
 For code locations and examples of changing unlock timing, costs and exploration
 requirements, see [Changing balance](docs/BALANCING.md).
+
+## Offline play and installation
+
+After deployment, open the game online once and wait for **Available offline**.
+It can then reopen without internet, in a browser tab or through Chrome's Install
+option. Complete updates wait until all game windows close; saved colonies remain
+in local browser storage. See [Offline support](docs/OFFLINE.md) for usage, update
+behavior, development packaging and tests.
