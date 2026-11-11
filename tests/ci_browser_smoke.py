@@ -100,6 +100,21 @@ def check_game(page, width, url):
         bounds, info = row.bounding_box(), row.locator('.info-summary').bounding_box()
         assert info['height'] >= 44
         assert info['y'] >= bounds['y'] and info['y'] + info['height'] <= bounds['y'] + bounds['height'] + 1
+    # Replacing native select options must retain the actual default task.
+    unlocking = save_game(page)
+    unlocking['nestAttributes']['chambers']['nurseryChamber']['level'] = 0
+    unlocking['ants']['tasks'] = [[{'SugarCollector': {}}, 40 * UNIT], [{'Tunneler': {}}, 10 * UNIT]]
+    load_game(page, unlocking)
+    page.get_by_role('tab', name='Tasks').click()
+    expect(page.locator('#default-worker-task')).to_have_value('SugarCollector')
+    page.get_by_role('tab', name='Nest', exact=True).click()
+    page.get_by_role('button', name='Nursery Chamber', exact=True).click()
+    page.get_by_role('tab', name='Tasks').click()
+    page.clock.run_for(600)
+    expect(page.locator('#default-worker-task option[value="BroodNurse"]')).to_have_count(1)
+    expect(page.locator('#default-worker-task')).to_have_value('SugarCollector')
+    assert save_game(page)['ants']['defaultTask'] == {'SugarCollector': {}}
+    load_game(page, game)
     page.get_by_role('tab', name='Explore', exact=True).click()
     # A fresh ring reveals through scout-only missions, with identical mobile/desktop rules.
     game['exploration'].update(revealedSites=0, surveys={}, depleted={}, explorationParties=[])

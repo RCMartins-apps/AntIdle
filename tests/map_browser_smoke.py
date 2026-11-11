@@ -94,8 +94,12 @@ def check_map(page, width, url):
     page.screenshot(path=str(artifacts / f'map-{width}.png'), full_page=True)
     ring = copy.deepcopy(studied)
     ring['exploration'].update(revealedSites=6, surveys={key: 1 for key in ['woodland-edge', 'nectar-meadow', 'rotten-log', 'dry-clearing', 'fallen-pine', 'rival-food-cache']}, depleted={})
+    # A studied site can still lack a collection prerequisite (resin needs seep study 2).
     load_game(page, ring)
     page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="fallen-pine"]').click()
+    expect(page.locator('#map-worker-count')).to_have_count(0)
+    expect(page.get_by_role('button', name='Collect Resin', exact=True)).to_have_count(0)
     page.locator('.map-hex[data-site="nectar-meadow"]').click()
     page.locator('.hex-map').screenshot(path=str(artifacts / f'ring-{width}.png'))
     assert not errors, errors
