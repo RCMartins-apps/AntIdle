@@ -11,10 +11,6 @@
   studied Fallen Pine without a resin collection unlock. No economy/save changes.
 - Verified fastOptJS and maintained CI/map browser functions against that fresh dev
   bundle at 390/1280px. All passed. git diff --check passed. Production CI awaits PR.
-- ui/compact-nest: zero-living small-worker resource/task UI hidden; ordinary Brood
-  collapses fully and remains stable across ticks. Mobile queue is visible only in
-  Nest through CSS on the existing single queue; desktop unchanged. fastOptJS and
-  maintained CI/map browser functions passed locally at 390/1280px.
-- Remaining sequence: Explore selector/research placement,
+- Remaining sequence: compact Nest/mobile queue, Explore selector/research placement,
   royal brood without nurse prerequisite, SVG map. Keep independent PRs/merges.
 - Preserve unrelated work/ and Python caches. Build/browser logs /tmp/antidle-ui2*.
