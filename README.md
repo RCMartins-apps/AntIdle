@@ -907,3 +907,10 @@ behavior, development packaging and tests.
 Choose a scout crew with the 1 / 2 / 3 buttons below the map. Collection crew
 controls appear only for unlocked deposits at the selected site. Expedition
 Supplies research is in Upgrades; its costs and haul-capacity ranks are unchanged.
+
+### Compact Nest controls
+
+The Brood section collapses as a whole. Starter-worker resource/task controls hide
+when no small adults remain. On mobile the build queue appears only while Nest is
+selected; desktop retains access beside other tabs. Royal egg laying needs its
+normal resources and housing, while development waits for assigned Royal Nurses.
