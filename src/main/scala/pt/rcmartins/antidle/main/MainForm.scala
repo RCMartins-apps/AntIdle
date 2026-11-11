@@ -1630,10 +1630,11 @@ object MainForm {
             select(
               idAttr := "default-worker-task",
               className := "form-select",
-              children <-- antsSignal.map(_.defaultTaskChoices).distinct.map(choices =>
-                option(value := "idle", "Keep idle") +:
-                  choices.map(task => option(value := task.toString, task.name))),
-              value <-- antsSignal.map(_.effectiveDefaultTask.map(_.toString).getOrElse("idle")).distinct,
+              children <-- antsSignal.map(ants => (ants.defaultTaskChoices, ants.effectiveDefaultTask)).distinct.map {
+                case (choices, current) =>
+                  option(value := "idle", selected := current.isEmpty, "Keep idle") +:
+                    choices.map(task => option(value := task.toString, selected := current.contains(task), task.name))
+              },
               onChange.mapToValue --> { selected =>
                 useSignalValue[AntsData](antsSignal, ants =>
                   Actions.selectDefaultTask(ants.defaultTaskChoices.find(_.toString == selected)))
@@ -1912,7 +1913,10 @@ object MainForm {
         div(className := "map-site-card card p-3", h5(site.name),
           p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
           child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
-          child.maybe <-- explorationSignal.map(data => site.routes.exists(route => ExplorationMap.remaining(data, route) > 0L) && ExplorationMap.studies(data, id) > 0).distinct.map(active => Option.when(active)(
+          child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
+            site.routes.flatMap(id => ExplorationDestination.all.find(_.id == id)).exists(route =>
+              route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L)
+          }.distinct.map(active => Option.when(active)(
           div(className := "site-worker-controls my-2",
             label(forId := "map-worker-count", "Collection crew"),
             div(className := "d-flex gap-2 align-items-center",
