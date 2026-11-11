@@ -697,3 +697,11 @@ Accept and size batches by that space regardless of current sugar/protein; keep
 scout unlock prerequisites. Actual laying still waits for brood space, the queen's
 cooldown and the full cost of each egg. Show costs without disabling unfunded
 orders. Orders remain in the shared FIFO and can be cancelled as before.
+
+## D39: First-prestige playtest UI pass — approved
+
+Follow docs/PLAYTEST-FOLLOWUP.md in focused PRs: preserve task selection on unlock;
+show relevant collection controls; hide extinct starter-worker UI; collapse Brood;
+show the queue only in Nest on mobile; move supply research to Upgrades; use scout
+crew buttons below the map. Royal eggs may start without nurses but care must wait
+for staffing. Prototype SVG icons for the hex map separately from its economy.

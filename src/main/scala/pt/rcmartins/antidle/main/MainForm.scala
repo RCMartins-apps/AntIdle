@@ -540,7 +540,7 @@ object MainForm {
 
     div(
       className := "m-1",
-      className := "card game-panel",
+      className := "card game-panel build-queue-panel",
       className := "fs-4",
       width.px := MessagesWidth,
       maxWidth.px := MessagesWidth,
@@ -701,7 +701,7 @@ object MainForm {
           name = "Small workers",
           resourceSignal = antsSignal.map(a => BasicResource(a.smallWorkers, 0L)),
           resourceEstimationSignal = Val(div()),
-          showSignal = unlocksSignal.map(_.resources.showSmallWorkers),
+          showSignal = antsSignal.map(_.smallWorkers > 0L),
           tooltipOpt = Some(div("Small founding workers: 50% task output and upkeep; live 30–40 simulated minutes.")),
         ),
         child.maybe <-- createResourceDiv(
@@ -907,8 +907,10 @@ object MainForm {
         bonusSignal = Val(ActionBonus(sugar = 1 * u)),
         onClickAction = _ => giveResources(sugar = PlayerGatherSugarClickAmount),
       ),
-      div(
+      detailsTag(
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
+        onMountCallback(ctx => ctx.thisNode.ref.asInstanceOf[HTMLElement].setAttribute("open", "")),
+        summaryTag(className := "brood-summary mb-2", minHeight.px := 44, "Brood"),
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
         infoHeading("Brood", div(
           div(className := "brood-feeding", child.text <-- antsSignal.map { ants =>
@@ -1652,7 +1654,7 @@ object MainForm {
     )
 
   private def smallWorkerTasks: ReactiveHtmlElement[HTMLDivElement] = div(
-    child.maybe <-- unlocksSignal.map(_.resources.showSmallWorkers).distinct.map { known => Option.when(known) {
+    child.maybe <-- antsSignal.map(_.smallWorkers > 0L).distinct.map { alive => Option.when(alive) {
       div(className := "small-worker-tasks border rounded p-2 my-2",
         infoHeading("Small workers · 50%", div("Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
         div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) =>
