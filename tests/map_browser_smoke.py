@@ -37,6 +37,7 @@ def check_map(page, width, url):
     load_game(page, game)
     page.get_by_role('tab', name='Explore', exact=True).click()
     expect(page.locator('.hex-map .map-hex')).to_have_count(7)
+    expect(page.locator('.hex-map .map-terrain-icon svg')).to_have_count(7)
     expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
     for tile in page.locator('.hex-map .map-hex').all():
         box = tile.bounding_box()
@@ -87,6 +88,7 @@ def check_map(page, width, url):
     page.get_by_role('tab', name='Explore', exact=True).click()
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.locator('.map-site-card')).to_contain_text('Site exhausted')
+    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_have_accessible_name('Woodland Edge: exhausted')
     expect(page.locator('.map-site-card button')).to_have_count(0)
     expect(page.locator('#map-worker-count')).to_have_count(0)
     assert_fits(page, width)

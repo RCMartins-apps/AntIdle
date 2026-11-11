@@ -123,9 +123,20 @@
             .antidle-app textarea { min-width: 0; width: 100%; }
         }
 
-.hex-map {position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto 1rem}
-.map-hex {position:absolute;transform:translate(-50%,-50%);width:29%;height:31%;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border:0;background:#d9e8d0;color:#183722;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px 8px;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;gap:3px;cursor:pointer}
+.hex-map {position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto 1rem;background:radial-gradient(ellipse,#e5edda 0%,#f3f5eb 58%,transparent 72%);border-radius:50%}
+.map-hex {position:absolute;transform:translate(-50%,-50%);width:29%;height:31%;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border:0;background:#d9e8d0;color:#183722;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 6px;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;gap:3px;cursor:pointer}
 .map-hex small {font-size:.7rem;font-weight:400}
+.map-terrain-icon {display:block;width:clamp(24px,7vw,38px);height:clamp(24px,7vw,38px);flex-shrink:0}
+.map-terrain-icon svg {display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.map-terrain-name {line-height:1.1}
+.map-hex[data-site="nectar-meadow"].revealed {background:#e9efd0;color:#536327}
+.map-hex[data-site="rotten-log"].revealed {background:#e3d6c2;color:#644928}
+.map-hex[data-site="dry-clearing"].revealed {background:#f3e6be;color:#7b5c25}
+.map-hex[data-site="fallen-pine"].revealed {background:#d0e2d8;color:#28543e}
+.map-hex[data-site="rival-food-cache"].revealed {background:#ecd5ca;color:#833e2b}
+.hex-map .map-hex[aria-pressed="true"] {background:#c3e3ff;color:#08477b;box-shadow:inset 0 0 0 5px #087cf1}
+@media (prefers-reduced-motion:no-preference) {.map-hex {transition:background-color .15s,color .15s}}
+
 .map-hex.unexplored {background:#e4e6e8;color:#657078;opacity:1}
 .map-hex.exhausted {background:#e9e6df;color:#72716b}
 .map-hex.nest-hex {background:#87623e;color:white}

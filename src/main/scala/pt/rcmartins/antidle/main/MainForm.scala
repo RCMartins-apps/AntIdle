@@ -1971,16 +1971,32 @@ object MainForm {
         infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
         div(className := "hex-map", role := "group", aria.label := "First exploration ring",
           button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent := 50,
-            aria.label := "Nest surroundings", "Nest", onClick --> (_ => selected.set("surroundings"))),
+            aria.label := "Nest surroundings",
+            aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
+            MapIcons("surroundings"), span("Nest"), onClick --> (_ => selected.set("surroundings"))),
           ExplorationMap.sites.map { site =>
             button(className := "map-hex", typ := "button", dataAttr("site") := site.id,
               left.percent := site.x, top.percent := site.y,
               disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
-              aria.label <-- explorationSignal.map(data => if (ExplorationMap.revealed(data, site.id)) site.name else "Unexplored hexagon"),
+              aria.label <-- explorationSignal.map(data =>
+                if (!ExplorationMap.revealed(data, site.id)) "Unexplored hexagon"
+                else s"${site.name}: ${if (ExplorationMap.exhausted(data, site.id)) "exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "knowledge remaining" else "resource deposits"}"),
               aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
               className <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "unexplored" else if (ExplorationMap.exhausted(data, site.id)) "exhausted" else "revealed"),
-              span(child.text <-- explorationSignal.map(data => if (ExplorationMap.revealed(data, site.id)) site.name else "?")),
-              small(child.text <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "" else if (ExplorationMap.exhausted(data, site.id)) "Exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else "Collect")),
+              child <-- explorationSignal.map(data => ExplorationMap.revealed(data, site.id)).distinct.map(known =>
+                MapIcons(if (known) site.id else "fog")),
+              span(className := "map-terrain-name", child.text <-- explorationSignal.map(data =>
+                if (!ExplorationMap.revealed(data, site.id)) "" else site.id match {
+                  case "woodland-edge" => "Woodland"
+                  case "nectar-meadow" => "Meadow"
+                  case "rotten-log" => "Deadwood"
+                  case "dry-clearing" => "Dry ground"
+                  case "fallen-pine" => "Pine"
+                  case _ => "Rivals"
+                })),
+              small(className := "map-state", aria.hidden := true, child.text <-- explorationSignal.map(data =>
+                if (!ExplorationMap.revealed(data, site.id)) "" else if (ExplorationMap.exhausted(data, site.id)) "✓"
+                else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else "Collect")),
               onClick --> (_ => selected.set(site.id)),
             )
           },
