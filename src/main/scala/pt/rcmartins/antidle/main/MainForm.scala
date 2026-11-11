@@ -1803,6 +1803,19 @@ object MainForm {
     )
   }
 
+  private def expeditionSuppliesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = div(
+      child.maybe <-- explorationSignal.map(_.revealedSites > 0).distinct.map(visible => Option.when(visible)(div(className := "col-12 p-3 expedition-supplies",
+        infoHeading("Expedition supplies", div("+20% haul capacity per rank. Does not create resources or increase knowledge.")),
+        p(child.text <-- explorationSignal.map(data => s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel}")),
+        child.maybe <-- explorationSignal.map(data => ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel).distinct.map(more => Option.when(more)(
+          actionButton(name = "Improve Expedition Supplies", descriptionSignal = Val(None),
+            enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) => ExplorationProgression.canUpgradeSupplies(data, resources) },
+            costSignal = explorationSignal.map(ExplorationProgression.suppliesCost), bonusSignal = Val(ActionBonus.empty),
+            onClickAction = _ => Actions.upgradeExpeditionSupplies()),
+        )),
+      ))),
+  )
+
   private def upgradesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     def createUpgrade(upgradeType: UpgradeType): ReactiveHtmlElement[HTMLDivElement] = {
       val costSignal: Signal[ActionCost] = Val(upgradeType.cost)
@@ -1818,9 +1831,12 @@ object MainForm {
 
     div(
       className := "row upgrades-grid",
+      expeditionSuppliesDiv,
       children <-- upgradesSignal.map { upgrades =>
         val available = UpgradeType.all.filter(t => upgrades(t).show && !upgrades(t).unlocked)
         if (available.isEmpty) Seq(div(className := "col-12 py-3 upgrades-empty text-body-secondary",
+          display <-- explorationSignal.map(data =>
+            if (data.revealedSites > 0 && ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel) "none" else "block"),
           if (UpgradeType.all.forall(t => upgrades(t).unlocked))
             p(className := "mb-0", "All current upgrades researched.")
           else div(p(className := "mb-1", "No upgrades available."))))
@@ -1951,13 +1967,6 @@ object MainForm {
     div(className := "row exploration-layout hex-exploration",
       div(className := "col-12 p-3",
         infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
-        div(className := "d-flex gap-2 align-items-center mb-2",
-          label(forId := "scout-crew", "Scout crew"),
-          select(idAttr := "scout-crew", className := "form-select w-auto",
-            (1 to 3).map(n => option(value := n.toString, n.toString)), value <-- scoutCrew.signal.map(_.toString),
-            onChange.mapToValue.map(_.toInt) --> scoutCrew.writer),
-          span(child.text <-- availableScoutsSignal.combineWith(scoutsSignal).map { case (available, total) => s"${available / u} / ${total / u} available" }),
-        ),
         div(className := "hex-map", role := "group", aria.label := "First exploration ring",
           button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent := 50,
             aria.label := "Nest surroundings", "Nest", onClick --> (_ => selected.set("surroundings"))),
@@ -1974,6 +1983,23 @@ object MainForm {
             )
           },
         ),
+        div(className := "scout-crew-control d-flex flex-wrap gap-2 align-items-center mb-2",
+          span("Scout crew"),
+          div(idAttr := "scout-crew", role := "group", aria.label := "Scout crew",
+            className := "btn-group",
+            (1 to ExplorationMap.MaxSurveyScouts).map(n => button(
+              typ := "button", className := "btn", minWidth.px := 44, minHeight.px := 44,
+              className("btn-primary") <-- scoutCrew.signal.map(_ == n),
+              className("btn-outline-primary") <-- scoutCrew.signal.map(_ != n),
+              aria.label := s"$n ${if (n == 1) "scout" else "scouts"}",
+              aria.pressed <-- scoutCrew.signal.map(current => (current == n).toString), n.toString,
+              onClick --> (_ => scoutCrew.set(n)),
+            )),
+          ),
+          span(className := "small", child.text <-- availableScoutsSignal.combineWith(scoutsSignal).map {
+            case (available, total) => s"${available / u} / ${total / u} available"
+          }),
+        ),
         child <-- selected.signal.map(sitePanel),
         div(className := "mission-status my-3",
           b("Missions "), span(child.text <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) => s"${data.explorationParties.size} / ${ExplorationProgression.maxParties(data, upgrades)}" }),
@@ -1989,16 +2015,6 @@ object MainForm {
         ),
       ),
       pheromoneTrailDiv,
-      child.maybe <-- explorationSignal.map(_.revealedSites > 0).distinct.map(visible => Option.when(visible)(div(className := "col-12 p-3 expedition-supplies",
-        infoHeading("Expedition supplies", div("+20% haul capacity per rank. Does not create resources or increase knowledge.")),
-        p(child.text <-- explorationSignal.map(data => s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel}")),
-        child.maybe <-- explorationSignal.map(data => ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel).distinct.map(more => Option.when(more)(
-          actionButton(name = "Improve Expedition Supplies", descriptionSignal = Val(None),
-            enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) => ExplorationProgression.canUpgradeSupplies(data, resources) },
-            costSignal = explorationSignal.map(ExplorationProgression.suppliesCost), bonusSignal = Val(ActionBonus.empty),
-            onClickAction = _ => Actions.upgradeExpeditionSupplies()),
-        )),
-      ))),
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
           className := "col-12 px-3 py-2 carcass-panel",

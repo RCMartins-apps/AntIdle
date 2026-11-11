@@ -141,7 +141,7 @@ def check_game(page, width, url):
     expect(page.locator('.hex-map .map-hex')).to_have_count(7)
     expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
     expect(page.locator('.exploration-progress')).to_have_count(0)
-    page.locator('#scout-crew').select_option('2')
+    page.get_by_role('button', name='2 scouts', exact=True).click()
     expect(page.locator('.map-site-card .action-costs').first).to_be_visible()
     assert_fits(page, width)
     page.get_by_role('button', name='Explore Surroundings', exact=True).click()

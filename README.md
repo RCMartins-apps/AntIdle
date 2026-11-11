@@ -900,3 +900,9 @@ It can then reopen without internet, in a browser tab or through Chrome's Instal
 option. Complete updates wait until all game windows close; saved colonies remain
 in local browser storage. See [Offline support](docs/OFFLINE.md) for usage, update
 behavior, development packaging and tests.
+
+### Explore controls
+
+Choose a scout crew with the 1 / 2 / 3 buttons below the map. Collection crew
+controls appear only for unlocked deposits at the selected site. Expedition
+Supplies research is in Upgrades; its costs and haul-capacity ranks are unchanged.
