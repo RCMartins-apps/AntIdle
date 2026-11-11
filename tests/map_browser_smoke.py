@@ -42,7 +42,7 @@ def check_map(page, width, url):
         box = tile.bounding_box()
         assert box['width'] >= 44 and box['height'] >= 44
     expect(page.locator('.exploration-progress')).to_have_count(0)
-    page.locator('#scout-crew').select_option('3')
+    page.get_by_role('button', name='3 scouts', exact=True).click()
     page.get_by_role('button', name='Explore Surroundings', exact=True).click()
     sent = save_game(page)
     party = sent['exploration']['explorationParties'][0]
@@ -56,6 +56,7 @@ def check_map(page, width, url):
     expect(tile).to_have_attribute('aria-pressed', 'true')
     expect(page.locator('.site-knowledge')).to_have_text('800 knowledge remaining')
     expect(page.locator('#map-worker-count')).to_have_count(0)
+    assert page.locator('#scout-crew').bounding_box()['y'] >= page.locator('.hex-map').bounding_box()['y'] + page.locator('.hex-map').bounding_box()['height']
     page.get_by_role('button', name='Study Site', exact=True).click()
     page.clock.run_for(61000)
     expect(page.locator('.site-knowledge')).to_have_text('400 knowledge remaining')
@@ -102,6 +103,14 @@ def check_map(page, width, url):
     expect(page.get_by_role('button', name='Collect Resin', exact=True)).to_have_count(0)
     page.locator('.map-hex[data-site="nectar-meadow"]').click()
     page.locator('.hex-map').screenshot(path=str(artifacts / f'ring-{width}.png'))
+    expect(page.locator('.expedition-supplies')).not_to_be_visible()
+    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    supplies = page.get_by_role('button', name='Improve Expedition Supplies', exact=True)
+    expect(supplies).to_be_visible()
+    supplies.click()
+    expect(page.locator('.expedition-supplies')).to_contain_text('Rank 1 /')
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    expect(page.locator('.expedition-supplies')).not_to_be_visible()
     assert not errors, errors
     print(f'PASS map {width}px: hex geometry, scout reveal/study, finite knowledge, selected-site controls, capacity block, depleted site and save reload', flush=True)
 
