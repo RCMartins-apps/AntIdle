@@ -57,6 +57,15 @@ def check_game(page, width, url):
     assert queued['ants']['eggsAndLarvae'] == []
     assert queued['basicResources']['sugar']['amount'] == 0
     assert queued['basicResources']['protein']['amount'] == 0
+    # The entire brood panel collapses and stays closed over live ticks.
+    page.get_by_role('tab', name='Nest', exact=True).click()
+    brood_panel = page.locator('details.nest-brood')
+    brood_panel.locator(':scope > summary').click()
+    expect(worker).not_to_be_visible()
+    page.clock.run_for(600)
+    expect(brood_panel).not_to_have_attribute('open', '')
+    brood_panel.locator(':scope > summary').click()
+    expect(worker).to_be_visible()
     # Shared research validation: reveal independently of affordability, then
     # enable at the displayed price and remove the one-time purchase.
     research = progressed_game(save_game(page))
@@ -100,6 +109,15 @@ def check_game(page, width, url):
         bounds, info = row.bounding_box(), row.locator('.info-summary').bounding_box()
         assert info['height'] >= 44
         assert info['y'] >= bounds['y'] and info['y'] + info['height'] <= bounds['y'] + bounds['height'] + 1
+    expect(page.locator('.small-worker-tasks')).to_have_count(0)
+    expect(page.get_by_text('Small workers', exact=True)).to_have_count(0)
+    if width <= 767:
+        expect(page.locator('.build-queue-panel')).not_to_be_visible()
+        page.get_by_role('tab', name='Nest', exact=True).click()
+        expect(page.locator('.build-queue-panel')).to_be_visible()
+        page.get_by_role('tab', name='Tasks').click()
+    else:
+        expect(page.locator('.build-queue-panel')).to_be_visible()
     # Replacing native select options must retain the actual default task.
     unlocking = save_game(page)
     unlocking['nestAttributes']['chambers']['nurseryChamber']['level'] = 0
