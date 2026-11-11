@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="4cce35dd02ffa237d8b519ee">
+    <meta name="antidle-build" content="c76abcfa8336505f2bbece76">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -76,6 +76,8 @@
         }
 
         @media (max-width: 767px) {
+            .activity-column .build-queue-panel { display: none; }
+            .game-layout:has(#nestContent.active) .activity-column .build-queue-panel { display: block; }
             .antidle-app { font-size: 1rem; padding-bottom: env(safe-area-inset-bottom); }
             .antidle-app .game-layout { margin: .5rem !important; gap: .5rem; }
             .antidle-app .game-panel,
@@ -145,7 +147,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.0a5eefbc52f62ad4.js"></script>
+<script type="text/javascript" src="game.4bc67f42216b88ca.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="pwa.js" data-service-worker="./sw.js" defer></script>
