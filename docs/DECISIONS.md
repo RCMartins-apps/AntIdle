@@ -705,10 +705,3 @@ show relevant collection controls; hide extinct starter-worker UI; collapse Broo
 show the queue only in Nest on mobile; move supply research to Upgrades; use scout
 crew buttons below the map. Royal eggs may start without nurses but care must wait
 for staffing. Prototype SVG icons for the hex map separately from its economy.
-
-## D40: Royal laying and care are separate — implemented
-
-A royal egg requires its actual laying cost, nursery capacity and colony housing,
-but not staffed nurses. Development waits for Royal Nurses without consuming care
-resources or losing progress. Staffing is shown explicitly as a Royal Nurse count,
-not as an anonymous worker requirement beside the laying cost.
