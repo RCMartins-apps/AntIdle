@@ -1355,6 +1355,9 @@ object MainForm {
     div(className := "royal-nursery-ready",
       child <-- antsSignal.map(ants => if (ants.royalBrood.nonEmpty) 1 else if (ants.daughterQueens > 0L) 2 else 0).distinct.map {
         case 0 => div(
+          div(className := "royal-staffing small mb-2",
+            className("text-danger") <-- nursesSignal.map(_ == 0L),
+            child.text <-- nursesSignal.map(n => s"$n/${RoyalBroodProgression.MaxNurses} Royal Nurses")),
           p(className := "royal-total-care small mb-1",
             s"Care: ${prettyNumberStr(RoyalBroodProgression.rearingCost.sugar)} sugar · ${prettyNumberStr(RoyalBroodProgression.rearingCost.protein)} protein · ${prettyNumberStr(RoyalBroodProgression.rearingCost.water)} water."),
           div(className := "row",
@@ -1366,7 +1369,6 @@ object MainForm {
               costSignal = Val(RoyalBroodProgression.startCost),
               bonusSignal = Val(ActionBonus.empty),
               requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) => List(
-                ActionRequirement("royal nurses", RoyalBroodProgression.nurses(ants, nest) * u, isCost = true),
                 ActionRequirement("colony slots", BroodProgression.availableColonySlots(ants, nest), isCost = true),
               ) },
               descriptionSignal = Val(Some(div("Reserves one colony slot. Nurses use water throughout rearing; larvae also need sugar and protein. Progress is kept when care pauses."))),

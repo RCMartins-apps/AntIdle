@@ -132,6 +132,17 @@ def check_game(page, width, url):
     expect(page.locator('#default-worker-task option[value="BroodNurse"]')).to_have_count(1)
     expect(page.locator('#default-worker-task')).to_have_value('SugarCollector')
     assert save_game(page)['ants']['defaultTask'] == {'SugarCollector': {}}
+    royal = save_game(page)
+    royal['ants'].update(daughterQueens=0, royalBrood=None)
+    load_game(page, royal)
+    expect(page.locator('.royal-staffing')).to_have_text('0/5 Royal Nurses')
+    royal_button = page.get_by_role('button', name='Raise Royal Egg', exact=True)
+    expect(royal_button).to_be_enabled()
+    royal_button.click()
+    page.clock.run_for(600)
+    expect(page.locator('.royal-nursery-ready')).to_contain_text('Needs Royal Nurses')
+    waiting_royal = save_game(page)
+    assert waiting_royal['ants']['royalBrood']['careUnits'] == 0
     load_game(page, game)
     page.get_by_role('tab', name='Explore', exact=True).click()
     # A fresh ring reveals through scout-only missions, with identical mobile/desktop rules.
