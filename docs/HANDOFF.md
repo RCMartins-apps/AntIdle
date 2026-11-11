@@ -4,8 +4,7 @@
 
 - Owner authorized implementing docs/PLAYTEST-FOLLOWUP.md in order, with PRs and
   merging after passing checks. Plan is approved, including a separate SVG map pass.
-- PR #58 (fix/egg-order-capacity) awaits CI: 253 engine and 4 balance tests pass
-  locally. Corrected the balance Strategy caller after CI caught the old signature.
+- PR #58 merged as 4cdacd8 with all CI passing. Its balance caller was fixed.
 - fix/task-selection-controls follows #58: option replacement explicitly selects
   the actual default task; collection controls use real route unlock predicates.
   Tests cover live Nursery unlock preserving selected/default saved task and a
