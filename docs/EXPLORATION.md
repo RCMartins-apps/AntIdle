@@ -92,3 +92,12 @@ baselines are historical. See [BALANCING.md](BALANCING.md) and the lab's README.
 
 Distance-two/three rings and their prestige/range unlocks remain future work.
 No procedural generation, new Understanding or extra ring is included here.
+
+## Map presentation
+
+The map uses inline SVG terrain symbols with short labels and distinct terrain
+colors. Unrevealed sites show only fog; selected and exhausted states retain
+explicit accessible names and visible indicators. Full site names, finite rewards,
+costs and missions remain in the selected-site card. All seven hexagons remain
+native keyboard-accessible buttons. This presentation changes no deposits,
+Knowledge, unlock requirements, scout roles or save data.
