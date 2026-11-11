@@ -689,3 +689,11 @@ Preserve local saves and current gameplay/offline-time mechanics. Don't silently
 reload an open game for updates: cache the new release, wait for all game windows
 to close, and keep the old release usable if an update fails. Keep development
 bundles free of service-worker caching. See OFFLINE.md for setup and verification.
+
+## D38: Egg orders require space, not upfront resources — implemented
+
+Worker (including small worker) and scout egg orders reserve future colony housing.
+Accept and size batches by that space regardless of current sugar/protein; keep
+scout unlock prerequisites. Actual laying still waits for brood space, the queen's
+cooldown and the full cost of each egg. Show costs without disabling unfunded
+orders. Orders remain in the shared FIFO and can be cancelled as before.

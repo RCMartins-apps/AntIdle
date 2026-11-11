@@ -77,6 +77,35 @@ class BroodPipelineSuite extends FunSuite {
     assertEquals(cancelled.basicResources, first.basicResources)
     assertEquals(BroodProgression.interval(normal.ants, normal.nestAttributes), 100L)
   }
+  test("unfunded worker and scout orders reserve housing, wait, then charge only when laid") {
+    val empty = normal.copy(basicResources = normal.basicResources.copy(
+      sugar = BasicResource(0L, 1000 * u), protein = BasicResource(0L, 100 * u)),
+      nestAttributes = normal.nestAttributes.copy(maxAnts = 5 * u,
+        chambers = normal.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))))
+    val workers = BroodProgression.order(empty, 2)
+    val queued = ScoutProgression.raise(workers, 10)
+    assertEquals(queued.ants.eggOrders, 2)
+    assertEquals(queued.ants.scoutEggOrders, Seq(2, 2, 2))
+    assertEquals(queued.basicResources, empty.basicResources)
+    assertEquals(BroodProgression.layOrdered(queued), queued)
+    assertEquals(BroodProgression.order(queued, 1), queued)
+    assertEquals(ScoutProgression.raise(queued), queued)
+    assertEquals(load(queued).ants.scoutEggOrders, queued.ants.scoutEggOrders)
+    val funded = queued.giveResources(sugar = 10 * u)
+    val laid = BroodProgression.layOrdered(funded)
+    assertEquals(laid.ants.eggOrders, 1)
+    assertEquals(laid.ants.eggsAndLarvae.size, 1)
+    assertEquals(laid.basicResources.sugar.amount, 0L)
+
+    val scout = ScoutProgression.raise(empty, 2)
+    assertEquals(scout.ants.scoutEggOrders, Seq(0, 0))
+    assertEquals(BroodProgression.layOrdered(scout.giveResources(sugar = 50 * u)).ants.eggsAndLarvae.size, 0)
+    val scoutLaid = BroodProgression.layOrdered(scout.giveResources(sugar = 50 * u, protein = 2 * u))
+    assertEquals(scoutLaid.ants.scoutEggOrders, Seq(0))
+    assertEquals(scoutLaid.ants.eggsAndLarvae.size, 1)
+    assertEquals(scoutLaid.basicResources.sugar.amount, 0L)
+    assertEquals(scoutLaid.basicResources.protein.amount, 0L)
+  }
   test("larvae and pupae continue occupying brood places; expansion and nurses solve separate bottlenecks") {
     val b = AntBrood.Developing(0L)
     val full = normal.copy(ants = normal.ants.copy(eggsAndLarvae = Seq(b.copy(care = b.eggEnd), b.copy(care = b.larvaEnd))))
@@ -192,7 +221,7 @@ class BroodPipelineSuite extends FunSuite {
     assertEquals(d.basicResources.protein.amount - adult.basicResources.protein.amount, 4 * u)
   }
 
-  test("scout batches clamp to supplies and housing, retain FIFO and survive saves") {
+  test("scout batches clamp only to housing, retain FIFO and survive saves") {
     val d = normal.copy(ants = normal.ants.copy(eggOrders = 2, layingCooldown = 10L),
       nestAttributes = normal.nestAttributes.copy(maxAnts = 100 * u,
         chambers = normal.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))))
@@ -201,9 +230,9 @@ class BroodPipelineSuite extends FunSuite {
     assertEquals(ordered.basicResources, d.basicResources)
     assertEquals(load(ordered).ants.scoutEggOrders, ordered.ants.scoutEggOrders)
     val sugarLimited = d.copy(basicResources = d.basicResources.copy(sugar = BasicResource(120 * u, 1000 * u)))
-    assertEquals(ScoutProgression.raise(sugarLimited, 10).ants.scoutEggOrders.size, 2)
+    assertEquals(ScoutProgression.raise(sugarLimited, 10).ants.scoutEggOrders.size, 10)
     val proteinLimited = d.copy(basicResources = d.basicResources.copy(protein = BasicResource(5 * u, 100 * u)))
-    assertEquals(ScoutProgression.raise(proteinLimited, 10).ants.scoutEggOrders.size, 2)
+    assertEquals(ScoutProgression.raise(proteinLimited, 10).ants.scoutEggOrders.size, 10)
     val cramped = d.copy(nestAttributes = d.nestAttributes.copy(maxAnts = 5 * u))
     assertEquals(ScoutProgression.raise(cramped, 10).ants.scoutEggOrders.size, 3)
     assertEquals(ScoutProgression.raise(d, 0), d)

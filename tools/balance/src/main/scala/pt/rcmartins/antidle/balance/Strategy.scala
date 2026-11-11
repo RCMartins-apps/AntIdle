@@ -146,7 +146,7 @@ object Strategy {
     val incoming = a.totalWorkersCount + BroodProgression.incoming(a) + a.eggOrders
     val preNurseryLimit = if (a.standardWorkersUnlocked && nest.chambers.nurseryChamber.level == 0) 7 else target
     if (!a.queenRoutine.enabled && incoming < Math.min(target, preNurseryLimit) && d.unlocks.actions.canLayEggs && d.basicResources.sugar.amount >= BroodProgression.eggCost(a) + (if (a.standardWorkersUnlocked) 20L * u else 0L))
-      if (BroodProgression.orderAmount(a, nest, d.basicResources.sugar.amount, Math.min(5, Math.min(target, preNurseryLimit) - incoming)) > 0)
+      if (BroodProgression.orderAmount(a, nest, Math.min(5, Math.min(target, preNurseryLimit) - incoming)) > 0)
         return done(Choice("Order Worker Eggs", "brood", BroodProgression.order(_, Math.min(5, Math.min(target, preNurseryLimit) - incoming))))
 
     e.discoveredCarcasses.zipWithIndex.find { case (c, _) => CarcassProgression.canRetrieve(a, nest, e, c) }.foreach { case (_, index) =>

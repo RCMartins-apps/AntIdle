@@ -24,11 +24,11 @@ object BroodProgression {
   def availableColonySlots(ants: AntsData, nest: NestAttributes): Long =
     Math.max(0L, nest.maxAnts - (ants.populationCount.toLong + ants.queuedEggs.toLong) * u)
 
-  def orderAmount(ants: AntsData, nest: NestAttributes, sugar: Long, requested: Int): Int =
+  def orderAmount(ants: AntsData, nest: NestAttributes, requested: Int): Int =
     Math.max(0L, Math.min(Math.max(0, requested).toLong,
-      Math.min(availableColonySlots(ants, nest) / u, sugar / eggCost(ants)))).toInt
+      availableColonySlots(ants, nest) / u)).toInt
   def order(data: AllData, requested: Int): AllData = {
-    val amount = orderAmount(data.ants, data.nestAttributes, data.basicResources.sugar.amount, requested)
+    val amount = orderAmount(data.ants, data.nestAttributes, requested)
     data.copy(ants = data.ants.copy(eggOrders = data.ants.eggOrders + amount))
   }
   def cancel(data: AllData): AllData = data.copy(ants = data.ants.copy(eggOrders = 0, scoutEggOrders = Seq.empty))

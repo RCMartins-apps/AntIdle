@@ -121,10 +121,10 @@ class ScoutQueueSuite extends FunSuite {
     assertEquals(load(old).ants.eggOrders, 2)
   }
 
-  test("nursery, standard workers and supplies are still required; queued scouts are not worker targets") {
+  test("nursery and standard workers are still required; queued scouts are not worker targets") {
     assert(!ScoutProgression.canRaise(colony.copy(ants = colony.ants.copy(standardWorkersUnlocked = false))))
     assert(!ScoutProgression.canRaise(colony.copy(nestAttributes = NestAttributes.initial)))
-    assert(!ScoutProgression.canRaise(colony.copy(basicResources = BasicResources.initial)))
+    assert(ScoutProgression.canRaise(colony.copy(basicResources = BasicResources.initial)))
     val busy = colony.copy(ants = colony.ants.copy(layingCooldown = 1L))
     val scout = ScoutProgression.raise(busy)
     val automated = scout.copy(ants = scout.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 6)),

@@ -973,8 +973,8 @@ object MainForm {
         div(
           className := "row",
           child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
-            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal, sugarSignal).map {
-              case (requested, ants, nest, sugar) => Math.max(1, Actions.workerEggAmount(ants, nest, sugar.amount, requested))
+            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal).map {
+              case (requested, ants, nest) => Math.max(1, Actions.workerEggAmount(ants, nest, requested))
             }.distinct
             actionButton(
               name = LayEggAction,
@@ -993,14 +993,14 @@ object MainForm {
             )
           },
           child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
-            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal, resourcesSignal).map {
-              case (requested, ants, nest, resources) => Math.max(1, ScoutProgression.orderAmount(ants, nest, resources, requested))
+            val displayedBatch = modifiersMultiplierSignal.combineWith(antsSignal, nestSignal).map {
+              case (requested, ants, nest) => Math.max(1, ScoutProgression.orderAmount(ants, nest, requested))
             }.distinct
             actionButton(
               name = "Raise Scout Egg",
               topLeftBadgeSignal = displayedBatch.map(amount => Option.when(amount > 1)(span(s"x$amount"))),
-              enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal)
-                .map { case (ants, nest, resources) => ScoutProgression.canRaise(ants, nest, resources) },
+              enabledSignal = antsSignal.combineWith(nestSignal)
+                .map { case (ants, nest) => ScoutProgression.canRaise(ants, nest) },
               descriptionSignal = Val(Some(eggDescription("scout"))),
               costSignal = displayedBatch.map(amount => ActionCost(sugar = amount * ScoutProgression.eggCost.sugar, protein = amount * ScoutProgression.eggCost.protein)),
               bonusSignal = Val(ActionBonus.empty),

@@ -33,6 +33,30 @@ def check_game(page, width, url):
     page.clock.run_for(400)
     expect(page.locator('.action-details[open]')).to_have_count(1)
     assert_fits(page, width)
+    # Egg orders require housing, not resources; costs are paid at laying.
+    unfunded = progressed_game(save_game(page))
+    unfunded['ants'].update(workers=0, smallWorkers=0, scouts=0, tasks=[],
+        eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[], layingCooldown=10)
+    unfunded['basicResources']['sugar']['amount'] = 0
+    unfunded['basicResources']['protein']['amount'] = 0
+    unfunded['nestAttributes']['maxAnts'] = 2 * UNIT
+    unfunded['nestAttributes']['chambers']['nurseryChamber']['level'] = 1
+    load_game(page, unfunded)
+    worker = page.get_by_role('button', name='Raise Worker Egg', exact=True)
+    scout = page.get_by_role('button', name='Raise Scout Egg', exact=True)
+    expect(worker).to_be_enabled()
+    expect(scout).to_be_enabled()
+    worker.click()
+    expect(scout).to_be_enabled()
+    scout.click()
+    expect(worker).to_be_disabled()
+    expect(scout).to_be_disabled()
+    queued = save_game(page)
+    assert queued['ants']['eggOrders'] == 1
+    assert queued['ants']['scoutEggOrders'] == [1]
+    assert queued['ants']['eggsAndLarvae'] == []
+    assert queued['basicResources']['sugar']['amount'] == 0
+    assert queued['basicResources']['protein']['amount'] == 0
     # Shared research validation: reveal independently of affordability, then
     # enable at the displayed price and remove the one-time purchase.
     research = progressed_game(save_game(page))

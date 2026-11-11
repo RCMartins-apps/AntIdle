@@ -22,26 +22,25 @@ object ScoutProgression {
     upkeepCount(ants, exploration) * antsSugarUpkeepTick + ants.smallWorkers / u * antsSugarUpkeepTick / 2L
 
   def canRaise(allData: AllData): Boolean =
-    canRaise(allData.ants, allData.nestAttributes, allData.basicResources)
+    canRaise(allData.ants, allData.nestAttributes)
 
   // Ordering reserves future housing, not an immediately free brood place or cooldown.
-  def canRaise(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
+  def canRaise(ants: AntsData, nest: NestAttributes): Boolean =
     nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&
-      BroodProgression.availableColonySlots(ants, nest) >= u && resources.hasResources(eggCost)
+      BroodProgression.availableColonySlots(ants, nest) >= u
 
   def canLay(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
     nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&
       ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < BroodProgression.capacity(nest) &&
       ants.populationCount < nest.maxAntsCount && resources.hasResources(eggCost)
 
-  def orderAmount(ants: AntsData, nest: NestAttributes, resources: BasicResources, requested: Int): Int =
-    if (!canRaise(ants, nest, resources)) 0
+  def orderAmount(ants: AntsData, nest: NestAttributes, requested: Int): Int =
+    if (!canRaise(ants, nest)) 0
     else Math.max(0L, Math.min(Math.max(0, requested).toLong,
-      Math.min(BroodProgression.availableColonySlots(ants, nest) / u,
-        Math.min(resources.sugar.amount / eggCost.sugar, resources.protein.amount / eggCost.protein)))).toInt
+      BroodProgression.availableColonySlots(ants, nest) / u)).toInt
 
   def raise(allData: AllData, requested: Int = 1): AllData = {
-    val amount = orderAmount(allData.ants, allData.nestAttributes, allData.basicResources, requested)
+    val amount = orderAmount(allData.ants, allData.nestAttributes, requested)
     if (amount == 0) allData
     else {
       val ordered = allData.modify(_.ants.scoutEggOrders).using(_ ++ Seq.fill(amount)(allData.ants.eggOrders))
