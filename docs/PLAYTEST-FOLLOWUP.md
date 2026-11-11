@@ -1,79 +1,43 @@
-# First-prestige playtest follow-up — 2026-11-11
+# First-prestige playtest follow-up — completed 2026-11-11
 
-Owner completed a full opening-to-first-prestige run. This is the proposed delivery
-sequence, not a claim that these changes are implemented. Keep each PR independently
-reviewable and test phone/desktop behavior. Do not introduce balance changes into
-layout-only PRs.
+The owner approved this sequence and authorized PR creation and merging. Each
+implementation PR passed its final CI before merging. The game retains its
+handcrafted finite exploration map, balance and save format.
 
-## 1. Ship the existing egg-order fix
+1. [#58: Egg ordering](https://github.com/RCMartins-apps/AntIdle/pull/58):
+   orders reserve available housing regardless of current sugar/protein; actual
+   laying waits for resources. The balance runner uses the same updated API.
+2. [#59: Task selection and collection controls](https://github.com/RCMartins-apps/AntIdle/pull/59):
+   default selection survives new options; collection controls require a genuinely
+   unlocked deposit at the selected site. Storage and staffing blockers stay visible.
+3. [#60: Compact Nest](https://github.com/RCMartins-apps/AntIdle/pull/60):
+   hide resource/task UI for extinct small workers; collapse all ordinary Brood
+   controls; show the existing single queue only on Nest on mobile. Desktop access
+   remains unchanged. Disclosure state survives live ticks.
+4. [#61: Explore controls and research](https://github.com/RCMartins-apps/AntIdle/pull/61):
+   direct 1/2/3 scout buttons below the map; Expedition Supplies research moves to
+   Upgrades with its existing saved ranks, prices and eligibility rules.
+5. [#62: Royal care](https://github.com/RCMartins-apps/AntIdle/pull/62):
+   lay a royal egg without assigned nurses, paying the normal laying cost and
+   reserving nursery/housing capacity. Care waits without progress loss or care
+   spending. Explicit Royal Nurse counts replace the ambiguous worker requirement.
+6. [#63: Visual map](https://github.com/RCMartins-apps/AntIdle/pull/63):
+   inline SVG terrain symbols, short labels and distinct terrain colors. Full names
+   remain in the selected card and accessible button labels. Unknown sites stay
+   hidden; selection/exhaustion remain explicit. A separate canvas is unnecessary
+   for this pass and remains an option for future rendering needs.
 
-`fix/egg-order-capacity` (784669b) already separates ordering from laying. Main
-still points to offline PR #57 and does not include this fix. Open its PR, run
-production CI and merge when authorized. Verify the deployed build before treating
-the live report as a new regression. Test zero sugar/protein, mixed worker/scout
-orders and housing-full disabling. Keep costs visible; actual laying waits for
-resources. Do not rewrite this fix on a second branch.
+## Verification
 
-## 2. Fix task selection and irrelevant collection controls
+Engine regressions cover unfunded orders, mixed worker/scout housing reservations,
+FIFO, persistence, exact laying costs, nurse-free royal laying and care resumption.
+Browser regressions cover live task unlocks, collapse stability, mobile queue
+visibility, selected-site prerequisites, scout button placement, supply purchases,
+royal care waiting, map states, finite deposits and founding/reset flows.
 
-Preserve the actual selected default task when new task options appear. Current
-select rebuilds option children on choices changes but its value stream is distinct
-on selected task alone; investigate option replacement resetting the native select.
-Test selection visually and in saved state through an unlock, tick and reload.
-
-Show collection crew controls only where the selected site has a discovered,
-collectible deposit. Keep an exhausted-site state distinct from storage/crew/slot
-blockers so the UI does not hide why an available mission cannot launch. Test
-unrevealed, revealed-but-unstudied, collectible, exhausted and storage-full sites.
-
-## 3. Compact the Nest on mobile
-
-Hide starter-worker controls when no living small workers remain; retain access
-if existing small brood matures later. Do not hide normal brood controls or a
-pending small-worker brood status accidentally.
-
-Make the entire ordinary Brood section collapsible, including routine, orders,
-action amount and egg actions. Preserve open state across ticks; keep a concise
-summary when collapsed. Show the build queue only in Nest on phone widths, while
-preserving current desktop access. Avoid duplicate queue controls/subscriptions.
-Test zero/surviving starter ants, collapsed ticks/reload behavior and both layouts.
-
-## 4. Simplify Explore controls and relocate research
-
-Replace the scout dropdown with a touch-friendly three-button 1 / 2 / 3 selector
-below the map. Preserve selection through ticks/site changes and expose crew costs
-and blocked requirements clearly. Keep selection and launch eligibility separate.
-
-Move Expedition Supplies research to Upgrades using the same engine rules,
-prices, rank and reveal condition. Keep the current haul-capacity effect; do not
-silently convert the saved progression to unrelated upgrade IDs. Check rank/cost
-updates, maximum rank, save/reload and no duplicated purchase entry in Explore.
-
-## 5. Clarify royal brood and nurse care
-
-Remove the nurse staffing prerequisite from starting royal brood, keeping royal
-nursery capacity, housing and actual egg costs. With no nurses, royal brood waits
-without losing progress. Explicitly show `0/5 Royal Nurses` and `Needs Royal Nurse`
-when relevant instead of the ambiguous ant icon `0/1`. Keep actual feeding costs
-and other capacity requirements visible. Test starting without nurses, no-care
-waiting, assigning/removing nurses, resumption, persistence and founding eligibility.
-This changes gameplay eligibility and belongs in its own PR, not a styling patch.
-
-## 6. Explore visual redesign — proposal to prototype separately
-
-Owner suggests a canvas map with icons. First try SVG terrain/resource icons in
-the existing hex map, with clear fog/available/exhausted/selected states and a
-compact selected-site panel. SVG supports scalable phone layouts, accessible
-labels and ordinary interaction without canvas hit testing and manual focus.
-A canvas implementation remains an option if the prototype shows a concrete need;
-it is not yet a chosen requirement. Keep the finite map economy, handcrafted ring
-and scout/worker roles unchanged. Compare phone screenshots before implementation
-is considered final; retain accessible keyboard controls and adequate touch targets.
-
-## Verification across the sequence
-
-Engine regressions for eligibility/cost/care changes; maintained browser checks at
-phone and desktop widths for option changes, collapse stability, visibility,
-selection and tab placement. End with a focused start-to-prestige playtest against
-the deployed build, especially royal brood and resource-starved ordering. Do not
-claim automated tests establish that the pacing is fun.
+Local final checks: 254 engine tests, 4 balance tests, fastOptJS, maintained UI/map
+scenarios at 390/1280px and map checks at 320/390/1280px. Compared phone screenshots
+before/after the terrain pass. Final production CI includes packaging, browser,
+offline cold launch and deferred/failed update checks for each implementation PR.
+Automated checks do not measure whether pacing is fun; the owner's next full run
+should assess feel and clarity on the deployed version.

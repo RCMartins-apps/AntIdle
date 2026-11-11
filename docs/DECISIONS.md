@@ -698,7 +698,7 @@ scout unlock prerequisites. Actual laying still waits for brood space, the queen
 cooldown and the full cost of each egg. Show costs without disabling unfunded
 orders. Orders remain in the shared FIFO and can be cancelled as before.
 
-## D39: First-prestige playtest UI pass — approved
+## D39: First-prestige playtest UI pass — implemented
 
 Follow docs/PLAYTEST-FOLLOWUP.md in focused PRs: preserve task selection on unlock;
 show relevant collection controls; hide extinct starter-worker UI; collapse Brood;
