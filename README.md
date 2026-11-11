@@ -453,8 +453,9 @@ cannot discard that essential supply permanently.
 
 Royal Nursery Planning costs 5,000 sugar, 100 protein, 700 Knowledge and 150 water.
 The chamber costs 3,000 sugar, 50 protein, 100 water, 80 resin and tunnelling space.
-It opens one royal brood place and Royal Nurse jobs. Daughter-queen rearing still
-requires sustained care before founding; the map does not bypass that mechanism.
+It opens one royal brood place and Royal Nurse jobs. A royal egg can be laid
+without nurses, but development waits for staffed Royal Nurses. Up to five nurses
+provide sustained care before founding; missing staff or supplies preserve progress.
 
 ## First prestige: DNA and Shared Paths
 

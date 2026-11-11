@@ -31,7 +31,7 @@ class RoyalBroodSuite extends FunSuite {
   def roundTrip(data: AllData): AllData =
     AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
-  test("raising reserves one colony and royal slot, spends once and requires real staff and supplies") {
+  test("raising reserves one colony and royal slot, spends once and requires housing and supplies") {
     val initial = colony
     assert(canStart(initial))
     val started = start(initial)
@@ -46,12 +46,26 @@ class RoyalBroodSuite extends FunSuite {
     val blocked = Seq(
       initial.copy(nestAttributes = NestAttributes()),
       initial.copy(nestAttributes = initial.nestAttributes.copy(maxAnts = 35 * u)),
-      initial.copy(ants = initial.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u)))),
       initial.copy(basicResources = initial.basicResources.copy(protein = BasicResource(49 * u, 500 * u))),
       initial.copy(ants = initial.ants.copy(daughterQueens = u)))
     blocked.foreach { data => assert(!canStart(data)); assertEquals(start(data), data) }
   }
 
+  test("royal eggs may be laid without nurses and care resumes only with staff") {
+    val unstaffed = colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
+    val laid = start(unstaffed)
+    assert(laid.ants.royalBrood.nonEmpty)
+    assertEquals(laid.basicResources, unstaffed.basicResources.spendResources(startCost))
+    assertEquals(status(laid.ants, laid.nestAttributes, laid.basicResources), "Needs Royal Nurses")
+    val waiting = tick(laid)
+    assertEquals(waiting.ants.royalBrood, laid.ants.royalBrood)
+    assertEquals(waiting.basicResources, laid.basicResources)
+    val staffed = waiting.copy(ants = waiting.ants.copy(tasks = Seq(AntTask.RoyalNurse -> u)))
+    val tending = tick(staffed)
+    assertEquals(tending.ants.royalBrood.get.careUnits, 1L)
+    assertEquals(tick(tending.copy(ants = tending.ants.copy(tasks = Seq.empty))).ants.royalBrood,
+      tending.ants.royalBrood)
+  }
   test("care uses staffed nurses and stage-specific costs, independent of worker egg slots") {
     val egg = rearing().copy(nestAttributes = rearing().nestAttributes.copy(maxEggs = 0L))
     val larva = rearing(EggCare)
@@ -133,7 +147,7 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals(unbuilt.ants.taskWorkers(AntTask.RoyalNurse), 0L)
   }
 
-  test("nurses age normally and newly expired staff cannot start an egg") {
+  test("nurses age normally and an egg can wait for replacement staff") {
     val data = rearing().copy(ants = rearing().ants.copy(workers = 5 * u,
       tasks = Seq(AntTask.RoyalNurse -> (5 * u)), ages = ColonyAges(active = true, workers = List(AgeCohort(1L, 5L)))))
     val aged = TickUpdater.updateAllData(data, None)
@@ -141,7 +155,7 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals(aged.ants.royalBrood.get.careUnits, 0L)
     assertEquals(aged.statistics.workersLostToAging.thisRun, 5)
     val due = data.copy(world = data.world.copy(currentTick = 1L), ants = data.ants.copy(royalBrood = None))
-    assertEquals(start(due).ants.royalBrood, None)
+    assert(start(due).ants.royalBrood.nonEmpty)
     assertEquals(start(due).ants.workers, 0L)
   }
 

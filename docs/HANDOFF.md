@@ -21,3 +21,7 @@
 - Remaining sequence:
   royal brood without nurse prerequisite, SVG map. Keep independent PRs/merges.
 - Preserve unrelated work/ and Python caches. Build/browser logs /tmp/antidle-ui2*.
+
+- Royal staffing pass verified locally: 254 engine + 4 balance tests, fastOptJS,
+  maintained phone/desktop UI/map checks. Egg laying no longer requires a nurse;
+  care still waits and UI names staffing explicitly. PR and CI pending.
