@@ -715,3 +715,13 @@ retain only compatibility input for old saves. Remove the separate purchase acti
 and rank panel. All current-colony purchased upgrades appear in a collapsed section
 at the end of Upgrades; live ticks and purchases must not close it. Understandings
 remain in Lineage and are not ordinary colony purchases.
+
+## D41: Quiet progress and native CI merge handoff — agreed workflow
+
+Prefer blocker/failure/decision/completion updates to repetitive waiting messages,
+subject to higher-priority platform instructions. For explicitly authorized PR and
+merge requests, queue GitHub native squash auto-merge and finish without polling
+when required CI is enforced. Report pending versus merged accurately; no implied
+background Codex monitoring. Auto-merge is enabled, but main currently has no
+protection/rulesets, so required `test` and `changes / classify` checks still need
+owner setup. docs/CI-WORKFLOW.md records the verified state and configuration.
