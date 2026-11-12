@@ -5,12 +5,7 @@ import pt.rcmartins.antidle.model._
 
 /** Crew/logistics bonuses only. Exploration has no XP or level reward multiplier. */
 object ExplorationProgression {
-  case class SuppliesUpgrade(requiredSites: Int, cost: ActionCost)
-  val suppliesUpgrades: Vector[SuppliesUpgrade] = Vector(
-    SuppliesUpgrade(1, ActionCost(sugar = 500L * u, knowledge = 20L * u)),
-    SuppliesUpgrade(3, ActionCost(sugar = 1500L * u, knowledge = 80L * u)),
-    SuppliesUpgrade(5, ActionCost(sugar = 4500L * u, knowledge = 200L * u)))
-  val MaxSuppliesLevel: Int = suppliesUpgrades.size
+  val MaxSuppliesLevel: Int = UpgradesData.UpgradeType.expeditionSupplies.size
   val MaxWorkers: Long = 37L * u
   val MaxExtraScouts: Int = 3
   val ExtraScoutSugar: Long = 10L * u
@@ -27,13 +22,14 @@ object ExplorationProgression {
   def suppliesPercent(rank: Int): Long = 100L + 20L * Math.max(0, Math.min(MaxSuppliesLevel, rank))
   def partyReward(amount: Long, workers: Long, supplies: Int): Long =
     amount * partyPercent(workers) / 100L * suppliesPercent(supplies) / 100L
-  def suppliesRank(data: ExplorationData): Int = Math.max(0, Math.min(MaxSuppliesLevel, data.suppliesLevel))
-  private def nextSuppliesUpgrade(data: ExplorationData): SuppliesUpgrade = suppliesUpgrades(Math.min(MaxSuppliesLevel - 1, suppliesRank(data)))
-  def suppliesRequiredSites(data: ExplorationData): Int = nextSuppliesUpgrade(data).requiredSites
-  def suppliesCost(data: ExplorationData): ActionCost = nextSuppliesUpgrade(data).cost
-  def canUpgradeSupplies(data: ExplorationData, resources: BasicResources): Boolean =
-    suppliesRank(data) < MaxSuppliesLevel && data.revealedSites >= suppliesRequiredSites(data) && resources.hasResources(suppliesCost(data))
-  def upgradeSupplies(data: AllData): AllData =
-    if (!canUpgradeSupplies(data.exploration, data.basicResources)) data else data.spendResources(suppliesCost(data.exploration)).copy(
-      exploration = data.exploration.copy(suppliesLevel = suppliesRank(data.exploration) + 1))
+  def suppliesRank(upgrades: UpgradesData): Int =
+    UpgradesData.UpgradeType.expeditionSupplies.takeWhile(upgrades(_).unlocked).size
+
+  // Read the former standalone rank once; all current effects use standard upgrades.
+  def migrateLegacySupplies(data: AllData): AllData = {
+    val rank = Math.max(0, Math.min(MaxSuppliesLevel, data.exploration.suppliesLevel))
+    data.copy(upgrades = UpgradesData.UpgradeType.expeditionSupplies.take(rank)
+      .foldLeft(data.upgrades)((upgrades, tier) => upgrades.unlock(tier)),
+      exploration = data.exploration.copy(suppliesLevel = 0))
+  }
 }

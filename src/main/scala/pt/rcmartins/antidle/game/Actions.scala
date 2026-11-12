@@ -123,7 +123,5 @@ object Actions {
 
   def scoutMap(site: String, count: Int): Unit = actionUpdater.writer.onNext(ExplorationMap.scout(_, site, count))
 
-  def upgradeExpeditionSupplies(): Unit =
-    actionUpdater.writer.onNext(ExplorationProgression.upgradeSupplies)
 
 }

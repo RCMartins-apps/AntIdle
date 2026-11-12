@@ -15,7 +15,7 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 | Stable upgrade/save identity and display order | `model/UpgradesData.scala`; preserve existing `name` values |
 | Collection discovery, duration, crew, costs or rewards | `game/ExplorationDestination.scala`, the destination's named arguments |
 | Scout studies needed to find a discovery | `game/DiscoveryProgression.scala`, the discovery's `trips` |
-| Supplies reveal-count requirements/prices | `game/ExplorationProgression.scala`, `suppliesUpgrades` |
+| Expedition Supplies tiers/prices/reveal requirements | `game/balance/UpgradeBalance.scala`, `ExpeditionSupplies1`–`3` |
 | Natural second expedition slot | `ExplorationProgression.maxParties` (four revealed sites) |
 | Crew/supplies/scout multipliers | `game/ExplorationProgression.scala` |
 

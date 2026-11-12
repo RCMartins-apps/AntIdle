@@ -17,7 +17,9 @@ Chromium first. Both browser scripts start their own localhost server and use
 isolated contexts. The CI gate covers research, task geometry, live disclosures,
 map/scout launch, prestige and persistent resource visibility at 390/1280px. The
 map gate checks 320/390/1280px, reveal/study costs and reservations, deterministic
-Knowledge, selection stability, depletion, storage blocking and reload.
+Knowledge, selection stability, depletion, storage blocking and reload. It also
+checks sequential standard supply purchases and the purchased-upgrade disclosure
+(default collapse, live purchase/tick stability and reload persistence).
 
 For a development bundle, `sbt fastOptJS` plus `python3 tests/map_browser_smoke.py`
 works without ANTIDLE_PRODUCTION. Production checks must use a fresh fullOptJS.

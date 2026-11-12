@@ -906,7 +906,11 @@ behavior, development packaging and tests.
 
 Choose a scout crew with the 1 / 2 / 3 buttons below the map. Collection crew
 controls appear only for unlocked deposits at the selected site. Expedition
-Supplies research is in Upgrades; its costs and haul-capacity ranks are unchanged.
+Expedition Supplies 1–3 are standard sequential upgrades, revealed at 1/3/5 mapped
+hexagons after buying the previous tier. Prices remain 500/1,500/4,500 sugar and
+20/80/200 Knowledge; each adds 20% of base haul capacity. Existing saved supplies
+ranks convert to purchased upgrades on load. The collapsed Purchased upgrades
+section at the end of Upgrades lists current-colony purchases with effects in [i].
 
 ### Compact Nest controls
 

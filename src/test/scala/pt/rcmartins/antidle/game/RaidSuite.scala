@@ -123,7 +123,7 @@ class RaidSuite extends FunSuite {
     assertEquals(returned.basicResources.protein.amount, 2000 * u)
     assertEquals(returned.statistics.proteinU.thisRun, u)
     assertEquals(returned.statistics.raidDeaths.thisRun, party.raidOutcome.get.workerLosses)
-    val boosted = colony.copy(exploration = colony.exploration.copy(suppliesLevel = 3))
+    val boosted = colony.copy(upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(3): _*))
     val faster = ExplorationHelper.start(boosted, 10 * u, RivalFoodCache, 1)
     assertEquals(faster.exploration.explorationParties.head.raidOutcome, party.raidOutcome)
     assert(faster.exploration.explorationParties.head.targetTick < party.targetTick)

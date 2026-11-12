@@ -80,10 +80,9 @@ class ExplorationSuite extends FunSuite {
   }
   test("the safe first ring funds all research, supplies and both outpost extensions with a margin") {
     val research = UpgradeType.all.map(_.cost.knowledge).sum
-    val supplies = ExplorationProgression.suppliesUpgrades.map(_.cost.knowledge).sum
     val nest = NestAttributes.initial.copy(dryClearingOutpost = true)
     val extensions = (0 until OutpostProgression.MaxExtensions).map(n => OutpostProgression.expansionCost(nest.copy(dryClearingExtensions = n)).knowledge).sum
-    assert(ExplorationMap.sites.map(_.knowledge).sum > research + supplies + OutpostProgression.cost.knowledge + extensions)
+    assert(ExplorationMap.sites.map(_.knowledge).sum > research + OutpostProgression.cost.knowledge + extensions)
     assert(ExplorationMap.deposits("collect-resin") >= RoyalNurseryProgression.buildCost.resin)
     assert(ExplorationMap.deposits("scavenge-water") > OutpostProgression.cost.water + RoyalNurseryProgression.buildCost.water)
   }

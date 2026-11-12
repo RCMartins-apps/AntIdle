@@ -71,7 +71,7 @@ class ExpeditionStaffingSuite extends FunSuite {
     val party = ExplorationHelper.start(colony, u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(party.scouts, 2L * u)
     assertEquals(party.targetTick, 150L)
-    val supplied = colony.copy(exploration = colony.exploration.copy(suppliesLevel = 1))
+    val supplied = colony.copy(upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(1): _*))
     val next = ExplorationHelper.start(supplied, u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(next.targetTick, party.targetTick)
     assert(next.cargo.protein > party.cargo.protein)
