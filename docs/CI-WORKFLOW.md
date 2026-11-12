@@ -8,15 +8,25 @@ native auto-merge can remove the need to keep a Codex turn running while CI runs
 
 - Repository: RCMartins-apps/AntIdle; default branch main.
 - `allow_auto_merge: true`; squash is the only enabled merge method.
-- The public branch endpoint reports `protected: false`, required-check enforcement
-  off and no required contexts. Repository rulesets list is empty.
+- The active [Main ruleset](https://github.com/RCMartins-apps/AntIdle/rules/27087827)
+  targets the default branch with no exclusions. The branch reports protected=true.
+- Requires a PR and both `test` and `changes / classify` from GitHub Actions
+  (integration 15368), with up-to-date branches required. No bypass actors; the
+  current user cannot bypass. Approval count is zero and code-owner/last-push
+  approvals are not required. Deletions and force pushes are blocked; linear
+  history is required. Repository squash-only settings remain authoritative.
+- Classic-protection fields on the branch endpoint still say disabled/off; those
+  fields do not describe ruleset requirements. The ruleset details are authoritative.
 - The completed PR #65 check runs are named `test` and `changes / classify`, both
   provided by GitHub Actions. Other deploy checks are not PR quality requirements.
 - The connector can enable PR auto-merge, but exposes no branch-protection write
   operation. The dedicated protection read endpoint returns 403; public branch
   metadata and ruleset reads supplied the observations above. No settings changed.
 
-## One-time owner setup
+## Setup reference — already configured with an active ruleset
+
+No additional classic rule is needed now. The following is an alternative setup,
+not a request to add duplicate protection.
 
 1. Open [repository branch settings](https://github.com/RCMartins-apps/AntIdle/settings/branches).
    Add a classic branch protection rule targeting exactly `main`.
@@ -51,3 +61,8 @@ Codex can then report the PR URL and pending status and end the turn. It does no
 need to poll or send waiting updates. If a check fails, the PR remains unmerged;
 use GitHub notifications or return with the failed PR to have it investigated.
 No additional bot workflow or write-enabled Actions token is needed.
+
+With strict up-to-date checks enabled, a PR may need its branch updated when main
+changes before auto-merge can complete. This is expected and does not require
+weakening the rule. Auto-merge is ready to use on the next authorized PR; no live
+pending PR was used to exercise a merge during this read-only settings check.

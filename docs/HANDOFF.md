@@ -9,14 +9,16 @@
   PR/merge requests, prefer native squash auto-merge with enforced required CI and
   finish after a confirmed queue, reporting pending accurately. No background-watch
   promise and no broader authorization to create/merge unrequested PRs.
-- Inspected GitHub: auto-merge enabled, squash only; public main branch endpoint
-  reports protected=false with check enforcement off; repository rulesets empty.
-  Verified actual check names from PR #65: test and changes / classify. Native
-  auto-merge tool is available, but branch-protection administration is not exposed;
-  its dedicated read endpoint returned integration 403. No repo settings changed.
-- docs/CI-WORKFLOW.md gives owner setup: main protection requiring PR + those two
-  checks, enforced for merge actor; docs-only test skips remain valid. Until set,
-  ordinary checked merging remains necessary for authorized merge requests.
+- Owner configured Main ruleset 27087827; rechecked GitHub on 2026-11-12. Active,
+  targets default branch with no exclusions, requires PRs and test plus changes /
+  classify from GitHub Actions (15368), strict up-to-date checks, no bypass actors;
+  current user cannot bypass. Zero required reviews, linear history, deletion and
+  force-push blocks. Auto-merge remains enabled, repository permits squash only.
+- Setup is now sufficient for native auto-merge on the next authorized PR. No test
+  PR/merge performed in this settings verification. Strict updates may require
+  syncing a PR after main changes. Classic-protection metadata does not reflect
+  ruleset checks; use ruleset detail, not legacy enforcement=off fields.
+- Updated docs/CI-WORKFLOW.md and D41 to replace the obsolete missing-setup state.
 - Docs-only change; relative-link checks and git diff --check suffice. Branch to
   be committed/pushed by default. No PR or settings change requested for this task.
 - Preserve unrelated work/ and Python caches. Legacy supplies migration and saves

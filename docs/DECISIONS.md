@@ -722,6 +722,7 @@ Prefer blocker/failure/decision/completion updates to repetitive waiting message
 subject to higher-priority platform instructions. For explicitly authorized PR and
 merge requests, queue GitHub native squash auto-merge and finish without polling
 when required CI is enforced. Report pending versus merged accurately; no implied
-background Codex monitoring. Auto-merge is enabled, but main currently has no
-protection/rulesets, so required `test` and `changes / classify` checks still need
-owner setup. docs/CI-WORKFLOW.md records the verified state and configuration.
+background Codex monitoring. Auto-merge is enabled. The owner configured active
+Main ruleset 27087827, verified on 2026-11-12: requires PRs, both `test` and
+`changes / classify` from GitHub Actions, up-to-date branches and no bypasses.
+docs/CI-WORKFLOW.md records the verified state and configuration.
