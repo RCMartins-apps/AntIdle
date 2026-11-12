@@ -131,6 +131,28 @@ and do not promise a local file link will work on the user's device.
 - Keep suggestions explicitly tentative. If intent is missing, inspect these
   files and related code first, then ask only if the missing choice matters.
 
+## Quiet progress and CI handoff
+
+The owner prefers updates only for blockers, failures, decisions requiring input
+and completion. Avoid repetitive “still waiting” CI/build messages. If higher-level
+platform instructions require periodic updates, keep them brief and factual; this
+repository preference cannot override those instructions.
+
+When the owner authorizes PR creation and merging, prefer GitHub native auto-merge
+(squash) after local validation and PR creation, provided required CI checks are
+actually enforced for main. Verify that protection/rulesets require `test` and
+`changes / classify`; allowing auto-merge in repository settings alone is not enough.
+See [CI handoff setup](docs/CI-WORKFLOW.md). Do not change protection requirements
+or bypass checks merely to queue a merge. If setup is missing, report it and use
+normal checked merging for an explicitly authorized merge request.
+
+Once GitHub confirms auto-merge is queued with enforced checks, finish the turn
+without polling CI. Report “auto-merge enabled; pending CI,” not “merged.” GitHub
+performs the merge after requirements pass; failures remain on the PR and are not
+a promise of background Codex monitoring. If checks already passed, a confirmed
+immediate merge may be reported as merged. This changes waiting behavior, not the
+existing requirement for owner authorization to open/merge a PR.
+
 ## Branch and push by default
 
 The owner has given standing authorization to create branches, commit and push

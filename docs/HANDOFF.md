@@ -1,31 +1,25 @@
 # Handoff
 
-## Last verified: 2026-11-12 — standard supply upgrades and purchase history
+## Last verified: 2026-11-12 — quiet progress and auto-merge setup
 
-- Baseline main 5b0f454 includes merged playtest improvements #58–#64. New branch
-  feature/standard-supply-upgrades starts from that verified origin/main.
-- Expedition Supplies 1/2/3 are ordinary UpgradeType entries, defined/priced in
-  UpgradeBalance with sequential prior-tier and 1/3/5 revealed-site prerequisites.
-  Sugar/Knowledge prices and additive +20% base haul per tier are unchanged.
-- Removed standalone supplies panel, action and purchase/catalog code. Engine haul
-  bonuses derive solely from purchased upgrade flags. Old suppliesLevel survives
-  only as legacy save input: load converts its clamped rank into purchased flags,
-  clears it, preserves resources and is idempotent. Version 7 saves remain valid.
-  Party cargo/rank snapshots remain intact; founding resets ordinary upgrades.
-- The end of Upgrades has a default-collapsed Purchased upgrades (count) section.
-  Readonly current-colony titles have [i] effects. It remains open across ticks and
-  new purchases; a fresh load starts collapsed. Understandings remain in Lineage.
-- Verified sbt test balance/test fastOptJS: 255 engine + 4 balance tests passed.
-  Includes tier gating/prices/repeat rejection, old ranks (including malformed
-  bounds), round-trip idempotence, resource preservation, founding reset and haul
-  fixture coverage. Safe-ring Knowledge budget counts supplies once as research.
-- Maintained CI/map browser functions passed on fresh dev bundle at 390/1280px;
-  map script also passed 320/390/1280px with sequential supply purchases, history
-  default collapse, live purchase/tick stability and reload persistence. Inspected
-  opened-history screenshot at 320px; no overflow. git diff --check passed.
-- README, balancing guide, exploration guide, tests README and D40 updated.
-  No PR/merge requested for this task; commit/push the branch by default.
-  fullOptJS/new GitHub CI not run yet. Logs /tmp/antidle-standard-supplies*.
-- Preserve unrelated work/ and Python caches. Temporary screenshots under
-  /tmp/antidle-map-browser are not durable user attachments.
-- Offline updates apply after all game windows close; no cloud save backup.
+- Main baseline 5ee1838 is merged PR #65: standard supply upgrades and collapsed
+  purchase history. Final GitHub CI passed, including production/browser/offline.
+- docs/quiet-ci-workflow records the owner preference in AGENTS.md: avoid repetitive
+  waiting updates; respect higher-level periodic-update instructions. For authorized
+  PR/merge requests, prefer native squash auto-merge with enforced required CI and
+  finish after a confirmed queue, reporting pending accurately. No background-watch
+  promise and no broader authorization to create/merge unrequested PRs.
+- Owner configured Main ruleset 27087827; rechecked GitHub on 2026-11-12. Active,
+  targets default branch with no exclusions, requires PRs and test plus changes /
+  classify from GitHub Actions (15368), strict up-to-date checks, no bypass actors;
+  current user cannot bypass. Zero required reviews, linear history, deletion and
+  force-push blocks. Auto-merge remains enabled, repository permits squash only.
+- Setup is now sufficient for native auto-merge on the next authorized PR. No test
+  PR/merge performed in this settings verification. Strict updates may require
+  syncing a PR after main changes. Classic-protection metadata does not reflect
+  ruleset checks; use ruleset detail, not legacy enforcement=off fields.
+- Updated docs/CI-WORKFLOW.md and D41 to replace the obsolete missing-setup state.
+- Docs-only change; relative-link checks and git diff --check suffice. Branch to
+  be committed/pushed by default. No PR or settings change requested for this task.
+- Preserve unrelated work/ and Python caches. Legacy supplies migration and saves
+  remain as implemented in #65; this task changes no gameplay or workflows.
