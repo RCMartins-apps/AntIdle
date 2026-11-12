@@ -1,22 +1,26 @@
 # Handoff
 
-## Last verified: 2026-11-12 — artwork provenance and branch cleanup
+## Last verified: 2026-11-12 — Shared Paths regression review
 
-- Main baseline 1271cea is merged PR #66: quieter updates and native auto-merge
-  workflow. The first auto-merge succeeded. Active Main ruleset requires PRs,
-  test + changes / classify from GitHub Actions, up-to-date branches and no bypasses.
-  For authorized PR/merge requests, queue squash auto-merge and report pending
-  without polling; do not claim a merge before confirmation.
-- At owner request, experiments were preserved as remote annotated archive tags:
-  archive/early-game (b7709fa) and archive/shoelace-lib-experiments (a64a6d9).
-  Their branches and four redundant docs/outpost-fix branches were deleted after
-  verification. Remaining remote branches at cleanup: main, gh-pages, some-assets.
-- Owner clarified that some-assets is their own Paint.NET pixel art for an earlier
-  top-down 2D ant-game prototype using a graphics library, also working on Android.
-  docs/ASSETS.md records provenance and the retained branch/files. No graphics
-  library identified and no asset reuse, UI redesign or engine change authorized.
-- docs/asset-provenance records this information only; no artwork was copied into
-  main and no gameplay/package change made. Documentation checks only; commit and
-  push by default. No PR/merge requested in this provenance discussion.
-- Preserve unrelated work/ and Python caches. Supply upgrade/history feature #65
-  remains merged, with 255 game + 4 balance tests and final CI passing.
+- Artwork provenance docs PR #67 merged as c0d5764 after docs CI passed. Attempt to
+  queue auto-merge returned clean-status because checks were already complete;
+  performed a confirmed squash merge. Normal authorized auto-merge workflow stands.
+- Owner says first prestige's pheromone trail feels effectively useless and supplied
+  a No nectar source screenshot. Inspected current and pre-map engine code.
+- Confirmed map regression: only the first Nectar Meadow study can create a trail
+  source, only if Shared Paths is owned at that instant. Reserves 1,200 from the
+  finite 20,000 nectar deposit, never replenishes, and misses late purchases. Old
+  repeat expedition discovery is gone. At 10 workers after first founding, 1,200
+  lasts about 136 simulated seconds when storage permits. Generic empty copy hides
+  unstudied/missed/exhausted states. Cannot infer exact screenshot state without save.
+- docs/trail-understanding-review corrects stale repeat-discovery README text and
+  records diagnosis/proposed redesign in docs/IDEAS.md. No gameplay changed.
+- Recommendation, NOT approved: maintained worker/scout collection from the studied
+  Meadow's whole remaining finite deposit, without repetitive launches/mission-slot
+  use, with late-purchase reconciliation and site-local controls. Keep finite
+  deposits and reserved cargo accounting; exact staffing/rates/costs still undecided.
+- Documentation checks only: git diff --check, relative paths. No game rebuild/tests
+  warranted for this review. Commit/push by default; this review PR/merge not asked.
+- Preserve unrelated work/ and Python caches. Original art remains in some-assets;
+  the two old code experiments remain in archive/* tags. Active Main ruleset enforces
+  required checks for authorized auto-merge; do not poll after a confirmed queue.

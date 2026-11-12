@@ -480,9 +480,12 @@ mechanic; later introductory Understandings, challenges and milestone-based
 DNA earnings remain future content. Repeated founding currently awards the
 same DNA amount and adds the same production bonus.
 
-After Shared Paths, returning **Nectar Meadow** expeditions reveal a finite
-**1,200 sugar** source when no source remains. The normal expedition reward is
-unchanged. Explore shows one source/trail, without exposing locked destinations.
+Current map behavior: owning Shared Paths during the **first Nectar Meadow study**
+reserves up to **1,200 sugar** from that hexagon's finite nectar deposit for a trail.
+It does not create extra nectar. This is a one-time source: subsequent studies and
+worker collections do not replace it. Buying Shared Paths after that study does
+not backfill a source. These limitations are under review; see
+[Shared Paths review](docs/IDEAS.md#shared-paths-after-the-map-rework).
 
 **Mark trail** costs **50 sugar** and reserves **one scout**. Assign up to ten
 workers with the trail card's controls. Each gathers **0.8 sugar/s**, improved
