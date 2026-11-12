@@ -705,3 +705,13 @@ show relevant collection controls; hide extinct starter-worker UI; collapse Broo
 show the queue only in Nest on mobile; move supply research to Upgrades; use scout
 crew buttons below the map. Royal eggs may start without nurses but care must wait
 for staffing. Prototype SVG icons for the hex map separately from its economy.
+
+## D40: Supplies use standard upgrades and purchases remain inspectable — implemented
+
+Expedition Supplies 1–3 use the ordinary upgrade catalog, reveal, purchase and save
+flags. Preserve their prices, sequential 1/3/5 revealed-site thresholds and additive
+20% base haul bonus per tier. Convert former saved ranks once without charging;
+retain only compatibility input for old saves. Remove the separate purchase action
+and rank panel. All current-colony purchased upgrades appear in a collapsed section
+at the end of Upgrades; live ticks and purchases must not close it. Understandings
+remain in Lineage and are not ordinary colony purchases.

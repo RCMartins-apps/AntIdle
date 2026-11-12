@@ -110,19 +110,45 @@ class UnlockDefinitionsSuite extends FunSuite {
     }
   }
 
-  test("supplies catalog drives actual price, unlock boundary, and milestone hints") {
+  test("supply tiers use standard sequential research, exact prices and map thresholds") {
     val fresh = AllData.initial
-    ExplorationProgression.suppliesUpgrades.zipWithIndex.foreach { case (tier, rank) =>
-      val d = fresh.copy(exploration = fresh.exploration.copy(suppliesLevel = rank, revealedSites = tier.requiredSites),
+    UpgradeType.expeditionSupplies.zipWithIndex.foreach { case (tier, rank) =>
+      val sites = List(1, 3, 5)(rank)
+      val d = fresh.copy(exploration = fresh.exploration.copy(revealedSites = sites),
+        unlocks = fresh.unlocks.copy(tabs = fresh.unlocks.tabs.copy(exploreTabUnlocked = true)),
+        upgrades = fresh.upgrades.unlock(UpgradeType.expeditionSupplies.take(rank): _*),
         basicResources = fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = tier.cost.sugar),
           knowledge = fresh.basicResources.knowledge.copy(amount = tier.cost.knowledge)))
-      assertEquals(ExplorationProgression.suppliesCost(d.exploration), tier.cost)
-      val before = d.copy(exploration = d.exploration.copy(revealedSites = d.exploration.revealedSites - 1))
-      assertEquals(ExplorationProgression.upgradeSupplies(before), before)
-      val upgraded = ExplorationProgression.upgradeSupplies(d)
-      assertEquals(upgraded.exploration.suppliesLevel, rank + 1)
+      val before = d.copy(exploration = d.exploration.copy(revealedSites = sites - 1))
+      assert(!UpgradeResearch.isVisible(before, tier))
+      assertEquals(UpgradeResearch.purchase(before, tier), before)
+      if (rank > 0) {
+        val missingPrevious = d.copy(upgrades = fresh.upgrades)
+        assertEquals(UpgradeResearch.purchase(missingPrevious, tier), missingPrevious)
+      }
+      val upgraded = UpgradeResearch.purchase(d, tier)
+      assert(upgraded.upgrades(tier).unlocked)
+      assertEquals(ExplorationProgression.suppliesRank(upgraded.upgrades), rank + 1)
       assertEquals(upgraded.basicResources.sugar.amount, 0L)
       assertEquals(upgraded.basicResources.knowledge.amount, 0L)
+      assertEquals(UpgradeResearch.purchase(upgraded, tier), upgraded)
+    }
+  }
+
+  test("old supply ranks migrate once to standard upgrades, survive reload and reset on founding") {
+    for (rank <- List(-1, 0, 1, 2, 3, 99)) {
+      val d = AllData.initial.copy(exploration = AllData.initial.exploration.copy(suppliesLevel = rank))
+      val save = AllDataForSave.fromAllData(d)
+      val oldSave = save.copy(upgrades = save.upgrades.copy(upgrades = save.upgrades.upgrades
+        .filterNot(upgrade => upgrade.name.startsWith("ExpeditionSupplies"))))
+      val loaded = oldSave.toJson.fromJson[AllDataForSave].toOption.get.toAllData
+      assertEquals(ExplorationProgression.suppliesRank(loaded.upgrades), Math.max(0, Math.min(3, rank)))
+      assertEquals(loaded.exploration.suppliesLevel, 0)
+      assertEquals(loaded.basicResources, d.basicResources)
+      val again = AllDataForSave.fromAllData(loaded).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+      assertEquals(again.upgrades, loaded.upgrades)
+      val reset = Prestige.found(loaded.copy(ants = loaded.ants.copy(daughterQueens = u)))
+      assertEquals(ExplorationProgression.suppliesRank(reset.upgrades), 0)
     }
   }
 }

@@ -1805,19 +1805,6 @@ object MainForm {
     )
   }
 
-  private def expeditionSuppliesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = div(
-      child.maybe <-- explorationSignal.map(_.revealedSites > 0).distinct.map(visible => Option.when(visible)(div(className := "col-12 p-3 expedition-supplies",
-        infoHeading("Expedition supplies", div("+20% haul capacity per rank. Does not create resources or increase knowledge.")),
-        p(child.text <-- explorationSignal.map(data => s"Rank ${ExplorationProgression.suppliesRank(data)} / ${ExplorationProgression.MaxSuppliesLevel}")),
-        child.maybe <-- explorationSignal.map(data => ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel).distinct.map(more => Option.when(more)(
-          actionButton(name = "Improve Expedition Supplies", descriptionSignal = Val(None),
-            enabledSignal = explorationSignal.combineWith(resourcesSignal).map { case (data, resources) => ExplorationProgression.canUpgradeSupplies(data, resources) },
-            costSignal = explorationSignal.map(ExplorationProgression.suppliesCost), bonusSignal = Val(ActionBonus.empty),
-            onClickAction = _ => Actions.upgradeExpeditionSupplies()),
-        )),
-      ))),
-  )
-
   private def upgradesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     def createUpgrade(upgradeType: UpgradeType): ReactiveHtmlElement[HTMLDivElement] = {
       val costSignal: Signal[ActionCost] = Val(upgradeType.cost)
@@ -1833,17 +1820,25 @@ object MainForm {
 
     div(
       className := "row upgrades-grid",
-      expeditionSuppliesDiv,
       children <-- upgradesSignal.map { upgrades =>
         val available = UpgradeType.all.filter(t => upgrades(t).show && !upgrades(t).unlocked)
         if (available.isEmpty) Seq(div(className := "col-12 py-3 upgrades-empty text-body-secondary",
-          display <-- explorationSignal.map(data =>
-            if (data.revealedSites > 0 && ExplorationProgression.suppliesRank(data) < ExplorationProgression.MaxSuppliesLevel) "none" else "block"),
           if (UpgradeType.all.forall(t => upgrades(t).unlocked))
             p(className := "mb-0", "All current upgrades researched.")
           else div(p(className := "mb-1", "No upgrades available."))))
         else available.map(t => createUpgrade(t))
       },
+      detailsTag(className := "col-12 purchased-upgrades border-top mt-3 pt-2",
+        summaryTag(minHeight.px := 44,
+          child.text <-- upgradesSignal.map(upgrades =>
+            s"Purchased upgrades (${UpgradeType.all.count(upgrades(_).unlocked)})").distinct),
+        children <-- upgradesSignal.map(upgrades => UpgradeType.all.filter(upgrades(_).unlocked)).distinct.map {
+          purchased =>
+            if (purchased.isEmpty) Seq(p(className := "small text-body-secondary", "No upgrades purchased yet."))
+            else purchased.map(upgrade => div(className := "purchased-upgrade d-flex align-items-center justify-content-between gap-2 border-bottom py-1",
+              span(upgrade.title), infoDetails(upgrade.title, div(upgrade.description))))
+        },
+      ),
     )
   }
 

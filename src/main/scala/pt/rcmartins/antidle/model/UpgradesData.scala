@@ -58,6 +58,12 @@ object UpgradesData {
 
     case object AdditionalExpeditionSlot extends UpgradeType { val name: String = "AdditionalExpeditionSlot" }
 
+    case object ExpeditionSupplies1 extends UpgradeType { val name: String = "ExpeditionSupplies1" }
+    case object ExpeditionSupplies2 extends UpgradeType { val name: String = "ExpeditionSupplies2" }
+    case object ExpeditionSupplies3 extends UpgradeType { val name: String = "ExpeditionSupplies3" }
+
+    val expeditionSupplies: Seq[UpgradeType] = Seq(ExpeditionSupplies1, ExpeditionSupplies2, ExpeditionSupplies3)
+
     case object EstablishedTrails extends UpgradeType { val name: String = "EstablishedTrails" }
 
     case object ReinforcedMandibles extends UpgradeType { val name: String = "ReinforcedMandibles" }
@@ -95,6 +101,9 @@ object UpgradesData {
       UnlockExplorerTask,
       DefaultWorkers,
       AdditionalExpeditionSlot,
+      ExpeditionSupplies1,
+      ExpeditionSupplies2,
+      ExpeditionSupplies3,
       EstablishedTrails,
       ReinforcedMandibles,
       BroodCare,

@@ -103,6 +103,24 @@ object UpgradeBalance {
       requirements = UpgradeRequirements(explorationTab = true, minimumRevealedSites = 2),
       description = "+1 expedition slot.",
     ),
+    ExpeditionSupplies1 -> UpgradeDefinition(
+      title = "Expedition Supplies 1",
+      cost = ActionCost(sugar = 500L * u, knowledge = 20L * u),
+      requirements = UpgradeRequirements(explorationAvailable = true, minimumRevealedSites = 1),
+      description = "+20% base expedition haul capacity.",
+    ),
+    ExpeditionSupplies2 -> UpgradeDefinition(
+      title = "Expedition Supplies 2",
+      cost = ActionCost(sugar = 1500L * u, knowledge = 80L * u),
+      requirements = UpgradeRequirements(upgrades = List(ExpeditionSupplies1), minimumRevealedSites = 3),
+      description = "+20% base expedition haul capacity (40% total).",
+    ),
+    ExpeditionSupplies3 -> UpgradeDefinition(
+      title = "Expedition Supplies 3",
+      cost = ActionCost(sugar = 4500L * u, knowledge = 200L * u),
+      requirements = UpgradeRequirements(upgrades = List(ExpeditionSupplies2), minimumRevealedSites = 5),
+      description = "+20% base expedition haul capacity (60% total).",
+    ),
     EstablishedTrails -> UpgradeDefinition(
       title = "Established Trails",
       cost = ActionCost(sugar = 600 * u, knowledge = 60 * u),

@@ -68,7 +68,7 @@ class RoyalNurserySuite extends FunSuite {
   }
 
   test("resin forecasts, actual retained rewards and gathered statistics agree and cannot replay") {
-    val initial = discovered.copy(exploration = discovered.exploration.copy(suppliesLevel = 2))
+    val initial = discovered.copy(upgrades = discovered.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(2): _*))
     val sent = ExplorationHelper.start(initial, 10 * u, CollectResin)
     val party = sent.exploration.explorationParties.head
     val expected = ExplorationProgression.partyReward(CollectResin.resinReward, 10 * u, 2)

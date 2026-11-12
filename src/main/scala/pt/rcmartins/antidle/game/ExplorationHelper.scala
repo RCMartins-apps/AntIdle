@@ -26,7 +26,7 @@ object ExplorationHelper {
   def load(data: AllData, workers: Long, destination: ExplorationDestination, raidReward: Option[Long] = None): ActionCost = {
     val base = if (RaidProgression.isRaid(destination)) raidReward.getOrElse(RaidProgression.rewardRange(workers)._1)
       else ExplorationProgression.partyReward(Math.max(Math.max(destination.sugarReward, destination.proteinReward),
-        Math.max(destination.waterReward, destination.resinReward)), workers, ExplorationProgression.suppliesRank(data.exploration))
+        Math.max(destination.waterReward, destination.resinReward)), workers, ExplorationProgression.suppliesRank(data.upgrades))
     val key = resource(destination)
     resourceCost(key, Math.min(base, Math.min(ExplorationMap.remaining(data.exploration, destination.id), free(data, key))))
   }
@@ -44,7 +44,7 @@ object ExplorationHelper {
       val scouts = destination.scouts + extraScouts.toLong * u
       val (ready, ages) = PopulationAging.depart(data, workers, scouts)
       val party = ExplorationParty(workers, data.currentTick, data.currentTick + ExplorationProgression.duration(destination, extraScouts),
-        scouts = scouts, destination = destination.id, suppliesLevel = ExplorationProgression.suppliesRank(data.exploration), ages = ages, extraScouts = extraScouts)
+        scouts = scouts, destination = destination.id, suppliesLevel = ExplorationProgression.suppliesRank(data.upgrades), ages = ages, extraScouts = extraScouts)
       val outcome = Option.when(RaidProgression.isRaid(destination))(RaidProgression.roll(RaidProgression.seed(ready, party), workers))
       val cargo = load(data, workers, destination, outcome.map(_.protein))
       val departed = party.copy(raidOutcome = outcome, cargo = cargo)

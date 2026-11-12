@@ -83,7 +83,9 @@ All current required progression can be reached without a raid or random find.
 - `game/balance/UpgradeBalance.scala`: `minimumRevealedSites` and discovery gates.
 - `game/DiscoveryProgression.scala`: study thresholds and unlocked jobs.
 - `game/ExplorationHelper.scala`: finite hauling, raid outcomes, overflow/returns.
-- `game/ExplorationProgression.scala`: mission slots, supplies and haul multipliers.
+- `game/ExplorationProgression.scala`: mission slots and haul multipliers; supply
+  bonuses derive from standard purchased upgrades. Their tier requirements/prices
+  live in `game/balance/UpgradeBalance.scala`. Old supply ranks migrate on load.
 
 Paths start at `src/main/scala/pt/rcmartins/antidle/`. Run engine/balance tests,
 production CI smoke and `tests/map_browser_smoke.py` at phone/desktop sizes.
