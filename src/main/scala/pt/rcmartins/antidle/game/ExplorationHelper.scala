@@ -9,14 +9,14 @@ object ExplorationHelper {
   def resource(destination: ExplorationDestination): String =
     if (destination.waterReward > 0L) "water" else if (destination.resinReward > 0L) "resin"
     else if (destination.sugarReward > 0L) "sugar" else "protein"
-  private def amount(cargo: ActionCost, key: String): Long = key match {
+  def amount(cargo: ActionCost, key: String): Long = key match {
     case "sugar" => cargo.sugar; case "protein" => cargo.protein; case "water" => cargo.water; case "resin" => cargo.resin
   }
-  private def resourceCost(key: String, value: Long): ActionCost = key match {
+  def resourceCost(key: String, value: Long): ActionCost = key match {
     case "sugar" => ActionCost(sugar = value); case "protein" => ActionCost(protein = value)
     case "water" => ActionCost(water = value); case "resin" => ActionCost(resin = value)
   }
-  private def free(data: AllData, key: String): Long = {
+  def free(data: AllData, key: String): Long = {
     val space = key match {
       case "sugar" => data.basicResources.sugar.freeSpace; case "protein" => data.basicResources.protein.freeSpace
       case "water" => data.basicResources.water.freeSpace; case "resin" => data.basicResources.resin.freeSpace
@@ -31,7 +31,7 @@ object ExplorationHelper {
     resourceCost(key, Math.min(base, Math.min(ExplorationMap.remaining(data.exploration, destination.id), free(data, key))))
   }
   def canDepart(data: ExplorationData, ants: AntsData, upgrades: UpgradesData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Boolean =
-    workers >= destination.minimumWorkers && workers <= ExplorationProgression.MaxWorkers && workers % u == 0 &&
+    workers >= destination.minimumWorkers && workers <= ExplorationProgression.MaxWorkers && workers % ExplorationProgression.WorkerStep == 0 &&
       extraScouts >= 0 && extraScouts <= ExplorationProgression.MaxExtraScouts && destination.progressionUnlocked(data) &&
       ExplorationMap.remaining(data, destination.id) > 0L &&
       data.explorationParties.size < ExplorationProgression.maxParties(data, upgrades) &&

@@ -37,7 +37,7 @@ object AgingJobReplacement {
     val limit = task match {
       case AntTask.AphidTender if !data.upgrades(UpgradeType.AphidTending).unlocked => 0L
       case AntTask.TrailForager =>
-        if (PheromoneTrails.guides(ants, data.exploration) > 0L && ScoutProgression.atHome(ants, data.exploration) >= u) PheromoneTrails.Capacity else 0L
+        PheromoneTrails.targetWorkers(data.exploration)
       case _ => DefaultWorkerAssignment.capacity(task, data.nestAttributes)
     }
     Math.max(0L, limit - count(ants, task))

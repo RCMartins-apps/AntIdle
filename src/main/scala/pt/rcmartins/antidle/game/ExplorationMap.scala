@@ -73,7 +73,7 @@ object ExplorationMap {
       val announced = DiscoveryProgression.all.filter(discovery => !discovery.found(removed.exploration) && discovery.found(studied.exploration))
         .foldLeft(studied)((state, discovery) => state.addMessage(s"Discovery: ${discovery.title}!"))
       val withFind = if (party.destination == "woodland-edge" && count == 1) CarcassProgression.discover(announced, 1) else announced
-      if (party.destination == "nectar-meadow" && count == 1) PheromoneTrails.discover(withFind, ExplorationDestination.NectarMeadow) else withFind
+      withFind
     }
     ResourceVisibility.reconcile(UpgradeVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.returnHome(rewarded, party.ages))))
   }

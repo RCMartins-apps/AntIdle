@@ -93,10 +93,10 @@ class ColonyLifecycleSuite extends FunSuite {
   }
 
   test("simultaneous expedition returns preserve both scout cohorts without introducing fresh lifespans") {
-    val initial = setAge(colony(2, 2), List(AgeCohort(Minute, 1), AgeCohort(2 * Minute, 1)),
+    val initial = setAge(colony(10, 2), List(AgeCohort(Minute, 5), AgeCohort(2 * Minute, 5)),
       List(AgeCohort(Minute, 1), AgeCohort(2 * Minute, 1)))
-    val first = ExplorationHelper.start(initial, u, ExplorationDestination.WoodlandEdge)
-    val second = ExplorationHelper.start(first, u, ExplorationDestination.WoodlandEdge)
+    val first = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.WoodlandEdge)
+    val second = ExplorationHelper.start(first, 5 * u, ExplorationDestination.WoodlandEdge)
     val returned = TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = 224L)), None)
     assertEquals(returned.ants.ages.workers.map(_.expiresAt), List(Minute, 2L * Minute))
     assertEquals(returned.ants.ages.scouts.map(_.expiresAt), List(Minute, 2L * Minute))
@@ -104,28 +104,28 @@ class ColonyLifecycleSuite extends FunSuite {
   }
 
   test("repeated expeditions cannot extend the same ants' original expiry or let overdue ants depart again") {
-    val initial = setAge(colony(1, 1), List(AgeCohort(Minute + 17L, 1)), List(AgeCohort(Minute + 17L, 1)))
-    val first = ExplorationHelper.start(initial, u, ExplorationDestination.WoodlandEdge)
+    val initial = setAge(colony(5, 1), List(AgeCohort(Minute + 17L, 5)), List(AgeCohort(Minute + 17L, 1)))
+    val first = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.WoodlandEdge)
     val returned = TickUpdater.updateAllData(first.copy(world = first.world.copy(currentTick = 224L)), None)
-    assertEquals(returned.ants.ages.workers, List(AgeCohort(Minute + 17L, 1)))
+    assertEquals(returned.ants.ages.workers, List(AgeCohort(Minute + 17L, 5)))
     assertEquals(returned.ants.ages.scouts, List(AgeCohort(Minute + 17L, 1)))
-    val second = ExplorationHelper.start(returned, u, ExplorationDestination.WoodlandEdge)
-    assertEquals(second.exploration.explorationParties.head.ages.workers, List(AgeCohort(Minute + 17L, 1)))
+    val second = ExplorationHelper.start(returned, 5 * u, ExplorationDestination.WoodlandEdge)
+    assertEquals(second.exploration.explorationParties.head.ages.workers, List(AgeCohort(Minute + 17L, 5)))
     val expired = TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = 449L)), None)
     assertEquals(expired.ants.workers, 0L)
     assertEquals(expired.ants.scouts, 0L)
-    assertEquals(ExplorationHelper.start(expired, u, ExplorationDestination.WoodlandEdge), expired)
+    assertEquals(ExplorationHelper.start(expired, 5 * u, ExplorationDestination.WoodlandEdge), expired)
   }
 
   test("home and return deaths in the same tick still produce only one periodic summary") {
-    val initial = setAge(colony(2), List(AgeCohort(Minute, 2)))
-    val sent = ExplorationHelper.start(initial, u, ExplorationDestination.WoodlandEdge)
+    val initial = setAge(colony(6), List(AgeCohort(Minute, 6)))
+    val sent = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.WoodlandEdge)
     val due = sent.copy(world = sent.world.copy(currentTick = Minute - 1L),
       exploration = sent.exploration.copy(explorationParties = sent.exploration.explorationParties.map(_.copy(targetTick = Minute))))
     val returned = TickUpdater.updateAllData(due, None)
     assertEquals(returned.ants.workers, 0L)
     assertEquals(returned.messages.count(_.startsWith("Aging:")), 1)
-    assertEquals(returned.ants.ages.pendingWorkers, 1L)
+    assertEquals(returned.ants.ages.pendingWorkers, 5L)
     val nextMinute = PopulationAging.tick(returned.copy(world = returned.world.copy(currentTick = 2L * Minute)))
     assertEquals(nextMinute.messages.count(_.startsWith("Aging:")), 2)
     assertEquals(nextMinute.ants.ages.pendingWorkers, 0L)

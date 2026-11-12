@@ -65,9 +65,9 @@ object Actions {
   def maintainTerritory(enabled: Boolean): Unit = actionUpdater.writer.onNext(TerritoryProgression.setMaintain(_, enabled))
   def withdrawTerritory(): Unit = actionUpdater.writer.onNext(TerritoryProgression.withdraw)
 
-  def markSugarTrail(): Unit = actionUpdater.writer.onNext(PheromoneTrails.mark)
-  def assignTrailWorkers(delta: Long): Unit = actionUpdater.writer.onNext(PheromoneTrails.assign(_, delta))
-  def recallSugarTrail(): Unit = actionUpdater.writer.onNext(PheromoneTrails.recall)
+  def assignTrailWorkers(destination: String, delta: Long): Unit =
+    actionUpdater.writer.onNext(PheromoneTrails.adjust(_, destination, delta))
+  def recallTrail(destination: String): Unit = actionUpdater.writer.onNext(PheromoneTrails.recall(_, destination))
 
   def raiseRoyalEgg(): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.start)
 

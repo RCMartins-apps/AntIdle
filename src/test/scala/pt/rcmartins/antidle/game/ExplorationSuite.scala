@@ -90,9 +90,9 @@ class ExplorationSuite extends FunSuite {
     val sent = ExplorationHelper.start(ready, 5L * u, RottenLog)
     assertEquals(sent.exploration.explorationParties.size, 1)
     val cargo = sent.exploration.explorationParties.head.cargo
-    assertEquals(cargo.protein, 40L * u)
+    assertEquals(cargo.protein, 25L * u)
     val returned = finish(sent)
-    assertEquals(returned.basicResources.protein.amount, 40L * u)
+    assertEquals(returned.basicResources.protein.amount, 25L * u)
     assertEquals(returned.basicResources.knowledge.amount, 0L)
     assertEquals(returned.exploration.surveys, ready.exploration.surveys)
     assertEquals(ExplorationHelper.exploreBonus(returned, sent.exploration.explorationParties.head), returned)
@@ -120,21 +120,21 @@ class ExplorationSuite extends FunSuite {
   }
   test("concurrent hauls never overbook deposits or destination storage") {
     val d = ready.copy(basicResources = ready.basicResources.copy(protein = BasicResource(95L * u, 100L * u)))
-    val first = ExplorationHelper.start(d, u, WoodlandEdge)
+    val first = ExplorationHelper.start(d, 5 * u, WoodlandEdge)
     assertEquals(first.exploration.explorationParties.head.cargo.protein, 5L * u)
     assert(!ExplorationHelper.canStart(first, 5L * u, RottenLog))
     assertEquals(finish(first).basicResources.protein.amount, 100L * u)
   }
   test("identical simultaneous hauls each return exactly once without stranding workers") {
-    val first = ExplorationHelper.start(ready, u, WoodlandEdge)
-    val sent = ExplorationHelper.start(first, u, WoodlandEdge)
+    val first = ExplorationHelper.start(ready, 5 * u, WoodlandEdge)
+    val sent = ExplorationHelper.start(first, 5 * u, WoodlandEdge)
     assertEquals(sent.exploration.explorationParties.size, 2)
     assertEquals(sent.exploration.explorationParties.head, sent.exploration.explorationParties(1))
     val once = finish(sent)
     assertEquals(once.exploration.explorationParties.size, 1)
     val twice = finish(once)
     assertEquals(twice.ants.idleWorkersCount, 50L * u)
-    assertEquals(twice.basicResources.protein.amount, 20L * u)
+    assertEquals(twice.basicResources.protein.amount, 25L * u)
     assert(twice.exploration.explorationParties.isEmpty)
   }
   test("exhausted sites persist without missions; managed discoveries and research remain available") {
@@ -144,7 +144,7 @@ class ExplorationSuite extends FunSuite {
     assert(ExplorationMap.revealed(d.exploration, used.id))
     assert(DiscoveryProgression.WildAphids.found(d.exploration))
     assertEquals(ExplorationMap.scout(d, used.id, 1), d)
-    assertEquals(ExplorationHelper.start(d, u, WoodlandEdge), d)
+    assertEquals(ExplorationHelper.start(d, 5 * u, WoodlandEdge), d)
   }
   test("map state, finite cargo and scout reservations round-trip; obsolete saves are rejected") {
     val sent = ExplorationMap.scout(colony, "surroundings", 2)
@@ -156,13 +156,15 @@ class ExplorationSuite extends FunSuite {
     assert(!AllDataForSave.fromAllData(sent).toJson.contains("experience"))
   }
   test("every useful nectar crew returns more sugar than its supplies cost without XP inflation") {
-    for (count <- 5L to 37L) {
+    for (count <- 5L to 50L by 5L) {
       val crew = count * u
       val cargo = ExplorationHelper.load(ready, crew, NectarMeadow)
       assert(cargo.sugar > ExplorationHelper.cost(crew, NectarMeadow).sugar, s"$count workers")
     }
   }
-  test("party bonuses remain diminishing and cap collection benefit at 37 workers") {
-    assertEquals(List(1L, 5L, 17L, 37L, 1000L).map(n => ExplorationProgression.partyPercent(n * u)), List(100L, 200L, 300L, 400L, 400L))
+  test("collection rewards are linear from five through fifty workers") {
+    val one = ExplorationProgression.partyReward(300L * u, 5L * u, 0)
+    for (workers <- 5L to 50L by 5L)
+      assertEquals(ExplorationProgression.partyReward(300L * u, workers * u, 0), one * workers / 5L)
   }
 }

@@ -6,7 +6,9 @@ import pt.rcmartins.antidle.model._
 /** Crew/logistics bonuses only. Exploration has no XP or level reward multiplier. */
 object ExplorationProgression {
   val MaxSuppliesLevel: Int = UpgradesData.UpgradeType.expeditionSupplies.size
-  val MaxWorkers: Long = 37L * u
+  val WorkerStep: Long = 5L * u
+  val MinWorkers: Long = WorkerStep
+  val MaxWorkers: Long = 50L * u
   val MaxExtraScouts: Int = 3
   val ExtraScoutSugar: Long = 10L * u
   def duration(destination: ExplorationDestination, extraScouts: Int): Long = {
@@ -14,14 +16,13 @@ object ExplorationProgression {
     (destination.duration * 100L + speed - 1L) / speed
   }
   def selectedWorkers(requested: Long, available: Long): Long =
-    Math.max(u, Math.min(MaxWorkers, Math.min(requested, Math.max(u, available / u * u))))
+    Math.max(MinWorkers, Math.min(MaxWorkers, Math.min(requested, Math.max(MinWorkers, available))) / WorkerStep * WorkerStep)
   def maxParties(data: ExplorationData, upgrades: UpgradesData): Int =
     (if (data.revealedSites >= 4) 2 else 1) + (if (upgrades(UpgradesData.UpgradeType.AdditionalExpeditionSlot).unlocked) 1 else 0)
-  def partyPercent(workers: Long): Long =
-    100L + Math.min(300L, (50.0 * Math.sqrt(Math.max(0L, workers / u - 1L).toDouble)).toLong)
   def suppliesPercent(rank: Int): Long = 100L + 20L * Math.max(0, Math.min(MaxSuppliesLevel, rank))
+  // Preserve the former 10-worker yield (2.5x base), now linear at every crew size.
   def partyReward(amount: Long, workers: Long, supplies: Int): Long =
-    amount * partyPercent(workers) / 100L * suppliesPercent(supplies) / 100L
+    amount * Math.max(0L, workers) / (4L * u) * suppliesPercent(supplies) / 100L
   def suppliesRank(upgrades: UpgradesData): Int =
     UpgradesData.UpgradeType.expeditionSupplies.takeWhile(upgrades(_).unlocked).size
 

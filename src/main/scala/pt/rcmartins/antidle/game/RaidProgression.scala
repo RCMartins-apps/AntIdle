@@ -8,15 +8,15 @@ object RaidProgression {
   val MinProtein: Long = 200L * u
   val MaxProtein: Long = 350L * u
   def rewardRange(workers: Long): (Long, Long) = {
-    val count = Math.max(10L, Math.min(37L, workers / u))
+    val count = Math.max(5L, Math.min(50L, workers / u))
     (MinProtein * count / 10L, MaxProtein * count / 10L)
   }
   def isRaid(destination: ExplorationDestination): Boolean = destination == ExplorationDestination.RivalFoodCache
 
   def lossRange(workers: Long): (Int, Int) = {
-    val count = Math.max(10L, Math.min(37L, workers / u))
-    val minimumPercent = 20L - (count - 10L) * 10L / 27L
-    val maximumPercent = 40L - (count - 10L) * 15L / 27L
+    val count = Math.max(5L, Math.min(50L, workers / u))
+    val minimumPercent = Math.max(10L, 20L - Math.max(0L, count - 10L) * 10L / 27L)
+    val maximumPercent = Math.max(25L, 40L - Math.max(0L, count - 10L) * 15L / 27L)
     (((count * minimumPercent + 99L) / 100L).toInt, ((count * maximumPercent + 99L) / 100L).toInt)
   }
   def risk(workers: Long): String = {
@@ -41,7 +41,7 @@ object RaidProgression {
   def roll(seed: Long, workers: Long): RaidOutcome = {
     val random = new Random(seed)
     val (low, high) = lossRange(workers)
-    RaidOutcome(low + random.nextInt(high - low + 1), (200L + random.nextInt(151)) * u * Math.max(10L, Math.min(37L, workers / u)) / 10L, seed)
+    RaidOutcome(low + random.nextInt(high - low + 1), (200L + random.nextInt(151)) * u * Math.max(5L, Math.min(50L, workers / u)) / 10L, seed)
   }
   def seed(data: AllData, party: ExplorationParty): Long =
     data.world.saveSeed + party.startingTick * 31L + party.amountWorkers + data.statistics.explorationsCount.total.toLong * 97L

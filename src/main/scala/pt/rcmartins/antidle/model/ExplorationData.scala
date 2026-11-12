@@ -13,7 +13,8 @@ case class ExplorationData(
     depleted: Map[String, Long] = Map.empty,
     suppliesLevel: Int = 0, // Legacy save input only; migrated to standard upgrades and cleared on load.
     surveys: Map[String, Int] = Map.empty,
-    sugarTrail: SugarTrail = SugarTrail(),
+    sugarTrail: SugarTrail = SugarTrail(), // Legacy reserved nectar, returned on load.
+    collectionTrails: List[CollectionTrail] = Nil,
     territory: Territory = Territory(),
 )
 

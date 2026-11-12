@@ -41,16 +41,18 @@ class WaterStatisticsSuite extends FunSuite {
 
   test("water forecast matches rewards, actual collection obeys capacity, visibility and saves persist") {
     val initial = colony.copy(exploration = colony.exploration.copy(surveys = Map(DryClearing.id -> 3)))
-    assert(ExplorationHelper.summary(initial, 5 * u, ScavengeWater).contains("40 water"))
+    assert(ExplorationHelper.summary(initial, 5 * u, ScavengeWater).contains("25 water"))
     assertEquals(ExplorationHelper.cost(5 * u, ScavengeWater).sugar, 125L * u)
     val result = ResourceVisibility.reconcile(trip(initial, ScavengeWater))
-    assertEquals(result.basicResources.water.amount, 40L * u)
-    assertEquals(result.statistics.waterU.thisRun, 40L * u)
+    assertEquals(result.basicResources.water.amount, 25L * u)
+    assertEquals(result.statistics.waterU.thisRun, 25L * u)
     assert(result.unlocks.resources.showWater)
     val second = trip(result, ScavengeWater)
-    assertEquals(second.basicResources.water.amount, 80L * u)
-    assertEquals(second.statistics.waterU.thisRun, 80L * u)
-    val full = trip(second, ScavengeWater)
+    assertEquals(second.basicResources.water.amount, 50L * u)
+    assertEquals(second.statistics.waterU.thisRun, 50L * u)
+    val third = trip(second, ScavengeWater)
+    assertEquals(third.basicResources.water.amount, 75L * u)
+    val full = trip(third, ScavengeWater)
     assertEquals(full.statistics.waterU.thisRun, 100L * u)
     val spent = full.spendResources(ActionCost(water = 100 * u))
     val loaded = AllDataForSave.fromAllData(spent).toJson.fromJson[AllDataForSave].toOption.get.toAllData
@@ -84,7 +86,7 @@ class WaterStatisticsSuite extends FunSuite {
   }
 
   test("launched and completed missions are separate, and replayed completions cannot award progress twice") {
-    val sent = ExplorationHelper.start(colony, u, WoodlandEdge)
+    val sent = ExplorationHelper.start(colony, 5 * u, WoodlandEdge)
     assertEquals(sent.statistics.explorationsCount.thisRun, 1)
     assertEquals(sent.statistics.explorationsCompleted.thisRun, 0)
     val party = sent.exploration.explorationParties.head

@@ -135,8 +135,88 @@ def check_map(page, width, url):
     page.locator('.purchased-upgrades').screenshot(path=str(artifacts / f'purchased-{width}.png'))
     page.get_by_role('tab', name='Explore', exact=True).click()
     expect(page.locator('.expedition-supplies')).not_to_be_visible()
+    check_trails(page, width, ring)
     assert not errors, errors
     print(f'PASS map {width}px: hex geometry, scout reveal/study, finite knowledge, selected-site controls, capacity block, depleted site and save reload', flush=True)
+
+
+def check_trails(page, width, base):
+    game = copy.deepcopy(base)
+    game['ants'].update(workers=100 * UNIT, scouts=5 * UNIT, smallWorkers=0,
+        tasks=[[{'SugarCollector': {}}, 100 * UNIT]], defaultTask={'SugarCollector': {}},
+        lineage={'foundings': 1, 'dna': 0, 'sharedPaths': True})
+    game['basicResources']['sugar'].update(amount=10000 * UNIT, maxAmount=100000 * UNIT)
+    for key in ['protein', 'water', 'resin']:
+        game['basicResources'][key].update(amount=0, maxAmount=100000 * UNIT)
+    game['exploration'].update(collectionTrails=[], depleted={}, explorationParties=[])
+    load_game(page, game)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="nectar-meadow"]').click()
+    expect(page.locator('.pheromone-trails')).to_have_count(0)
+    crew = page.locator('#map-worker-count')
+    expect(crew).to_have_attribute('min', '5')
+    expect(crew).to_have_attribute('max', '50')
+    expect(crew).to_have_attribute('step', '5')
+    crew.fill('7')
+    crew.press('Tab')
+    expect(crew).to_have_value('5')
+    page.get_by_role('button', name='Increase collection workers', exact=True).click()
+    expect(crew).to_have_value('10')
+    page.get_by_role('button', name='Decrease collection workers', exact=True).click()
+    expect(crew).to_have_value('5')
+    trail = page.locator('.collection-trail[data-route="nectar-meadow"]')
+    add = page.get_by_role('button', name='Assign 5 trail workers to Nectar Meadow', exact=True)
+    for _ in range(3):
+        add.click()
+    expect(trail.locator('.trail-staffing')).to_have_text('15/50 workers')
+    expect(page.locator('.scout-crew-control')).to_contain_text('3 / 5 available')
+    for _ in range(7):
+        add.click()
+    expect(trail.locator('.trail-staffing')).to_have_text('50/50 workers')
+    expect(add).to_be_disabled()
+    expect(page.locator('.scout-crew-control')).to_contain_text('0 / 5 available')
+    trail.get_by_label('About Collection trail', exact=True).click()
+    page.clock.run_for(1000)
+    expect(trail.locator('.info-details')).to_have_attribute('open', '')
+    active = save_game(page)
+    assert active['exploration']['collectionTrails'] == [{'destination': 'nectar-meadow', 'workers': 50 * UNIT}]
+    assert active['exploration']['depleted']['nectar-meadow'] > 0
+    assert active['exploration']['explorationParties'] == []
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    # Manual collection remains available alongside a trail, using the same deposit.
+    page.get_by_role('button', name='Collect Nectar', exact=True).click()
+    trail.get_by_role('button', name='Recall trail', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    page.get_by_role('button', name='Assign 5 trail workers to Woodland Edge', exact=True).click()
+    page.clock.run_for(1000)
+    saved = save_game(page)
+    assert len(saved['exploration']['explorationParties']) == 1
+    assert saved['basicResources']['protein']['amount'] > 0
+    load_game(page, saved)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    wood = page.locator('.collection-trail[data-route="woodland-edge"]')
+    expect(wood.locator('.trail-staffing')).to_have_text('5/50 workers')
+    full = copy.deepcopy(saved)
+    full['basicResources']['protein']['amount'] = full['basicResources']['protein']['maxAmount']
+    load_game(page, full)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    expect(wood.locator('.trail-status')).to_have_text('Storage full')
+    page.clock.run_for(1000)
+    paused = save_game(page)
+    assert paused['exploration']['depleted'] == full['exploration']['depleted']
+    no_scouts = copy.deepcopy(saved)
+    no_scouts['ants']['scouts'] = 0
+    load_game(page, no_scouts)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    expect(wood.locator('.trail-status')).to_have_text('Needs scouts')
+    assert_fits(page, width)
+    artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
+    artifacts.mkdir(parents=True, exist_ok=True)
+    page.screenshot(path=str(artifacts / f'trails-{width}.png'), full_page=True)
+    print(f'PASS trails {width}px: 5-worker controls, guide reservations, collection, manual coexistence, reload and pauses', flush=True)
 
 
 def main():

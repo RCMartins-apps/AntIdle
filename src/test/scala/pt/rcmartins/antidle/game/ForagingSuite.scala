@@ -105,12 +105,12 @@ class ForagingSuite extends FunSuite {
       basicResources = AllData.initial.basicResources.copy(sugar = BasicResource(1000 * u, 1000 * u)),
       unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
-    val three = (1 to 3).foldLeft(initial)((data, _) => ExplorationHelper.start(data, u, ExplorationDestination.WoodlandEdge))
+    val three = (1 to 3).foldLeft(initial)((data, _) => ExplorationHelper.start(data, 5 * u, ExplorationDestination.WoodlandEdge))
     assertEquals(three.exploration.explorationParties.size, 3)
-    assertEquals(ExplorationHelper.start(three, u, ExplorationDestination.WoodlandEdge), three)
+    assertEquals(ExplorationHelper.start(three, 5 * u, ExplorationDestination.WoodlandEdge), three)
     val returned = TickUpdater.updateAllData(three.copy(world = three.world.copy(currentTick = ExplorationDestination.WoodlandEdge.duration - 1L)), None)
     assert(returned.exploration.explorationParties.isEmpty)
     assertEquals(returned.ants.idleWorkersCount, 20L * u)
-    assert(ExplorationHelper.canStart(returned, u, ExplorationDestination.WoodlandEdge))
+    assert(ExplorationHelper.canStart(returned, 5 * u, ExplorationDestination.WoodlandEdge))
   }
 }

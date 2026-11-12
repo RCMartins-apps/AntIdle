@@ -152,11 +152,10 @@ object Strategy {
     e.discoveredCarcasses.zipWithIndex.find { case (c, _) => CarcassProgression.canRetrieve(a, nest, e, c) }.foreach { case (_, index) =>
       return done(Choice("Retrieve Carcass", "expedition", CarcassProgression.retrieve(_, index)))
     }
-    if (a.lineage.sharedPaths && e.sugarTrail.remaining > 0L && !e.sugarTrail.marked &&
-        d.hasResources(PheromoneTrails.markCost) && ScoutProgression.available(a, e) >= u)
-      return done(Choice("Mark nectar trail", "trail", PheromoneTrails.mark))
-    if (e.sugarTrail.marked && PheromoneTrails.workers(a) / u < 5 && a.availableWorkersCount > 0L)
-      return done(Choice("Assign trail workers", "trail", PheromoneTrails.assign(_, Math.min(5L * u - PheromoneTrails.workers(a), a.availableWorkersCount))))
+    if (a.lineage.sharedPaths && PheromoneTrails.target(e, ExplorationDestination.NectarMeadow.id) < 10L * u &&
+        PheromoneTrails.canAdjust(d, ExplorationDestination.NectarMeadow.id, PheromoneTrails.Step))
+      return done(Choice("Assign nectar trail workers", "trail",
+        PheromoneTrails.adjust(_, ExplorationDestination.NectarMeadow.id, PheromoneTrails.Step)))
 
     if (d.unlocks.tabs.exploreTabUnlocked) {
       val crew = Math.min(3, (ScoutProgression.available(a, e) / u).toInt)
@@ -176,7 +175,7 @@ object Strategy {
         else d.basicResources.protein.amount < 120L * u
       }
       needed.foreach { route =>
-        val workers = Math.min(Math.max(p.partyWorkers.toLong, route.minimumWorkers / u), a.availableWorkersCount / u) * u
+        val workers = ExplorationProgression.selectedWorkers(Math.max(p.partyWorkers.toLong * u, route.minimumWorkers), a.availableWorkersCount)
         if (ExplorationHelper.canStart(d, workers, route))
           return done(Choice(s"Collect ${route.name}", "expedition", ExplorationHelper.start(_, workers, route)))
       }

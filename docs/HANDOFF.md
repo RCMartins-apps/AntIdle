@@ -1,22 +1,26 @@
 # Handoff
 
-## Last verified: 2026-11-12 — artwork provenance and branch cleanup
+## In progress: 2026-11-12 — collection trail automation and linear crews
 
-- Main baseline 1271cea is merged PR #66: quieter updates and native auto-merge
-  workflow. The first auto-merge succeeded. Active Main ruleset requires PRs,
-  test + changes / classify from GitHub Actions, up-to-date branches and no bypasses.
-  For authorized PR/merge requests, queue squash auto-merge and report pending
-  without polling; do not claim a merge before confirmation.
-- At owner request, experiments were preserved as remote annotated archive tags:
-  archive/early-game (b7709fa) and archive/shoelace-lib-experiments (a64a6d9).
-  Their branches and four redundant docs/outpost-fix branches were deleted after
-  verification. Remaining remote branches at cleanup: main, gh-pages, some-assets.
-- Owner clarified that some-assets is their own Paint.NET pixel art for an earlier
-  top-down 2D ant-game prototype using a graphics library, also working on Android.
-  docs/ASSETS.md records provenance and the retained branch/files. No graphics
-  library identified and no asset reuse, UI redesign or engine change authorized.
-- docs/asset-provenance records this information only; no artwork was copied into
-  main and no gameplay/package change made. Documentation checks only; commit and
-  push by default. No PR/merge requested in this provenance discussion.
-- Preserve unrelated work/ and Python caches. Supply upgrade/history feature #65
-  remains merged, with 255 game + 4 balance tests and final CI passing.
+- Baseline c0d5764 includes merged artwork docs PR #67. Owner approved Shared Paths
+  automation, one scout per ten workers rounded up, ±5 controls, and linear manual
+  exploration with 5–50-worker crews. No gameplay PR/merge requested yet.
+- feature/automated-collection-trails implements safe route-specific collection
+  targets in exploration.collectionTrails, ordinary home task workers/aging and
+  additive guide reservations. Uses common finite deposits and manual storage/cargo
+  reservations; no mission slots, new resources or knowledge. Raids remain manual.
+- Manual yields are linear anchored at former ten-worker yield; min/max/step enforced
+  in engine and controls. Raid yield no longer caps at 37; previous 10–37 risk curve
+  stays, bounded at larger crews. Territorial contests remain their separate system.
+- Automation runs at 80% manual gross rate, charges proportional ongoing sugar and
+  normal upkeep, pauses at storage/guide/supply shortages and releases on depletion.
+  Site-local controls show rates/supply costs/scout requirements. Resin now has a
+  real income estimate. Old unused nectar is restored once on load; no save reset.
+- 260 game tests passed after updating old one-worker expedition fixtures and yields.
+  Balance-tool integration and browser/production validation are still running.
+  This is a checkpoint, not yet ready to merge. Logs /tmp/antidle-trails*.
+- docs/COLLECTION-TRAILS.md records rules, rate math and tuning. Still need finalize
+  other stale docs, verify all balance/browser/production checks and inspect phone
+  layouts. Keep finite deposits; do not restore the old recurring nectar source.
+- Preserve unrelated work/ and Python caches. Follow active Main CI rules and native
+  squash auto-merge only for explicitly authorized PR/merge requests.
