@@ -36,7 +36,7 @@ class DiscoverySuite extends FunSuite {
     }
     assert(WildAphids.found(studied.exploration))
     assert(AphidTending.shouldShow(studied))
-    val collected = complete(studied, WoodlandEdge, u)
+    val collected = complete(studied, WoodlandEdge, 5 * u)
     assertEquals(collected.exploration.surveys, studied.exploration.surveys)
     assertEquals(collected.basicResources.knowledge.amount, studied.basicResources.knowledge.amount)
   }

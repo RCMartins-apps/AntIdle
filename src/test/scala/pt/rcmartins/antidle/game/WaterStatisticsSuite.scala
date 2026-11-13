@@ -84,7 +84,7 @@ class WaterStatisticsSuite extends FunSuite {
   }
 
   test("launched and completed missions are separate, and replayed completions cannot award progress twice") {
-    val sent = ExplorationHelper.start(colony, u, WoodlandEdge)
+    val sent = ExplorationHelper.start(colony, 5 * u, WoodlandEdge)
     assertEquals(sent.statistics.explorationsCount.thisRun, 1)
     assertEquals(sent.statistics.explorationsCompleted.thisRun, 0)
     val party = sent.exploration.explorationParties.head

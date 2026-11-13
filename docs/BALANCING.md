@@ -17,7 +17,9 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 | Scout studies needed to find a discovery | `game/DiscoveryProgression.scala`, the discovery's `trips` |
 | Expedition Supplies tiers/prices/reveal requirements | `game/balance/UpgradeBalance.scala`, `ExpeditionSupplies1`–`3` |
 | Natural second expedition slot | `ExplorationProgression.maxParties` (four revealed sites) |
-| Crew/supplies/scout multipliers | `game/ExplorationProgression.scala` |
+| Linear haul scaling, 5–50-worker bounds and step | `game/ExplorationProgression.scala` |
+| Automatic trail efficiency and guide ratio | `game/PheromoneTrails.scala`; see [rate analysis](COLLECTION-TRAILS.md) |
+| Supplies/scout multipliers | `game/ExplorationProgression.scala` |
 
 For example, to reveal Brood Care later, change its
 `minimumRevealedSites` in `UpgradeBalance`, retaining `nursery = true` and

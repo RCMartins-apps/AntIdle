@@ -135,7 +135,7 @@ class AgingJobReplacementSuite extends FunSuite {
 
   test("expired or recalled pheromone trails never retain replacement requests") {
     val d = colony.copy(ants = colony.ants.copy(agingJobVacancies = Seq(TrailForager -> u)))
-    assert(PheromoneTrails.recall(d).ants.agingJobVacancies.isEmpty)
+    assert(PheromoneTrails.recall(d, "nectar-meadow").ants.agingJobVacancies.isEmpty)
     assert(PheromoneTrails.reconcile(d).ants.agingJobVacancies.isEmpty)
   }
 

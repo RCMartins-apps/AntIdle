@@ -726,3 +726,21 @@ background Codex monitoring. Auto-merge is enabled. The owner configured active
 Main ruleset 27087827, verified on 2026-11-12: requires PRs, both `test` and
 `changes / classify` from GitHub Actions, up-to-date branches and no bypasses.
 docs/CI-WORKFLOW.md records the verified state and configuration.
+
+## D42: Shared Paths automates finite collection; crews scale linearly — approved
+
+The owner approved replacing the one-off nectar source with collection automation.
+Each safe route uses 5–50 workers in groups of five, controlled with ±5, and needs
+one scout per ten workers rounded up. Guide reservations add per trail, making
+5/15/25 crews less scout-efficient. Normal home aging/upkeep continue. Manual
+collection also uses 5–50 step-five crews and linear rewards rather than diminishing
+returns capped at 37. Scout-only study/reveal crews remain 1–3. Territorial contest
+crews remain separate; raids stay manual so combat losses require a player action.
+
+Initial tuning preserves the former five-worker haul, uses 60% manual throughput
+for automation and charges proportional supplies plus normal upkeep. Both methods
+consume the same finite deposit and account for reserved manual cargo/storage.
+Storage, sugar or guide shortages pause; depletion frees staff. Learning after a
+site was studied works. Legacy unused nectar returns to the deposit on load without
+creating stock or resetting saves. See docs/COLLECTION-TRAILS.md for exact rates.
+These are tunable balance choices; pacing checks complement actual playtests.

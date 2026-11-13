@@ -329,9 +329,8 @@ charging sugar upkeep; original expiry ticks apply on return. Scouts guiding a
 nectar trail or another mission cannot be booked twice.
 
 The map's scout-crew selector chooses 1–3 scouts. A selected site's collection
-crew uses a bounded numeric field and touch buttons, capped at 37 workers. Extra
-workers raise haul capacity with diminishing returns; they do not create a larger
-deposit. Worker controls disappear on unstudied or exhausted sites.
+crew uses a bounded numeric field and touch buttons, using groups of five from 5–50 workers. Extra
+workers raise haul capacity linearly; they do not create a larger deposit. Worker controls disappear on unstudied or exhausted sites.
 
 ## Repletes: living water storage
 
@@ -480,43 +479,42 @@ mechanic; later introductory Understandings, challenges and milestone-based
 DNA earnings remain future content. Repeated founding currently awards the
 same DNA amount and adds the same production bonus.
 
-After Shared Paths, returning **Nectar Meadow** expeditions reveal a finite
-**1,200 sugar** source when no source remains. The normal expedition reward is
-unchanged. Explore shows one source/trail, without exposing locked destinations.
+**Shared Paths** unlocks automatic collection trails on safe studied sites. Each
+route can assign **5–50 workers in groups of five**, with **one guiding scout per
+ten workers, rounded up**. Five or ten workers need one scout; fifteen need two.
+Controls live beside the selected map action, including current output and supply
+costs. Learning the Understanding after studying a site works immediately.
 
-**Mark trail** costs **50 sugar** and reserves **one scout**. Assign up to ten
-workers with the trail card's controls. Each gathers **0.8 sugar/s**, improved
-by the inherited production bonus; output is limited by actual storage room
-and remaining supply. The bonus increases harvesting speed, not source size.
-The card shows workers, sugar/s and remaining sugar. At full storage, gathering
-pauses without wasting supply. **Recall trail** frees workers and the scout,
-keeping unharvested sugar; marking it again costs 50 sugar. Depletion releases
-staff automatically. Workers return to their selected default task, respecting
-its capacity, with any overflow idle.
+Trails gather continuously at **60% of the equivalent manual haul rate**, pay the
+same proportional sugar supplies and retain normal worker/scout upkeep and aging.
+They use no expedition slots. Full storage or missing sugar/scouts pauses the
+route without spending resources; depletion releases staff. Recall returns workers
+to their default pool. The finite deposit and manual cargo/storage reservations
+are shared, so automation cannot create or duplicate resources. Raids stay manual.
 
-Trail workers and the guiding scout retain ordinary upkeep and saved age
-cohorts. They do not gain new lifespans when assigned or recalled. A lost guide
-ends active gathering and releases workers while preserving the source.
-Lineage/DNA/Understanding state is stored in `ants.lineage`; the source and
-marking state are in `exploration.sugarTrail`. Older saves receive safe defaults.
+Manual collection is linear with crew size and uses the same **5–50, step-five**
+controls. The former 37-worker cap and diminishing collection rewards are removed.
+Old in-flight cargo remains intact; unused legacy nectar reserves return to the
+Meadow deposit once on load, and their old workers are released. Saves remain
+version 7. Trail assignments are stored in `exploration.collectionTrails`.
 
-Verification: `sbt fastOptJS fullOptJS test`, then
-`python3 tests/prestige_smoke.py` checks founding cancellation/confirmation,
-DNA purchases, early unlocks after reset, trail discovery and management,
-save/load and phone/desktop layout. Engine tests cover resets, lifetime totals,
-bonuses, finite supply, scout reservations, upkeep, aging and defaults.
+See [Collection trails](docs/COLLECTION-TRAILS.md) for tuning and resource/s math.
+Engine tests cover guide reservations, finite resources, supply/storage pauses,
+aging replacements, migration and coexistence with manual cargo. Maintained
+map/browser checks cover mobile controls, reloads and live disclosure stability.
 
 ## Dangerous expeditions: Rival Food Cache
 
 **Raid Rival Food Cache** unlocks after scouts study its revealed hexagon. Existing routes have
-no combat losses. A raid takes 120 simulated seconds, requires 10–37 workers
+no combat losses. A raid takes 120 simulated seconds, requires 5–50 workers in groups of five
 and one scout, and costs 30 sugar per worker. Extra scouts use the existing
 10-sugar cost and travel-speed bonus; they do not reduce combat losses.
 
-| Party | Guaranteed worker combat losses | Protein haul before storage cap |
+| Party | Guaranteed worker combat losses | Protein haul before storage/deposit caps |
 | --- | ---: | ---: |
+| 5 workers | 1–2 | 100–175 |
 | 10 workers | 2–4 | 200–350 |
-| 37 workers | 4–10 | 740–1,295 |
+| 50 workers | 5–13 | 1,000–1,750 |
 
 Intermediate parties use a gradually lower percentage loss range with integer
 rounding. Counts, certainty, reward range and costs are shown directly beside

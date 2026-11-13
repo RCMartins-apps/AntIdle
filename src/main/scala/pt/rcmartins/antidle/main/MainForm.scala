@@ -646,9 +646,9 @@ object MainForm {
         ),
         child.maybe <-- createResourceDiv(
           name = "Resin",
-          netRateSignal = Some(Val(0L)),
+          netRateSignal = Some(TickCalculator.resinTickGain.sum),
           resourceSignal = resinSignal,
-          resourceEstimationSignal = Val(div("0/s")),
+          resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.resinTickGain, resinSignal)),
           showSignal = unlocksSignal.map(_.resources.showResin),
           tooltipOpt = Some(div("Collected from woodland resin sources to line protected brood chambers.")),
         ),
@@ -1265,7 +1265,7 @@ object MainForm {
           child.maybe <-- antsSignal.map(_.lineage).distinct.map { lineage =>
             Option.when(lineage.foundings > 0 && !lineage.sharedPaths) {
               div(className := "understanding-shared-paths mt-2",
-                infoHeading("Understanding: Shared Paths", div("Mark nectar sources found through exploration and assign trail workers."), minor = true),
+                infoHeading("Understanding: Shared Paths", div("Automates collection from studied sites using workers and guiding scouts."), minor = true),
                 div(className := "small", "Cost: 1 DNA"),
                 button(className := "btn btn-primary mt-1", minHeight.px := 44, typ := "button",
                   "Learn Shared Paths", disabled := (lineage.dna < 1L),
@@ -1291,53 +1291,6 @@ object MainForm {
         )
       }
     },
-  )
-
-  private def pheromoneTrailDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = div(
-    className := "col-12 pheromone-trails",
-    child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map { known => Option.when(known) {
-      val trailSignal = explorationSignal.map(_.sugarTrail).distinct
-      val workersSignal = antsSignal.map(a => PheromoneTrails.workers(a) / u).distinct
-      div(className := "border rounded p-2 my-2",
-        infoHeading("Pheromone trail", div("Find nectar sources in Nectar Meadow. Marking a trail reserves one scout; up to ten workers gather sugar until the source is depleted.")),
-        child <-- trailSignal.map(t => if (t.remaining <= 0L) 0 else if (t.marked) 2 else 1).distinct.map {
-          case 0 => div(className := "small", "No nectar source")
-          case 1 => div(className := "row",
-            div(className := "small", child.text <-- trailSignal.map(t => s"Nectar source · ${prettyNumberStr(t.remaining)} sugar remaining")),
-            actionButton(
-              name = "Mark trail", costSignal = Val(PheromoneTrails.markCost), bonusSignal = Val(ActionBonus.empty),
-              descriptionSignal = Val(Some(div("Reserves one scout. Up to ten workers follow the trail; recall releases them."))),
-              enabledSignal = antsSignal.combineWith(explorationSignal, resourcesSignal).map { case (ants, exploration, resources) =>
-                resources.hasResources(PheromoneTrails.markCost) && ScoutProgression.available(ants, exploration) >= u
-              },
-              requirementsSignal = antsSignal.combineWith(explorationSignal).map { case (ants, exploration) =>
-                List(ActionRequirement("scouts", ScoutProgression.available(ants, exploration), isCost = true))
-              },
-              onClickAction = _ => Actions.markSugarTrail(),
-            ),
-          )
-          case _ => div(
-            div(className := "small", child.text <-- trailSignal.map(t => s"${prettyNumberStr(t.remaining)} sugar remaining · 1 scout guiding")),
-            div(className := "small trail-production", child.text <-- antsSignal.combineWith(explorationSignal, resourcesSignal).map {
-              case (ants, exploration, resources) =>
-                val rate = PheromoneTrails.production(ants, exploration, resources) * TicksPerSecond
-                if (resources.sugar.atCapacity) "Sugar full · gathering paused"
-                else s"+${resourceRateStr(rate)} sugar/s"
-            }),
-            div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
-              button(className := "btn btn-outline-primary", minHeight.px := 44, typ := "button", "−", aria.label := "Remove trail worker",
-                disabled <-- workersSignal.map(_ <= 0L), onClick --> (_ => Actions.assignTrailWorkers(-u))),
-              span(child.text <-- workersSignal.map(n => s"$n/10 workers")),
-              button(className := "btn btn-outline-primary", minHeight.px := 44, typ := "button", "+", aria.label := "Assign trail worker",
-                disabled <-- workersSignal.combineWith(availableWorkersCountSignal).map { case (n, available) => n >= 10L || available < u },
-                onClick --> (_ => Actions.assignTrailWorkers(u))),
-              button(className := "btn btn-outline-secondary", minHeight.px := 44, typ := "button", "Recall trail",
-                onClick --> (_ => Actions.recallSugarTrail())),
-            ),
-          )
-        },
-      )
-    } },
   )
 
   private def royalRearingDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
@@ -1890,6 +1843,41 @@ object MainForm {
         onClickAction = _ => Actions.scoutMap(id, scoutCrew.now()),
       ).amend(className := "col-12"),
     )
+    def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
+      child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
+        Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
+          infoHeading("Collection trail", div("60% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply."), minor = true),
+          div(className := "trail-preview small", child.text <-- snapshotSignal.map { data =>
+            val count = Math.max(PheromoneTrails.Step, PheromoneTrails.target(data.exploration, route.id))
+            val (rate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
+            s"+${resourceRateStr(rate * TicksPerSecond)} ${ExplorationHelper.resource(route)}/s · −${resourceRateStr(cost * TicksPerSecond)} sugar/s supplies"
+          }),
+          div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
+            button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44, "−5",
+              aria.label := s"Remove 5 trail workers from ${route.name}",
+              disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, -PheromoneTrails.Step)),
+              onClick --> (_ => Actions.assignTrailWorkers(route.id, -PheromoneTrails.Step))),
+            span(className := "trail-staffing", child.text <-- antsSignal.combineWith(explorationSignal).map { case (ants, data) =>
+              s"${PheromoneTrails.staffed(ants, data, route.id) / u}/50 workers"
+            }),
+            button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44, "+5",
+              aria.label := s"Assign 5 trail workers to ${route.name}",
+              disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, PheromoneTrails.Step)),
+              onClick --> (_ => Actions.assignTrailWorkers(route.id, PheromoneTrails.Step))),
+            button(typ := "button", className := "btn btn-outline-secondary", minHeight.px := 44, "Recall trail",
+              disabled <-- explorationSignal.map(data => PheromoneTrails.target(data, route.id) == 0L),
+              onClick --> (_ => Actions.recallTrail(route.id))),
+          ),
+          actionCosts(Val(ActionCost.empty), antsSignal.combineWith(explorationSignal).map { case (ants, data) =>
+            val current = PheromoneTrails.target(data, route.id)
+            val available = Math.min(ScoutProgression.atHome(ants, data), ScoutProgression.available(ants, data) + PheromoneTrails.requiredScouts(current))
+            List(ActionRequirement("scouts", available, PheromoneTrails.requiredScouts(Math.max(PheromoneTrails.Step, current)), isCost = true))
+          }),
+          div(className := "trail-status small", child.text <-- snapshotSignal.map(data =>
+            PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources)
+              .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned"))),
+        ))),
+    )
     def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(className := "site-haul my-3",
       b(route.actionName),
       p(className := "mb-1", child.text <-- explorationSignal.map(data =>
@@ -1916,6 +1904,7 @@ object MainForm {
         },
         onClickAction = _ => useSignalValue[Long](workers, Actions.explore(_, route)),
       ).amend(className := "col-12"),
+      trailControls(route),
     )
     def sitePanel(id: String): ReactiveHtmlElement[HTMLDivElement] = {
       if (id == "surroundings") div(className := "map-site-card card p-3",
@@ -1935,20 +1924,24 @@ object MainForm {
           div(className := "site-worker-controls my-2",
             label(forId := "map-worker-count", "Collection crew"),
             div(className := "d-flex gap-2 align-items-center",
-              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Decrease collection workers", "−",
-                disabled <-- workers.map(_ <= u),
-                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.max(u, n - u))))),
-              input(idAttr := "map-worker-count", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "1",
-                maxAttr <-- availableWorkersCountSignal.map(n => Math.max(1L, Math.min(37L, n / u)).toString),
-                disabled <-- availableWorkersCountSignal.map(_ < u),
+              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Decrease collection workers", "−5",
+                disabled <-- workers.map(_ <= ExplorationProgression.MinWorkers),
+                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.max(ExplorationProgression.MinWorkers, n - ExplorationProgression.WorkerStep))))),
+              input(idAttr := "map-worker-count", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "5", stepAttr := "5",
+                maxAttr <-- availableWorkersCountSignal.map(n => (ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, n) / u).toString),
+                disabled <-- availableWorkersCountSignal.map(_ < ExplorationProgression.MinWorkers),
                 value <-- workers.map(n => (n / u).toString),
                 onChange --> (event => {
                   val field = event.target.asInstanceOf[HTMLInputElement]
-                  requestedWorkers.set(Math.max(1L, Math.min(37L, field.value.toLongOption.getOrElse(1L))) * u)
+                  useSignalValue[Long](availableWorkersCountSignal, available => {
+                    val count = ExplorationProgression.selectedWorkers(field.value.toLongOption.getOrElse(5L) * u, available)
+                    field.value = (count / u).toString
+                    requestedWorkers.set(count)
+                  })
                 })),
-              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Increase collection workers", "+",
-                disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) => count >= Math.min(37L * u, available) },
-                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.min(37L * u, n + u))))),
+              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Increase collection workers", "+5",
+                disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) => count >= ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, available) },
+                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.min(ExplorationProgression.MaxWorkers, n + ExplorationProgression.WorkerStep))))),
             ),
           )
           )),
@@ -2027,7 +2020,6 @@ object MainForm {
           )),
         ),
       ),
-      pheromoneTrailDiv,
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
           className := "col-12 px-3 py-2 carcass-panel",

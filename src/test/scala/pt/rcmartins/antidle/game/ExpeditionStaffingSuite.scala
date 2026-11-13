@@ -18,13 +18,13 @@ class ExpeditionStaffingSuite extends FunSuite {
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
 
-  test("new expeditions cannot waste more than the useful 37-worker reward limit") {
-    assert(ExplorationHelper.canStart(colony, 37 * u, WoodlandEdge))
-    assert(!ExplorationHelper.canStart(colony, 38 * u, WoodlandEdge))
-    assertEquals(ExplorationHelper.start(colony, 38 * u, WoodlandEdge), colony)
-    assertEquals(ExplorationProgression.selectedWorkers(100 * u, 100 * u), 37L * u)
-    assertEquals(ExplorationProgression.selectedWorkers(37 * u, 5 * u), 5L * u)
-    assertEquals(ExplorationProgression.selectedWorkers(5 * u, 0L), u)
+  test("expeditions accept only groups of five between five and fifty") {
+    assert(ExplorationHelper.canStart(colony, 50 * u, WoodlandEdge))
+    assert(!ExplorationHelper.canStart(colony, 55 * u, WoodlandEdge))
+    assertEquals(ExplorationHelper.start(colony, 55 * u, WoodlandEdge), colony)
+    assertEquals(ExplorationProgression.selectedWorkers(100 * u, 100 * u), 50L * u)
+    assertEquals(ExplorationProgression.selectedWorkers(50 * u, 5 * u), 5L * u)
+    assertEquals(ExplorationProgression.selectedWorkers(5 * u, 0L), 5L * u)
   }
 
   test("extra scouts improve travel speed with clear sugar costs and unchanged per-trip rewards") {
@@ -48,8 +48,8 @@ class ExpeditionStaffingSuite extends FunSuite {
     assert(ExplorationHelper.canStart(colony, 10 * u, CollectResin, 3))
     val fewer = colony.copy(ants = colony.ants.copy(scouts = 2 * u, ages = ColonyAges()))
     assert(!ExplorationHelper.canStart(fewer, 10 * u, CollectResin, 3))
-    assertEquals(ExplorationHelper.start(colony, u, WoodlandEdge, -1), colony)
-    assertEquals(ExplorationHelper.start(colony, u, WoodlandEdge, 4), colony)
+    assertEquals(ExplorationHelper.start(colony, 5 * u, WoodlandEdge, -1), colony)
+    assertEquals(ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 4), colony)
   }
 
   test("saved parties retain their speed and reservations, return on time, and preserve fixed age expiry") {
@@ -68,11 +68,11 @@ class ExpeditionStaffingSuite extends FunSuite {
   }
 
   test("extra scouts are optional even on the first route, and supplies remain an independent bonus") {
-    val party = ExplorationHelper.start(colony, u, WoodlandEdge, 2).exploration.explorationParties.head
+    val party = ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(party.scouts, 2L * u)
     assertEquals(party.targetTick, 150L)
     val supplied = colony.copy(upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(1): _*))
-    val next = ExplorationHelper.start(supplied, u, WoodlandEdge, 2).exploration.explorationParties.head
+    val next = ExplorationHelper.start(supplied, 5 * u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(next.targetTick, party.targetTick)
     assert(next.cargo.protein > party.cargo.protein)
   }
