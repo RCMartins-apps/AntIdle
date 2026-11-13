@@ -1,26 +1,38 @@
 # Handoff
 
-## In progress: 2026-11-12 — collection trail automation and linear crews
+## Last verified: 2026-11-13 — Shared Paths automation and linear crews complete
 
-- Baseline c0d5764 includes merged artwork docs PR #67. Owner approved Shared Paths
-  automation, one scout per ten workers rounded up, ±5 controls, and linear manual
-  exploration with 5–50-worker crews. No gameplay PR/merge requested yet.
-- feature/automated-collection-trails implements safe route-specific collection
-  targets in exploration.collectionTrails, ordinary home task workers/aging and
-  additive guide reservations. Uses common finite deposits and manual storage/cargo
-  reservations; no mission slots, new resources or knowledge. Raids remain manual.
-- Manual yields are linear anchored at former ten-worker yield; min/max/step enforced
-  in engine and controls. Raid yield no longer caps at 37; previous 10–37 risk curve
-  stays, bounded at larger crews. Territorial contests remain their separate system.
-- Automation runs at 80% manual gross rate, charges proportional ongoing sugar and
-  normal upkeep, pauses at storage/guide/supply shortages and releases on depletion.
-  Site-local controls show rates/supply costs/scout requirements. Resin now has a
-  real income estimate. Old unused nectar is restored once on load; no save reset.
-- 260 game tests passed after updating old one-worker expedition fixtures and yields.
-  Balance-tool integration and browser/production validation are still running.
-  This is a checkpoint, not yet ready to merge. Logs /tmp/antidle-trails*.
-- docs/COLLECTION-TRAILS.md records rules, rate math and tuning. Still need finalize
-  other stale docs, verify all balance/browser/production checks and inspect phone
-  layouts. Keep finite deposits; do not restore the old recurring nectar source.
-- Preserve unrelated work/ and Python caches. Follow active Main CI rules and native
-  squash auto-merge only for explicitly authorized PR/merge requests.
+- Branch feature/automated-collection-trails starts at c0d5764 (merged artwork docs
+  PR #67). Owner approved automation, one scout per ten workers rounded up, ±5
+  controls, and linear collection with 5–50-worker crews. No gameplay PR requested.
+- Safe studied routes now automate via exploration.collectionTrails. Each route
+  has its own 5–50 target, guiding scouts and normal home workers/upkeep/aging.
+  Uses the shared finite deposit and respects reserved manual cargo/storage;
+  no mission slots, new resources or Knowledge. Raids remain explicit manual acts.
+- Final linear curve preserves the former five-worker haul, avoiding weaker early
+  collection. Trails run at 60% of equivalent manual gross rate, charge proportional
+  ongoing sugar and normal upkeep, pause for storage/sugar/scouts, release on
+  depletion and recognize sites studied before buying the Understanding.
+- Site-local ±5 controls show assigned workers, rates, supplies and scouts. The
+  native input snaps visibly to valid groups. Missing guides/storage pause safely.
+  Resin now has a real income estimate. Legacy unused nectar is restored once on
+  load and old staff released; in-flight cargo and version 7 saves are preserved.
+- Final validation on 2026-11-12 before environment restart: 260 engine tests and
+  4 balance tests passed; fullOptJS finished without Closure errors/warnings.
+  Maintained production CI browser checks passed at 390/1280px, production map and
+  trail checks at 320/390/1280px, and offline cold-open/update checks at 390/1280px.
+  Inspected the 320px trail panel. Current source retains that verified state.
+- All six final seeded pacing runs reached first founding (95.2–143.2 simulated
+  minutes), four reached a second within four hours; no starvation or negative
+  sampled resources. See tools/balance/TRAIL_RESULTS.md for results/limitations.
+  Earlier 10-worker/80% tuning was discarded after slowing small-colony progress.
+- docs/COLLECTION-TRAILS.md records exact rates/rules; D42, VISION, README, balancing
+  guide and tests documentation updated. This completes the earlier checkpoint.
+  New GitHub PR/CI not run yet. Final commit/push pending in this handoff snapshot.
+- Environment restarted on 2026-11-13. Working files and checkpoint survived, but
+  /tmp build/browser logs and screenshots did not. Prior successful tool outputs
+  are in conversation history; checked current diff and documentation, no code
+  changes after the completed validation. Do not claim those temporary files exist.
+- Preserve unrelated work/ and Python caches. Follow Main rules and native squash
+  auto-merge only for explicitly authorized PR/merge requests; no CI polling after
+  a confirmed queue. Territorial contest crews remain a separate unchanged system.

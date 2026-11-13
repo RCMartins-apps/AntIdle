@@ -35,7 +35,7 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/AgingJobReplacement.scala`: saved old-age job vacancies, pool refill and manual cancellation.
 - `game/EmergencyRecovery.scala`: one-worker recovery after collapse and protected queen provisions.
 - `game/Prestige.scala`: founding resets, DNA purchases and inherited production.
-- `game/PheromoneTrails.scala`: finite nectar sources, guide reservations and trail workers.
+- `game/PheromoneTrails.scala`: safe finite collection automation, per-route staffing/guide reservations and supply costs; see docs/COLLECTION-TRAILS.md.
 - `game/TerritoryProgression.scala`: held crews, pending hauls, recurring contests and withdrawal.
   Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
 - `game/balance/UpgradeBalance.scala`: upgrade prices, help and structured reveal prerequisites; see docs/BALANCING.md.

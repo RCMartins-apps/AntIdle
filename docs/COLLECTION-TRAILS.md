@@ -24,12 +24,12 @@ raids remain manual because they involve a deliberate combat-loss decision.
 
 ## Rates and tuning
 
-Manual collection now scales linearly. Preserve the previous ten-worker reward
-(2.5 times the destination's base reward): each worker carries one quarter of that
-base reward. Supplies tiers retain their additive haul bonuses. No new reward
+Manual collection now scales linearly. Preserve the previous five-worker reward
+(twice the destination's base reward): each worker carries two fifths of that base
+reward. Supplies tiers retain their additive haul bonuses. No new reward
 multiplier comes from inheritance for either collection method.
 
-`PheromoneTrails.EfficiencyPercent = 80` makes automatic collection slower than
+`PheromoneTrails.EfficiencyPercent = 60` makes automatic collection slower than
 manual collection at the same crew size. Ongoing sugar supplies use the same
 sugar-per-unit-haul ratio; workers and guides additionally keep their home upkeep.
 Output rounds down and supplies round up in fixed-point units, preventing free
@@ -40,20 +40,25 @@ Base per-worker rates before supplies upgrades (resource/s):
 
 | Route | Manual output | Trail output | Trail sugar supplies |
 | --- | ---: | ---: | ---: |
-| Woodland insects | 0.05556 protein | 0.04444 protein | 0.35556 |
-| Deadwood | 0.08333 protein | 0.06667 protein | 0.40000 |
-| Nectar | 0.83333 sugar | 0.66667 sugar | 0.08889 |
-| Seeds | 0.02083 protein | 0.01667 protein | 0.16667 |
-| Water | 0.05556 water | 0.04444 water | 0.22222 |
-| Resin | 0.01042 resin | 0.00833 resin | 0.23333 |
+| Woodland insects | 0.08889 protein | 0.05333 protein | 0.26667 |
+| Deadwood | 0.13333 protein | 0.08000 protein | 0.30000 |
+| Nectar | 1.33333 sugar | 0.80000 sugar | 0.06667 |
+| Seeds | 0.03333 protein | 0.02000 protein | 0.12500 |
+| Water | 0.08889 water | 0.05333 water | 0.16667 |
+| Resin | 0.01667 resin | 0.01000 resin | 0.17500 |
 
 Values are rounded here; the engine rounds each tick at 1/10,000 resource units.
 Upkeep is additional (0.2 sugar/s per normal worker/scout). For example ten Nectar
-trail workers and one guide net about 3.58 sugar/s after base supplies/upkeep;
-ten manually travelling workers return about 7.22 sugar/s net of supplies over
+trail workers and one guide net about 5.13 sugar/s after base supplies/upkeep;
+ten manually travelling workers return about 12.22 sugar/s net of supplies over
 repeated trips, before guide requirements or additional travel-speed research.
 Automation trades efficiency for fewer launches and free mission slots. Renewable
 collectors, aphids, scraps and outpost jobs retain value because deposits run out.
 These figures explain tuning, not proof that pacing is fun; playtesting remains
 necessary. Main tuning locations: ExplorationProgression (crew/linear rewards),
 ExplorationDestination (costs/durations/base rewards), PheromoneTrails (efficiency).
+
+The six-policy/seed pacing results are recorded in
+[TRAIL_RESULTS.md](../tools/balance/TRAIL_RESULTS.md). All six reached first
+founding without starvation; four reached two within four simulated hours. These
+are reproducible heuristic checks, not a claim about player enjoyment.

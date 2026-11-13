@@ -5,7 +5,7 @@ import pt.rcmartins.antidle.game.Constants._
 
 /** Safe, continuous collection: shared finite deposits, no mission slots or extra rewards. */
 object PheromoneTrails {
-  val EfficiencyPercent: Long = 80L
+  val EfficiencyPercent: Long = 60L
   val Capacity: Long = ExplorationProgression.MaxWorkers
   val Step: Long = ExplorationProgression.WorkerStep
   private val GuideCapacity: Long = 10L * u

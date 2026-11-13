@@ -90,9 +90,9 @@ class ExplorationSuite extends FunSuite {
     val sent = ExplorationHelper.start(ready, 5L * u, RottenLog)
     assertEquals(sent.exploration.explorationParties.size, 1)
     val cargo = sent.exploration.explorationParties.head.cargo
-    assertEquals(cargo.protein, 25L * u)
+    assertEquals(cargo.protein, 40L * u)
     val returned = finish(sent)
-    assertEquals(returned.basicResources.protein.amount, 25L * u)
+    assertEquals(returned.basicResources.protein.amount, 40L * u)
     assertEquals(returned.basicResources.knowledge.amount, 0L)
     assertEquals(returned.exploration.surveys, ready.exploration.surveys)
     assertEquals(ExplorationHelper.exploreBonus(returned, sent.exploration.explorationParties.head), returned)
@@ -134,7 +134,7 @@ class ExplorationSuite extends FunSuite {
     assertEquals(once.exploration.explorationParties.size, 1)
     val twice = finish(once)
     assertEquals(twice.ants.idleWorkersCount, 50L * u)
-    assertEquals(twice.basicResources.protein.amount, 25L * u)
+    assertEquals(twice.basicResources.protein.amount, 40L * u)
     assert(twice.exploration.explorationParties.isEmpty)
   }
   test("exhausted sites persist without missions; managed discoveries and research remain available") {

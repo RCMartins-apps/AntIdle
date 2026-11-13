@@ -216,6 +216,7 @@ def check_trails(page, width, base):
     artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
     artifacts.mkdir(parents=True, exist_ok=True)
     page.screenshot(path=str(artifacts / f'trails-{width}.png'), full_page=True)
+    page.locator('.map-site-card').screenshot(path=str(artifacts / f'trails-panel-{width}.png'))
     print(f'PASS trails {width}px: 5-worker controls, guide reservations, collection, manual coexistence, reload and pauses', flush=True)
 
 

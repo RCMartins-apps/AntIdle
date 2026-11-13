@@ -1846,7 +1846,7 @@ object MainForm {
     def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
       child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
         Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
-          infoHeading("Collection trail", div("80% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply."), minor = true),
+          infoHeading("Collection trail", div("60% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply."), minor = true),
           div(className := "trail-preview small", child.text <-- snapshotSignal.map { data =>
             val count = Math.max(PheromoneTrails.Step, PheromoneTrails.target(data.exploration, route.id))
             val (rate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
@@ -1857,8 +1857,9 @@ object MainForm {
               aria.label := s"Remove 5 trail workers from ${route.name}",
               disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, -PheromoneTrails.Step)),
               onClick --> (_ => Actions.assignTrailWorkers(route.id, -PheromoneTrails.Step))),
-            span(className := "trail-staffing", child.text <-- explorationSignal.map(data =>
-              s"${PheromoneTrails.target(data, route.id) / u}/50 workers")),
+            span(className := "trail-staffing", child.text <-- antsSignal.combineWith(explorationSignal).map { case (ants, data) =>
+              s"${PheromoneTrails.staffed(ants, data, route.id) / u}/50 workers"
+            }),
             button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44, "+5",
               aria.label := s"Assign 5 trail workers to ${route.name}",
               disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, PheromoneTrails.Step)),
@@ -1932,7 +1933,11 @@ object MainForm {
                 value <-- workers.map(n => (n / u).toString),
                 onChange --> (event => {
                   val field = event.target.asInstanceOf[HTMLInputElement]
-                  requestedWorkers.set(ExplorationProgression.selectedWorkers(field.value.toLongOption.getOrElse(5L) * u, ExplorationProgression.MaxWorkers))
+                  useSignalValue[Long](availableWorkersCountSignal, available => {
+                    val count = ExplorationProgression.selectedWorkers(field.value.toLongOption.getOrElse(5L) * u, available)
+                    field.value = (count / u).toString
+                    requestedWorkers.set(count)
+                  })
                 })),
               button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Increase collection workers", "+5",
                 disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) => count >= ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, available) },

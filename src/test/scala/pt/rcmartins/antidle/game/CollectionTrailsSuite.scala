@@ -59,21 +59,21 @@ class CollectionTrailsSuite extends FunSuite {
   test("manual collection scales linearly, accepts 5-50 groups, and rejects non-groups") {
     for (n <- 5L to 50L by 5L) {
       assert(ExplorationHelper.canStart(colony, n * u, NectarMeadow), n.toString)
-      assertEquals(ExplorationHelper.load(colony, n * u, NectarMeadow).sugar, 75L * n * u)
+      assertEquals(ExplorationHelper.load(colony, n * u, NectarMeadow).sugar, 120L * n * u)
     }
     for (n <- List(0L, 1L, 4L, 6L, 49L, 51L, 55L)) {
       assert(!ExplorationHelper.canStart(colony, n * u, NectarMeadow), n.toString)
       assertEquals(ExplorationHelper.start(colony, n * u, NectarMeadow), colony)
     }
   }
-  test("automatic gross output is at most 80% of manual throughput and supply cost is not discounted") {
+  test("automatic gross output is at most 60% of manual throughput and supply cost is not discounted") {
     for (route <- List(WoodlandEdge, RottenLog, NectarMeadow, SeedGathering, ScavengeWater, CollectResin);
          n <- 5L to 50L by 5L; rank <- 0 to 3) {
       val upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(rank): _*)
       val (gain, cost) = PheromoneTrails.nominal(route, n * u, upgrades)
       val reward = ExplorationProgression.partyReward(List(route.sugarReward, route.proteinReward, route.waterReward, route.resinReward).max, n * u, rank)
-      assert(gain * route.duration * 100L <= reward * 80L)
-      assert(cost * route.duration * 100L >= ExplorationHelper.cost(n * u, route).sugar * 80L)
+      assert(gain * route.duration * 100L <= reward * 60L)
+      assert(cost * route.duration * 100L >= ExplorationHelper.cost(n * u, route).sugar * 60L)
       assert(gain > 0L && cost > 0L)
     }
   }

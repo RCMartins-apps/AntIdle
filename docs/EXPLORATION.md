@@ -10,8 +10,9 @@ Understandings and known resource visibility retain their existing behavior.
   One scout takes 60 simulated seconds; two/three take 30/20. No workers required.
 - **Study Site:** learn about a revealed site. One scout takes 180 seconds;
   two/three take 90/60. Three studies claim 50%, 30%, then 20% of its Knowledge.
-- **Guide:** existing Shared Paths reserves a scout for a finite nectar source;
-  optional Rival Cache raids also need a guide. Busy guides cannot join studies.
+- **Guide:** Shared Paths reserves one scout per ten trail workers, rounded up,
+  separately for each safe collection route. Rival Cache raids also need a guide.
+  Busy guides cannot join studies or another trail.
 
 Scout missions cost ten sugar per participating scout. Local reveal/study crews
 still consume their usual adult sugar upkeep. Scouts need housing and feeding,
@@ -28,7 +29,7 @@ No terrain or essential reward is rolled randomly. The reveal order is fixed:
 | Site | Knowledge | Opportunity |
 | --- | ---: | --- |
 | Woodland Edge | 800 | One guaranteed carcass from first study; finite insects; aphid discovery |
-| Nectar Meadow | 1,000 | Finite nectar and seeds; Shared Paths source |
+| Nectar Meadow | 1,000 | Finite nectar and seeds; automated trails |
 | Rotten Log | 1,100 | Finite insects; Dry Trail discovery |
 | Dry Clearing | 1,200 | Water deposit; dew collection, repletes and outpost progression |
 | Fallen Pine | 1,400 | Finite resin; royal-nursery progression |
@@ -42,7 +43,7 @@ optional research cannot consume the last Knowledge needed for founding.
 Site Knowledge is finite, not a reward on worker trips. Once a site is studied,
 worker collection draws from its separate finite deposit. Party size and supplies
 raise what can be carried per trip; they never increase the deposit or study yield.
-Nectar supplies cost ten sugar per worker so every useful 5–37-worker crew
+Nectar supplies cost ten sugar per worker so every useful 5–50-worker crew
 has a positive full-load sugar return without relying on XP multipliers.
 Optional raid casualties/rewards remain random and disclosed, but no required
 resource or discovery depends on combat or a lucky result.
@@ -68,8 +69,9 @@ Sugar collectors, scraps gatherers, aphids and outpost workers remain renewable
 colony jobs. Three Dry Clearing studies open **Dew Gatherers**: up to five standard
 workers gathering 0.15 water/s each. Their normal sugar upkeep and opportunity cost
 remain. This prevents exhausted water deposits from permanently blocking ongoing
-outpost/royal maintenance. Shared Paths removes its finite nectar reserve from the
-meadow deposit once; depletion never regenerates that source.
+outpost/royal maintenance. Shared Paths automates gathering from those same finite
+safe deposits; it does not reserve an extra nectar sub-source or regenerate finds.
+See [Collection trails](COLLECTION-TRAILS.md) for staffing, costs and balancing.
 
 This is protection against resource/content softlocks, not immunity to poor
 staffing or starvation. Existing queen recovery remains available after collapse.

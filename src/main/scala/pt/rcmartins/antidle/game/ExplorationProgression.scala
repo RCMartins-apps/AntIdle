@@ -20,9 +20,9 @@ object ExplorationProgression {
   def maxParties(data: ExplorationData, upgrades: UpgradesData): Int =
     (if (data.revealedSites >= 4) 2 else 1) + (if (upgrades(UpgradesData.UpgradeType.AdditionalExpeditionSlot).unlocked) 1 else 0)
   def suppliesPercent(rank: Int): Long = 100L + 20L * Math.max(0, Math.min(MaxSuppliesLevel, rank))
-  // Preserve the former 10-worker yield (2.5x base), now linear at every crew size.
+  // Preserve the former 5-worker yield (2x base), now linear at every crew size.
   def partyReward(amount: Long, workers: Long, supplies: Int): Long =
-    amount * Math.max(0L, workers) / (4L * u) * suppliesPercent(supplies) / 100L
+    amount * Math.max(0L, workers) * 2L / (5L * u) * suppliesPercent(supplies) / 100L
   def suppliesRank(upgrades: UpgradesData): Int =
     UpgradesData.UpgradeType.expeditionSupplies.takeWhile(upgrades(_).unlocked).size
 

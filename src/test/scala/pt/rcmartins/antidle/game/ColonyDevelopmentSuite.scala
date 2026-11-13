@@ -33,10 +33,10 @@ class ColonyDevelopmentSuite extends FunSuite {
   test("meadow previews match collection cargo without generating knowledge") {
     val sent = ExplorationHelper.start(colony(), 5 * u, NectarMeadow)
     val result = ExplorationHelper.exploreBonus(sent, sent.exploration.explorationParties.head)
-    assertEquals(result.basicResources.sugar.amount, 3325L * u)
+    assertEquals(result.basicResources.sugar.amount, 3550L * u)
     assertEquals(result.basicResources.knowledge.amount, 0L)
     assertEquals(result.ants.idleWorkersCount, 20L * u)
-    assert(ExplorationHelper.summary(colony(), 5 * u, NectarMeadow).contains("375 sugar"))
+    assert(ExplorationHelper.summary(colony(), 5 * u, NectarMeadow).contains("600 sugar"))
   }
 
   test("meadow returns through the tick engine, respects storage caps and releases scouts") {

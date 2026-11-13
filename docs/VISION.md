@@ -116,8 +116,9 @@ mostly linear sequence so players learn colony management gradually. Afterwards,
 shorter and longer runs should offer meaningful choices in DNA accumulation.
 Remaining introductory rewards, exact count and later DNA scaling remain undecided.
 
-The first implemented Understanding is Shared Paths, opening finite nectar
-trails managed with workers and a guiding scout. Founding gives an automatic
+The first implemented Understanding is Shared Paths, automating safe collection
+from studied sites with workers and one guiding scout per ten workers, rounded up.
+Manual and automatic collection draw from the same finite deposits. Founding gives an automatic
 +10% sugar production per completed prestige, stacked additively; DNA buys
 Understandings separately. The new colony starts with the normal initial queen
 and no workers. The reset preview lists what is lost and inherited. The founding
