@@ -46,5 +46,8 @@ Offline checks exercise real service workers in regular temporary profiles and
 the actual deployment package, including multi-window updates and failed releases.
 See [OFFLINE.md](../docs/OFFLINE.md).
 
+The production CI browser gate checks brood-list egg/larva/pupa SVGs, caste and
+legacy entries, and a live stage transition in the phone disclosure/desktop tooltip.
+
 The map browser gate also covers aphid relocation: visible costs, reserved housing,
 saving an in-flight group and receiving it without regenerating insects or Knowledge.

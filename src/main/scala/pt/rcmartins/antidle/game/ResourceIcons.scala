@@ -3,6 +3,7 @@ package pt.rcmartins.antidle.game
 import com.raquo.laminar.api.L.{u => _, _}
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.HTMLSpanElement
+import pt.rcmartins.antidle.model.AntBrood
 
 object ResourceIcons {
   sealed abstract class ResourceIcon(val id: String, val path: String)
@@ -29,6 +30,10 @@ object ResourceIcons {
     "M8 3l2 3h4l2-3M12 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM12 13a5 4 0 1 0 0 8 5 4 0 0 0 0-8ZM9 9 4 7M15 9l5-2M8 15l-5-2M16 15l5-2M8 19l-4 3M16 19l4 3")
   case object Eggs extends ResourceIcon("eggs",
     "M20 14c0 5-3.6 8-8 8s-8-3-8-8S8 2 12 2s8 7 8 12ZM9 7l-2 4")
+  case object Larva extends ResourceIcon("larva",
+    "M17 4a3 3 0 0 1 3 3c0 7-4 13-10 13-4 0-7-2-7-5a3 3 0 0 1 6 0c0 1 1 1 2 0 2-2 3-5 3-8a3 3 0 0 1 3-3ZM14 8l6 1M13 12l5 2M10 15l3 4M6 14l-2 4M17 6h.01")
+  case object Pupa extends ResourceIcon("pupa",
+    "M12 2c5 0 7 4 7 10s-2 10-7 10-7-4-7-10S7 2 12 2ZM8 6l8 2-8 3 8 3-8 3 7 2")
   case object Colony extends ResourceIcon("colony",
     "M2 21 9 7h6l7 14H2ZM9 21v-3a3 3 0 0 1 6 0v3M10 7V3h4v4M8 12h3M15 12h1")
 
@@ -49,6 +54,9 @@ object ResourceIcons {
     case resourceLabel if resourceLabel.endsWith(" workers") => Some(Workers)
     case _ => None
   }
+
+  def forBrood(brood: AntBrood): ResourceIcon =
+    if (brood.isEgg) Eggs else if (brood.isLarvae) Larva else Pupa
 
   def icon(resource: ResourceIcon): ReactiveHtmlElement[HTMLSpanElement] =
     span(

@@ -675,6 +675,8 @@ object MainForm {
                     div(
                       seq.map { antBlood =>
                         div(
+                          className := "brood-entry",
+                          ResourceIcons.icon(ResourceIcons.forBrood(antBlood)),
                           b(antBlood.name + ": "),
                           child <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
                             antBlood match {

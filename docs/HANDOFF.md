@@ -1,35 +1,26 @@
 # Handoff
 
-## Last verified: 2026-11-14 — aphid population and relocation
+## Last verified: 2026-11-14 — brood-stage icons
 
-- Branch `feature/aphid-relocation` starts from main `99ee3f2` (PR #68). Main was
-  checked again before handoff. PR #69 (audit fixes and guide-loss resizing) is a
-  separate authorized auto-merge PR, still pending at the start of this task;
-  this branch does not include it. Check GitHub/main before a future PR/update.
-- Owner approved D43: each chamber level houses ten aphids; each worker tends ten.
-  Per-tender output/protein cost unchanged. The first chamber gets ten animals;
-  further empty housing requires relocation. Stock persists, resets on founding,
-  and legacy version-7 saves populate existing housing once to preserve capacity.
-- Woodland Edge now offers Relocate Aphids after Wild Aphids/Aphid Tending. Safe
-  fixed mission: five workers, one scout, ten sugar, thirty simulated seconds,
-  ten reserved aphid places. Incoming groups, costs and duration are visible.
-  Uses normal expedition slots/age returns/statistics. No Knowledge/resource haul,
-  new ring or Understanding. Spent insects do not erase the living aphid source.
-- Details and reproducible before/after pacing results: docs/APHIDS.md. Balanced
-  policy, seeds 42/137, three hours each: first daughter readiness +3.11% / -1.06%,
-  one founding per run and zero starvation deaths. Earlier opening milestones
-  identical. Small measured impact for these cases, not universal balance proof.
-- 267 engine tests and four balance tests passed; fastOptJS and balance/fastOptJS
-  succeeded. fullOptJS: zero Closure errors/warnings. Maintained map/trail/aphid
-  browser gate passed at 320/390/1280px; production CI browser gate at 390/1280px.
-  git diff --check passed. Offline packaging was not rerun (no packaging changes).
-- Existing production/rate/default-pool tests now specify populated aphid housing.
-  New relocation tests cover housing reservations, concurrent trips, replay,
-  resource/scout/worker/research gates, reload and one-time legacy migration.
-  Balance policies now relocate animals to meet their existing tender targets.
-- Owner authorized a PR and auto-merge for this feature. Main and its active
-  ruleset reverified: main is still 99ee3f2; test and changes / classify are required
-  with strict up-to-date checks and no bypass. Auto-merge is enabled, squash only.
-  Check GitHub for live PR/CI state when resuming; no CI polling after queueing.
-- Preserve unrelated work/ and Python caches. Baseline worktree/reports are
-  temporary under /tmp; no scratch artifacts should be committed.
+- Branch `ui/brood-stage-icons` now includes main `3223c58` (merged aphid PR #70).
+  Updated before opening the authorized icons PR. Code merged cleanly; combined
+  handoff/test documentation conflicts. PR #69 is separate; do not assume merged.
+- Brood resource disclosure/desktop tooltip now places distinct SVG egg, larva
+  and pupa icons beside the existing name/progress. Icons derive from AntBrood's
+  actual stage flags, covering small/standard/scout and legacy entries. Existing
+  text supplies accessible labels; icons are decorative. No gameplay/save changes.
+- Reuses ResourceIcons sizing/strokes with two new silhouettes/colors. Live stage
+  transitions update the icon. CI browser gate now covers all three shapes,
+  caste/legacy entries, disclosure persistence and a live egg-to-larva transition.
+- fastOptJS passed again after integrating main. Focused browser verification using that maintained helper
+  passed again at 320/390/1280px after integrating main; previously inspected
+  the 320px list. git diff --check
+  passed. No engine tests, full production build or complete CI browser run was
+  needed/repeated for this presentation-only change.
+- Owner authorized PR and auto-merge. Active Main ruleset reverified: required
+  test and changes / classify, strict up-to-date checks, no bypass. Repository
+  auto-merge is enabled, squash only. Check GitHub for live PR state.
+- Preserve unrelated work/ and Python caches. Temporary screenshots/logs are
+  under /tmp, not durable links.
+- Aphid rules and measured pacing are in docs/APHIDS.md, now on main. Audit
+  findings remain on fix/consistency-audit; check its PR #69 separately.
