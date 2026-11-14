@@ -1,167 +1,141 @@
-"""First founding, inherited production, Shared Paths and finite nectar trails."""
+"""Staged founding, atomic Understanding selection and second-ring research. Run after fastOptJS."""
 import copy
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
 import os
+from pathlib import Path
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
-from progression_smoke import explore_tab
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from ci_browser_smoke import ProductionHandler
 
 
 def check_prestige(page, width, url):
-    now = datetime(2026, 11, 7, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 14, tzinfo=timezone.utc)
     page.clock.install(time=now)
     page.clock.pause_at(now + timedelta(seconds=1))
     errors = []
-    page.on("pageerror", lambda error: errors.append(str(error)))
-    page.goto(url, wait_until="networkidle")
+    page.on('pageerror', lambda error: errors.append(str(error)))
+    page.goto(url, wait_until='networkidle')
     initial = save_game(page)
     game = progressed_game(initial)
-    game["world"]["currentTick"] = game["world"]["targetTick"] = 100
-    game["ants"].update(workers=20 * UNIT, scouts=2 * UNIT, daughterQueens=UNIT,
-        lineage={"foundings": 0, "dna": 0, "sharedPaths": False},
-        tasks=[[{"SugarCollector": {}}, 20 * UNIT], [{"Explorer": {}}, 0]],
-        defaultTask={"SugarCollector": {}}, royalBrood=None, eggsAndLarvae=[])
-    game["statistics"]["sugarU"] = {"thisRun": 100 * UNIT, "total": 300 * UNIT}
-    for upgrade in game["upgrades"]["upgrades"]:
-        upgrade.update(show=False, unlocked=upgrade["name"] == "DefaultWorkers")
+    game['ants'].update(workers=20 * UNIT, scouts=3 * UNIT, daughterQueens=UNIT,
+        lineage={'foundings': 0, 'dna': 0, 'sharedPaths': False},
+        tasks=[[{'SugarCollector': {}}, 20 * UNIT], [{'Explorer': {}}, 0]],
+        defaultTask={'SugarCollector': {}}, royalBrood=None, eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
+    game['statistics']['sugarU'] = {'thisRun': 100 * UNIT, 'total': 300 * UNIT}
+    for upgrade in game['upgrades']['upgrades']:
+        upgrade.update(show=False, unlocked=upgrade['name'] in ['DefaultWorkers', 'AphidTending'])
+    # Existing banked DNA can be spent after backing out of a draft without leaving it invalid.
+    banked = copy.deepcopy(game)
+    banked['ants']['lineage'].update(foundings=1, dna=1)
+    load_game(page, banked)
+    page.get_by_role('tab', name='Lineage', exact=True).click()
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    page.get_by_role('checkbox', name='Select Shared Paths', exact=True).check()
+    page.get_by_role('button', name='Back to rewards', exact=True).click()
+    page.get_by_role('button', name='Learn Shared Paths', exact=True).click()
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    expect(page.get_by_role('button', name='Review founding', exact=True)).to_be_enabled()
+    expect(page.locator('.founding-rewards')).to_contain_text('DNA spent on Understandings0')
     load_game(page, game)
-
-    def nest():
-        page.get_by_role("tab", name="Nest", exact=True).click()
-
-    page.get_by_role("tab", name="Lineage", exact=True).click()
-    expect(page.locator(".lineage-section")).to_contain_text("Generation 1 · DNA: 0 · +0% sugar production")
-    page.get_by_text("Review founding", exact=True).click()
-    expect(page.locator(".founding-preview")).to_contain_text("Keep: DNA, Understandings, lifetime statistics")
-    if width == 390:
-        page.locator("#lineageContent").screenshot(path="/tmp/lineage-review-390.png")
-    page.once("dialog", lambda dialog: dialog.dismiss())
-    page.get_by_role("button", name="Found daughter colony", exact=True).click()
-    assert save_game(page)["ants"]["daughterQueens"] == UNIT
-    page.get_by_role("tab", name="Lineage", exact=True).click()
-    page.once("dialog", lambda dialog: dialog.accept())
-    page.get_by_role("button", name="Found daughter colony", exact=True).click()
+    page.get_by_role('tab', name='Lineage', exact=True).click()
+    expect(page.locator('.founding-rewards')).to_contain_text('0 + 1 = 1')
+    expect(page.locator('.founding-rewards')).to_contain_text('+0% → +10%')
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    expect(page.get_by_role('checkbox', name='Select Beyond the Woodland', exact=True)).to_have_count(0)
+    page.get_by_role('checkbox', name='Select Shared Paths', exact=True).check()
+    expect(page.locator('.founding-rewards')).to_contain_text('DNA carried forward0')
+    page.get_by_role('button', name='Back to rewards', exact=True).click()
+    unchanged = save_game(page)
+    assert unchanged['ants']['lineage']['dna'] == 0
+    assert not unchanged['ants']['lineage']['sharedPaths']
+    assert unchanged['ants']['daughterQueens'] == UNIT
+    page.get_by_role('tab', name='Lineage', exact=True).click()
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    page.get_by_role('button', name='Review founding', exact=True).click()
+    found = page.get_by_role('button', name='Found daughter colony', exact=True)
+    expect(found).to_be_disabled()
+    page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
+    found.click()
     page.clock.run_for(1)
-    expect(page.locator(".lineage-section")).to_contain_text("Generation 2 · DNA: 1 · +10% sugar production")
-    expect(page.get_by_role("button", name="Found daughter colony", exact=True)).to_have_count(0)
-    founded = save_game(page)
-    assert founded["ants"]["workers"] == 0 and founded["ants"]["daughterQueens"] == 0
-    assert founded["basicResources"]["sugar"]["amount"] == 0
-    assert founded["statistics"]["sugarU"] == {"thisRun": 0, "total": 300 * UNIT}
-    assert founded["exploration"]["experience"] == 0
-    assert founded["exploration"]["proteinDiscovered"]
-    nest()
-    expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_have_count(0)
-    expect(page.locator(".resource-row").filter(has=page.get_by_text("Protein", exact=True))).to_be_visible()
-    page.reload(wait_until="networkidle")
-    nest()
-    expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_have_count(0)
-    expect(page.locator(".resource-row").filter(has=page.get_by_text("Protein", exact=True))).to_be_visible()
-    assert not any(u["unlocked"] for u in founded["upgrades"]["upgrades"])
-    page.get_by_role("tab", name="Lineage", exact=True).click()
-    page.get_by_role("button", name="Learn Shared Paths", exact=True).click()
-    expect(page.locator(".lineage-section")).to_contain_text("DNA: 0")
-    expect(page.get_by_role("button", name="Learn Shared Paths", exact=True)).to_have_count(0)
-    assert_fits(page, width)
-    learned = save_game(page)
-    page.reload(wait_until="networkidle")
-    assert save_game(page)["ants"]["lineage"] == learned["ants"]["lineage"]
-    # Resetting the colony must recreate early-game reactive unlock subscriptions.
-    nest()
-    for _ in range(30):
-        page.get_by_role("button", name="Gather Sugar", exact=True).click()
-    expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
-    page.get_by_role("button", name="Raise Small Worker Egg", exact=True).click()
-    page.clock.run_for(60000)
-    expect(page.locator("#tasks-tab")).to_be_visible()
-    page.locator("#tasks-tab").click()
-    expect(page.locator(".small-worker-tasks")).to_contain_text("Small workers · 50%")
-    expect(page.locator(".small-collector-summary")).to_contain_text("0.22 sugar/s")
-
-    if width == 1920:
-        sugar_row = page.locator(".resource-row").filter(has=page.get_by_text("Sugar", exact=True))
-        sugar_row.locator(":scope > div").last.hover()
-        expect(page.locator(".game-tooltip")).to_contain_text("+10.00%")
-        page.get_by_role("tab", name="Nest", exact=True).hover()
-
-    # A later colony state exercises the new exploration loop without replaying
-    # all pre-existing research and surveys in each viewport.
-    later = copy.deepcopy(game)
-    later["ants"].update(daughterQueens=0, lineage={"foundings": 1, "dna": 0, "sharedPaths": True})
-    later["exploration"] = {"experience": 600, "sugarTrail": {"remaining": 0, "marked": False}}
-    later["basicResources"]["sugar"] = {"amount": 500 * UNIT, "maxAmount": 1000 * UNIT}
-    later["ants"]["ages"] = {"active": True, "workers": [{"expiresAt": 18000, "count": 20}],
-        "scouts": [{"expiresAt": 18000, "count": 2}]}
-    load_game(page, later)
-    explore_tab(page)
-    expect(page.locator(".pheromone-trails")).to_contain_text("No nectar source")
-    page.get_by_label("About Pheromone trail", exact=True).click()
-    expect(page.locator(".pheromone-trails .info-content")).to_contain_text("Nectar Meadow")
-    page.get_by_label("About Pheromone trail", exact=True).click()
-    select_expedition(page, "nectar-meadow")
-    route = page.locator('.exploration-destination[data-destination="nectar-meadow"]')
-    page.locator("#explorer-count").fill("5")
-    route.get_by_role("button").first.click()
-    page.clock.run_for(120000)
-    explore_tab(page)
-    expect(page.get_by_role("button", name="Mark trail", exact=True)).to_be_enabled()
-    source = save_game(page)
-    assert source["exploration"]["sugarTrail"]["remaining"] == 1200 * UNIT
-    explore_tab(page)
-    page.get_by_role("button", name="Mark trail", exact=True).click()
-    marked = save_game(page)
-    assert source["basicResources"]["sugar"]["amount"] - marked["basicResources"]["sugar"]["amount"] == 50 * UNIT
-    explore_tab(page)
-    expect(page.locator(".pheromone-trails")).to_contain_text("1 scout guiding")
-    plus = page.get_by_role("button", name="Assign trail worker", exact=True)
-    for _ in range(10):
-        plus.click()
-    expect(plus).to_be_disabled()
-    expect(page.locator(".pheromone-trails")).to_contain_text("10/10 workers")
-    # The expedition reward can fill storage; make room to test real harvest.
-    assigned = save_game(page)
-    assigned["basicResources"]["sugar"]["amount"] = 100 * UNIT
-    load_game(page, assigned)
-    explore_tab(page)
-    expect(page.locator(".trail-production")).to_have_text("+8.80 sugar/s")
-    assert_fits(page, width)
-    page.locator(".pheromone-trails").screenshot(path=f"/tmp/antidle-trail-{width}.png")
+    first = save_game(page)
+    assert first['ants']['lineage'] == {'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False}
+    assert first['ants']['workers'] == 0 and first['ants']['daughterQueens'] == 0
+    assert first['basicResources']['sugar']['amount'] == 0
+    assert first['statistics']['sugarU'] == {'thisRun': 0, 'total': 300 * UNIT}
+    second = copy.deepcopy(game)
+    second['ants']['lineage'] = first['ants']['lineage']
+    load_game(page, second)
+    page.get_by_role('tab', name='Lineage', exact=True).click()
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    page.get_by_role('checkbox', name='Select Beyond the Woodland', exact=True).check()
+    page.locator('.understanding-research > summary').click()
+    expect(page.locator('.understanding-research')).to_contain_text('10 → 20 aphid places')
+    expect(page.locator('.understanding-research')).to_contain_text('60% → 75%')
     page.clock.run_for(1000)
-    harvested = save_game(page)
-    assert assigned["exploration"]["sugarTrail"]["remaining"] - harvested["exploration"]["sugarTrail"]["remaining"] == 88000
-    assert next(count for task, count in harvested["ants"]["tasks"] if "TrailForager" in task) == 10 * UNIT
-    page.reload(wait_until="networkidle")
-    explore_tab(page)
-    expect(page.locator(".pheromone-trails")).to_contain_text("10/10 workers")
-    page.get_by_role("button", name="Recall trail", exact=True).click()
-    recalled = save_game(page)
-    assert not recalled["exploration"]["sugarTrail"]["marked"]
-    assert recalled["exploration"]["sugarTrail"]["remaining"] == harvested["exploration"]["sugarTrail"]["remaining"]
-    assert next(count for task, count in recalled["ants"]["tasks"] if "TrailForager" in task) == 0
-    depleted = copy.deepcopy(harvested)
-    depleted["exploration"]["sugarTrail"]["remaining"] = 10
-    load_game(page, depleted)
-    page.clock.run_for(200)
-    ended = save_game(page)
-    assert ended["exploration"]["sugarTrail"]["remaining"] == 0
-    assert not ended["exploration"]["sugarTrail"]["marked"]
-    assert next(count for task, count in ended["ants"]["tasks"] if "SugarCollector" in task) == 20 * UNIT
-    old = copy.deepcopy(game)
-    old["ants"].pop("lineage", None)
-    old["exploration"].pop("sugarTrail", None)
-    load_game(page, old)
-    restored = save_game(page)
-    assert restored["ants"]["lineage"] == {"foundings": 0, "dna": 0, "sharedPaths": False}
+    expect(page.locator('.understanding-research')).to_have_attribute('open', '')
+    artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-prestige-browser'))
+    artifacts.mkdir(parents=True, exist_ok=True)
+    assert_fits(page, width)
+    page.locator('#lineageContent').screenshot(path=str(artifacts / f'choices-{width}.png'))
+    page.get_by_role('button', name='Review founding', exact=True).click()
+    expect(page.locator('.founding-rewards')).to_contain_text('+10% → +20%')
+    expect(page.locator('.selected-understandings')).to_contain_text('Beyond the Woodland')
+    page.locator('.founding-reset > summary').click()
+    expect(page.locator('.founding-reset')).to_contain_text('Standard workers20 → 0')
+    page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
+    found.click()
+    page.clock.run_for(1)
+    founded = save_game(page)
+    assert founded['ants']['lineage']['beyondWoodland']
+    assert founded['ants']['lineage']['dna'] == 0 and founded['ants']['lineage']['foundings'] == 2
+    later = progressed_game(founded)
+    later['ants'].update(workers=40 * UNIT, scouts=3 * UNIT, tasks=[[{'SugarCollector': {}}, 40 * UNIT]])
+    later['exploration'].update(revealedSites=6, surveys={key: 3 for key in ['woodland-edge','nectar-meadow','rotten-log','dry-clearing','fallen-pine','rival-food-cache']})
+    later['nestAttributes'].update(aphids=10, aphidsInitialized=True)
+    later['nestAttributes']['chambers']['aphidChamber']['level'] = 1
+    for upgrade in later['upgrades']['upgrades']:
+        upgrade.update(show=False, unlocked=upgrade['name'] in ['DefaultWorkers','AphidTending'])
+    load_game(page, later)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    expect(page.locator('.hex-map .map-hex')).to_have_count(10)
+    page.get_by_role('button', name='3 scouts', exact=True).click()
+    for site, title in [('aphid-thicket','Aphid Shelters'),('fallen-oak','Trail Logistics'),('root-hollow','Coordinated Expeditions')]:
+        page.get_by_role('button', name='Nest surroundings', exact=True).click()
+        page.get_by_role('button', name='Explore Surroundings', exact=True).click()
+        page.clock.run_for(21000)
+        tile = page.locator(f'.map-hex[data-site="{site}"]')
+        expect(tile).to_be_enabled()
+        tile.click()
+        expect(page.locator('.site-unlock')).to_contain_text(title)
+        for _ in range(3):
+            page.get_by_role('button', name='Study Site', exact=True).click()
+            page.clock.run_for(61000)
+        expect(page.locator('.site-knowledge')).to_have_text('0 knowledge remaining')
+        page.get_by_role('tab', name='Upgrades', exact=True).click()
+        purchase = page.get_by_role('button', name=title, exact=True)
+        expect(purchase).to_be_enabled()
+        purchase.click()
+        expect(purchase).to_have_count(0)
+        page.get_by_role('tab', name='Explore', exact=True).click()
+    for tile in page.locator('.hex-map .map-hex').all():
+        box = tile.bounding_box()
+        assert box['width'] >= 44 and box['height'] >= 44, box
+    assert_fits(page, width)
+    page.locator('.hex-map').screenshot(path=str(artifacts / f'outer-map-{width}.png'))
+    upgraded = save_game(page)
+    assert upgraded['nestAttributes']['aphidPlacesPerLevel'] == 20
+    assert upgraded['nestAttributes']['aphids'] == 10
+    assert upgraded['exploration']['revealedSites'] == 9
     assert not errors, errors
-    print(f"PASS {width}px: founding/cancel, reset preview, DNA, inheritance, early unlocks after reset, trail discovery/mark/staff/harvest/recall/depletion and saves", flush=True)
+    print(f'PASS prestige {width}px: staged founding, no preview charges, permanent selection, second ring and all three research purchases', flush=True)
 
 
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT)))
+    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(ProductionHandler if os.environ.get("ANTIDLE_PRODUCTION") else QuietHandler, directory=str(ROOT)))
     Thread(target=server.serve_forever, daemon=True).start()
     try:
         with sync_playwright() as p:
@@ -174,8 +148,8 @@ if __name__ == "__main__":
                 launch["proxy"] = {"server": proxy, "bypass": "127.0.0.1,localhost"}
             browser = p.chromium.launch(**launch)
             try:
-                for width in (320, 390, 1920):
-                    context = browser.new_context(viewport={"width": width, "height": 844})
+                for width in (320, 390, 1280):
+                    context = browser.new_context(viewport={"width": width, "height": 844}, has_touch=width <= 767, is_mobile=width <= 767)
                     check_prestige(context.new_page(), width, f"http://127.0.0.1:{server.server_port}")
                     context.close()
             finally:

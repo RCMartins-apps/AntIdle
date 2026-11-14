@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.DiscoveryProgression
+import pt.rcmartins.antidle.game.{DiscoveryProgression, AphidHusbandry, PheromoneTrails}
 import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
@@ -21,9 +21,10 @@ case class UpgradeRequirements(
     proteinDiscovered: Boolean = false,
     minimumSmallWorkers: Int = 0,
     earlyResearch: Boolean = false,
+    beyondWoodland: Boolean = false,
 ) {
   def met(data: AllData): Boolean =
-    upgrades.forall(data.upgrades(_).unlocked) &&
+    (!beyondWoodland || data.ants.lineage.beyondWoodland) && upgrades.forall(data.upgrades(_).unlocked) &&
       data.exploration.revealedSites >= minimumRevealedSites &&
       (!explorationTab || data.unlocks.tabs.exploreTabUnlocked) &&
       (!explorationAvailable || UpgradeBalance.explorationAvailable(data)) &&
@@ -49,6 +50,15 @@ object UpgradeBalance {
   def apply(upgrade: UpgradeType): UpgradeDefinition = definitions(upgrade)
 
   lazy val definitions: Map[UpgradeType, UpgradeDefinition] = Map(
+    AphidShelters -> UpgradeDefinition("Aphid Shelters", ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
+      UpgradeRequirements(upgrades = List(AphidTending), discovery = Some("aphid-shelters"), beyondWoodland = true),
+      s"Aphid Chamber: ${AphidHusbandry.BasePlacesPerLevel} → ${AphidHusbandry.ShelteredPlacesPerLevel} aphid places per level."),
+    TrailLogistics -> UpgradeDefinition("Trail Logistics", ActionCost(sugar = 3000L * u, knowledge = 300L * u),
+      UpgradeRequirements(discovery = Some("trail-logistics"), beyondWoodland = true),
+      s"Collection trails: ${PheromoneTrails.EfficiencyPercent}% → ${PheromoneTrails.LogisticsEfficiencyPercent}% of manual haul rate; +${PheromoneTrails.LogisticsEfficiencyPercent * 100L / PheromoneTrails.EfficiencyPercent - 100L}% supply use."),
+    CoordinatedExpeditions -> UpgradeDefinition("Coordinated Expeditions", ActionCost(sugar = 4000L * u, knowledge = 400L * u),
+      UpgradeRequirements(discovery = Some("coordinated-expeditions"), beyondWoodland = true), "+1 expedition slot."),
+
     StandardWorkers -> UpgradeDefinition(
       title = "Standard Worker Development",
       cost = ActionCost(sugar = 75 * u, tunnelingSpace = 10 * u),

@@ -55,3 +55,8 @@ saving an in-flight group and receiving it without regenerating insects or Knowl
 Build-version checks compare the compiled commit link with the checkout and confirm
 Settings/footer agreement and reload stability. The offline gate also checks that
 the label remains available offline and unchanged while a new release waits.
+
+`prestige_smoke.py` is now a maintained gate (its historical XP/trail scenario was
+replaced). It checks the staged founding transaction and second-ring research at
+320/390/1280px. Run after fastOptJS, or with ANTIDLE_PRODUCTION=1 after fullOptJS.
+The PR workflow runs it in a separate five-minute step.

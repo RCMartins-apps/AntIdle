@@ -467,12 +467,13 @@ It opens one royal brood place and Royal Nurse jobs. A royal egg can be laid
 without nurses, but development waits for staffed Royal Nurses. Up to five nurses
 provide sustained care before founding; missing staff or supplies preserve progress.
 
-## First prestige: DNA and Shared Paths
+## Introductory prestige: DNA and Understandings
 
 The **Lineage** tab appears with a Royal Nursery, a mature daughter queen or a
-previous founding. It holds generation/DNA, readiness, Understandings and
-**Review founding**, which unlocks with a mature daughter queen. The preview and
-confirmation list the reset before **Found daughter colony** takes effect:
+previous founding. Its staged flow shows rewards/reset values, lets you choose
+Understandings using banked plus earned DNA, then requires explicit confirmation.
+Selections do not spend anything until **Found daughter colony** is confirmed
+with a ready daughter queen:
 
 - Reset colony resources, ants/brood, chambers, research, explored map,
   discoveries, trails, queues and worker assignments.
@@ -480,14 +481,15 @@ confirmation list the reset before **Found daughter colony** takes effect:
   visibility, settings and stored simulation time. The new colony begins with
   its queen and no workers, using the normal initial economy.
 - Each founding awards **1 DNA** and automatically adds **+10% sugar production**,
-  stacked additively (+10%, +20%, etc.). Collectors, aphids and trail foragers
-  receive this bonus. Sugar gathering clicks, expedition rewards, costs, upkeep,
+  stacked additively (+10%, +20%, etc.). Sugar Collectors and Aphid Tenders receive this bonus. Sugar gathering clicks, expedition rewards, costs, upkeep,
   aging and consumption are unchanged. Per-colony statistics restart at zero.
 
 The first Understanding, **Shared Paths**, costs **1 DNA** once. Ownership is
 inherited across later foundings. This is the first introductory prestige
-mechanic; later introductory Understandings, challenges and milestone-based
-DNA earnings remain future content. Repeated founding currently awards the
+mechanic. **Beyond the Woodland** costs **1 DNA** at the second founding after
+Shared Paths, opening three handcrafted outer sites with new colony research.
+Later introductory Understandings, challenges and milestone-based DNA earnings
+remain future content. Repeated founding currently awards the
 same DNA amount and adds the same production bonus.
 
 **Shared Paths** unlocks automatic collection trails on safe studied sites. Each
@@ -498,8 +500,9 @@ costs. Learning the Understanding after studying a site works immediately.
 
 Trails gather continuously at **60% of the equivalent manual haul rate**, pay the
 same proportional sugar supplies and retain normal worker/scout upkeep and aging.
-They use no expedition slots. Full storage or missing sugar/scouts pauses the
-route without spending resources; depletion releases staff. Recall returns workers
+They use no expedition slots. Full storage or missing sugar pauses collection.
+Guide losses shrink crews to supported staffing and return excess workers;
+depletion releases staff. Recall returns workers
 to their default pool. The finite deposit and manual cargo/storage reservations
 are shared, so automation cannot create or duplicate resources. Raids stay manual.
 
@@ -509,7 +512,13 @@ Old in-flight cargo remains intact; unused legacy nectar reserves return to the
 Meadow deposit once on load, and their old workers are released. Saves remain
 version 7. Trail assignments are stored in `exploration.collectionTrails`.
 
-See [Collection trails](docs/COLLECTION-TRAILS.md) for tuning and resource/s math.
+Trail Logistics, discovered in the outer map, raises the rate to 75% with +25%
+supply use. Aphid Shelters doubles aphid housing per chamber level; Coordinated
+Expeditions adds one mission slot. These research upgrades reset each colony;
+the Understanding permanently retains access.
+
+See [Prestige](docs/PRESTIGE.md) for exact costs and reset rules, and
+[Collection trails](docs/COLLECTION-TRAILS.md) for tuning and resource/s math.
 Engine tests cover guide reservations, finite resources, supply/storage pauses,
 aging replacements, migration and coexistence with manual cargo. Maintained
 map/browser checks cover mobile controls, reloads and live disclosure stability.

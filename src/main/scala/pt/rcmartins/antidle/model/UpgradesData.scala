@@ -88,6 +88,10 @@ object UpgradesData {
 
     case object RoyalNurseryPlanning extends UpgradeType { val name: String = "RoyalNurseryPlanning" }
 
+    case object AphidShelters extends UpgradeType { val name = "AphidShelters" }
+    case object TrailLogistics extends UpgradeType { val name = "TrailLogistics" }
+    case object CoordinatedExpeditions extends UpgradeType { val name = "CoordinatedExpeditions" }
+
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
 
@@ -116,6 +120,7 @@ object UpgradesData {
       CoveredTrails,
       SeedProcessing,
       RoyalNurseryPlanning,
+      AphidShelters, TrailLogistics, CoordinatedExpeditions,
     )
 
   }

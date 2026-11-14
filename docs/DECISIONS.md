@@ -774,3 +774,19 @@ step budgets. PR/deploy runs cancel superseded work on the same PR/ref; preserve
 required check names, docs-only skipping and main/debug deployment authorization.
 Timeouts fail validation rather than bypass it. Existing executions do not inherit
 new limits. Details and observed normal durations are in CI-WORKFLOW.md.
+
+## D46: Second prestige opens the outer map; founding is a staged transaction — approved
+
+The owner approved Beyond the Woodland: three handcrafted second-ring hexes and
+new colony research, following Shared Paths. Cost 1 DNA, available at the second
+founding with Shared Paths. Initial site effects: double aphid housing per level,
+75% trail collection efficiency with proportionate supplies, and one extra mission
+slot. No duplicate protein source, new currency or challenge colony in this step.
+Research resets each colony; the Understanding permanently grants access.
+
+The owner requires a clear prestige flow: rewards and reset preview, Understanding
+selection, then explicit confirmation. Show actual DNA gained/spent/remaining,
+production bonuses and numeric upgrade effects. Preview/back navigation must not
+spend DNA. Validate and apply learning and reset together on confirmation; allow
+banking DNA. Retain old saves and existing banked-DNA purchases. PRESTIGE.md records
+exact rules, prices and the distinction between inherited and colony upgrades.

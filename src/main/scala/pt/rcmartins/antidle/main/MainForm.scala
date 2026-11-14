@@ -1267,47 +1267,132 @@ object MainForm {
     )
   }
 
-  private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = div(
-    className := "col-12 lineage-section",
-    child.maybe <-- lineageVisibleSignal.map {
-      visible => Option.when(visible) {
-        div(className := "lineage-overview",
-          infoHeading("Queen's lineage", div("Daughter queens found new colonies. DNA buys permanent Understandings.")),
-          child.maybe <-- antsSignal.map(_.daughterQueens < u).distinct.map { notReady => Option.when(notReady) {
-            div(className := "lineage-queen-status small text-body-secondary mb-2",
-              child.text <-- antsSignal.map(ants => if (ants.royalBrood.nonEmpty) "Daughter queen: rearing" else "Daughter queen: not ready").distinct)
-          } },
-          div(child.text <-- antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1L} · DNA: ${a.lineage.dna} · +${a.lineage.foundings.toLong * 10L}% sugar production")),
-          child.maybe <-- antsSignal.map(_.lineage).distinct.map { lineage =>
-            Option.when(lineage.foundings > 0 && !lineage.sharedPaths) {
-              div(className := "understanding-shared-paths mt-2",
-                infoHeading("Understanding: Shared Paths", div("Automates collection from studied sites using workers and guiding scouts."), minor = true),
-                div(className := "small", "Cost: 1 DNA"),
-                button(className := "btn btn-primary mt-1", minHeight.px := 44, typ := "button",
-                  "Learn Shared Paths", disabled := (lineage.dna < 1L),
-                  onClick --> (_ => Actions.purchaseSharedPaths())),
-              )
+  private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = {
+    val step = Var(0)
+    val selected = Var(Set.empty[String])
+    val acknowledged = Var(false)
+    val planned = snapshotSignal.combineWith(selected.signal).map { case (data, choices) => Prestige.plan(data, choices.toSeq) }
+    def buttonFor(label: String)(action: => Unit) = button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
+      label, onClick --> (_ => action))
+    def advance(next: Int): Unit = { acknowledged.set(false); step.set(next) }
+    def row(label: String, value: Signal[String]) = div(className := "d-flex flex-wrap justify-content-between gap-2 py-1",
+      span(label), b(child.text <-- value))
+    def rewardRows = div(className := "founding-rewards border rounded p-2 my-2",
+      row("Generation", antsSignal.map(a => s"${a.lineage.foundings.toLong + 1} → ${a.lineage.foundings.toLong + 2}")),
+      row("DNA earned", Val(s"+${Prestige.DnaReward}")),
+      row("DNA available to spend", antsSignal.map(a => s"${a.lineage.dna} + ${Prestige.DnaReward} = ${BigInt(a.lineage.dna) + Prestige.DnaReward}")),
+      row("Inherited sugar production", antsSignal.map(a => s"+${Prestige.sugarBonus(a.lineage)}% → +${Prestige.sugarBonus(a.lineage) + 10L}%")),
+      div(className := "small text-body-secondary", "Applies to Sugar Collectors and Aphid Tenders. Adds 10 percentage points each founding."),
+      row("DNA spent on Understandings", selected.signal.map(ids => Prestige.understandings.filter(u => ids(u.id)).map(_.cost).sum.toString)),
+      row("DNA carried forward", planned.map(_.map(_.dna.toString).getOrElse("Invalid selection"))),
+    )
+    def resetRows = detailsTag(className := "founding-reset my-2", summaryTag(minHeight.px := 44, "Colony reset: exact values"),
+      children <-- snapshotSignal.map { data =>
+        val fresh = AllData.initial
+        def resource(label: String, before: BasicResource, after: BasicResource) = {
+          def stock(r: BasicResource) = prettyNumberStr(r.amount) + (if (r.maxAmount == Long.MaxValue) "" else s"/${prettyNumberStr(r.maxAmount)}")
+          label -> s"${stock(before)} → ${stock(after)}"
+        }
+        val a = data.ants
+        val values = Seq(
+          resource("Sugar", data.basicResources.sugar, fresh.basicResources.sugar),
+          resource("Protein", data.basicResources.protein, fresh.basicResources.protein),
+          resource("Water", data.basicResources.water, fresh.basicResources.water),
+          resource("Resin", data.basicResources.resin, fresh.basicResources.resin),
+          resource("Knowledge", data.basicResources.knowledge, fresh.basicResources.knowledge),
+          resource("Tunnelling space", data.basicResources.tunnelingSpace, fresh.basicResources.tunnelingSpace),
+          "Standard workers" -> s"${a.workers / u} → 0", "Small workers" -> s"${a.smallWorkers / u} → 0",
+          "Scouts" -> s"${a.scouts / u} → 0", "Repletes" -> s"${a.repletes / u} → 0",
+          "Daughter queens" -> s"${a.daughterQueens / u} → 0", "Brood" -> s"${a.eggsAndLarvae.size + a.royalBrood.size} → 0",
+          "Aphids" -> s"${data.nestAttributes.aphids} → 0",
+          "Explored hexes" -> s"${data.exploration.revealedSites} → 0",
+          "Active missions" -> s"${data.exploration.explorationParties.size} → 0",
+          "Build queue" -> s"${data.nestAttributes.buildQueue.size} → 0",
+          "Egg orders" -> s"${a.queuedEggs} → 0") ++
+          Seq(ChamberType.Nest, ChamberType.Queen, ChamberType.FoodStorage, ChamberType.Nursery, ChamberType.Aphid, ChamberType.Replete, ChamberType.RoyalNursery).map(kind =>
+            kind.name -> s"${Construction.level(data.nestAttributes.chambers, kind)} → ${Construction.level(fresh.nestAttributes.chambers, kind)}")
+        values.map { case (label, number) => div(className := "d-flex flex-wrap justify-content-between gap-2 small py-1", span(label), span(number)) } :+
+          div(className := "small mt-2", s"Research reset (${data.upgrades.upgrades.count(_._2.unlocked)}): ",
+            data.upgrades.upgrades.toSeq.filter(_._2.unlocked).sortBy(_._1.title).map(_._1.title).mkString(", "))
+      })
+    def newResearch = detailsTag(className := "understanding-research my-2", summaryTag(minHeight.px := 44, "New colony research"),
+      div(className := "small text-body-secondary my-2", "Each needs 3 studies at its outer site. Colony research resets on founding."),
+      Seq(UpgradeType.AphidShelters, UpgradeType.TrailLogistics, UpgradeType.CoordinatedExpeditions).map { upgrade =>
+        div(className := "border-bottom small py-2", b(upgrade.title), div(upgrade.description),
+          div(s"${prettyNumberStr(upgrade.cost.sugar)} sugar · ${prettyNumberStr(upgrade.cost.knowledge)} knowledge" +
+            (if (upgrade.cost.resin > 0L) s" · ${prettyNumberStr(upgrade.cost.resin)} resin" else "")),
+          emptyNode)
+      })
+    def choices = div(className := "understanding-choices",
+      children <-- antsSignal.map(_.lineage).distinct.combineWith(selected.signal).map { case (lineage, ids) =>
+        val available = lineage.copy(foundings = if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue,
+          sharedPaths = lineage.sharedPaths || ids(Prestige.SharedPaths.id))
+        val options = Prestige.understandings.filter(u => !u.owned(lineage) && u.available(available))
+        if (options.isEmpty) Seq(div(className := "small my-2", "No new Understandings available for this founding.")) else options.map { understanding =>
+          div(className := "understanding-choice border rounded p-2 my-2", dataAttr("understanding") := understanding.id,
+            label(className := "d-flex align-items-center gap-2", minHeight.px := 44,
+              input(typ := "checkbox", className := "form-check-input", aria.label := s"Select ${understanding.title}", checked := ids(understanding.id),
+                onChange.mapToChecked --> { checked =>
+                  selected.update { old =>
+                    if (checked) old + understanding.id
+                    else if (understanding.id == Prestige.SharedPaths.id && !lineage.sharedPaths) old - understanding.id - Prestige.BeyondWoodland.id
+                    else old - understanding.id
+                  }
+                }), b(understanding.title), span(s"${understanding.cost} DNA")),
+            div(className := "small", understanding.effect),
+            if (understanding.id == Prestige.BeyondWoodland.id) newResearch else emptyNode)
+        }
+      },
+      div(className := "small text-body-secondary", "Selections apply only on confirmation. You may keep DNA unspent. Existing Understandings are inherited automatically."))
+    div(className := "col-12 lineage-section",
+      infoHeading("Queen's lineage", div("Understandings are permanent. Colony research resets when the daughter queen founds her colony.")),
+      row("Current lineage", antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1} · ${a.lineage.dna} DNA · +${Prestige.sugarBonus(a.lineage)}% sugar")),
+      div(className := "lineage-queen-status small my-2", child.text <-- antsSignal.map(a =>
+        if (a.daughterQueens >= u) "Daughter queen: ready" else if (a.royalBrood.nonEmpty) "Daughter queen: rearing in Nest" else "Daughter queen: raise in Nest")),
+      div(className := "inherited-understandings small", child.text <-- antsSignal.map { a =>
+        val known = Prestige.understandings.filter(_.owned(a.lineage)).map(_.title)
+        if (known.isEmpty) "Understandings: none yet" else "Inherited: " + known.mkString(", ")
+      }.distinct),
+      child <-- step.signal.distinct.map {
+        case 0 => div(className := "founding-step", dataAttr("step") := "rewards",
+          h5(className := "mt-3", "1. Founding rewards"), rewardRows,
+          div(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
+          div(className := "small", "Reset: resources, population, brood, chambers, colony research, exploration, discoveries, trails, queues and assignments."),
+          resetRows,
+          buttonFor("Choose Understandings")(advance(1)),
+          children <-- antsSignal.map(_.lineage).distinct.map { lineage =>
+            Prestige.understandings.filter(u => !u.owned(lineage) && u.available(lineage)).map { understanding =>
+              div(className := "learn-understanding small mt-3", span(s"${understanding.title}: ${understanding.effect} "),
+                button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
+                  s"Learn ${understanding.title}", disabled := lineage.dna < understanding.cost,
+                  onClick --> (_ => { selected.set(Set.empty); acknowledged.set(false); Actions.purchaseUnderstanding(understanding.id) })), span(s" ${understanding.cost} DNA"))
             }
-          },
-          child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
-            Option.when(known)(div(className := "small mt-1", "Shared Paths inherited"))),
-          child.maybe <-- antsSignal.map(_.daughterQueens >= u).distinct.map { ready => Option.when(ready) {
-            detailsTag(className := "founding-preview mt-2",
-              summaryTag(minHeight.px := 44, "Review founding"),
-              p(className := "small my-2", "Found with your daughter queen: +1 DNA and +10% sugar production, added to your inherited bonus."),
-              p(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
-              p(className := "small", "Reset: resources, ants and brood, chambers, research, explored map, discoveries, trails, queues and task assignments."),
-              button(className := "btn btn-primary", minHeight.px := 44, typ := "button", "Found daughter colony",
-                onClick --> { _ =>
-                  if (window.confirm("Found a new colony? Colony resources, ants, chambers, research and exploration will reset. DNA, Understandings, lifetime statistics, settings and stored time are kept. Gain 1 DNA and +10% sugar production."))
-                    Actions.foundDaughterColony()
-                }),
-            )
-          } },
-        )
-      }
-    },
-  )
+          })
+        case 1 => div(className := "founding-step", dataAttr("step") := "understandings",
+          h5(className := "mt-3", "2. Choose Understandings"), rewardRows, choices,
+          div(className := "text-danger small", child.text <-- planned.map(p => if (p.isEmpty) "Not enough DNA for this selection." else "")),
+          div(className := "d-flex flex-wrap gap-2 mt-2", buttonFor("Back to rewards")(advance(0)),
+            button(typ := "button", className := "btn btn-primary", minHeight.px := 44, "Review founding",
+              disabled <-- planned.map(_.isEmpty), onClick --> (_ => advance(2)))))
+        case _ => div(className := "founding-step", dataAttr("step") := "confirmation",
+          h5(className := "mt-3", "3. Confirm daughter colony"), rewardRows,
+          div(className := "selected-understandings", child.text <-- planned.map(_.map(l =>
+            "Inherited Understandings: " + Prestige.understandings.filter(_.owned(l)).map(_.title).mkString(", ")).getOrElse("Invalid selection"))),
+          resetRows,
+          div(className := "alert alert-warning small mt-2", "This replaces the current colony. Begin with the founding queen and no workers."),
+          label(className := "d-flex align-items-center gap-2 my-2", minHeight.px := 44,
+            input(typ := "checkbox", className := "form-check-input", aria.label := "Confirm colony reset", checked <-- acknowledged.signal,
+              onChange.mapToChecked --> acknowledged.writer), "I understand that this colony will reset."),
+          div(className := "d-flex flex-wrap gap-2",
+            buttonFor("Back to Understandings")(advance(1)),
+            button(className := "btn btn-primary", typ := "button", minHeight.px := 44, "Found daughter colony",
+              disabled <-- snapshotSignal.combineWith(planned, acknowledged.signal).map { case (data, plan, yes) => !yes || plan.isEmpty || !Prestige.canFound(data) },
+              onClick --> (_ => {
+                if (acknowledged.now()) { Actions.foundDaughterColony(selected.now().toSeq); selected.set(Set.empty); advance(0) }
+              }))),
+          div(className := "text-danger small mt-2", child.text <-- antsSignal.map(a => if (a.daughterQueens < u) "Requires 1 ready daughter queen." else "")))
+      })
+  }
 
   private def royalRearingDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val broodSignal = antsSignal.map(_.royalBrood).distinct
@@ -1864,7 +1949,7 @@ object MainForm {
     def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
       child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
         Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
-          infoHeading("Collection trail", div("60% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply."), minor = true),
+          infoHeading("Collection trail", div(child.text <-- upgradesSignal.map(upgrades => s"${PheromoneTrails.efficiency(upgrades)}% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply.")), minor = true),
           div(className := "trail-preview small", child.text <-- snapshotSignal.map { data =>
             val count = Math.max(PheromoneTrails.Step, PheromoneTrails.target(data.exploration, route.id))
             val (rate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
@@ -1948,12 +2033,14 @@ object MainForm {
     def sitePanel(id: String): ReactiveHtmlElement[HTMLDivElement] = {
       if (id == "surroundings") div(className := "map-site-card card p-3",
         h5("Nest surroundings"),
-        p(child.text <-- explorationSignal.map(data => s"${data.revealedSites} / 6 hexagons revealed")),
-        child.maybe <-- explorationSignal.map(_.revealedSites < 6).distinct.map(more => Option.when(more)(scoutAction(id))),
-        child.maybe <-- explorationSignal.map(_.revealedSites >= 6).distinct.map(done => Option.when(done)(span("First ring mapped"))),
+        p(child.text <-- explorationSignal.combineWith(antsSignal).map { case (data, ants) => s"${data.revealedSites} / ${ExplorationMap.availableSites(ants).size} hexagons revealed" }),
+        child.maybe <-- explorationSignal.combineWith(antsSignal).map { case (data, ants) => data.revealedSites < ExplorationMap.availableSites(ants).size }.distinct.map(more => Option.when(more)(scoutAction(id))),
+        child.maybe <-- explorationSignal.combineWith(antsSignal).map { case (data, ants) => data.revealedSites >= ExplorationMap.availableSites(ants).size }.distinct.map(done => Option.when(done)(span("Current range mapped"))),
       ) else {
         val site = ExplorationMap.site(id)
+        val unlockLabel: String = DiscoveryProgression.all.find(_.destination == id).map(d => s"3 studies: ${d.title} research").getOrElse("")
         div(className := "map-site-card card p-3", h5(site.name),
+          if (ExplorationMap.outerSites.exists(_.id == id)) div(className := "site-unlock small mb-2", unlockLabel) else emptyNode,
           p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
           child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
           child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
@@ -1997,14 +2084,15 @@ object MainForm {
     div(className := "row exploration-layout hex-exploration",
       div(className := "col-12 p-3",
         infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
-        div(className := "hex-map", role := "group", aria.label := "First exploration ring",
-          button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent := 50,
+        div(className := "hex-map", className("expanded") <-- antsSignal.map(_.lineage.beyondWoodland), role := "group", aria.label := "Exploration map",
+          button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
             aria.label := "Nest surroundings",
             aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
             MapIcons("surroundings"), span("Nest"), onClick --> (_ => selected.set("surroundings"))),
-          ExplorationMap.sites.map { site =>
+          children <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map { expanded =>
+            ExplorationMap.availableSites(AntsData(lineage = Lineage(beyondWoodland = expanded))).map { site =>
             button(className := "map-hex", typ := "button", dataAttr("site") := site.id,
-              left.percent := site.x, top.percent := site.y,
+              left.percent := (if (expanded) 50 + (site.x - 50) * 3 / 4 else site.x), top.percent := (if (expanded) 62 + (site.y - 50) * 3 / 4 else site.y),
               disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
               aria.label <-- explorationSignal.map(data =>
                 if (!ExplorationMap.revealed(data, site.id)) "Unexplored hexagon"
@@ -2020,6 +2108,9 @@ object MainForm {
                   case "rotten-log" => "Deadwood"
                   case "dry-clearing" => "Dry ground"
                   case "fallen-pine" => "Pine"
+                  case "aphid-thicket" => "Thicket"
+                  case "fallen-oak" => "Oak"
+                  case "root-hollow" => "Hollow"
                   case _ => "Rivals"
                 })),
               small(className := "map-state", aria.hidden := true, child.text <-- explorationSignal.map(data =>
@@ -2027,6 +2118,7 @@ object MainForm {
                 else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "Aphids" else "Collect")),
               onClick --> (_ => selected.set(site.id)),
             )
+            }
           },
         ),
         div(className := "scout-crew-control d-flex flex-wrap gap-2 align-items-center mb-2",

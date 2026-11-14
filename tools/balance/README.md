@@ -105,3 +105,8 @@ For a generated report and checkpoint browser check (after `fullOptJS`):
 ```sh
 python3 tests/balance_browser_smoke.py /tmp/balance-before
 ```
+
+Founding policies select the introductory Understandings atomically: Shared Paths
+first, Beyond the Woodland second. For third-colony coverage, use a configuration
+with `foundings: 3`; outer-map milestones record range ownership, reveal and study.
+The policy can research outer upgrades and its aphid target still counts tenders.

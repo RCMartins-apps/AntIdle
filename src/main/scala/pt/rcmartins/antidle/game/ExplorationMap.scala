@@ -18,6 +18,13 @@ object ExplorationMap {
     Site("fallen-pine", "Fallen Pine", 1400L * u, List("collect-resin"), -1, 1),
     Site("rival-food-cache", "Rival Cache", 1500L * u, List("rival-food-cache"), -1, 0),
   )
+  val FirstRingSize: Int = 6
+  val outerSites: Vector[Site] = Vector(
+    Site("aphid-thicket", "Aphid Thicket", 800L * u, Nil, 0, -2),
+    Site("fallen-oak", "Fallen Oak", 900L * u, Nil, 1, -2),
+    Site("root-hollow", "Root Hollow", 1000L * u, Nil, -1, -1))
+  def availableSites(ants: AntsData): Vector[Site] = if (ants.lineage.beyondWoodland) sites ++ outerSites else sites
+  def allSites: Vector[Site] = sites ++ outerSites
   val SurveyTicks: Long = 180L * TicksPerSecond
   val RevealTicks: Long = 60L * TicksPerSecond
   val ScoutSugar: Long = 10L * u
@@ -26,9 +33,9 @@ object ExplorationMap {
   val deposits: Map[String, Long] = Map("woodland-edge" -> 800L * u, "nectar-meadow" -> 20000L * u,
     "seed-gathering" -> 2000L * u, "rotten-log" -> 1200L * u, "scavenge-water" -> 6000L * u,
     "collect-resin" -> 2000L * u, "rival-food-cache" -> 1500L * u)
-  def site(id: String): Site = sites.find(_.id == id).get
+  def site(id: String): Site = allSites.find(_.id == id).get
   def siteForRoute(id: String): Option[Site] = sites.find(_.routes.contains(id))
-  def revealed(data: ExplorationData, id: String): Boolean = sites.take(data.revealedSites).exists(_.id == id)
+  def revealed(data: ExplorationData, id: String): Boolean = allSites.take(data.revealedSites).exists(_.id == id)
   def studies(data: ExplorationData, id: String): Int = Math.max(0, Math.min(3, data.surveys.getOrElse(id, 0)))
   def studyReward(data: ExplorationData, id: String): Long =
     List(50L, 30L, 20L).lift(studies(data, id)).map(site(id).knowledge * _ / 100L).getOrElse(0L)
@@ -45,8 +52,8 @@ object ExplorationMap {
     data.unlocks.tabs.exploreTabUnlocked && count >= 1 && count <= MaxSurveyScouts &&
       ScoutProgression.available(data.ants, data.exploration) >= count.toLong * u && data.hasResources(scoutCost(count)) &&
       data.exploration.explorationParties.size < ExplorationProgression.maxParties(data.exploration, data.upgrades) &&
-      (if (id == "surroundings") data.exploration.revealedSites < sites.size && !busy(data.exploration, id, "reveal")
-      else sites.exists(_.id == id) && revealed(data.exploration, id) && studyReward(data.exploration, id) > 0L && !busy(data.exploration, id, "study"))
+      (if (id == "surroundings") data.exploration.revealedSites < availableSites(data.ants).size && !busy(data.exploration, id, "reveal")
+      else availableSites(data.ants).exists(_.id == id) && revealed(data.exploration, id) && studyReward(data.exploration, id) > 0L && !busy(data.exploration, id, "study"))
   def scout(data: AllData, id: String, count: Int): AllData = {
     if (!canScout(data, id, count)) data else {
       val (ready, ages) = PopulationAging.depart(data, 0L, count.toLong * u)
@@ -62,8 +69,8 @@ object ExplorationMap {
     val removed = data.copy(exploration = data.exploration.copy(explorationParties = data.exploration.explorationParties.patch(data.exploration.explorationParties.indexOf(party), Nil, 1)),
       statistics = data.statistics.copy(explorationsCompleted = data.statistics.explorationsCompleted.addValue(1)))
     val rewarded = if (party.mission == "reveal") {
-      val count = Math.min(sites.size, removed.exploration.revealedSites + 1)
-      removed.copy(exploration = removed.exploration.copy(revealedSites = count)).addMessage(s"Scouts revealed ${sites(count - 1).name}.")
+      val count = Math.min(availableSites(removed.ants).size, removed.exploration.revealedSites + 1)
+      removed.copy(exploration = removed.exploration.copy(revealedSites = count)).addMessage(s"Scouts revealed ${allSites(count - 1).name}.")
     } else {
       val reward = studyReward(removed.exploration, party.destination)
       val count = studies(removed.exploration, party.destination) + 1

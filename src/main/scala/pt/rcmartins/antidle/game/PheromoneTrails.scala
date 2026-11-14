@@ -6,6 +6,8 @@ import pt.rcmartins.antidle.game.Constants._
 /** Safe, continuous collection: shared finite deposits, no mission slots or extra rewards. */
 object PheromoneTrails {
   val EfficiencyPercent: Long = 60L
+  val LogisticsEfficiencyPercent: Long = 75L
+  def efficiency(upgrades: UpgradesData): Long = if (upgrades(UpgradesData.UpgradeType.TrailLogistics).unlocked) LogisticsEfficiencyPercent else EfficiencyPercent
   val Capacity: Long = ExplorationProgression.MaxWorkers
   val Step: Long = ExplorationProgression.WorkerStep
   private val GuideCapacity: Long = 10L * u
@@ -93,8 +95,8 @@ object PheromoneTrails {
     val denominator = route.duration * 100L
     val gain = ExplorationProgression.partyReward(
       List(route.sugarReward, route.proteinReward, route.waterReward, route.resinReward).max,
-      workers, ExplorationProgression.suppliesRank(upgrades)) * EfficiencyPercent / denominator
-    val cost = (ExplorationHelper.cost(workers, route).sugar * EfficiencyPercent + denominator - 1L) / denominator
+      workers, ExplorationProgression.suppliesRank(upgrades)) * efficiency(upgrades) / denominator
+    val cost = (ExplorationHelper.cost(workers, route).sugar * efficiency(upgrades) + denominator - 1L) / denominator
     (gain, cost)
   }
   def applyHarvest(resources: BasicResources, harvest: Harvest): BasicResources = {

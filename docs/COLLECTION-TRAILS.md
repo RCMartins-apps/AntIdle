@@ -69,3 +69,7 @@ The six-policy/seed pacing results are recorded in
 [TRAIL_RESULTS.md](../tools/balance/TRAIL_RESULTS.md). All six reached first
 founding without starvation; four reached two within four simulated hours. These
 are reproducible heuristic checks, not a claim about player enjoyment.
+
+Trail Logistics is outer-map colony research: efficiency rises from 60% to 75%,
+with supplies scaled by the same factor (+25%). Guide quotas and normal upkeep
+are unchanged. Current previews derive the percentage from research flags.

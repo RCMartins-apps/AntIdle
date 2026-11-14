@@ -127,6 +127,10 @@
 
 .hex-map {position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto 1rem;background:radial-gradient(ellipse,#e5edda 0%,#f3f5eb 58%,transparent 72%);border-radius:50%}
 .map-hex {position:absolute;transform:translate(-50%,-50%);width:29%;height:31%;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border:0;background:#d9e8d0;color:#183722;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 6px;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;gap:3px;cursor:pointer}
+.hex-map.expanded {max-width:600px}
+.hex-map.expanded .map-hex {width:21.75%;height:23.25%;padding:3px 1px;font-size:clamp(.65rem,2.2vw,.85rem);gap:1px}
+.hex-map.expanded .map-hex small {font-size:.6rem}
+.hex-map.expanded .map-terrain-icon {width:20px;height:20px}
 .map-hex small {font-size:.7rem;font-weight:400}
 .map-terrain-icon {display:block;width:clamp(24px,7vw,38px);height:clamp(24px,7vw,38px);flex-shrink:0}
 .map-terrain-icon svg {display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
