@@ -23,5 +23,8 @@
   successful for #69/main, despite some older runs being stuck or cancelled.
   Thus #69–72 were not collectively absent from deployment. #73's subsequent
   deployment was not verified in this task. Next PR/main run can exercise limits.
-- No PR requested for this ordering task. Save/push the branch under the standing
-  workflow. Preserve unrelated work/ and Python caches; temporary logs in /tmp.
+- Owner authorized PR and auto-merge for this ordering task. Main remains
+  7b22c11; active required test and changes / classify checks, strict up-to-date
+  policy and no bypass reverified. Squash-only auto-merge is enabled. Check live
+  PR/deployment state when resuming; finish after queue confirmation without
+  polling CI. Preserve unrelated work/ and Python caches; temporary logs in /tmp.
