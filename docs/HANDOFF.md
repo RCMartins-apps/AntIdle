@@ -1,38 +1,35 @@
 # Handoff
 
-## Last verified: 2026-11-13 — Shared Paths automation and linear crews complete
+## Last verified: 2026-11-14 — aphid population and relocation
 
-- Branch feature/automated-collection-trails starts at c0d5764 (merged artwork docs
-  PR #67). Owner approved automation, one scout per ten workers rounded up, ±5
-  controls, and linear collection with 5–50-worker crews. No gameplay PR requested.
-- Safe studied routes now automate via exploration.collectionTrails. Each route
-  has its own 5–50 target, guiding scouts and normal home workers/upkeep/aging.
-  Uses the shared finite deposit and respects reserved manual cargo/storage;
-  no mission slots, new resources or Knowledge. Raids remain explicit manual acts.
-- Final linear curve preserves the former five-worker haul, avoiding weaker early
-  collection. Trails run at 60% of equivalent manual gross rate, charge proportional
-  ongoing sugar and normal upkeep, pause for storage/sugar/scouts, release on
-  depletion and recognize sites studied before buying the Understanding.
-- Site-local ±5 controls show assigned workers, rates, supplies and scouts. The
-  native input snaps visibly to valid groups. Missing guides/storage pause safely.
-  Resin now has a real income estimate. Legacy unused nectar is restored once on
-  load and old staff released; in-flight cargo and version 7 saves are preserved.
-- Final validation on 2026-11-12 before environment restart: 260 engine tests and
-  4 balance tests passed; fullOptJS finished without Closure errors/warnings.
-  Maintained production CI browser checks passed at 390/1280px, production map and
-  trail checks at 320/390/1280px, and offline cold-open/update checks at 390/1280px.
-  Inspected the 320px trail panel. Current source retains that verified state.
-- All six final seeded pacing runs reached first founding (95.2–143.2 simulated
-  minutes), four reached a second within four hours; no starvation or negative
-  sampled resources. See tools/balance/TRAIL_RESULTS.md for results/limitations.
-  Earlier 10-worker/80% tuning was discarded after slowing small-colony progress.
-- docs/COLLECTION-TRAILS.md records exact rates/rules; D42, VISION, README, balancing
-  guide and tests documentation updated. This completes the earlier checkpoint.
-  New GitHub PR/CI not run yet. Final commit/push pending in this handoff snapshot.
-- Environment restarted on 2026-11-13. Working files and checkpoint survived, but
-  /tmp build/browser logs and screenshots did not. Prior successful tool outputs
-  are in conversation history; checked current diff and documentation, no code
-  changes after the completed validation. Do not claim those temporary files exist.
-- Preserve unrelated work/ and Python caches. Follow Main rules and native squash
-  auto-merge only for explicitly authorized PR/merge requests; no CI polling after
-  a confirmed queue. Territorial contest crews remain a separate unchanged system.
+- Branch `feature/aphid-relocation` starts from main `99ee3f2` (PR #68). Main was
+  checked again before handoff. PR #69 (audit fixes and guide-loss resizing) is a
+  separate authorized auto-merge PR, still pending at the start of this task;
+  this branch does not include it. Check GitHub/main before a future PR/update.
+- Owner approved D43: each chamber level houses ten aphids; each worker tends ten.
+  Per-tender output/protein cost unchanged. The first chamber gets ten animals;
+  further empty housing requires relocation. Stock persists, resets on founding,
+  and legacy version-7 saves populate existing housing once to preserve capacity.
+- Woodland Edge now offers Relocate Aphids after Wild Aphids/Aphid Tending. Safe
+  fixed mission: five workers, one scout, ten sugar, thirty simulated seconds,
+  ten reserved aphid places. Incoming groups, costs and duration are visible.
+  Uses normal expedition slots/age returns/statistics. No Knowledge/resource haul,
+  new ring or Understanding. Spent insects do not erase the living aphid source.
+- Details and reproducible before/after pacing results: docs/APHIDS.md. Balanced
+  policy, seeds 42/137, three hours each: first daughter readiness +3.11% / -1.06%,
+  one founding per run and zero starvation deaths. Earlier opening milestones
+  identical. Small measured impact for these cases, not universal balance proof.
+- 267 engine tests and four balance tests passed; fastOptJS and balance/fastOptJS
+  succeeded. fullOptJS: zero Closure errors/warnings. Maintained map/trail/aphid
+  browser gate passed at 320/390/1280px; production CI browser gate at 390/1280px.
+  git diff --check passed. Offline packaging was not rerun (no packaging changes).
+- Existing production/rate/default-pool tests now specify populated aphid housing.
+  New relocation tests cover housing reservations, concurrent trips, replay,
+  resource/scout/worker/research gates, reload and one-time legacy migration.
+  Balance policies now relocate animals to meet their existing tender targets.
+- Owner authorized a PR and auto-merge for this feature. Main and its active
+  ruleset reverified: main is still 99ee3f2; test and changes / classify are required
+  with strict up-to-date checks and no bypass. Auto-merge is enabled, squash only.
+  Check GitHub for live PR/CI state when resuming; no CI polling after queueing.
+- Preserve unrelated work/ and Python caches. Baseline worktree/reports are
+  temporary under /tmp; no scratch artifacts should be committed.

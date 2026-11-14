@@ -14,6 +14,7 @@ case class ExplorationParty(
     raidOutcome: Option[RaidOutcome] = None,
     mission: String = "haul",
     cargo: ActionCost = ActionCost(),
+    aphids: Long = 0L, // Whole animals reserved for a relocation.
 )
 
 object ExplorationParty {

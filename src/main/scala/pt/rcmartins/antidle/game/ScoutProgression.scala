@@ -16,7 +16,7 @@ object ScoutProgression {
 
   // Like expedition workers, scouts away from the nest do not consume colony food.
   def upkeepCount(ants: AntsData, exploration: ExplorationData): Long =
-    ants.upkeepWorkersCount - exploration.explorationParties.filter(_.mission == "haul").map(_.scouts).sum / u
+    ants.upkeepWorkersCount - exploration.explorationParties.filter(p => p.mission == "haul" || p.mission == "aphids").map(_.scouts).sum / u
 
   def upkeepPerTick(ants: AntsData, exploration: ExplorationData): Long =
     upkeepCount(ants, exploration) * antsSugarUpkeepTick + ants.smallWorkers / u * antsSugarUpkeepTick / 2L

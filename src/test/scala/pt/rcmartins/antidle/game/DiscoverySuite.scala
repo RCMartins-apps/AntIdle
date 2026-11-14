@@ -88,7 +88,7 @@ class DiscoverySuite extends FunSuite {
 
   test("aphid workers participate in the default worker pool without duplicating ants") {
     val ready = UpgradeVisibility.reconcile(colony.copy(
-      nestAttributes = colony.nestAttributes.copy(chambers = colony.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(40))),
+      nestAttributes = colony.nestAttributes.copy(aphids = 400L, chambers = colony.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(40))),
       upgrades = colony.upgrades.unlock(AphidTending, DefaultWorkers)))
     val selected = DefaultWorkerAssignment.select(ready, Some(AntTask.AphidTender))
     assertEquals(selected.ants.taskWorkers(AntTask.AphidTender), 40L * u)

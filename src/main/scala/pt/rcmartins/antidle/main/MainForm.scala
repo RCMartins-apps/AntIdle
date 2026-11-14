@@ -1567,7 +1567,7 @@ object MainForm {
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " brood places")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " colony slots")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass ${if (value == 1) "slot" else "slots"}"),
-          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value Aphid Tender ${if (value == 1) "slot" else "slots"}"),
+          ifGreater0(bonus.aphidSlots.toLong)(value => s"+$value aphid places"),
           ifGreater0(bonus.seedForagerSlots.toLong)(value => s"+$value Seed Forager ${if (value == 1) "slot" else "slots"}"),
           ifGreater0(bonus.royalBroodSlots.toLong)(value => s"+$value royal brood ${if (value == 1) "slot" else "slots"}"),
         )
@@ -1665,7 +1665,7 @@ object MainForm {
             },
           )
         case AntTask.AphidTender =>
-          div(child.text <-- antsSignal.map(a => s"${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s per tender"))
+          div("One tender per 10 aphids.", child.text <-- antsSignal.map(a => s" ${resourceRateStr(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage))} sugar/s · −0.01 protein/s per tender"))
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1744,7 +1744,9 @@ object MainForm {
         case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) => s"${preciseRateStr(Foraging.perCollector(ants, upgrades, small = false))} sugar/s each" })
         case AntTask.Tunneler => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} space/s each"))
         case AntTask.Scavenger => div("+0.05 protein/s each")
-        case AntTask.AphidTender => div(child.text <-- antsSignal.map(a => s"+${resourceRateStr(Prestige.sugar(8000L, a.lineage))} sugar/s · −0.01 protein/s each"),
+        case AntTask.AphidTender => div(
+          div(className := "aphid-stock", child.text <-- nestSignal.map(n => s"${n.aphids}/${AphidHusbandry.housing(n)} aphids")),
+          child.text <-- antsSignal.map(a => s"+${resourceRateStr(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage))} sugar/s · −0.01 protein/s each"),
           child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
         case AntTask.WaterCollector => div("+0.15 water/s each")
         case AntTask.SeedForager => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s each"),
@@ -1906,6 +1908,25 @@ object MainForm {
       ).amend(className := "col-12"),
       trailControls(route),
     )
+    def relocateAphids: ReactiveHtmlElement[HTMLDivElement] = div(className := "aphid-relocation",
+      div(className := "aphid-housing small mb-1", child.text <-- nestSignal.combineWith(explorationSignal).map { case (nest, data) =>
+        val incoming = AphidRelocation.reserved(data)
+        s"${nest.aphids}/${AphidHusbandry.housing(nest)} aphids" + (if (incoming > 0L) s" · $incoming returning" else "")
+      }),
+      div(className := "small", s"${prettyTimeFromTicks(AphidRelocation.Duration)} · +${AphidRelocation.Batch} aphids"),
+      actionButton(
+        name = "Relocate Aphids",
+        enabledSignal = snapshotSignal.map(AphidRelocation.canStart),
+        descriptionSignal = Val(Some(div("One tender per 10 aphids. The first chamber receives 10; further groups are relocated from Woodland Edge."))),
+        costSignal = Val(AphidRelocation.Cost),
+        bonusSignal = Val(ActionBonus.empty),
+        requirementsSignal = snapshotSignal.map { data => List(
+          ActionRequirement("scouts", ScoutProgression.available(data.ants, data.exploration), AphidRelocation.Scouts, isCost = true),
+          ActionRequirement("aphid places", AphidRelocation.free(data.nestAttributes, data.exploration) * u, AphidRelocation.Batch * u, isCost = true),
+          ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data.exploration, data.upgrades) - data.exploration.explorationParties.size).toLong * u, isCost = true)) },
+        onClickAction = _ => Actions.relocateAphids(),
+      ).amend(className := "col-12"),
+    )
     def sitePanel(id: String): ReactiveHtmlElement[HTMLDivElement] = {
       if (id == "surroundings") div(className := "map-site-card card p-3",
         h5("Nest surroundings"),
@@ -1950,6 +1971,7 @@ object MainForm {
               route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L
             }.distinct.map(available => Option.when(available)(haul(route)))
           },
+          if (id == "woodland-edge") child.maybe <-- snapshotSignal.map(AphidRelocation.visible).distinct.map(visible => Option.when(visible)(relocateAphids)) else emptyNode,
           child.maybe <-- explorationSignal.map(data => ExplorationMap.exhausted(data, id)).distinct.map(done => Option.when(done)(p("Site exhausted"))),
         )
       }
@@ -1968,7 +1990,7 @@ object MainForm {
               disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
               aria.label <-- explorationSignal.map(data =>
                 if (!ExplorationMap.revealed(data, site.id)) "Unexplored hexagon"
-                else s"${site.name}: ${if (ExplorationMap.exhausted(data, site.id)) "exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "knowledge remaining" else "resource deposits"}"),
+                else s"${site.name}: ${if (ExplorationMap.exhausted(data, site.id)) "exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "knowledge remaining" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "aphids" else "resource deposits"}"),
               aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
               className <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "unexplored" else if (ExplorationMap.exhausted(data, site.id)) "exhausted" else "revealed"),
               child <-- explorationSignal.map(data => ExplorationMap.revealed(data, site.id)).distinct.map(known =>
@@ -1984,7 +2006,7 @@ object MainForm {
                 })),
               small(className := "map-state", aria.hidden := true, child.text <-- explorationSignal.map(data =>
                 if (!ExplorationMap.revealed(data, site.id)) "" else if (ExplorationMap.exhausted(data, site.id)) "✓"
-                else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else "Collect")),
+                else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "Aphids" else "Collect")),
               onClick --> (_ => selected.set(site.id)),
             )
           },
@@ -2011,7 +2033,7 @@ object MainForm {
           b("Missions "), span(child.text <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) => s"${data.explorationParties.size} / ${ExplorationProgression.maxParties(data, upgrades)}" }),
           children <-- explorationSignal.map(_.explorationParties.map(party =>
             div(className := "map-mission p-2",
-              b(if (party.mission == "reveal") "Exploring surroundings" else if (party.mission == "study") s"Studying ${ExplorationMap.site(party.destination).name}" else ExplorationDestination.forParty(party).name),
+              b(if (party.mission == "aphids") s"Relocating ${party.aphids} aphids" else if (party.mission == "reveal") "Exploring surroundings" else if (party.mission == "study") s"Studying ${ExplorationMap.site(party.destination).name}" else ExplorationDestination.forParty(party).name),
               s" · ${party.scouts / u} scouts · ${party.amountWorkers / u} workers · ",
               span(child.text <-- currentTickSignal.map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick)))),
               if (party.mission == "haul" && RaidProgression.isRaid(ExplorationDestination.forParty(party)))
