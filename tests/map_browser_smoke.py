@@ -223,7 +223,12 @@ def check_trails(page, width, base):
     load_game(page, no_scouts)
     page.get_by_role('tab', name='Explore', exact=True).click()
     page.locator('.map-hex[data-site="woodland-edge"]').click()
-    expect(wood.locator('.trail-status')).to_have_text('Needs scouts')
+    page.clock.run_for(1000)
+    expect(wood.locator('.trail-staffing')).to_have_text('0/50 workers')
+    released = save_game(page)
+    assert released['exploration']['collectionTrails'] == []
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
     assert_fits(page, width)
     artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
     artifacts.mkdir(parents=True, exist_ok=True)

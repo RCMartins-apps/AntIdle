@@ -69,11 +69,23 @@ object PheromoneTrails {
         val count = Math.min(Capacity, Math.max(0L, entries.head.workers)) / Step * Step
         Option.when(count >= Step && route(id).exists(eligible(data.exploration, _)))(CollectionTrail(id, count))
       }
-    val excess = Math.max(0L, workers(data.ants) - trails.map(_.workers).sum)
+    // Preserve route priority and release only its actual staff, not unfilled targets.
+    var availableScouts = ScoutProgression.atHome(data.ants, data.exploration) / u
+    var availableWorkers = workers(data.ants)
+    var retainedWorkers = 0L
+    val supported = trails.flatMap { trail =>
+      val assigned = Math.min(trail.workers, availableWorkers)
+      availableWorkers -= assigned
+      val count = Math.min(trail.workers, availableScouts * GuideCapacity)
+      availableScouts -= requiredScouts(count) / u
+      retainedWorkers += Math.min(assigned, count)
+      Option.when(count >= Step)(trail.copy(workers = count))
+    }
+    val excess = Math.max(0L, workers(data.ants) - retainedWorkers)
     val ready = data.copy(ants = data.ants.removeFromTask(AntTask.TrailForager, excess),
-      exploration = data.exploration.copy(collectionTrails = trails))
+      exploration = data.exploration.copy(collectionTrails = supported))
     if (excess > 0L) DefaultWorkerAssignment.normalize(AgingJobReplacement.cancel(ready, AntTask.TrailForager))
-    else if (trails.isEmpty) AgingJobReplacement.cancel(ready, AntTask.TrailForager) else ready
+    else if (supported.isEmpty) AgingJobReplacement.cancel(ready, AntTask.TrailForager) else ready
   }
 
   case class Harvest(destination: String, workers: Long, sugarCost: Long, cargo: ActionCost, status: String)
@@ -97,11 +109,12 @@ object PheromoneTrails {
     var resources = initialResources
     exploration.collectionTrails.sortBy(_.destination).flatMap { trail =>
       route(trail.destination).filter(eligible(exploration, _)).map { destination =>
-        val active = Math.min(trail.workers, availableWorkers)
-        availableWorkers -= active
-        val scouts = requiredScouts(trail.workers)
-        val guided = availableScouts >= scouts
-        availableScouts = Math.max(0L, availableScouts - scouts)
+        val assigned = Math.min(trail.workers, availableWorkers)
+        availableWorkers -= assigned
+        val supported = Math.min(trail.workers, availableScouts / u * GuideCapacity)
+        val active = Math.min(assigned, supported)
+        val guided = supported >= Step
+        availableScouts = Math.max(0L, availableScouts - requiredScouts(supported))
         val (maximum, supply) = nominal(destination, active, upgrades)
         val key = ExplorationHelper.resource(destination)
         val resource = key match {

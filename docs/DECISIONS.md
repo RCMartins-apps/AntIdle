@@ -740,7 +740,10 @@ crews remain separate; raids stay manual so combat losses require a player actio
 Initial tuning preserves the former five-worker haul, uses 60% manual throughput
 for automation and charges proportional supplies plus normal upkeep. Both methods
 consume the same finite deposit and account for reserved manual cargo/storage.
-Storage, sugar or guide shortages pause; depletion frees staff. Learning after a
+Storage or sugar shortages pause; guide loss shrinks crews to the capacity of
+remaining scouts and returns excess workers to their default task. With no guides,
+the trail is recalled. Replacement scouts do not silently reassign workers; the
+player can expand again with +5. Depletion frees staff. Learning after a
 site was studied works. Legacy unused nectar returns to the deposit on load without
 creating stock or resetting saves. See docs/COLLECTION-TRAILS.md for exact rates.
 These are tunable balance choices; pacing checks complement actual playtests.

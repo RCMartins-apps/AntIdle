@@ -13,6 +13,8 @@ save reconciliation. This is a targeted pass, not an exhaustive game review.
 - Growing from five to ten workers could bypass a missing guide, because the
   incremental guide requirement was zero. Expansion now validates the full
   resulting quota after other trails' reservations. Removal remains possible.
+  Follow-up: guide losses now shrink crews and return excess workers instead of
+  retaining a paused crew; see COLLECTION-TRAILS.md.
 - Royal-brood forecasts omitted Dew Gatherer water that the tick engine produces
   before royal care. An empty water store could therefore predict blocked care
   while care progressed. Forecasts now include that same-tick income, also
