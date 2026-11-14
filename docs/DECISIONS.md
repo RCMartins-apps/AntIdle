@@ -747,3 +747,20 @@ player can expand again with +5. Depletion frees staff. Learning after a
 site was studied works. Legacy unused nectar returns to the deposit on load without
 creating stock or resetting saves. See docs/COLLECTION-TRAILS.md for exact rates.
 These are tunable balance choices; pacing checks complement actual playtests.
+
+## D43: Aphid colonies require relocation and ten aphids per tender — approved
+
+On 2026-11-14 the owner approved making aphids an actual housed population while
+keeping the current per-tender economics. Each Aphid Chamber level provides ten
+aphid places; one worker tends ten aphids for the existing 0.8 sugar/s and 0.01
+protein/s before inheritance. Empty places do not employ more workers. The first
+chamber gets an easy starter group of ten; expanding requires relocating further
+groups of ten from the existing Wild Aphids discovery. No new ring or prestige
+Understanding is part of this step. No recurring aphid replacement is introduced.
+
+Initial implementation makes relocation a safe 30-second expedition using five
+workers, one scout, ten sugar and ten reserved housing places. These are tunable
+values chosen to keep the added expansion friction small. It grants no Knowledge
+or ordinary resource cargo. The wild colony remains accessible after finite
+Woodland insects/Knowledge are spent. Keep existing save populations productive
+through one-time migration; reset aphids on founding. See APHIDS.md.

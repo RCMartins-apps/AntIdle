@@ -121,6 +121,8 @@ object Actions {
   def explore(workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Unit =
     actionUpdater.writer.onNext(ExplorationHelper.start(_, workers, destination, extraScouts))
 
+  def relocateAphids(): Unit = actionUpdater.writer.onNext(AphidRelocation.start)
+
   def scoutMap(site: String, count: Int): Unit = actionUpdater.writer.onNext(ExplorationMap.scout(_, site, count))
 
 

@@ -1,33 +1,23 @@
 # Handoff
 
-## Last verified: 2026-11-14 — consistency audit and guide-loss follow-up
+## Last verified: 2026-11-14 — repairing PR #69 after newer merges
 
-- Branch `fix/consistency-audit` starts at `99ee3f2`, merged Shared Paths PR #68.
-  Verified the merge before starting. Owner requested an inconsistency audit;
-  clear fixes implemented, followed by the requested guide-loss behavior. Owner
-  has now authorized a PR with auto-merge.
-- Trail assignment now checks the whole prospective scout quota after other
-  routes' reservations. Losing a guide cannot bypass expansion checks. UI costs
-  show next +5 requirements (workers and resulting guides), matching eligibility.
-- Follow-up requested by owner: guide losses shrink crews to the remaining
-  scouts' capacity and return excess staff to the default task. No guides recalls
-  the route; replacement scouts do not restore the old target automatically.
-  Existing destination-ID priority across trails is preserved. Forecasts use the
-  supported crew too. D42 and COLLECTION-TRAILS document the changed rule.
-- Royal-care forecasts now include same-tick Dew Gatherer income, matching actual
-  care and resource-rate estimates at an empty water store.
-- Audit scope/findings: docs/CONSISTENCY-AUDIT.md. Adjacent construction, resource
-  visibility, upgrades and save rules reviewed; no further confirmed player-path
-  bug selected. No prices, rates, unlocks or save-format changes.
-- Initial audit validation: 262 engine tests and 4 balance tests passed; fastOptJS
-  succeeded. Follow-up: 263 engine tests passed and fastOptJS succeeded.
-  Maintained map/trail browser checks passed at 320/390/1280px, including red
-  1/2 scout requirements for a disabled +5 button. git diff --check passed.
-  Guide-loss browser follow-up also passed at 320/390/1280px, including zero-guide
-  recall and saved crew removal. Production/offline and long pacing runs were not
-  repeated for these narrow changes.
-- PR/auto-merge handoff authorized. Main protection reverified on 2026-11-14:
-  active ruleset requires test and changes / classify, strict up-to-date policy,
-  no bypass; repository has squash-only auto-merge. Check GitHub for live PR state.
-- Preserve unrelated work/ and Python caches. Continue native squash auto-merge
-  only when PR/merge is authorized; do not poll after a confirmed auto-merge queue.
+- Branch `fix/consistency-audit` / PR #69 was blocked by merge conflicts, with
+  auto-merge still enabled. Merged current main `2b2b022` (build version PR #72),
+  including aphid PR #70 and brood icons PR #71. Only HANDOFF conflicted; source
+  and browser checks merged cleanly. Keep main's features and the audit fixes.
+- PR #69 fixes next +5 worker/scout counters to match eligibility, prevents guide
+  shortages bypassing expansion, and includes Dew Gatherer income in royal-care
+  forecasts. Guide losses reduce trails to supported crews, returning excess to
+  the default task; no guides recalls the route. Replacements do not silently
+  restore old targets. See CONSISTENCY-AUDIT.md and COLLECTION-TRAILS.md.
+- Existing aphid/save rules and pacing are in APHIDS.md. Running commit identity
+  and deferred offline update behavior are in OFFLINE.md; no change to either
+  feature is intended by this integration. BuildInfo is generated, not tracked.
+- Previous branch validation passed 263 engine tests and map checks before main
+  integration. Fresh combined engine/build/browser validation is pending in this
+  repair; replace this entry with actual results before the final handoff.
+- User authorized fixing and restoring auto-merge for #69. Push the ordinary
+  merge/update to its existing branch, preserve required checks and squash auto-
+  merge, and finish once GitHub confirms the queue. Do not claim merged/deployed
+  from an authorization or queued state. Preserve unrelated work/ and caches.

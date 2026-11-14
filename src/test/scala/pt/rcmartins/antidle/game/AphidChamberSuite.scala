@@ -13,7 +13,7 @@ class AphidChamberSuite extends FunSuite {
     val initial = AllData.initial
     initial.copy(
       ants = AntsData(workers = 20 * u, tasks = Seq(AntTask.SugarCollector -> 0L, AntTask.AphidTender -> 0L, AntTask.Explorer -> 0L)),
-      nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(aphidChamber = AphidChamber(level))),
+      nestAttributes = initial.nestAttributes.copy(aphids = level * 10L, chambers = initial.nestAttributes.chambers.copy(aphidChamber = AphidChamber(level))),
       exploration = MapFixture.explored,
       upgrades = initial.upgrades.unlock(AphidTending, DefaultWorkers),
       basicResources = initial.basicResources.copy(sugar = BasicResource(500 * u, 1000 * u), protein = BasicResource(10 * u, 100 * u)),
@@ -21,14 +21,16 @@ class AphidChamberSuite extends FunSuite {
     )
   }
 
-  test("each chamber level adds exactly one worker slot and the advertised bonus matches") {
+  test("each chamber level houses ten aphids but empty housing cannot employ extra tenders") {
     val empty = colony(0)
     assertEquals(AphidHusbandry.capacity(empty.nestAttributes), 0L)
-    val built = ChamberBonuses.completeUpgrade(empty, ChamberType.Aphid)
+    val built = DefaultWorkerAssignment.normalize(ChamberBonuses.completeUpgrade(empty, ChamberType.Aphid))
     assertEquals(AphidHusbandry.capacity(built.nestAttributes), u)
-    assertEquals(ChamberBonuses.forChamber(ChamberType.Aphid).aphidSlots, 1)
+    assertEquals(ChamberBonuses.forChamber(ChamberType.Aphid).aphidSlots, 10)
     assertEquals(built.basicResources, empty.basicResources)
-    assertEquals(AphidHusbandry.capacity(ChamberBonuses.completeUpgrade(built, ChamberType.Aphid).nestAttributes), 2L * u)
+    val expanded = DefaultWorkerAssignment.normalize(ChamberBonuses.completeUpgrade(built, ChamberType.Aphid))
+    assertEquals(AphidHusbandry.housing(expanded.nestAttributes), 20L)
+    assertEquals(AphidHusbandry.capacity(expanded.nestAttributes), u)
   }
 
   test("manual batches stop at capacity without removing excess workers from their default task") {
@@ -55,8 +57,8 @@ class AphidChamberSuite extends FunSuite {
     assertEquals(grown.ants.taskWorkers(AntTask.AphidTender), 3L * u)
     assertEquals(grown.ants.idleWorkersCount, 18L * u)
     val expanded = DefaultWorkerAssignment.normalize(ChamberBonuses.completeUpgrade(selected, ChamberType.Aphid))
-    assertEquals(expanded.ants.taskWorkers(AntTask.AphidTender), 4L * u)
-    assertEquals(expanded.ants.idleWorkersCount, 16L * u)
+    assertEquals(expanded.ants.taskWorkers(AntTask.AphidTender), 3L * u)
+    assertEquals(expanded.ants.idleWorkersCount, 17L * u)
   }
 
   test("fed tenders produce constant sugar and consume minor protein in actual ticks") {

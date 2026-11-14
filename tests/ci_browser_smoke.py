@@ -5,6 +5,7 @@ from http.server import ThreadingHTTPServer
 import os
 from pathlib import Path
 import shutil
+import subprocess
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
@@ -14,6 +15,65 @@ from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, prog
 class ProductionHandler(QuietHandler):
     def translate_path(self, path):
         return super().translate_path(path.replace('/antidle-fastopt/', '/antidle-opt/'))
+
+
+
+
+def check_build_version(page, width):
+    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    footer = page.locator('.game-build-footer .build-version')
+    expect(footer).to_contain_text('Build ' + revision[:8])
+    expect(footer.locator('a')).to_have_attribute('href', 'https://github.com/RCMartins-apps/AntIdle/commit/' + revision)
+    displayed = footer.inner_text()
+    page.get_by_role('tab', name='Settings', exact=True).click()
+    expect(page.locator('.settings-build .build-version')).to_have_text(displayed)
+    page.clock.run_for(1000)
+    expect(footer).to_have_text(displayed)
+    page.reload(wait_until='networkidle')
+    expect(footer).to_have_text(displayed)
+    assert_fits(page, width)
+    print(f'PASS build version {width}px: compiled commit, Settings/footer agreement and reload', flush=True)
+
+
+def check_brood_icons(page, width, base):
+    game = progressed_game(base)
+    tick = game['world']['currentTick']
+    game['ants'].update(workers=20 * UNIT, smallWorkers=0, scouts=0,
+        tasks=[[{'SugarCollector': {}}, 20 * UNIT]],
+        eggsAndLarvae=[
+            {'Developing': {'initialTick': tick, 'kind': 'worker', 'care': 99 * UNIT}},
+            {'Developing': {'initialTick': tick, 'kind': 'worker', 'care': 100 * UNIT}},
+            {'Developing': {'initialTick': tick, 'kind': 'worker', 'care': 500 * UNIT}},
+            {'Developing': {'initialTick': tick, 'kind': 'small', 'care': 0}},
+            {'Developing': {'initialTick': tick, 'kind': 'scout', 'care': 80 * UNIT}},
+            {'Larvae': {'initialTick': tick}},
+            {'Pupae': {'initialTick': tick}},
+            {'ScoutEgg': {'initialTick': tick}}], eggOrders=0, scoutEggOrders=[])
+    game['ants']['queenRoutine']['enabled'] = False
+    load_game(page, game)
+    row = page.locator('.resource-row').filter(has=page.get_by_text('Brood', exact=True))
+    if width <= 767:
+        row.locator('.resource-name details > summary').click()
+        listing = row
+    else:
+        row.locator('.resource-name').hover()
+        listing = page.locator('.game-tooltip')
+    entries = listing.locator('.brood-entry')
+    expect(entries).to_have_count(8)
+    expect(entries.locator('.resource-icon-eggs')).to_have_count(3)
+    expect(entries.locator('.resource-icon-larva')).to_have_count(3)
+    expect(entries.locator('.resource-icon-pupa')).to_have_count(2)
+    expect(entries.first).to_contain_text('Worker egg')
+    expect(entries.first.locator('.resource-icon')).to_have_attribute('aria-hidden', 'true')
+    paths = entries.locator('.resource-icon svg path').evaluate_all('(nodes) => nodes.map(n => n.getAttribute("d"))')
+    assert len(set(paths)) == 3, paths
+    assert_fits(page, width)
+    page.clock.run_for(1000)
+    expect(entries.first).to_contain_text('Worker larva')
+    expect(entries.first.locator('.resource-icon-larva')).to_have_count(1)
+    if width <= 767:
+        expect(row.locator('.resource-name details')).to_have_attribute('open', '')
+    print(f'PASS brood icons {width}px: distinct stages, caste/legacy entries and live stage transition', flush=True)
 
 
 def check_game(page, width, url):
@@ -184,6 +244,8 @@ def check_game(page, width, url):
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
     expect(protein).to_be_visible()
     assert_fits(page, width)
+    check_brood_icons(page, width, save_game(page))
+    check_build_version(page, width)
     assert not errors, errors
     print(f'PASS production {width}px: founding labels, disclosures, task geometry, research prices/purchase, hex map/scout launch/reveal, prestige/reset and resource visibility', flush=True)
 

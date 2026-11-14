@@ -38,7 +38,8 @@ multipliers are not spent. Prestige is the normal reset with normal inheritance.
 
 The default configuration has two seeds and three policies. They differ in
 population targets, party sizes (multiples of five, from 5 to 50), additional scouts beyond a two-scout colony target and how many workers are reserved
-for digging, brood care and aphids. They share explicit research priorities and use scouts to reveal/study sites, then workers to collect needed resources.
+for digging, brood care and aphids. The policy `aphids` value means worker tenders;
+policies relocate additional groups of ten aphids to populate their housing. They share explicit research priorities and use scouts to reveal/study sites, then workers to collect needed resources.
 Change `tools/balance/default.json` or pass another file with `--config` to test
 hypotheses. Policy names are labels, not promises of optimal play. Research only
 considers the first visible unfinished priority; this is intentionally inspectable.

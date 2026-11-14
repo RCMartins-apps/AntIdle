@@ -155,6 +155,13 @@ Resource statistics count retained gains, not spending or discarded overflow.
 Tunnelling capacity remains limited and grows with Nest chambers. Permanent
 resource visibility is separate from current-colony unlocks and survives founding.
 
+## Running build version
+
+Settings and the page footer show an automatic short Git commit ID for the
+running bundle, including offline. Local uncommitted builds append `-dev`.
+If **Update ready** appears, save and close all game windows to apply it on the
+next launch. See [offline updates](docs/OFFLINE.md) for build identity and caching.
+
 ## Resource icons
 
 `game/ResourceIcons.scala` defines a consistent embedded SVG set for sugar,
@@ -227,6 +234,10 @@ Discovery unlocks are deterministic. They enable aphid research, seeds, water,
 repletes, outposts and resin/royal-nursery progression. Water discovery also opens
 Dew Gatherers (five places), providing renewable water after the deposit runs out.
 The Discoveries tab retains learned information independently of site exhaustion.
+Aphid Chambers house ten aphids per level, with one tender per ten animals. The
+first chamber receives ten; later groups require a safe relocation mission from
+Woodland Edge. Per-tender production and protein consumption are unchanged. See
+[aphid husbandry](docs/APHIDS.md) for costs, reservations and save migration.
 
 ## Colony lifecycle
 

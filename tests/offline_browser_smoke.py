@@ -65,6 +65,8 @@ def check(context, width, server, root):
         page.goto(url, wait_until='networkidle')
         expect(page.locator('#offline-status')).to_have_text('Available offline', timeout=30000)
         page.wait_for_function('navigator.serviceWorker.controller !== null')
+        running_build = page.locator('.game-build-footer .build-version').inner_text()
+        assert running_build.startswith('Build ')
         # Disable HTTP cache: this must work through the service worker's release cache.
         cdp = context.new_cdp_session(page)
         cdp.send('Network.enable')
@@ -92,6 +94,7 @@ def check(context, width, server, root):
         page.goto(url, wait_until='networkidle')
         expect(page.get_by_role('button', name='Gather Sugar', exact=True)).to_be_visible()
         expect(page.locator('#offline-status')).to_have_text('Available offline')
+        expect(page.locator('.game-build-footer .build-version')).to_have_text(running_build)
         assert page.evaluate("localStorage.getItem('save')") == saved_raw
         assert page.get_by_role('button', name='Gather Sugar', exact=True).evaluate("el => getComputedStyle(el).backgroundColor") == 'rgb(13, 110, 253)'
         page.get_by_role('button', name='Gather Sugar', exact=True).click()
@@ -103,6 +106,7 @@ def check(context, width, server, root):
         page.evaluate('async () => (await navigator.serviceWorker.getRegistration()).update()')
         expect(page.locator('#offline-status')).to_contain_text('Update ready', timeout=30000)
         assert page.evaluate('window.liveGameMarker') == 'do-not-reload'
+        expect(page.locator('.game-build-footer .build-version')).to_have_text(running_build)
         assert page.title() == f'Ant Idle first-{width}'
         page.reload(wait_until='networkidle')
         assert page.title() == f'Ant Idle first-{width}'

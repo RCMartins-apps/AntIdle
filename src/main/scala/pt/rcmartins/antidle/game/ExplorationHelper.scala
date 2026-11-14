@@ -69,6 +69,7 @@ object ExplorationHelper {
     if (RaidProgression.isRaid(destination)) RaidProgression.risk(workers) else s"${resource(destination).capitalize} guaranteed; no knowledge from collection."
   def exploreBonus(initial: AllData, party: ExplorationParty): AllData =
     if (!initial.exploration.explorationParties.contains(party)) initial
+    else if (party.mission == "aphids") AphidRelocation.finish(initial, party)
     else if (party.mission != "haul") ExplorationMap.finishScout(initial, party)
     else {
       val destination = ExplorationDestination.forParty(party)

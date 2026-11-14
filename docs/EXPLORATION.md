@@ -21,6 +21,9 @@ o aging reset or repeated-mission immortality. Larger crews cost more and finish
 sooner, but do not multiply Knowledge. Normal worker hauls need no scout except
 the dangerous Rival Cache; workers cannot reveal or study a site themselves.
 
+Aphid relocation also needs one scout to escort five workers carrying ten aphids.
+It is a separate safe housing mission, not a resource haul; see [Aphids](APHIDS.md).
+
 ## Fixed landscape and budgets
 
 Axial coordinates `(q,r)` describe six distance-one neighbors of the nest.
@@ -28,7 +31,7 @@ No terrain or essential reward is rolled randomly. The reveal order is fixed:
 
 | Site | Knowledge | Opportunity |
 | --- | ---: | --- |
-| Woodland Edge | 800 | One guaranteed carcass from first study; finite insects; aphid discovery |
+| Woodland Edge | 800 | One guaranteed carcass from first study; finite insects; aphid discovery and relocation |
 | Nectar Meadow | 1,000 | Finite nectar and seeds; automated trails |
 | Rotten Log | 1,100 | Finite insects; Dry Trail discovery |
 | Dry Clearing | 1,200 | Water deposit; dew collection, repletes and outpost progression |

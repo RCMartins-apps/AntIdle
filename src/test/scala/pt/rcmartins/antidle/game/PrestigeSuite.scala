@@ -50,7 +50,7 @@ class PrestigeSuite extends FunSuite {
     assertEquals(boosted.basicResources.sugar.amount - normal.basicResources.sugar.amount, production / 10L)
     assertEquals(boosted.ants.upkeepWorkersCount, normal.ants.upkeepWorkersCount)
     val aphids = improved.ants.copy(tasks = Seq(AntTask.AphidTender -> u))
-    val nest = base.nestAttributes.copy(chambers = base.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1)))
+    val nest = base.nestAttributes.copy(aphids = 10L, chambers = base.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1)))
     val upgrades = base.upgrades.unlock(UpgradesData.UpgradeType.AphidTending)
     assertEquals(AphidHusbandry.productionPerTick(aphids, nest, upgrades, u), 1760L)
     assertEquals(AphidHusbandry.proteinPerTick(aphids, nest, upgrades, u), 20L)
