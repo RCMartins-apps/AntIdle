@@ -26,7 +26,7 @@ object ChamberBonuses {
       case ChamberType.Replete =>
         ActionBonus(repleteSlots = 1)
       case ChamberType.Aphid =>
-        ActionBonus(aphidSlots = (if (upgrades(pt.rcmartins.antidle.model.UpgradesData.UpgradeType.AphidShelters).unlocked) 20 else 10))
+        ActionBonus(aphidSlots = (if (upgrades(pt.rcmartins.antidle.model.UpgradesData.UpgradeType.AphidShelters).unlocked) AphidHusbandry.ShelteredPlacesPerLevel else AphidHusbandry.BasePlacesPerLevel))
       case ChamberType.Nursery =>
         ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
       case ChamberType.RoyalNursery =>

@@ -73,6 +73,13 @@ jobs:
           ANTIDLE_PRODUCTION: "1"
         run: python3 tests/map_browser_smoke.py
 
+      - name: Check prestige and outer-map progression
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+          ANTIDLE_PRODUCTION: "1"
+        run: python3 tests/prestige_smoke.py
+
       - name: Check offline play and updates
         timeout-minutes: 5
         env:

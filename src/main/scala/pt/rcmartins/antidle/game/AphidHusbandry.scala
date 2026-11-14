@@ -8,12 +8,14 @@ object AphidHusbandry {
   val SugarPerWorkerSecond: Long = 8000L
   val ProteinPerWorkerSecond: Long = 100L
 
+  val BasePlacesPerLevel: Int = 10
+  val ShelteredPlacesPerLevel: Int = 20
   val AphidsPerTender: Long = 10L
   def housing(nest: NestAttributes): Long = Math.max(0L, nest.chambers.aphidChamber.level.toLong) * nest.aphidPlacesPerLevel
   def capacity(nest: NestAttributes): Long = Math.min(housing(nest), Math.max(0L, nest.aphids)) / AphidsPerTender * u
 
   def reconcile(data: AllData): AllData = {
-    val nest = data.nestAttributes.copy(aphidPlacesPerLevel = if (data.upgrades(UpgradesData.UpgradeType.AphidShelters).unlocked) 20 else 10)
+    val nest = data.nestAttributes.copy(aphidPlacesPerLevel = if (data.upgrades(UpgradesData.UpgradeType.AphidShelters).unlocked) ShelteredPlacesPerLevel else BasePlacesPerLevel)
     val stocked = if (!nest.aphidsInitialized) nest.copy(aphids = housing(nest), aphidsInitialized = true)
       else nest.copy(aphids = Math.max(0L, Math.min(housing(nest), nest.aphids)))
     val first = stocked.aphids == 0L && housing(stocked) >= AphidsPerTender &&

@@ -1316,17 +1316,19 @@ object MainForm {
             data.upgrades.upgrades.toSeq.filter(_._2.unlocked).sortBy(_._1.title).map(_._1.title).mkString(", "))
       })
     def newResearch = detailsTag(className := "understanding-research my-2", summaryTag(minHeight.px := 44, "New colony research"),
+      div(className := "small text-body-secondary my-2", "Each needs 3 studies at its outer site. Colony research resets on founding."),
       Seq(UpgradeType.AphidShelters, UpgradeType.TrailLogistics, UpgradeType.CoordinatedExpeditions).map { upgrade =>
         div(className := "border-bottom small py-2", b(upgrade.title), div(upgrade.description),
           div(s"${prettyNumberStr(upgrade.cost.sugar)} sugar · ${prettyNumberStr(upgrade.cost.knowledge)} knowledge" +
             (if (upgrade.cost.resin > 0L) s" · ${prettyNumberStr(upgrade.cost.resin)} resin" else "")),
-          div("Discover through 3 studies at its outer site. Research is purchased again in each colony."))
+          emptyNode)
       })
     def choices = div(className := "understanding-choices",
       children <-- antsSignal.map(_.lineage).distinct.combineWith(selected.signal).map { case (lineage, ids) =>
         val available = lineage.copy(foundings = if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue,
           sharedPaths = lineage.sharedPaths || ids(Prestige.SharedPaths.id))
-        Prestige.understandings.filter(u => !u.owned(lineage) && u.available(available)).map { understanding =>
+        val options = Prestige.understandings.filter(u => !u.owned(lineage) && u.available(available))
+        if (options.isEmpty) Seq(div(className := "small my-2", "No new Understandings available for this founding.")) else options.map { understanding =>
           div(className := "understanding-choice border rounded p-2 my-2", dataAttr("understanding") := understanding.id,
             label(className := "d-flex align-items-center gap-2", minHeight.px := 44,
               input(typ := "checkbox", className := "form-check-input", aria.label := s"Select ${understanding.title}", checked := ids(understanding.id),
@@ -1347,8 +1349,10 @@ object MainForm {
       row("Current lineage", antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1} · ${a.lineage.dna} DNA · +${Prestige.sugarBonus(a.lineage)}% sugar")),
       div(className := "lineage-queen-status small my-2", child.text <-- antsSignal.map(a =>
         if (a.daughterQueens >= u) "Daughter queen: ready" else if (a.royalBrood.nonEmpty) "Daughter queen: rearing in Nest" else "Daughter queen: raise in Nest")),
-      div(className := "inherited-understandings small", child.text <-- antsSignal.map(a =>
-        "Inherited: " + Prestige.understandings.filter(_.owned(a.lineage)).map(_.title).mkString(", ")).distinct),
+      div(className := "inherited-understandings small", child.text <-- antsSignal.map { a =>
+        val known = Prestige.understandings.filter(_.owned(a.lineage)).map(_.title)
+        if (known.isEmpty) "Understandings: none yet" else "Inherited: " + known.mkString(", ")
+      }.distinct),
       child <-- step.signal.distinct.map {
         case 0 => div(className := "founding-step", dataAttr("step") := "rewards",
           h5(className := "mt-3", "1. Founding rewards"), rewardRows,

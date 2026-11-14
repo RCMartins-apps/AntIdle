@@ -6,7 +6,8 @@ import pt.rcmartins.antidle.game.Constants._
 /** Safe, continuous collection: shared finite deposits, no mission slots or extra rewards. */
 object PheromoneTrails {
   val EfficiencyPercent: Long = 60L
-  def efficiency(upgrades: UpgradesData): Long = if (upgrades(UpgradesData.UpgradeType.TrailLogistics).unlocked) 75L else EfficiencyPercent
+  val LogisticsEfficiencyPercent: Long = 75L
+  def efficiency(upgrades: UpgradesData): Long = if (upgrades(UpgradesData.UpgradeType.TrailLogistics).unlocked) LogisticsEfficiencyPercent else EfficiencyPercent
   val Capacity: Long = ExplorationProgression.MaxWorkers
   val Step: Long = ExplorationProgression.WorkerStep
   private val GuideCapacity: Long = 10L * u

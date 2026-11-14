@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.DiscoveryProgression
+import pt.rcmartins.antidle.game.{DiscoveryProgression, AphidHusbandry, PheromoneTrails}
 import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
@@ -52,10 +52,10 @@ object UpgradeBalance {
   lazy val definitions: Map[UpgradeType, UpgradeDefinition] = Map(
     AphidShelters -> UpgradeDefinition("Aphid Shelters", ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
       UpgradeRequirements(upgrades = List(AphidTending), discovery = Some("aphid-shelters"), beyondWoodland = true),
-      "Aphid Chamber: 10 → 20 aphid places per level. One tender still cares for 10 aphids."),
+      s"Aphid Chamber: ${AphidHusbandry.BasePlacesPerLevel} → ${AphidHusbandry.ShelteredPlacesPerLevel} aphid places per level."),
     TrailLogistics -> UpgradeDefinition("Trail Logistics", ActionCost(sugar = 3000L * u, knowledge = 300L * u),
       UpgradeRequirements(discovery = Some("trail-logistics"), beyondWoodland = true),
-      "Collection trails: 60% → 75% of manual haul rate. Supply use scales with the haul; guide requirements stay the same."),
+      s"Collection trails: ${PheromoneTrails.EfficiencyPercent}% → ${PheromoneTrails.LogisticsEfficiencyPercent}% of manual haul rate; +${PheromoneTrails.LogisticsEfficiencyPercent * 100L / PheromoneTrails.EfficiencyPercent - 100L}% supply use."),
     CoordinatedExpeditions -> UpgradeDefinition("Coordinated Expeditions", ActionCost(sugar = 4000L * u, knowledge = 400L * u),
       UpgradeRequirements(discovery = Some("coordinated-expeditions"), beyondWoodland = true), "+1 expedition slot."),
 

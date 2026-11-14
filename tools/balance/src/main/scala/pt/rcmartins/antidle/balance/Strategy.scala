@@ -98,7 +98,11 @@ object Strategy {
     val a = d.ants; val nest = d.nestAttributes; val e = d.exploration
     def done(c: Choice) = Decision(Some(c), c.name)
     def select(c: Option[Choice]): Option[Decision] = c.map(done)
-    if (Prestige.canFound(d)) return done(Choice("Found daughter colony", "founding", Prestige.found(_)))
+    if (Prestige.canFound(d)) {
+      val learn = if (!a.lineage.sharedPaths) Seq(Prestige.SharedPaths.id)
+        else if (!a.lineage.beyondWoodland && a.lineage.foundings >= 1) Seq(Prestige.BeyondWoodland.id) else Nil
+      return done(Choice("Found daughter colony", "founding", Prestige.found(_, learn)))
+    }
     if (a.lineage.foundings > 0 && !a.lineage.sharedPaths && a.lineage.dna >= 1L)
       return done(Choice("Learn Shared Paths", "research", Prestige.purchase))
     if (EmergencyRecovery.canRaise(a, d.basicResources.sugar.amount))
@@ -111,7 +115,8 @@ object Strategy {
 
     if (a.lineage.foundings >= 2 && a.lineage.sharedPaths && !a.lineage.beyondWoodland && a.lineage.dna >= 1L)
       return done(Choice("Learn Beyond the Woodland", "research", Prestige.purchase(_, Prestige.BeyondWoodland.id)))
-    val orders = p.upgradeOrder.flatMap(name => UpgradeType.all.find(_.name == name))
+    val orders = p.upgradeOrder.flatMap(name => UpgradeType.all.find(_.name == name)) ++
+      (if (a.lineage.beyondWoodland) Seq(AphidShelters, TrailLogistics, CoordinatedExpeditions) else Nil)
     val research = orders.find(t => !d.upgrades(t).unlocked && d.upgrades(t).show)
     research.filter(t => UpgradeResearch.canPurchase(d, t)).foreach { t =>
       return done(Choice(s"Research ${t.title}", "research", UpgradeResearch.purchase(_, t)))
