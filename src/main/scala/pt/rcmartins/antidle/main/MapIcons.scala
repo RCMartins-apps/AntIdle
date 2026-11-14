@@ -14,6 +14,9 @@ object MapIcons {
     "dry-clearing" -> "M3 27h26M4 22l7-4 6 4 7-5 5 4M22 5a4 4 0 1 0 0 8 4 4 0 1 0 0-8ZM22 1v1m0 14v1M14 9h-1m18 0h-1M8 4C5 9 3 11 3 14a5 5 0 0 0 10 0c0-3-2-5-5-10Z",
     "fallen-pine" -> "M13 2 5 12h5L3 22h9v7h3v-7h8l-7-10h5L13 2ZM25 15c-2 4-4 6-4 9a4 4 0 0 0 8 0c0-3-2-5-4-9Z",
     "rival-food-cache" -> "M16 3 2 27h28L16 3ZM16 12v7m0 4v1M9 27l-3 4m17-4 3 4",
+    "aphid-thicket" -> "M16 29V14M16 21 8 14M16 17l7-7M5 4c15-3 23 2 22 12-11 4-23-1-22-12ZM6 22a3 3 0 1 0 6 0 3 3 0 1 0-6 0ZM23 22a3 3 0 1 0 6 0 3 3 0 1 0-6 0Z",
+    "fallen-oak" -> "M5 12h22v14H5V12ZM9 12V5m0 3 6-4M8 18h16M8 22h12",
+    "root-hollow" -> "M3 26h26M7 26V12a9 9 0 0 1 18 0v14M12 26v-7a4 4 0 0 1 8 0v7M11 9l5 3 5-3",
     "fog" -> "M10 11a6 6 0 1 1 10 4l-4 3v3m0 5v1",
   )
   def apply(id: String): ReactiveHtmlElement[HTMLSpanElement] =

@@ -12,7 +12,7 @@ import zio.json._
 class UnlockDefinitionsSuite extends FunSuite {
   def ready: AllData = {
     val d = AllData.initial
-    d.copy(ants = d.ants.copy(smallWorkers = 5L * u, ages = d.ants.ages.copy(active = true)),
+    d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = 5L * u, ages = d.ants.ages.copy(active = true)),
       nestAttributes = d.nestAttributes.copy(dryClearingOutpost = true, chambers = d.nestAttributes.chambers.copy(
         nestChamber = d.nestAttributes.chambers.nestChamber.copy(level = 1),
         nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
@@ -53,12 +53,13 @@ class UnlockDefinitionsSuite extends FunSuite {
         val discovery = DiscoveryProgression.all.find(_.id == id).get
         assert(!upgrade.shouldShow(d.copy(exploration = d.exploration.copy(surveys = d.exploration.surveys.updated(discovery.destination, discovery.trips - 1)))), upgrade.name)
       }
+      if (r.beyondWoodland) assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(lineage = Lineage()))), upgrade.name)
       if (r.nursery) assert(!upgrade.shouldShow(d.copy(nestAttributes = d.nestAttributes.copy(chambers = d.nestAttributes.chambers.copy(nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 0))))), upgrade.name)
       if (r.outpost) assert(!upgrade.shouldShow(d.copy(nestAttributes = d.nestAttributes.copy(dryClearingOutpost = false))), upgrade.name)
       if (r.aging) assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(ages = d.ants.ages.copy(active = false)))), upgrade.name)
       if (r.proteinDiscovered) assert(!upgrade.shouldShow(d.copy(exploration = d.exploration.copy(proteinDiscovered = false))), upgrade.name)
       if (r.minimumSmallWorkers > 0) {
-        assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(smallWorkers = (r.minimumSmallWorkers - 1L) * u))), upgrade.name)
+        assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = (r.minimumSmallWorkers - 1L) * u))), upgrade.name)
         assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(standardWorkersUnlocked = true))), upgrade.name)
       }
     }
@@ -85,7 +86,7 @@ class UnlockDefinitionsSuite extends FunSuite {
   test("earned visibility survives a transient prerequisite loss and save/load") {
     val d = UpgradeVisibility.reconcile(AllData.initial.copy(ants = AllData.initial.ants.copy(smallWorkers = 5L * u)))
     assert(d.upgrades(StandardWorkers).show)
-    val spent = d.copy(ants = d.ants.copy(smallWorkers = 4L * u))
+    val spent = d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = 4L * u))
     assert(!StandardWorkers.shouldShow(spent))
     assert(UpgradeResearch.isVisible(spent, StandardWorkers))
     assert(AllDataForSave.fromAllData(spent).toAllData.upgrades(StandardWorkers).show)

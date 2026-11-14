@@ -21,9 +21,10 @@ case class UpgradeRequirements(
     proteinDiscovered: Boolean = false,
     minimumSmallWorkers: Int = 0,
     earlyResearch: Boolean = false,
+    beyondWoodland: Boolean = false,
 ) {
   def met(data: AllData): Boolean =
-    upgrades.forall(data.upgrades(_).unlocked) &&
+    (!beyondWoodland || data.ants.lineage.beyondWoodland) && upgrades.forall(data.upgrades(_).unlocked) &&
       data.exploration.revealedSites >= minimumRevealedSites &&
       (!explorationTab || data.unlocks.tabs.exploreTabUnlocked) &&
       (!explorationAvailable || UpgradeBalance.explorationAvailable(data)) &&
@@ -49,6 +50,15 @@ object UpgradeBalance {
   def apply(upgrade: UpgradeType): UpgradeDefinition = definitions(upgrade)
 
   lazy val definitions: Map[UpgradeType, UpgradeDefinition] = Map(
+    AphidShelters -> UpgradeDefinition("Aphid Shelters", ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
+      UpgradeRequirements(upgrades = List(AphidTending), discovery = Some("aphid-shelters"), beyondWoodland = true),
+      "Aphid Chamber: 10 → 20 aphid places per level. One tender still cares for 10 aphids."),
+    TrailLogistics -> UpgradeDefinition("Trail Logistics", ActionCost(sugar = 3000L * u, knowledge = 300L * u),
+      UpgradeRequirements(discovery = Some("trail-logistics"), beyondWoodland = true),
+      "Collection trails: 60% → 75% of manual haul rate. Supply use scales with the haul; guide requirements stay the same."),
+    CoordinatedExpeditions -> UpgradeDefinition("Coordinated Expeditions", ActionCost(sugar = 4000L * u, knowledge = 400L * u),
+      UpgradeRequirements(discovery = Some("coordinated-expeditions"), beyondWoodland = true), "+1 expedition slot."),
+
     StandardWorkers -> UpgradeDefinition(
       title = "Standard Worker Development",
       cost = ActionCost(sugar = 75 * u, tunnelingSpace = 10 * u),

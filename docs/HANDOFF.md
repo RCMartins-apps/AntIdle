@@ -1,28 +1,17 @@
 # Handoff
 
-## Last verified: 2026-11-14 — bounded GitHub Actions
+## Checkpoint: 2026-11-14 — second prestige in progress
 
-- Branch `ci/workflow-timeouts` starts from main `3a51b3c`, merged PR #69. The
-  consistency/guide-loss fixes are now on main, along with aphids, brood icons
-  and running build identity. Latest main deployment completed successfully.
-- Owner requested limits after long-running Actions. Found superseded main
-  deployments still running: 43583940403 (stuck at Scala Build project) and
-  43582168774. Recent successful PR tests took ~6 minutes and deploys ~3 minutes.
-- Runner budgets: PR test 20 min, deployment 15, classifier 5. Explicit step
-  limits include builds/tests 10, browser suites 5 each, dependencies 8 and deploy
-  5. Browser commands split into three named timed steps; commands unchanged.
-- PR and deploy workflows cancel superseded runs per workflow and PR/ref. Required
-  test and changes / classify names, docs-only policy and main/debug gates remain.
-  D44 and CI-WORKFLOW.md document behavior and non-retroactive limits.
-- YAML structure/timeout coverage validated for all three workflows; all six
-  ci_changes_test.py tests passed; git diff --check passed. No game build/browser
-  rerun needed for workflow-only changes. Live GitHub timeout/cancellation behavior
-  will be exercised after the workflow update lands; do not claim live verification.
-- Existing runs were not cancelled. The GitHub connector has no cancel action;
-  shell gh API access returned Forbidden. Existing executions need cancellation
-  separately in Actions; future limits do not apply retroactively.
-- Owner authorized a PR and auto-merge. Main remains 3a51b3c; active required
-  test and changes / classify checks, strict up-to-date policy and no bypass
-  verified again. Squash-only auto-merge is enabled. Check GitHub for live state
-  when resuming; finish after queue confirmation without CI polling.
-- Preserve unrelated work/ and Python caches.
+- feature/second-prestige from main 7b22c11; user approved three outer hexes for
+  Beyond the Woodland and requested reward → Understanding → confirmation flow.
+- Core and UI implemented: 1 DNA range Understanding after Shared Paths/second
+  founding, three fixed scout-only sites and colony research (aphid housing 20,
+  trail efficiency 75%, extra expedition slot). Exact rules in PRESTIGE.md / D46.
+- Founding selection validates/spends/reset atomically; old saves default to the
+  original range. Preview/back never charges. UI shows live DNA, sugar bonus and
+  reset values; final checkbox required. Current research resets, ownership lasts.
+- 275 engine tests passed. Balance tests/development build finishing. Browser
+  validation, mobile screenshots, production build, pacing and final docs still
+  pending; this checkpoint is not ready to merge. New prestige_smoke.py replaces
+  the historical XP/trail script with current staged/outer-map checks.
+- Preserve unrelated work/ and Python caches. No PR requested for this feature.

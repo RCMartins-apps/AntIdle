@@ -228,9 +228,10 @@ def check_game(page, width, url):
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_have_count(0)
     assert_fits(page, width)
     page.get_by_role('tab', name='Lineage', exact=True).click()
-    page.get_by_text('Review founding', exact=True).click()
-    expect(page.locator('.founding-preview')).to_contain_text('Reset:')
-    page.once('dialog', lambda dialog: dialog.accept())
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    page.get_by_role('button', name='Review founding', exact=True).click()
+    expect(page.get_by_role('button', name='Found daughter colony', exact=True)).to_be_disabled()
+    page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     page.get_by_role('button', name='Found daughter colony', exact=True).click()
     founded = save_game(page)
     assert founded['ants']['lineage']['foundings'] == 1
