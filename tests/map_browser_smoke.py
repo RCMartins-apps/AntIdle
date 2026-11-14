@@ -81,14 +81,14 @@ def check_map(page, width, url):
     page.get_by_role('tab', name='Explore', exact=True).click()
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_be_disabled()
-    # Exhausted hex remains visible, with no scout/worker mission or crew control.
+    # Spent insect deposits retain the wild aphid source, without collection controls.
     depleted = copy.deepcopy(studied)
     depleted['exploration'].update(surveys={'woodland-edge': 3}, depleted={'woodland-edge': 800 * UNIT})
     load_game(page, depleted)
     page.get_by_role('tab', name='Explore', exact=True).click()
     page.locator('.map-hex[data-site="woodland-edge"]').click()
-    expect(page.locator('.map-site-card')).to_contain_text('Site exhausted')
-    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_have_accessible_name('Woodland Edge: exhausted')
+    expect(page.locator('.map-site-card')).not_to_contain_text('Site exhausted')
+    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_have_accessible_name('Woodland Edge: aphids')
     expect(page.locator('.map-site-card button')).to_have_count(0)
     expect(page.locator('#map-worker-count')).to_have_count(0)
     assert_fits(page, width)
@@ -136,6 +136,7 @@ def check_map(page, width, url):
     page.get_by_role('tab', name='Explore', exact=True).click()
     expect(page.locator('.expedition-supplies')).not_to_be_visible()
     check_trails(page, width, ring)
+    check_aphids(page, width, ring)
     assert not errors, errors
     print(f'PASS map {width}px: hex geometry, scout reveal/study, finite knowledge, selected-site controls, capacity block, depleted site and save reload', flush=True)
 
@@ -218,6 +219,52 @@ def check_trails(page, width, base):
     page.screenshot(path=str(artifacts / f'trails-{width}.png'), full_page=True)
     page.locator('.map-site-card').screenshot(path=str(artifacts / f'trails-panel-{width}.png'))
     print(f'PASS trails {width}px: 5-worker controls, guide reservations, collection, manual coexistence, reload and pauses', flush=True)
+
+
+
+def check_aphids(page, width, base):
+    game = copy.deepcopy(base)
+    game['ants'].update(workers=40 * UNIT, scouts=2 * UNIT, smallWorkers=0,
+        tasks=[[{'SugarCollector': {}}, 40 * UNIT]], defaultTask={'SugarCollector': {}},
+        eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
+    game['exploration']['surveys']['woodland-edge'] = 3
+    game['nestAttributes'].update(aphids=10, aphidsInitialized=True)
+    game['nestAttributes']['chambers']['aphidChamber']['level'] = 2
+    game['basicResources']['sugar'].update(amount=1000 * UNIT, maxAmount=10000 * UNIT)
+    game['exploration'].update(explorationParties=[], collectionTrails=[],
+        depleted={'woodland-edge': 800 * UNIT})
+    for upgrade in game['upgrades']['upgrades']:
+        if upgrade['name'] in ['AphidTending', 'DefaultWorkers']:
+            upgrade.update(show=True, unlocked=True)
+    load_game(page, game)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    panel = page.locator('.aphid-relocation')
+    expect(panel.locator('.aphid-housing')).to_have_text('10/20 aphids')
+    expect(panel.get_by_role('img', name='scouts: 2 available, 1 required', exact=True)).to_be_visible()
+    expect(panel.get_by_role('img', name='aphid places: 10 available, 10 required', exact=True)).to_be_visible()
+    button = panel.get_by_role('button', name='Relocate Aphids', exact=True)
+    button.click()
+    expect(panel.locator('.aphid-housing')).to_have_text('10/20 aphids · 10 returning')
+    expect(button).to_be_disabled()
+    expect(panel.get_by_role('img', name='aphid places: 0 available, 10 required', exact=True).locator('.text-danger')).to_have_text('0')
+    expect(page.locator('.map-mission')).to_contain_text('Relocating 10 aphids')
+    assert_fits(page, width)
+    saved = save_game(page)
+    assert saved['nestAttributes']['aphids'] == 10
+    load_game(page, saved)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    expect(panel.locator('.aphid-housing')).to_have_text('10/20 aphids · 10 returning')
+    page.clock.run_for(31000)
+    expect(panel.locator('.aphid-housing')).to_have_text('20/20 aphids')
+    expect(button).to_be_disabled()
+    finished = save_game(page)
+    assert finished['nestAttributes']['aphids'] == 20
+    assert finished['exploration']['explorationParties'] == []
+    assert finished['exploration']['depleted'] == game['exploration']['depleted']
+    assert finished['basicResources']['knowledge']['amount'] == game['basicResources']['knowledge']['amount']
+    print(f'PASS aphids {width}px: visible costs, reserved housing, reload, timed return and full-capacity block', flush=True)
 
 
 def main():

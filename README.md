@@ -227,6 +227,10 @@ Discovery unlocks are deterministic. They enable aphid research, seeds, water,
 repletes, outposts and resin/royal-nursery progression. Water discovery also opens
 Dew Gatherers (five places), providing renewable water after the deposit runs out.
 The Discoveries tab retains learned information independently of site exhaustion.
+Aphid Chambers house ten aphids per level, with one tender per ten animals. The
+first chamber receives ten; later groups require a safe relocation mission from
+Woodland Edge. Per-tender production and protein consumption are unchanged. See
+[aphid husbandry](docs/APHIDS.md) for costs, reservations and save migration.
 
 ## Colony lifecycle
 

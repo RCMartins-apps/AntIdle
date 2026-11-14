@@ -18,7 +18,8 @@ Realism is a design guide, not a requirement for exhaustive simulation.
 
 Examples already supporting that identity include larvae/brood, scouting,
 carcass retrieval, aphid husbandry, finite adult lifespans and living water
-storage in repletes. Extend such connections rather than adding disconnected
+storage in repletes. Aphids are housed populations: one tender per ten animals,
+with expansion through safe relocation rather than empty chambers creating output. Extend such connections rather than adding disconnected
 currencies and arbitrary multipliers.
 
 ## Player enjoyment and balance iteration

@@ -137,10 +137,10 @@ class ExplorationSuite extends FunSuite {
     assertEquals(twice.basicResources.protein.amount, 40L * u)
     assert(twice.exploration.explorationParties.isEmpty)
   }
-  test("exhausted sites persist without missions; managed discoveries and research remain available") {
+  test("exhausted deposits cannot be collected again; wild aphids remain a managed source") {
     val used = ExplorationMap.sites.head
     val d = ready.copy(exploration = ready.exploration.copy(depleted = Map("woodland-edge" -> ExplorationMap.deposits("woodland-edge"))))
-    assert(ExplorationMap.exhausted(d.exploration, used.id))
+    assert(!ExplorationMap.exhausted(d.exploration, used.id))
     assert(ExplorationMap.revealed(d.exploration, used.id))
     assert(DiscoveryProgression.WildAphids.found(d.exploration))
     assertEquals(ExplorationMap.scout(d, used.id, 1), d)

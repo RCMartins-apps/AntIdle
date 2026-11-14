@@ -44,7 +44,7 @@ object DefaultWorkerAssignment {
   }
 
   def normalize(data: AllData): AllData = {
-    val capped = clamp(data)
+    val capped = clamp(AphidHusbandry.reconcile(data))
     val assigned = if (capped.upgrades(UpgradeType.DefaultWorkers).unlocked)
       capped.modify(_.ants).using(_.assignIdleToDefault)
     else if (capped.ants.defaultTask.nonEmpty) capped.modify(_.ants.defaultTask).setTo(None)

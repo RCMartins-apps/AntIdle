@@ -26,7 +26,7 @@ object ChamberBonuses {
       case ChamberType.Replete =>
         ActionBonus(repleteSlots = 1)
       case ChamberType.Aphid =>
-        ActionBonus(aphidSlots = 1)
+        ActionBonus(aphidSlots = AphidHusbandry.AphidsPerTender.toInt)
       case ChamberType.Nursery =>
         ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
       case ChamberType.RoyalNursery =>

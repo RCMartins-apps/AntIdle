@@ -143,7 +143,7 @@ object UpgradeBalance {
       title = "Aphid Tending",
       cost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 100 * u),
       requirements = UpgradeRequirements(explorationTab = true, discovery = Some("wild-aphids")),
-      description = "Unlocks Aphid Chamber: +1 Aphid Tender slot per level. Tenders: +0.8 sugar/s · −0.01 protein/s each.",
+      description = "Unlocks Aphid Chamber: +10 aphid places per level. One tender per 10 aphids: +0.8 sugar/s · −0.01 protein/s.",
     ),
     ProteinStorage -> UpgradeDefinition(
       title = "Protein Storage",
