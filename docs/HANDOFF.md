@@ -27,7 +27,9 @@
   New relocation tests cover housing reservations, concurrent trips, replay,
   resource/scout/worker/research gates, reload and one-time legacy migration.
   Balance policies now relocate animals to meet their existing tender targets.
-- No PR requested for this task. Commit/push to this feature branch under the
-  standing backup workflow; verify the remote head when resuming. Preserve
-  unrelated work/ and Python caches. Baseline worktree/reports are temporary
-  under /tmp; no scratch artifacts should be committed.
+- Owner authorized a PR and auto-merge for this feature. Main and its active
+  ruleset reverified: main is still 99ee3f2; test and changes / classify are required
+  with strict up-to-date checks and no bypass. Auto-merge is enabled, squash only.
+  Check GitHub for live PR/CI state when resuming; no CI polling after queueing.
+- Preserve unrelated work/ and Python caches. Baseline worktree/reports are
+  temporary under /tmp; no scratch artifacts should be committed.
