@@ -21,5 +21,8 @@
 - Existing runs were not cancelled. The GitHub connector has no cancel action;
   shell gh API access returned Forbidden. Existing executions need cancellation
   separately in Actions; future limits do not apply retroactively.
-- No PR requested for this task. Save on this branch under the standing push
-  workflow. Preserve unrelated work/ and Python caches.
+- Owner authorized a PR and auto-merge. Main remains 3a51b3c; active required
+  test and changes / classify checks, strict up-to-date policy and no bypass
+  verified again. Squash-only auto-merge is enabled. Check GitHub for live state
+  when resuming; finish after queue confirmation without CI polling.
+- Preserve unrelated work/ and Python caches.
