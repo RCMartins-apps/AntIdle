@@ -1621,7 +1621,7 @@ object MainForm {
         b(child.text <-- availableWorkersCountSignal.map(prettyNumberStr)),
       ),
       smallWorkerTasks,
-      children <-- unlockedAntTasks.map(_.map(task => taskDiv(task))),
+      children <-- unlockedAntTasks.map(_.sortBy(task => (if (task.showButtons) 0 else 1, task.uiOrder)).map(task => taskDiv(task))),
     )
 
   private def smallWorkerTasks: ReactiveHtmlElement[HTMLDivElement] = div(

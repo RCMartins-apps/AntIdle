@@ -151,7 +151,7 @@ def check_game(page, width, url):
     assert next(u for u in researched['upgrades']['upgrades'] if u['name'] == 'ImproveSugarCollectorTask1')['unlocked']
     game = progressed_game(save_game(page))
     game['ants'].update(workers=50 * UNIT, scouts=2 * UNIT, daughterQueens=UNIT,
-        tasks=[[{'SugarCollector': {}}, 40 * UNIT], [{'Tunneler': {}}, 10 * UNIT], [{'Explorer': {}}, 0]],
+        tasks=[[{'CarcassCarrier': {}}, 0], [{'Explorer': {}}, 0], [{'Tunneler': {}}, 10 * UNIT], [{'SugarCollector': {}}, 40 * UNIT], [{'TerritoryForager': {}}, 0]],
         defaultTask={'SugarCollector': {}}, eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
     game['nestAttributes']['chambers']['nurseryChamber']['level'] = 1
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
@@ -165,6 +165,9 @@ def check_game(page, width, url):
     expect(outpost).to_have_attribute('open', '')
     outpost.locator('summary').click()
     page.get_by_role('tab', name='Tasks').click()
+    manual = page.locator('.task-row:visible').evaluate_all(
+        '(rows) => rows.map(row => !!row.querySelector(".task-controls button"))')
+    assert True in manual and False in manual and manual == sorted(manual, reverse=True), manual
     for row in page.locator('.task-row:visible').all():
         bounds, info = row.bounding_box(), row.locator('.info-summary').bounding_box()
         assert info['height'] >= 44
