@@ -44,6 +44,19 @@ class CollectionTrailsSuite extends FunSuite {
     assertEquals(recalled.basicResources, d.basicResources)
     assertEquals(ScoutProgression.available(recalled.ants, recalled.exploration), 10 * u)
   }
+  test("next-step guide requirements match button eligibility, including existing shortages") {
+    val d = colony.copy(ants = colony.ants.copy(scouts = u))
+    val ten = assign(d, NectarMeadow, 10)
+    assertEquals(PheromoneTrails.scoutsAvailableFor(ten.ants, ten.exploration, NectarMeadow.id), u)
+    assertEquals(PheromoneTrails.requiredScouts(PheromoneTrails.nextTarget(ten.exploration, NectarMeadow.id)), 2 * u)
+    assert(!PheromoneTrails.canAdjust(ten, NectarMeadow.id, 5 * u))
+    val five = assign(d, NectarMeadow, 5)
+    val lost = five.copy(ants = five.ants.copy(scouts = 0L))
+    assert(!PheromoneTrails.canAdjust(lost, NectarMeadow.id, 5 * u))
+    assert(PheromoneTrails.canAdjust(lost, NectarMeadow.id, -5 * u))
+    val two = assign(assign(colony, NectarMeadow, 5), WoodlandEdge, 5)
+    assertEquals(PheromoneTrails.scoutsAvailableFor(two.ants, two.exploration, NectarMeadow.id), 9 * u)
+  }
   test("only safe studied routes automate; late Understanding purchase works immediately") {
     val d = colony.copy(ants = colony.ants.copy(lineage = Lineage(1, 1L, false)))
     assertEquals(assign(d, NectarMeadow, 5), d)
@@ -132,13 +145,35 @@ class CollectionTrailsSuite extends FunSuite {
     assertEquals(PheromoneTrails.guides(recalled.ants, recalled.exploration), u)
     assertEquals(PheromoneTrails.workers(recalled.ants), 5 * u)
   }
-  test("losing guides pauses assigned routes; new scouts resume without granting resources") {
+  test("losing guides shrinks crews and releases workers instead of pausing") {
     val d = assign(colony, NectarMeadow, 50)
     val short = d.copy(ants = d.ants.copy(scouts = 4 * u))
-    assertEquals(plans(short).head.status, "Needs scouts")
-    assertEquals(PheromoneTrails.tick(short).basicResources, short.basicResources)
-    val restored = short.copy(ants = short.ants.copy(scouts = 5 * u))
-    assert(PheromoneTrails.tick(restored).statistics.sugarU.thisRun > 0L)
+    assertEquals(plans(short).head.status, "Collecting")
+    assertEquals(plans(short).head.workers, 40 * u)
+    val resized = PheromoneTrails.reconcile(short)
+    assertEquals(PheromoneTrails.target(resized.exploration, NectarMeadow.id), 40 * u)
+    assertEquals(PheromoneTrails.workers(resized.ants), 40 * u)
+    assertEquals(resized.ants.taskWorkers(AntTask.SugarCollector), 60 * u)
+    assertEquals(resized.basicResources, short.basicResources)
+    assert(PheromoneTrails.tick(resized).statistics.sugarU.thisRun > 0L)
+    val restored = PheromoneTrails.reconcile(resized.copy(ants = resized.ants.copy(scouts = 5 * u)))
+    assertEquals(PheromoneTrails.target(restored.exploration, NectarMeadow.id), 40 * u)
+    val empty = PheromoneTrails.reconcile(resized.copy(ants = resized.ants.copy(scouts = 0L)))
+    assertEquals(empty.exploration.collectionTrails, Nil)
+    assertEquals(empty.ants.taskWorkers(AntTask.SugarCollector), 100 * u)
+  }
+  test("guide loss across routes preserves supported staff and never duplicates scouts") {
+    val d = assign(assign(colony, NectarMeadow, 15), WoodlandEdge, 15)
+    val short = d.copy(ants = d.ants.copy(scouts = 3 * u))
+    val resized = PheromoneTrails.reconcile(short)
+    assertEquals(PheromoneTrails.target(resized.exploration, NectarMeadow.id), 15 * u)
+    assertEquals(PheromoneTrails.target(resized.exploration, WoodlandEdge.id), 10 * u)
+    assertEquals(PheromoneTrails.guides(resized.ants, resized.exploration), 3 * u)
+    assertEquals(resized.ants.taskWorkers(AntTask.SugarCollector), 75 * u)
+    assertEquals(PheromoneTrails.reconcile(resized), resized)
+    val understaffed = short.copy(ants = short.ants.copy(tasks = Seq(
+      AntTask.TrailForager -> (17 * u), AntTask.SugarCollector -> (83 * u))))
+    assertEquals(PheromoneTrails.workers(PheromoneTrails.reconcile(understaffed).ants), 17 * u)
   }
   test("recalling an understaffed later route does not take workers from an earlier route") {
     val d = assign(assign(colony, NectarMeadow, 5), WoodlandEdge, 10)

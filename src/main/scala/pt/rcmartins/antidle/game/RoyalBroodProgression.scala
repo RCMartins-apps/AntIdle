@@ -62,7 +62,7 @@ object RoyalBroodProgression {
     val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, trailResources)
     val upkeep = ScoutProgression.upkeepPerTick(ants, exploration) - CarcassProgression.foodOffset(exploration, ants)
     trailResources.copy(sugar = trailResources.sugar.copy(amount = Math.max(0L, trailResources.sugar.amount + sugar - upkeep)),
-      protein = (trailResources.protein - feeding) + (harvest.protein + BroodProgression.scavenged(ants, trailResources.protein.freeSpace - harvest.protein + feeding)), water = trailResources.water - harvest.water)
+      protein = (trailResources.protein - feeding) + (harvest.protein + BroodProgression.scavenged(ants, trailResources.protein.freeSpace - harvest.protein + feeding)), water = (trailResources.water - harvest.water) + OutpostProgression.dewPerTick(ants))
   }
 
   def forecast(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
