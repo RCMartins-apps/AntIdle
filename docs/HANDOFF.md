@@ -4,8 +4,8 @@
 
 - Branch `fix/consistency-audit` starts at `99ee3f2`, merged Shared Paths PR #68.
   Verified the merge before starting. Owner requested an inconsistency audit;
-  clear fixes implemented, followed by the requested guide-loss behavior. No PR
-  requested.
+  clear fixes implemented, followed by the requested guide-loss behavior. Owner
+  has now authorized a PR with auto-merge.
 - Trail assignment now checks the whole prospective scout quota after other
   routes' reservations. Losing a guide cannot bypass expansion checks. UI costs
   show next +5 requirements (workers and resulting guides), matching eligibility.
@@ -26,7 +26,8 @@
   Guide-loss browser follow-up also passed at 320/390/1280px, including zero-guide
   recall and saved crew removal. Production/offline and long pacing runs were not
   repeated for these narrow changes.
-- This is push-only work on the task branch; verify its remote head when resuming.
-  No PR created or CI started for this task.
+- PR/auto-merge handoff authorized. Main protection reverified on 2026-11-14:
+  active ruleset requires test and changes / classify, strict up-to-date policy,
+  no bypass; repository has squash-only auto-merge. Check GitHub for live PR state.
 - Preserve unrelated work/ and Python caches. Continue native squash auto-merge
   only when PR/merge is authorized; do not poll after a confirmed auto-merge queue.
