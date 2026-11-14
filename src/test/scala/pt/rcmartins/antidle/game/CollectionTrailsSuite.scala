@@ -44,6 +44,19 @@ class CollectionTrailsSuite extends FunSuite {
     assertEquals(recalled.basicResources, d.basicResources)
     assertEquals(ScoutProgression.available(recalled.ants, recalled.exploration), 10 * u)
   }
+  test("next-step guide requirements match button eligibility, including existing shortages") {
+    val d = colony.copy(ants = colony.ants.copy(scouts = u))
+    val ten = assign(d, NectarMeadow, 10)
+    assertEquals(PheromoneTrails.scoutsAvailableFor(ten.ants, ten.exploration, NectarMeadow.id), u)
+    assertEquals(PheromoneTrails.requiredScouts(PheromoneTrails.nextTarget(ten.exploration, NectarMeadow.id)), 2 * u)
+    assert(!PheromoneTrails.canAdjust(ten, NectarMeadow.id, 5 * u))
+    val five = assign(d, NectarMeadow, 5)
+    val lost = five.copy(ants = five.ants.copy(scouts = 0L))
+    assert(!PheromoneTrails.canAdjust(lost, NectarMeadow.id, 5 * u))
+    assert(PheromoneTrails.canAdjust(lost, NectarMeadow.id, -5 * u))
+    val two = assign(assign(colony, NectarMeadow, 5), WoodlandEdge, 5)
+    assertEquals(PheromoneTrails.scoutsAvailableFor(two.ants, two.exploration, NectarMeadow.id), 9 * u)
+  }
   test("only safe studied routes automate; late Understanding purchase works immediately") {
     val d = colony.copy(ants = colony.ants.copy(lineage = Lineage(1, 1L, false)))
     assertEquals(assign(d, NectarMeadow, 5), d)

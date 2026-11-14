@@ -206,6 +206,18 @@ def check_trails(page, width, base):
     page.clock.run_for(1000)
     paused = save_game(page)
     assert paused['exploration']['depleted'] == full['exploration']['depleted']
+    one_scout = copy.deepcopy(game)
+    one_scout['ants']['scouts'] = UNIT
+    load_game(page, one_scout)
+    page.get_by_role('tab', name='Explore', exact=True).click()
+    page.locator('.map-hex[data-site="nectar-meadow"]').click()
+    add.click()
+    add.click()
+    expect(trail.locator('.trail-staffing')).to_have_text('10/50 workers')
+    expect(add).to_be_disabled()
+    scout_cost = trail.get_by_role('img', name='scouts: 1 available, 2 required', exact=True)
+    expect(scout_cost.locator('.text-danger')).to_have_text('1')
+    expect(trail.get_by_role('img', name='workers: 90 available, 5 required', exact=True)).to_be_visible()
     no_scouts = copy.deepcopy(saved)
     no_scouts['ants']['scouts'] = 0
     load_game(page, no_scouts)

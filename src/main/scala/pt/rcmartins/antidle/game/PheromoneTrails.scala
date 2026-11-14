@@ -27,6 +27,13 @@ object PheromoneTrails {
       ExplorationMap.remaining(exploration, route.id) > 0L
   private def route(id: String): Option[ExplorationDestination] = ExplorationDestination.all.find(_.id == id)
 
+  def scoutsAvailableFor(ants: AntsData, exploration: ExplorationData, destination: String): Long = {
+    val reservedElsewhere = exploration.collectionTrails.filterNot(_.destination == destination)
+      .map(t => requiredScouts(t.workers)).sum
+    Math.max(0L, ScoutProgression.atHome(ants, exploration) - reservedElsewhere)
+  }
+  def nextTarget(exploration: ExplorationData, destination: String): Long =
+    Math.min(Capacity, target(exploration, destination) + Step)
   def canAdjust(data: AllData, destination: String, delta: Long): Boolean = {
     val old = target(data.exploration, destination)
     val next = old + delta
@@ -34,7 +41,7 @@ object PheromoneTrails {
       (delta == Step || delta == -Step) && next >= 0L && next <= Capacity &&
       (if (delta < 0L) old >= Step else
         route(destination).exists(eligible(data.exploration, _)) && data.ants.availableWorkersCount >= Step &&
-          ScoutProgression.available(data.ants, data.exploration) >= requiredScouts(next) - requiredScouts(old))
+          scoutsAvailableFor(data.ants, data.exploration, destination) >= requiredScouts(next))
   }
   def adjust(initial: AllData, destination: String, delta: Long): AllData = {
     if (!canAdjust(initial, destination, delta)) initial

@@ -66,6 +66,22 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals(tick(tending.copy(ants = tending.ants.copy(tasks = Seq.empty))).ants.royalBrood,
       tending.ants.royalBrood)
   }
+  test("royal care forecast includes same-tick Dew Gatherer water at an empty store") {
+    val base = rearing(EggCare)
+    var data = base.copy(ants = base.ants.copy(tasks = Seq(
+      AntTask.SugarCollector -> (25 * u), AntTask.RoyalNurse -> (5 * u), AntTask.WaterCollector -> (5 * u))),
+      exploration = MapFixture.explored,
+      basicResources = base.basicResources.copy(water = BasicResource(0L, 100 * u)))
+    for (_ <- 1 to 10) {
+      val predicted = forecast(data.ants, data.nestAttributes, data.upgrades, data.exploration, data.basicResources)
+      assert(predicted.units > 0L)
+      val next = TickUpdater.updateAllData(data, None)
+      assertEquals(next.ants.royalBrood.get.careUnits - data.ants.royalBrood.get.careUnits, predicted.units)
+      assertEquals(next.basicResources.water.amount,
+        Math.min(data.basicResources.water.maxAmount, data.basicResources.water.amount + OutpostProgression.dewPerTick(data.ants)) - predicted.cost.water)
+      data = next
+    }
+  }
   test("care uses staffed nurses and stage-specific costs, independent of worker egg slots") {
     val egg = rearing().copy(nestAttributes = rearing().nestAttributes.copy(maxEggs = 0L))
     val larva = rearing(EggCare)

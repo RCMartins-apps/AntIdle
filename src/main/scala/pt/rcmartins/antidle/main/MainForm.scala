@@ -1870,8 +1870,10 @@ object MainForm {
           ),
           actionCosts(Val(ActionCost.empty), antsSignal.combineWith(explorationSignal).map { case (ants, data) =>
             val current = PheromoneTrails.target(data, route.id)
-            val available = Math.min(ScoutProgression.atHome(ants, data), ScoutProgression.available(ants, data) + PheromoneTrails.requiredScouts(current))
-            List(ActionRequirement("scouts", available, PheromoneTrails.requiredScouts(Math.max(PheromoneTrails.Step, current)), isCost = true))
+            val available = PheromoneTrails.scoutsAvailableFor(ants, data, route.id)
+            val next = PheromoneTrails.nextTarget(data, route.id)
+            List(ActionRequirement("scouts", available, PheromoneTrails.requiredScouts(next), isCost = true)) ++
+              Option.when(current < PheromoneTrails.Capacity)(ActionRequirement("workers", ants.availableWorkersCount, PheromoneTrails.Step, isCost = true))
           }),
           div(className := "trail-status small", child.text <-- snapshotSignal.map(data =>
             PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources)

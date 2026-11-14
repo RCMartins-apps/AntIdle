@@ -9,6 +9,9 @@ raids remain manual because they involve a deliberate combat-loss decision.
 - Manual collection crews and trail targets use groups of five, from 5 to 50.
   Each trail reserves one scout per ten target workers, rounded up: 5/10 use one,
   15/20 two, 25/30 three, 35/40 four, 45/50 five. Reservations add across trails.
+- Assignment counters show the requirements for the next +5 workers, including
+  the whole resulting crew's guide quota. Expansion requires enough scouts after
+  other trails' reservations; an existing guide shortage cannot bypass this check.
 - Workers remain ordinary home workers with normal upkeep and aging. Desired
   staffing stays saved; Queen's Routine refills aging vacancies as before. Missing
   guides pause a route until replaced or recalled. Recall releases staff normally.
