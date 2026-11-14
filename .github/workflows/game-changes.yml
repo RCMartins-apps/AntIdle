@@ -13,15 +13,19 @@ permissions:
 jobs:
   classify:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       run_game_jobs: ${{ steps.changes.outputs.run_game_jobs }}
     steps:
       - uses: actions/checkout@v4
+        timeout-minutes: 3
         with:
           fetch-depth: 0
       - name: Classify changes
+        timeout-minutes: 1
         id: changes
         run: python3 scripts/ci_changes.py
       - name: Verify classification policy
+        timeout-minutes: 1
         if: steps.changes.outputs.run_game_jobs == 'true'
         run: python3 tests/ci_changes_test.py

@@ -66,3 +66,31 @@ With strict up-to-date checks enabled, a PR may need its branch updated when mai
 changes before auto-merge can complete. This is expected and does not require
 weakening the rule. Auto-merge is ready to use on the next authorized PR; no live
 pending PR was used to exercise a merge during this read-only settings check.
+
+## Runtime limits and superseded runs
+
+Repository-controlled workflows use explicit job budgets rather than GitHub's
+six-hour default: PR `test` is 20 minutes, `build-and-deploy` is 15, and the reusable
+`classify` job is 5. Reusable-workflow caller jobs do not accept timeout-minutes;
+the runner job inside game-changes.yml enforces the classifier budget instead.
+Job limits cover the entire running job, not its time waiting for a runner.
+
+Individual steps have tighter bounds: Scala builds and engine tests 10 minutes,
+browser suites 5 each, browser installation 8, and deployment 5. Setup, checkout,
+packaging and artifact upload also have explicit limits in YAML. Browser suites
+remain the same commands but now run in separate steps for clearer timeouts.
+A timeout fails the check; it never waives required validation or proceeds to
+publish after a failed build. Recent successful runs were roughly six minutes for
+PR validation and three for deployment, leaving room for cold setup.
+
+PR and deploy workflows cancel superseded runs for the same PR or branch, grouped
+by workflow name plus PR number/ref. Different PRs/workflows remain independent.
+Newer main pushes cancel older main deployment workflows, preventing a hung old
+build from later publishing over a newer release. Docs-only classification and
+existing main/debug deployment gates remain unchanged.
+
+These settings apply to newly started workflow executions after the change is
+available; they do not shorten already-running jobs. Those must be cancelled in
+Actions. On 2026-11-14, runs 43583940403 and 43582168774 were still in progress
+while newer main deployments had succeeded; 43583940403 was stuck specifically
+at Build project. No existing run was cancelled by this change.

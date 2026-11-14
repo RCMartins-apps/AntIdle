@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changes:
     uses: ./.github/workflows/game-changes.yml
@@ -17,21 +21,27 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.run_game_jobs == 'true') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
+        timeout-minutes: 3
         uses: actions/checkout@v4
 
       - name: Setup Scala and SBT
+        timeout-minutes: 5
         uses: olafurpg/setup-scala@v14
 
       - name: Build project
+        timeout-minutes: 10
         run: sbt fullOptJS
 
       - name: Run tests
+        timeout-minutes: 10
         run: sbt test balance/test
 
       - name: Setup Python for browser checks
+        timeout-minutes: 3
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -39,25 +49,38 @@ jobs:
           cache-dependency-path: tests/requirements-browser.txt
 
       - name: Check report and offline release packaging
+        timeout-minutes: 2
         run: |
           python3 -m unittest discover -s tests -p "balance*_test.py"
           python3 -m unittest discover -s tests -p "package_site_test.py"
 
       - name: Install browser test dependencies
+        timeout-minutes: 8
         run: |
           python -m pip install -r tests/requirements-browser.txt
           python -m playwright install --with-deps chromium
 
       - name: Check production UI on phone and desktop
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+        run: python3 tests/ci_browser_smoke.py
+
+      - name: Check exploration and trails on phone and desktop
+        timeout-minutes: 5
         env:
           ANTIDLE_ARTIFACTS: test-results
           ANTIDLE_PRODUCTION: "1"
-        run: |
-          python3 tests/ci_browser_smoke.py
-          python3 tests/map_browser_smoke.py
-          python3 tests/offline_browser_smoke.py
+        run: python3 tests/map_browser_smoke.py
+
+      - name: Check offline play and updates
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+        run: python3 tests/offline_browser_smoke.py
 
       - name: Upload browser failure screenshots
+        timeout-minutes: 2
         if: failure()
         uses: actions/upload-artifact@v4
         with:
