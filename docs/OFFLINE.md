@@ -16,6 +16,21 @@ Stored offline time and its multiplier work as before. Clearing site data can
 remove saves/cache, and browsers can evict cached files; keep using save exports
 for backups. Installing isn't a substitute for backing up a colony.
 
+## Identifying the running build
+
+Settings and the page footer show **Build abcdef12**, using the first eight
+characters of the Git commit compiled into the running game bundle. Click the ID
+to inspect its source commit. It is not a save-format number and requires no
+network request to display. The same cached game reports the same ID offline.
+Local builds with tracked uncommitted changes append -dev; a source archive
+without Git metadata displays development. No manual version bump is required.
+
+The ID changes when a newly compiled commit actually runs, rather than when a
+new version merely exists on GitHub. If an update is waiting, follow the close-all-
+windows message below. Compare the displayed ID with the latest deployed main
+commit when reporting stale content. A merged PR is not itself proof that the
+subsequent Pages deployment has completed successfully.
+
 ## Updates
 
 An online visit checks for a new release in the background. A complete new release
@@ -37,6 +52,9 @@ python3 -m http.server 8001 --directory /tmp/antidle-site
 Open localhost:8001. Use a new output directory each time. GitHub Pages deploys
 that same package automatically on authorized main/debug deployments.
 
+- sbt generates BuildInfo under target at compilation from Git HEAD and tracked
+  dirty state; metadata is part of the JavaScript bundle. No timestamps or runtime
+  GitHub fetches are needed. Unchanged metadata is not rewritten.
 - `index.html` uses pinned local Bootstrap CSS/bundle and jQuery, with original
   SRI values. The bundle already includes Popper; unused Font Awesome is removed.
   No CDN/font connection is needed at runtime. See assets/vendor/README.md/licenses.

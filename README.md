@@ -155,6 +155,13 @@ Resource statistics count retained gains, not spending or discarded overflow.
 Tunnelling capacity remains limited and grows with Nest chambers. Permanent
 resource visibility is separate from current-colony unlocks and survives founding.
 
+## Running build version
+
+Settings and the page footer show an automatic short Git commit ID for the
+running bundle, including offline. Local uncommitted builds append `-dev`.
+If **Update ready** appears, save and close all game windows to apply it on the
+next launch. See [offline updates](docs/OFFLINE.md) for build identity and caching.
+
 ## Resource icons
 
 `game/ResourceIcons.scala` defines a consistent embedded SVG set for sugar,

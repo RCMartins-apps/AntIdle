@@ -5,6 +5,7 @@ from http.server import ThreadingHTTPServer
 import os
 from pathlib import Path
 import shutil
+import subprocess
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
@@ -15,6 +16,23 @@ class ProductionHandler(QuietHandler):
     def translate_path(self, path):
         return super().translate_path(path.replace('/antidle-fastopt/', '/antidle-opt/'))
 
+
+
+
+def check_build_version(page, width):
+    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    footer = page.locator('.game-build-footer .build-version')
+    expect(footer).to_contain_text('Build ' + revision[:8])
+    expect(footer.locator('a')).to_have_attribute('href', 'https://github.com/RCMartins-apps/AntIdle/commit/' + revision)
+    displayed = footer.inner_text()
+    page.get_by_role('tab', name='Settings', exact=True).click()
+    expect(page.locator('.settings-build .build-version')).to_have_text(displayed)
+    page.clock.run_for(1000)
+    expect(footer).to_have_text(displayed)
+    page.reload(wait_until='networkidle')
+    expect(footer).to_have_text(displayed)
+    assert_fits(page, width)
+    print(f'PASS build version {width}px: compiled commit, Settings/footer agreement and reload', flush=True)
 
 
 def check_brood_icons(page, width, base):
@@ -227,6 +245,7 @@ def check_game(page, width, url):
     expect(protein).to_be_visible()
     assert_fits(page, width)
     check_brood_icons(page, width, save_game(page))
+    check_build_version(page, width)
     assert not errors, errors
     print(f'PASS production {width}px: founding labels, disclosures, task geometry, research prices/purchase, hex map/scout launch/reveal, prestige/reset and resource visibility', flush=True)
 

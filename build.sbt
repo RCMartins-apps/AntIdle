@@ -1,3 +1,6 @@
+import scala.sys.process._
+import scala.util.Try
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.13.14"
@@ -7,6 +10,27 @@ lazy val root =
     .enablePlugins(ScalaJSPlugin)
     .settings(
       name := "AntIdle",
+      Compile / sourceGenerators += Def.task {
+        val directory = baseDirectory.value
+        val quiet = ProcessLogger(_ => (), _ => ())
+        val revision = Try(Process(Seq("git", "rev-parse", "--verify", "HEAD"), directory).!!(quiet).trim)
+          .toOption.filter(_.matches("[0-9a-f]{40,64}"))
+        val modified = revision.isDefined &&
+          Try(Process(Seq("git", "diff", "--quiet", "HEAD", "--"), directory).!(quiet)).getOrElse(1) != 0
+        val commit = revision.getOrElse("development")
+        val output = (Compile / sourceManaged).value / "pt" / "rcmartins" / "antidle" / "game" / "BuildInfo.scala"
+        val source = s"""package pt.rcmartins.antidle.game
+                       |// Generated at compilation; identifies the running bundle, never the save schema.
+                       |object BuildInfo {
+                       |  val commit: String = "$commit"
+                       |  val modified: Boolean = $modified
+                       |  val label: String = "${revision.map(_.take(8)).getOrElse("development")}${if (modified) "-dev" else ""}"
+                       |}
+                       |""".stripMargin
+        if (!output.exists || IO.read(output) != source) IO.write(output, source)
+        Seq(output)
+      }.taskValue,
+
       scalacOptions ++= ScalacOptions.allScalacOptions,
       scalaJSUseMainModuleInitializer := true,
       libraryDependencies ++= Seq(

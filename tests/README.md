@@ -51,3 +51,7 @@ legacy entries, and a live stage transition in the phone disclosure/desktop tool
 
 The map browser gate also covers aphid relocation: visible costs, reserved housing,
 saving an in-flight group and receiving it without regenerating insects or Knowledge.
+
+Build-version checks compare the compiled commit link with the checkout and confirm
+Settings/footer agreement and reload stability. The offline gate also checks that
+the label remains available offline and unchanged while a new release waits.
