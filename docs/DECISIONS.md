@@ -774,3 +774,11 @@ step budgets. PR/deploy runs cancel superseded work on the same PR/ref; preserve
 required check names, docs-only skipping and main/debug deployment authorization.
 Timeouts fail validation rather than bypass it. Existing executions do not inherit
 new limits. Details and observed normal durations are in CI-WORKFLOW.md.
+
+## D45: Show manually assignable tasks before implicit roles — implemented
+
+The owner requested a small Tasks UI improvement as a deployment smoke change.
+List jobs with assignment controls before implicit roles such as Carcass Carrier,
+Trail Forager, Territory Forager and Collection Crew, retaining existing uiOrder
+within each group. Apply the sort to display only; do not reorder the saved task
+list or change aging, assignment, default-worker or production behavior.
