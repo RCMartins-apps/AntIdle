@@ -58,7 +58,7 @@ object ExplorationMap {
     }
   }
   def finishScout(data: AllData, party: ExplorationParty): AllData = {
-    if (party.mission == "haul" || !data.exploration.explorationParties.contains(party)) return data
+    if ((party.mission != "reveal" && party.mission != "study") || !data.exploration.explorationParties.contains(party)) return data
     val removed = data.copy(exploration = data.exploration.copy(explorationParties = data.exploration.explorationParties.patch(data.exploration.explorationParties.indexOf(party), Nil, 1)),
       statistics = data.statistics.copy(explorationsCompleted = data.statistics.explorationsCompleted.addValue(1)))
     val rewarded = if (party.mission == "reveal") {
@@ -78,5 +78,6 @@ object ExplorationMap {
     ResourceVisibility.reconcile(UpgradeVisibility.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.returnHome(rewarded, party.ages))))
   }
   def exhausted(data: ExplorationData, id: String): Boolean =
-    knowledgeRemaining(data, id) == 0L && site(id).routes.forall(remaining(data, _) == 0L)
+    knowledgeRemaining(data, id) == 0L && site(id).routes.forall(remaining(data, _) == 0L) &&
+      !(id == "woodland-edge" && DiscoveryProgression.WildAphids.found(data))
 }

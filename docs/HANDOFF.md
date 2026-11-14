@@ -2,10 +2,9 @@
 
 ## Last verified: 2026-11-14 — brood-stage icons
 
-- Branch `ui/brood-stage-icons` starts at fetched main `99ee3f2` (PR #68).
-  PR #69 (consistency/guide-loss fixes) and #70 (aphid relocation) were authorized
-  for native auto-merge in earlier turns; main had not advanced when this task
-  began. This branch does not include them. Check live GitHub state before a PR.
+- Branch `ui/brood-stage-icons` now includes main `3223c58` (merged aphid PR #70).
+  Updated before opening the authorized icons PR. Code merged cleanly; combined
+  handoff/test documentation conflicts. PR #69 is separate; do not assume merged.
 - Brood resource disclosure/desktop tooltip now places distinct SVG egg, larva
   and pupa icons beside the existing name/progress. Icons derive from AntBrood's
   actual stage flags, covering small/standard/scout and legacy entries. Existing
@@ -17,9 +16,10 @@
   passed at 320/390/1280px; visually inspected the 320px list. git diff --check
   passed. No engine tests, full production build or complete CI browser run was
   needed/repeated for this presentation-only change.
-- No PR requested for this task. Save on this feature branch under the standing
-  push workflow; verify its remote head when resuming. Preserve unrelated work/
-  and Python caches. Temporary screenshots/logs are under /tmp, not durable links.
-- Aphid rules and measured pacing are in docs/APHIDS.md on feature/aphid-relocation;
-  audit findings are in docs/CONSISTENCY-AUDIT.md on fix/consistency-audit. Do not
-  infer either pending branch has merged merely from prior chat approval.
+- Owner authorized PR and auto-merge. Active Main ruleset reverified: required
+  test and changes / classify, strict up-to-date checks, no bypass. Repository
+  auto-merge is enabled, squash only. Check GitHub for live PR state.
+- Preserve unrelated work/ and Python caches. Temporary screenshots/logs are
+  under /tmp, not durable links.
+- Aphid rules and measured pacing are in docs/APHIDS.md, now on main. Audit
+  findings remain on fix/consistency-audit; check its PR #69 separately.

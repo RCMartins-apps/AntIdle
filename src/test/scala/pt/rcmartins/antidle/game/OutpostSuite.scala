@@ -117,7 +117,7 @@ class OutpostSuite extends FunSuite {
   test("aphid feeding frees real storage room before the same tick's harvest") {
     val initial = staffed
     val feeding = initial.copy(ants = initial.ants.unlockTask(AntTask.AphidTender).addToTask(AntTask.AphidTender, u),
-      nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))),
+      nestAttributes = initial.nestAttributes.copy(aphids = 10L, chambers = initial.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))),
       basicResources = initial.basicResources.copy(protein = BasicResource(100 * u, 100 * u)),
       upgrades = initial.upgrades.unlock(AphidTending))
     val next = TickUpdater.updateAllData(feeding, None)

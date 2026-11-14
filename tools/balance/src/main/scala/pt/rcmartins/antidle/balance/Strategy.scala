@@ -129,6 +129,8 @@ object Strategy {
       select(build(d, ChamberType.FoodStorage)).foreach(x => return x)
     if (d.upgrades(AphidTending).unlocked && nest.chambers.aphidChamber.level < p.aphids)
       select(build(d, ChamberType.Aphid)).foreach(x => return x)
+    if (nest.aphids < p.aphids * AphidHusbandry.AphidsPerTender && AphidRelocation.canStart(d))
+      return done(Choice("Relocate Aphids", "exploration", AphidRelocation.start))
     if (d.upgrades(RepleteStorage).unlocked && nest.chambers.repleteChamber.level < 1)
       select(build(d, ChamberType.Replete)).foreach(x => return x)
     if (d.upgrades(RepleteStorage).unlocked && a.repletes == 0L && nest.chambers.repleteChamber.level > 0 &&
