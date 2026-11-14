@@ -19,6 +19,11 @@
   Offline gate passed at 390/1280px, including offline version display, deferred
   activation and failed-update recovery. git diff --check passed. No engine rule
   changes, so engine/balance pacing suites were not repeated for this UI/build task.
-- No PR requested. Commit/push this feature under the standing backup workflow;
-  verify the remote head when resuming. BuildInfo is generated, not tracked.
+- Owner authorized PR and auto-merge, then intends to test the installed Android
+  copy. Main remains 52ce13f; enforced test and changes / classify checks, strict
+  up-to-date policy and no bypass verified. Auto-merge is enabled, squash only.
+  Check live GitHub PR/deployment state before claiming it is deployed.
+- Clean-commit regeneration and focused version checks also passed at
+  320/390/1280px after committing: new ID appeared and -dev disappeared.
+  BuildInfo is generated, not tracked.
   Preserve unrelated work/ and Python caches; temporary logs/profiles are in /tmp.
