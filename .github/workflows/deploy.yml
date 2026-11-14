@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changes:
     if: >-
@@ -25,23 +29,29 @@ jobs:
           (startsWith(github.head_ref, 'debug') &&
            github.event.pull_request.head.repo.full_name == github.repository)) }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
 
     steps:
       - name: Checkout
+        timeout-minutes: 3
         uses: actions/checkout@v4
 
       - name: Setup Scala and SBT
+        timeout-minutes: 5
         uses: olafurpg/setup-scala@v14
 
       - name: Build project
+        timeout-minutes: 10
         run: sbt fullOptJS
 
       - name: Prepare files for GitHub Pages
+        timeout-minutes: 2
         run: python3 scripts/package_site.py --out publish-folder
 
       - name: Deploy to GitHub Pages
+        timeout-minutes: 5
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

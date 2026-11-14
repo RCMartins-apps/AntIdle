@@ -1,26 +1,28 @@
 # Handoff
 
-## Last verified: 2026-11-14 — repairing PR #69 after newer merges
+## Last verified: 2026-11-14 — bounded GitHub Actions
 
-- Branch `fix/consistency-audit` / PR #69 was blocked by merge conflicts, with
-  auto-merge still enabled. Merged current main `2b2b022` (build version PR #72),
-  including aphid PR #70 and brood icons PR #71. Only HANDOFF conflicted; source
-  and browser checks merged cleanly. Keep main's features and the audit fixes.
-- PR #69 fixes next +5 worker/scout counters to match eligibility, prevents guide
-  shortages bypassing expansion, and includes Dew Gatherer income in royal-care
-  forecasts. Guide losses reduce trails to supported crews, returning excess to
-  the default task; no guides recalls the route. Replacements do not silently
-  restore old targets. See CONSISTENCY-AUDIT.md and COLLECTION-TRAILS.md.
-- Existing aphid/save rules and pacing are in APHIDS.md. Running commit identity
-  and deferred offline update behavior are in OFFLINE.md; no change to either
-  feature is intended by this integration. BuildInfo is generated, not tracked.
-- Fresh combined validation passed: 270 engine tests, four balance tests and
-  fullOptJS (zero Closure errors/warnings). Production CI browser gate passed at
-  390/1280px, including brood icons and compiled build identity. Production map,
-  trail and aphid gate passed at 320/390/1280px. git diff --check passed.
-  Offline and long pacing suites were not repeated for this integration.
-- User authorized fixing and restoring auto-merge for #69. Main ruleset verified:
-  test and changes / classify required, strict up-to-date checks and no bypass.
-  Repository auto-merge remains enabled, squash only. Push the ordinary merge
-  update to the existing branch and finish once GitHub confirms the queue. Do not claim merged/deployed
-  from an authorization or queued state. Preserve unrelated work/ and caches.
+- Branch `ci/workflow-timeouts` starts from main `3a51b3c`, merged PR #69. The
+  consistency/guide-loss fixes are now on main, along with aphids, brood icons
+  and running build identity. Latest main deployment completed successfully.
+- Owner requested limits after long-running Actions. Found superseded main
+  deployments still running: 43583940403 (stuck at Scala Build project) and
+  43582168774. Recent successful PR tests took ~6 minutes and deploys ~3 minutes.
+- Runner budgets: PR test 20 min, deployment 15, classifier 5. Explicit step
+  limits include builds/tests 10, browser suites 5 each, dependencies 8 and deploy
+  5. Browser commands split into three named timed steps; commands unchanged.
+- PR and deploy workflows cancel superseded runs per workflow and PR/ref. Required
+  test and changes / classify names, docs-only policy and main/debug gates remain.
+  D44 and CI-WORKFLOW.md document behavior and non-retroactive limits.
+- YAML structure/timeout coverage validated for all three workflows; all six
+  ci_changes_test.py tests passed; git diff --check passed. No game build/browser
+  rerun needed for workflow-only changes. Live GitHub timeout/cancellation behavior
+  will be exercised after the workflow update lands; do not claim live verification.
+- Existing runs were not cancelled. The GitHub connector has no cancel action;
+  shell gh API access returned Forbidden. Existing executions need cancellation
+  separately in Actions; future limits do not apply retroactively.
+- Owner authorized a PR and auto-merge. Main remains 3a51b3c; active required
+  test and changes / classify checks, strict up-to-date policy and no bypass
+  verified again. Squash-only auto-merge is enabled. Check GitHub for live state
+  when resuming; finish after queue confirmation without CI polling.
+- Preserve unrelated work/ and Python caches.

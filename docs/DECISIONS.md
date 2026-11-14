@@ -764,3 +764,13 @@ values chosen to keep the added expansion friction small. It grants no Knowledge
 or ordinary resource cargo. The wild colony remains accessible after finite
 Woodland insects/Knowledge are spent. Keep existing save populations productive
 through one-time migration; reset aphids on founding. See APHIDS.md.
+
+## D44: Bound CI runtime and cancel superseded runs — implemented
+
+The owner requested reasonable GitHub Actions limits after seeing a run exceed
+two hours. All repository-controlled runner jobs now have explicit timeouts:
+20 minutes for PR tests, 15 for deployment and 5 for classification, with tighter
+step budgets. PR/deploy runs cancel superseded work on the same PR/ref; preserve
+required check names, docs-only skipping and main/debug deployment authorization.
+Timeouts fail validation rather than bypass it. Existing executions do not inherit
+new limits. Details and observed normal durations are in CI-WORKFLOW.md.

@@ -138,6 +138,10 @@ and do not promise a local file link will work on the user's device.
 
 ## Quiet progress and CI handoff
 
+Keep explicit job/step runtime limits in repository workflows; see
+[CI limits](docs/CI-WORKFLOW.md#runtime-limits-and-superseded-runs). Reusable callers
+use the timeout on the called runner job. Preserve required check identities.
+
 The owner prefers updates only for blockers, failures, decisions requiring input
 and completion. Avoid repetitive “still waiting” CI/build messages. If higher-level
 platform instructions require periodic updates, keep them brief and factual; this
