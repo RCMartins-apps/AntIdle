@@ -12,8 +12,9 @@
 - Reuses ResourceIcons sizing/strokes with two new silhouettes/colors. Live stage
   transitions update the icon. CI browser gate now covers all three shapes,
   caste/legacy entries, disclosure persistence and a live egg-to-larva transition.
-- fastOptJS passed. Focused browser verification using that maintained helper
-  passed at 320/390/1280px; visually inspected the 320px list. git diff --check
+- fastOptJS passed again after integrating main. Focused browser verification using that maintained helper
+  passed again at 320/390/1280px after integrating main; previously inspected
+  the 320px list. git diff --check
   passed. No engine tests, full production build or complete CI browser run was
   needed/repeated for this presentation-only change.
 - Owner authorized PR and auto-merge. Active Main ruleset reverified: required
