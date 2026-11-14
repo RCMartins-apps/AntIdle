@@ -45,3 +45,6 @@ script passes simply because the current CI and Scala suites do.
 Offline checks exercise real service workers in regular temporary profiles and
 the actual deployment package, including multi-window updates and failed releases.
 See [OFFLINE.md](../docs/OFFLINE.md).
+
+The production CI browser gate checks brood-list egg/larva/pupa SVGs, caste and
+legacy entries, and a live stage transition in the phone disclosure/desktop tooltip.
