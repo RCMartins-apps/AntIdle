@@ -4,7 +4,7 @@
 
 - Branch `feature/second-prestige` starts at main `7b22c11` (PR #73). Owner approved
   Beyond the Woodland: three handcrafted second-ring sites, plus a clear reward →
-  Understanding selection → confirmation flow. No PR requested for this feature.
+  Understanding selection → confirmation flow. Owner now authorized PR/auto-merge.
   Task ordering PR #74 is separate; refresh main before a later PR/integration.
 - Beyond costs 1 DNA at the second founding after Shared Paths; existing banked DNA
   can also learn it once eligible. Reveals append three sites after the original
@@ -33,7 +33,9 @@
   studied all outer sites and bought the new research, with zero starvation deaths.
   Third founding at 313.6/311.3 simulated minutes. This is scoped pacing evidence,
   not a universal balance or enjoyment claim. See PRESTIGE.md for reproduction.
-- Checkpoints were pushed during work; finish by pushing final docs/regressions on
-  the same branch. Verify its remote head when resuming. No PR or deployment is
-  implied. Preserve unrelated work/ and Python caches; temporary logs/reports and
+- PR/auto-merge handoff authorized. Main remains 7b22c11; active required test
+  and changes / classify checks, strict up-to-date policy and no bypass verified.
+  Auto-merge is enabled, squash only. Check GitHub for live PR/deployment state;
+  finish after queue confirmation without CI polling.
+- Preserve unrelated work/ and Python caches; temporary logs/reports and
   screenshots are under /tmp and are not durable chat attachments.
