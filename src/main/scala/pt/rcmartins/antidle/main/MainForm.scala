@@ -126,6 +126,7 @@ object MainForm {
           messagesDiv,
         ),
       ),
+      div(className := "game-build-footer small text-body-secondary text-center py-2", buildVersion),
       onMouseMove --> (ev => {
         Var.set(
           tooltipX -> ev.clientX.toInt,
@@ -418,6 +419,18 @@ object MainForm {
       },
     )
 
+  private def buildVersion: ReactiveHtmlElement[HTMLSpanElement] =
+    span(className := "build-version", "Build ",
+      if (BuildInfo.commit == "development") span("development")
+      else a(
+        href := s"https://github.com/RCMartins-apps/AntIdle/commit/${BuildInfo.commit}",
+        target := "_blank", rel := "noopener noreferrer",
+        className := "text-body-secondary",
+        title := (if (BuildInfo.modified) "Local build with uncommitted changes" else "Source commit for this game build"),
+        BuildInfo.label,
+      ),
+    )
+
   private def settingsDiv: ReactiveHtmlElement[HTMLDivElement] = {
     def settingsButton(
         name: String,
@@ -437,6 +450,7 @@ object MainForm {
 
     div(
       className := "row",
+      div(className := "settings-build col-12 px-3 py-2 small text-body-secondary", buildVersion),
       statisticsDiv,
       settingsButton(
         "Manual Save",
