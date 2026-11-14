@@ -17,7 +17,7 @@ Sugar Collectors and Aphid Tenders, not resource hauls or trail efficiency.
    the colony reset, then found. The final action revalidates the live state and
    applies learning, DNA payment and reset atomically. No browser confirm dialog.
 
-The first colony learns Shared Paths (1 DNA) at its first founding. The second
+The first colony can learn Shared Paths (1 DNA) at its first founding. The second
 introductory Understanding is Beyond the Woodland (1 DNA), requiring Shared Paths
 and two completed foundings including the one being planned. It opens three
 handcrafted distance-two sites after the six original reveals, in fixed order.
@@ -46,3 +46,23 @@ Existing save version 7 defaults the new Understanding to unowned and continues
 normally. A new colony still begins with the queen, no workers and no revealed
 hexes, research or aphids. This step adds no challenge colony or arbitrary DNA
 scaling. Later introductory Understandings and challenge rules remain undecided.
+
+## Initial pacing checks — 2026-11-14
+
+The real-engine balanced policy ran with seeds 42 and 137, a six-hour budget and
+three foundings as its goal. It chooses Shared Paths at first founding and Beyond
+the Woodland at second, and can research the outer upgrades. Both runs reached
+all three foundings, studied the outer sites and purchased all three new upgrades.
+Neither had starvation deaths. Existing natural aging still replaced workers.
+
+| Seed | First daughter ready | Second founding / new Understanding | Outer sites studied | Third founding |
+| --- | ---: | ---: | ---: | ---: |
+| 42 | 105.5 min | 210.8 min | 279.5 min | 313.6 min |
+| 137 | 103.1 min | 208.0 min | 277.1 min | 311.3 min |
+
+These are two scripted policies/seeds, not proof that every strategy is balanced
+or enjoyable. No pre-change controlled comparison is claimed for the new content.
+Reproduce with scripts/balance.py --policy balanced --seed 42 --seed 137 --hours 6
+and a copy of tools/balance/default.json with foundings set to 3. Build the runner
+first. Temporary reports/checkpoint saves were produced under
+/tmp/antidle-second-prestige-pacing; they are not durable repository artifacts.

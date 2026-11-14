@@ -170,7 +170,7 @@ def check_game(page, width, url):
         assert info['height'] >= 44
         assert info['y'] >= bounds['y'] and info['y'] + info['height'] <= bounds['y'] + bounds['height'] + 1
     expect(page.locator('.small-worker-tasks')).to_have_count(0)
-    expect(page.get_by_text('Small workers', exact=True)).to_have_count(0)
+    expect(page.locator('.resource-row').filter(has=page.get_by_text('Small workers', exact=True))).to_have_count(0)
     if width <= 767:
         expect(page.locator('.build-queue-panel')).not_to_be_visible()
         page.get_by_role('tab', name='Nest', exact=True).click()

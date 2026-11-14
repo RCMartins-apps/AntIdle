@@ -12,10 +12,10 @@ class SecondPrestigeSuite extends FunSuite {
   def colony: AllData = {
     val d = AllData.initial
     d.copy(ants = AntsData(workers = 30 * u, scouts = 3 * u, daughterQueens = u,
-      lineage = Lineage(1, 0L, true), tasks = Seq(AntTask.SugarCollector -> (30 * u))),
+      lineage = Lineage(1, 0L, true), tasks = Seq(AntTask.SugarCollector -> (30 * u)), defaultTask = Some(AntTask.SugarCollector)),
       nestAttributes = d.nestAttributes.copy(aphids = 10L, chambers = d.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))),
       exploration = MapFixture.explored,
-      upgrades = d.upgrades.unlock(AphidTending),
+      upgrades = d.upgrades.unlock(AphidTending, DefaultWorkers),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)),
       basicResources = d.basicResources.copy(sugar = BasicResource(10000 * u, 100000 * u),
         resin = BasicResource(100 * u, 1000 * u), knowledge = BasicResource(5000 * u, Long.MaxValue)))
@@ -101,4 +101,28 @@ class SecondPrestigeSuite extends FunSuite {
     assertEquals(loaded.nestAttributes.aphidPlacesPerLevel, 20)
     assertEquals(loaded.nestAttributes.aphids, 10L)
   }
+  test("Trail Logistics changes actual harvesting and charges proportionate supplies") {
+    val base = colony.copy(upgrades = colony.upgrades.unlock(TrailLogistics))
+    val five = PheromoneTrails.adjust(base, ExplorationDestination.NectarMeadow.id, 5 * u)
+    val assigned = PheromoneTrails.adjust(five, ExplorationDestination.NectarMeadow.id, 5 * u)
+    val (gain, cost) = PheromoneTrails.nominal(ExplorationDestination.NectarMeadow, 10 * u, assigned.upgrades)
+    val (oldGain, oldCost) = PheromoneTrails.nominal(ExplorationDestination.NectarMeadow, 10 * u, colony.upgrades)
+    assertEquals(gain * 4L, oldGain * 5L)
+    assert(Math.abs(cost * 4L - oldCost * 5L) <= 4L)
+    val next = PheromoneTrails.tick(assigned)
+    assertEquals(next.basicResources.sugar.amount - assigned.basicResources.sugar.amount, gain - cost)
+    assertEquals(next.exploration.depleted(ExplorationDestination.NectarMeadow.id), gain)
+    assertEquals(PheromoneTrails.guides(assigned.ants, assigned.exploration), u)
+  }
+  test("Coordinated Expeditions permits one more real departure without relaxing crew costs") {
+    def launch(d: AllData): AllData = ExplorationHelper.start(d, 5 * u, ExplorationDestination.NectarMeadow)
+    val oldFull = launch(launch(colony))
+    assertEquals(launch(oldFull), oldFull)
+    val expanded = oldFull.copy(upgrades = oldFull.upgrades.unlock(CoordinatedExpeditions))
+    val sent = launch(expanded)
+    assertEquals(sent.exploration.explorationParties.size, 3)
+    assertEquals(sent.basicResources.sugar.amount, expanded.basicResources.sugar.amount - 50L * u)
+    assertEquals(launch(sent), sent)
+  }
+
 }

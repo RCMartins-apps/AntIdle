@@ -28,6 +28,18 @@ def check_prestige(page, width, url):
     game['statistics']['sugarU'] = {'thisRun': 100 * UNIT, 'total': 300 * UNIT}
     for upgrade in game['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=upgrade['name'] in ['DefaultWorkers', 'AphidTending'])
+    # Existing banked DNA can be spent after backing out of a draft without leaving it invalid.
+    banked = copy.deepcopy(game)
+    banked['ants']['lineage'].update(foundings=1, dna=1)
+    load_game(page, banked)
+    page.get_by_role('tab', name='Lineage', exact=True).click()
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    page.get_by_role('checkbox', name='Select Shared Paths', exact=True).check()
+    page.get_by_role('button', name='Back to rewards', exact=True).click()
+    page.get_by_role('button', name='Learn Shared Paths', exact=True).click()
+    page.get_by_role('button', name='Choose Understandings', exact=True).click()
+    expect(page.get_by_role('button', name='Review founding', exact=True)).to_be_enabled()
+    expect(page.locator('.founding-rewards')).to_contain_text('DNA spent on Understandings0')
     load_game(page, game)
     page.get_by_role('tab', name='Lineage', exact=True).click()
     expect(page.locator('.founding-rewards')).to_contain_text('0 + 1 = 1')

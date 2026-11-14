@@ -97,8 +97,10 @@ production CI smoke and `tests/map_browser_smoke.py` at phone/desktop sizes.
 The balance lab now uses scout studies and resource collection; pre-map XP timing
 baselines are historical. See [BALANCING.md](BALANCING.md) and the lab's README.
 
-Distance-two/three rings and their prestige/range unlocks remain future work.
-No procedural generation, new Understanding or extra ring is included here.
+Beyond the Woodland opens three handcrafted distance-two sites after the six
+original reveals. They have finite scout Knowledge and unlock colony research;
+see [Prestige](PRESTIGE.md). They add no ordinary resource deposits. Additional
+outer sites, distance-three range and procedural generation remain future work.
 
 ## Map presentation
 

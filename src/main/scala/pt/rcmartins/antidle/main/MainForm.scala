@@ -1365,7 +1365,7 @@ object MainForm {
               div(className := "learn-understanding small mt-3", span(s"${understanding.title}: ${understanding.effect} "),
                 button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
                   s"Learn ${understanding.title}", disabled := lineage.dna < understanding.cost,
-                  onClick --> (_ => Actions.purchaseUnderstanding(understanding.id))), span(s" ${understanding.cost} DNA"))
+                  onClick --> (_ => { selected.set(Set.empty); acknowledged.set(false); Actions.purchaseUnderstanding(understanding.id) })), span(s" ${understanding.cost} DNA"))
             }
           })
         case 1 => div(className := "founding-step", dataAttr("step") := "understandings",

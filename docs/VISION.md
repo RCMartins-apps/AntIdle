@@ -74,8 +74,9 @@ than random access to essential resources. Scouts exclusively reveal and study
 sites; workers collect deposits. Knowledge declines with repeated study and is
 finite per site; resource reserves are finite too. Exhausted places remain visible
 as colony history. Managed aphids/outposts and renewable worker jobs retain value.
-Exploration XP is removed. Further rings can open through future range research
-or Understandings; those later unlocks are not designed or implemented yet.
+Exploration XP is removed. Beyond the Woodland, the second Understanding, opens
+three handcrafted distance-two sites with finite Knowledge and new colony
+research. Further outer sites and distance-three range remain future content.
 
 ## Understandings and prestige
 
@@ -119,7 +120,10 @@ Remaining introductory rewards, exact count and later DNA scaling remain undecid
 
 The first implemented Understanding is Shared Paths, automating safe collection
 from studied sites with workers and one guiding scout per ten workers, rounded up.
-Manual and automatic collection draw from the same finite deposits. Founding gives an automatic
+The second, Beyond the Woodland, opens three outer sites and research for aphid
+housing, trail efficiency and expedition capacity. Founding now previews rewards,
+then selects Understandings, then requires confirmation; DNA learning and reset
+apply atomically. Manual and automatic collection draw from the same finite deposits. Founding gives an automatic
 +10% sugar production per completed prestige, stacked additively; DNA buys
 Understandings separately. The new colony starts with the normal initial queen
 and no workers. The reset preview lists what is lost and inherited. The founding
