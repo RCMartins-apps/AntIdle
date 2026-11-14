@@ -14,10 +14,13 @@
 - Existing aphid/save rules and pacing are in APHIDS.md. Running commit identity
   and deferred offline update behavior are in OFFLINE.md; no change to either
   feature is intended by this integration. BuildInfo is generated, not tracked.
-- Previous branch validation passed 263 engine tests and map checks before main
-  integration. Fresh combined engine/build/browser validation is pending in this
-  repair; replace this entry with actual results before the final handoff.
-- User authorized fixing and restoring auto-merge for #69. Push the ordinary
-  merge/update to its existing branch, preserve required checks and squash auto-
-  merge, and finish once GitHub confirms the queue. Do not claim merged/deployed
+- Fresh combined validation passed: 270 engine tests, four balance tests and
+  fullOptJS (zero Closure errors/warnings). Production CI browser gate passed at
+  390/1280px, including brood icons and compiled build identity. Production map,
+  trail and aphid gate passed at 320/390/1280px. git diff --check passed.
+  Offline and long pacing suites were not repeated for this integration.
+- User authorized fixing and restoring auto-merge for #69. Main ruleset verified:
+  test and changes / classify required, strict up-to-date checks and no bypass.
+  Repository auto-merge remains enabled, squash only. Push the ordinary merge
+  update to the existing branch and finish once GitHub confirms the queue. Do not claim merged/deployed
   from an authorization or queued state. Preserve unrelated work/ and caches.
