@@ -24,6 +24,7 @@ def check(page, width, url):
     game = progressed_game(game)
     game['ants']['eggOrders'] = 0
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
+    game['nestAttributes']['royalBroodSlots'] = 1
     load_game(page, game)
     page.get_by_role('tab', name='Nest', exact=True).click()
     page.get_by_role('button', name='Raise Royal Egg', exact=True).click()
