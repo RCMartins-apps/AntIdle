@@ -2,11 +2,12 @@
 
 ## Last verified: 2026-11-15 — permanent compounding milestones
 
-- New work is on `feature/permanent-milestones`, based on `feature/colony-milestones`
-  at f77cadc because it extends that feature. PR #76 was open with native squash
-  auto-merge enabled when this task started; its content was left unchanged.
-  Check GitHub before a later PR, and integrate main normally after #76 merges.
-  No PR for this new branch has been requested yet. Preserve the branch by pushing.
+- Work is on `feature/permanent-milestones`. PR #76 is confirmed merged at
+  main 3fa8eee; this branch integrated main with the tested feature tree unchanged.
+  The owner authorized PR creation and native squash auto-merge for this branch.
+  Main protection requires test and changes / classify with strict up-to-date
+  checks and no bypass; squash-only auto-merge settings were reverified.
+  Check GitHub for live PR/merge state; finish after queueing without CI polling.
 - Owner explicitly chose permanent lifetime milestones and multiplicative rewards:
   each tier gives ×1.01 sugar; N tiers gives 1.01^N. A dedicated Milestones tab
   shows the combined multiplier, introduced goals, expandable tiers and resource
