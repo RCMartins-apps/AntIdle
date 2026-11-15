@@ -1,1 +1,4 @@
 -Dfile.encoding=utf-8
+-Xms256M
+-Xmx3G
+-XX:+UseG1GC
