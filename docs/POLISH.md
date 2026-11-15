@@ -8,7 +8,7 @@ Integrate current main before submitting each PR.
 1. **Activity states (implemented):** shared compact status styling for brood, royal care,
    trails and construction. Waiting/paused states differ from resource blockers;
    queued construction names missing materials. Text accompanies color.
-2. **Map feedback:** distinguish unexplored, studying, collecting and exhausted
+2. **Map feedback (implemented):** distinguish unexplored, studying, collecting and exhausted
    sites; show active mission progress at its hex without hiding risks or costs.
 3. **UI memory:** preserve selected map site and collapsed sections across reloads,
    with safe fallback when an old selection is no longer unlocked.
