@@ -46,8 +46,11 @@ object ExplorationMap {
   def busy(data: ExplorationData, id: String, mission: String): Boolean =
     data.explorationParties.exists(p => p.destination == id && p.mission == mission)
   def scoutCost(count: Int): ActionCost = ActionCost(sugar = count.toLong * ScoutSugar)
-  def scoutDuration(count: Int, reveal: Boolean): Long =
-    ((if (reveal) RevealTicks else SurveyTicks) + count - 1L) / Math.max(1, count)
+  def scoutDuration(count: Int, reveal: Boolean, upgrades: UpgradesData = UpgradesData.initial): Long = {
+    val percent = if (upgrades(UpgradesData.UpgradeType.ScoutWayfinding).unlocked) MilestoneResearch.ScoutDurationPercent else 100L
+    val denominator = Math.max(1, count).toLong * 100L
+    ((if (reveal) RevealTicks else SurveyTicks) * percent + denominator - 1L) / denominator
+  }
   def canScout(data: AllData, id: String, count: Int): Boolean =
     data.unlocks.tabs.exploreTabUnlocked && count >= 1 && count <= MaxSurveyScouts &&
       ScoutProgression.available(data.ants, data.exploration) >= count.toLong * u && data.hasResources(scoutCost(count)) &&
@@ -58,7 +61,7 @@ object ExplorationMap {
     if (!canScout(data, id, count)) data else {
       val (ready, ages) = PopulationAging.depart(data, 0L, count.toLong * u)
       val reveal = id == "surroundings"
-      val party = ExplorationParty(0L, data.currentTick, data.currentTick + scoutDuration(count, reveal),
+      val party = ExplorationParty(0L, data.currentTick, data.currentTick + scoutDuration(count, reveal, data.upgrades),
         scouts = count.toLong * u, destination = id, ages = ages, mission = if (reveal) "reveal" else "study")
       ready.spendResources(scoutCost(count)).copy(exploration = ready.exploration.copy(explorationParties = party :: ready.exploration.explorationParties),
         statistics = ready.statistics.copy(explorationsCount = ready.statistics.explorationsCount.addValue(1)))

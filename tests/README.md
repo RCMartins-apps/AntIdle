@@ -60,3 +60,8 @@ the label remains available offline and unchanged while a new release waits.
 replaced). It checks the staged founding transaction and second-ring research at
 320/390/1280px. Run after fastOptJS, or with ANTIDLE_PRODUCTION=1 after fullOptJS.
 The PR workflow runs it in a separate five-minute step.
+
+
+The production CI gate also checks milestone research through actual expedition
+returns and worker maturation, purchases all three upgrades, and checks the scout
+duration preview at 390/1280px. Engine coverage is in MilestoneResearchSuite.

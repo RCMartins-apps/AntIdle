@@ -41,7 +41,7 @@ object ChamberBonuses {
       case ChamberType.Queen =>
         val next = nest.copy(chambers = nest.chambers.copy(
           queenChamber = nest.chambers.queenChamber.copy(level = nest.chambers.queenChamber.level + 1)))
-        bonus.copy(layingIntervalReduction = BroodProgression.interval(ants, nest) - BroodProgression.interval(ants, next))
+        bonus.copy(layingIntervalReduction = BroodProgression.interval(ants, nest, upgrades) - BroodProgression.interval(ants, next, upgrades))
       case _ => bonus
     }
   }

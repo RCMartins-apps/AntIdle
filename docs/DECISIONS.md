@@ -790,3 +790,15 @@ production bonuses and numeric upgrade effects. Preview/back navigation must not
 spend DNA. Validate and apply learning and reset together on confirmation; allow
 banking DNA. Retain old saves and existing banked-DNA purchases. PRESTIGE.md records
 exact rules, prices and the distinction between inherited and colony upgrades.
+
+## D47: Current-colony milestones open optional paid research — implemented
+
+Under the owner's request for more engaging features, connect existing statistics
+to optional Scout Wayfinding, Nurse Training and Queen's Rhythm research. Goals
+use this-colony completed expeditions and standard workers actually raised, not
+launches, small founding workers or lifetime totals. Show one relevant upcoming
+goal with progress/effect/price; reveal research only after its goal and existing
+prerequisites. Use ordinary purchase flags and reset both goals and research on
+founding. Do not add another currency, permanent non-Understanding bonuses,
+claim buttons or repeated milestone messages. Exact initial counts, effects and
+prices are documented in MILESTONES.md and remain tunable.

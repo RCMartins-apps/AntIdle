@@ -110,3 +110,6 @@ Founding policies select the introductory Understandings atomically: Shared Path
 first, Beyond the Woodland second. For third-colony coverage, use a configuration
 with `foundings: 3`; outer-map milestones record range ownership, reveal and study.
 The policy can research outer upgrades and its aphid target still counts tenders.
+
+Default policies include the new milestone research priorities. They still pay
+normal costs and meet this-run goals through actual mission returns and births.

@@ -212,6 +212,15 @@ effect stacks with all three techniques and updates live rates and predictions.
 Knowledge-priced upgrades stay hidden until exploration is unlocked, including
 unpurchased upgrades revealed prematurely in an existing save.
 
+## Colony milestones
+
+Optional research opens through current-colony achievements: 20 completed
+expeditions unlock Scout Wayfinding, 25 standard workers raised unlock Nurse
+Training, and 50 unlock Queen's Rhythm, subject to their base research prerequisites.
+Upgrades shows one upcoming goal; reaching it reveals paid research. These goals
+and upgrades reset on founding. See [Milestone research](docs/MILESTONES.md) for
+prices, effects and timing rules.
+
 ## Colony development
 
 Reinforced Mandibles requires two revealed sites and increases tunnelling output
