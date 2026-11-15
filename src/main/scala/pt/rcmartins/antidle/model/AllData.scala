@@ -3,7 +3,6 @@ package pt.rcmartins.antidle.model
 import com.raquo.airstream.state.Var
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Utils._
-import pt.rcmartins.antidle.model.AllData.MaxMessages
 
 case class AllData(
     version: Int = AllData.CurrentVersion,
@@ -77,15 +76,13 @@ case class AllData(
     )
 
   def addMessage(message: String): AllData =
-    this.modify(_.messages).using(oldMessages => (message +: oldMessages).take(MaxMessages))
+    this.modify(_.messages).using(oldMessages => pt.rcmartins.antidle.game.EventLog.append(oldMessages, message))
 
 }
 
 object AllData {
 
   val CurrentVersion = 7
-
-  private val MaxMessages = 10
 
   val initial: AllData =
     AllData(

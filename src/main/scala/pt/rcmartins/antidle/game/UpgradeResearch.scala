@@ -19,4 +19,5 @@ object UpgradeResearch {
   def purchase(data: AllData, upgrade: UpgradeType): AllData =
     if (!canPurchase(data, upgrade)) data
     else UpgradeVisibility.reconcile(data.spendResources(upgrade.cost).copy(upgrades = data.upgrades.unlock(upgrade)))
+      .addMessage(s"Research completed: ${upgrade.title}.")
 }

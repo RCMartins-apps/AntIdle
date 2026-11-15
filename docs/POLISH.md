@@ -10,9 +10,9 @@ Integrate current main before submitting each PR.
    queued construction names missing materials. Text accompanies color.
 2. **Map feedback (PR #79):** distinguish unexplored, studying, collecting and exhausted
    sites; show active mission progress at its hex without hiding risks or costs.
-3. **UI memory (implemented):** preserve selected map site and collapsed sections across reloads,
+3. **UI memory (PR #80):** preserve selected map site and collapsed sections across reloads,
    with safe fallback when an old selection is no longer unlocked.
-4. **Event log:** group routine reports and emphasize meaningful discoveries,
+4. **Event log (implemented):** group routine reports and emphasize meaningful discoveries,
    research and losses without adding message spam.
 5. **Visual consistency:** align control/touch sizes, spacing, numeric presentation,
    progress and empty/completed states.
@@ -25,3 +25,8 @@ It covers brood, aging, resource/details, purchased research and milestone tiers
 Storage failures fall back to normal defaults. Saved map selection is validated
 against current reveals/range, including during founding/import. Confirmation
 checkboxes and irreversible-action drafts are never restored.
+
+Event retention remains compatible with string-based saves: up to 20 significant
+events, 30 routine reports and 10 notices. Collection/Knowledge/carcass reports
+group by source/resource and show the latest text plus report count. Counts refer
+to reports, not summed yields. Successful paid research records one completion.
