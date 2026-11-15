@@ -88,7 +88,7 @@ def check_map(page, width, url):
     page.get_by_role('tab', name='Explore', exact=True).click()
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.locator('.map-site-card')).not_to_contain_text('Site exhausted')
-    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_have_accessible_name('Woodland Edge: aphids')
+    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_have_accessible_name('Woodland Edge: Aphids')
     expect(page.locator('.map-site-card button')).to_have_count(0)
     expect(page.locator('#map-worker-count')).to_have_count(0)
     assert_fits(page, width)
