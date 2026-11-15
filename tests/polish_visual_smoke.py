@@ -50,7 +50,7 @@ def check(page, width, url):
     load_game(page, royal)
     page.get_by_role('button', name='Raise Royal Egg', exact=True).click()
     progress = page.get_by_role('progressbar', name='Royal brood progress', exact=True)
-    expect(progress).to_have_attribute('aria-valuenow', '0')
+    assert float(progress.get_attribute('aria-valuenow')) == 0.0
     expect(progress.locator('..')).to_have_css('height', '8px')
     assert_fits(page, narrow)
     print(f'PASS visual polish {width}px: compact values, aligned digits, control sizes, settings and queue empty state', flush=True)

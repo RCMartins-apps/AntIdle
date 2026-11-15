@@ -639,7 +639,10 @@ object MainForm {
           children <-- highlights.map(_.drop(4).map(row))),
         detailsTag(rememberDetails("log.routine"), className := "log-routine mt-2",
           display <-- routine.map(m => if (m.nonEmpty) "" else "none"),
-          summaryTag(minHeight.px := 44, child.text <-- routine.map(m => s"Routine activity (${m.map(_.reports).sum} reports)")),
+          summaryTag(minHeight.px := 44, child.text <-- routine.map { entries =>
+            val count = entries.map(_.reports).sum
+            s"Routine activity ($count ${if (count == 1) "report" else "reports"})"
+          }),
           div(className := "small text-body-secondary", "Latest report from each source"),
           children <-- routine.map(_.map(entry => div(className := "log-entry log-routine-entry",
             span(entry.text), if (entry.reports > 1) small(s" · ${entry.reports} reports") else emptyNode)))),
@@ -1978,9 +1981,12 @@ object MainForm {
     def validSelection(id: String, data: ExplorationData, ants: AntsData): Boolean =
       id == "surroundings" || (ExplorationMap.availableSites(ants).exists(_.id == id) && ExplorationMap.revealed(data, id))
 
-    def feedback(id: String) = explorationSignal.combineWith(currentTickSignal).map {
-      case (data, tick) => MapFeedback.state(data, id, tick)
-    }.distinct
+    val feedbackSignals = (Vector("surroundings") ++ ExplorationMap.allSites.map(_.id)).map { id =>
+      id -> explorationSignal.combineWith(currentTickSignal).map {
+        case (data, tick) => MapFeedback.state(data, id, tick)
+      }.distinct
+    }.toMap
+    def feedback(id: String): Signal[MapFeedback.State] = feedbackSignals(id)
     def mapProgress(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
       className := "map-progress", role := "progressbar", aria.label := "Mission progress",
       aria.valueMin := 0, aria.valueMax := 100,
@@ -2187,7 +2193,7 @@ object MainForm {
                   case _ => "Rivals"
                 })),
               small(className := "map-state", title <-- feedback(site.id).map(_.label),
-                child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "?" else f.percent.map(p => s"$p%").getOrElse(if (f.kind == "trail") "Trail" else if (f.kind == "exhausted") "✓" else f.label))),
+                child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "" else f.percent.map(p => s"$p%").getOrElse(if (f.kind == "trail") "Trail" else if (f.kind == "exhausted") "✓" else f.label))),
               mapProgress(site.id),
               onClick --> (_ => selected.set(site.id)),
             )
