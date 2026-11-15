@@ -76,3 +76,60 @@ runs a few minutes slower than the earlier second-prestige runs; this is not a
 controlled comparison or an enjoyment measurement. Nurse care matters under brood
 load, while laying speed matters when laying is the bottleneck. The upgrades are
 optional choices, not a promise that buying everything immediately is optimal.
+
+## Permanent achievements
+
+The **Milestones** tab tracks lifetime achievements separately from the paid
+current-colony research above. Each reached tier automatically multiplies all
+sugar gains by ×1.01. N completed tiers gives 1.01^N, rather than 1 + N/100.
+Ten tiers give ×1.1046 (rounded only for display). Resource arithmetic uses an
+exact integer ratio and floors the final fixed-point gain; it does not repeatedly
+round at each milestone. Negative amounts, supplies, upkeep and purchase costs
+are never multiplied. The multiplier stacks with the existing inherited bonus.
+
+| Goal | Tier targets |
+| --- | --- |
+| Sugar gathered | 100; 1,000; 10,000; 100,000; 1,000,000 |
+| Protein, resin gathered | 10; 100; 1,000; 10,000 each |
+| Knowledge gathered | 25; 100; 500; 1,000 |
+| Water gathered | 25; 100; 1,000; 10,000 |
+| Space excavated | 100; 1,000; 10,000; 100,000 |
+| Standard workers raised | 10; 25; 50; 100; 500 |
+| Workers alive at once | 10; 25; 50; 100; 250 |
+| Scouts raised | 1; 5; 10; 25 |
+| Expeditions completed | 5; 20; 50; 100 |
+| Carcasses retrieved | 1; 5; 20 |
+| Repletes promoted | 1; 5; 10 |
+| Territorial contests completed | 1; 5; 20 |
+| Daughter queens raised | 1; 3; 10 |
+
+Targets and rewards are centralized in ColonyMilestones. Resource goals count
+retained/used output, not discarded overflow. Sugar income includes collectors,
+aphids, manual expedition cargo and automatic trails; a carcass offsets upkeep
+rather than producing sugar and is unchanged. Finite deposits still debit raw
+cargo; the bonus improves yield without regenerating deposits. Unstored return
+cargo is refunded in raw deposit units. Mission and trail previews include the
+bonus; costs remain base amounts. Existing parties receive the current multiplier
+when delivering cargo. Founding provisions and protected recovery are unchanged.
+
+The tab shows the combined multiplier and one row per introduced goal. Expand a
+row to inspect its tiers. Disclosures survive live ticks. Resource rows also show
+lifetime peak holdings. Peak worker population includes small and standard workers;
+standard-worker birth goals exclude small workers and scouts. Lifetime goals do
+not reset when a colony spends resources, loses ants or founds a daughter colony.
+The founding preview explicitly lists the milestone multiplier as kept.
+
+Statistics saves now include this-colony/lifetime maximum holdings for all six
+resources. Older saves default absent peak fields to zero and seed them from
+current stores on load; past holdings cannot be reconstructed. Existing lifetime
+counts immediately qualify for achievements. The existing save schema remains
+compatible; no save-version reset is needed. New colony counters reset while
+lifetime totals and peaks persist.
+
+With permanent achievements enabled, two balanced-policy four-hour-budget runs
+(seeds 42/137) reached their two-founding goal in 166.9/165.1 simulated minutes.
+First daughter readiness was 90.4/90.3 minutes; both runs had zero starvation deaths
+and no negative sampled resources. This is faster than the earlier paid-research
+runs recorded above, as expected from the new sugar multiplier. The samples do
+not establish player enjoyment or an optimal strategy. Use the same reproduction
+command above with a fresh rebuilt balance runner.

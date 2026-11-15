@@ -65,3 +65,9 @@ The PR workflow runs it in a separate five-minute step.
 The production CI gate also checks milestone research through actual expedition
 returns and worker maturation, purchases all three upgrades, and checks the scout
 duration preview at 390/1280px. Engine coverage is in MilestoneResearchSuite.
+
+Permanent milestone checks also earn a resource tier through live production,
+verify its ×1.01 multiplier, preserve an open goal across ticks, and reload lower
+holdings/current-run totals without losing lifetime progress or saved peaks.
+ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
+finite-haul refunds, automation, prestige and legacy peak-field defaults.
