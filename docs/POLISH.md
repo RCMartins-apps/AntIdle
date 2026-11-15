@@ -36,3 +36,8 @@ progress tracks and the empty construction queue. Resource numbers share one
 K/M/B/T formatter; exact requirement values remain in titles/accessibility labels.
 Tiny values and negative rates retain meaningful precision and signs. Royal brood
 progress has an accessible label/value and is clamped to 0–100%.
+
+Expanded map hexes show compact percentages with study/cargo/scouting symbols
+during missions. Full action labels remain in accessible names and tooltips.
+Trail/exhausted labels also stay compact to fit narrow hexes. The 320px expanded
+map and royal progress accessibility are covered in polish_visual_smoke.py.

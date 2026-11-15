@@ -49,6 +49,9 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/saves/`: serialization, restoration and load-time reconciliation.
 - `tools/balance/` (repository root): seeded real-engine pacing runner, policy config, portable reports and checkpoint saves; see its README.
 - `game/UnlockUtils.scala`, `GameTransition.scala`: pure unlock and post-action rules shared by browser and balance runner.
+- `game/ActivityStatus.scala`, `MapFeedback.scala`: compact presentation states and map mission progress.
+- `game/EventLog.scala`: bounded compatible string history and routine report grouping.
+- `main/UiPreferences.scala`: browser-only disclosure/map choices, separate from game saves.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.
 
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at

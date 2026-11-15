@@ -29,13 +29,16 @@ object MainForm {
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
 
+  private def rememberDetails(key: String, defaultOpen: Boolean = false): Modifier[ReactiveHtmlElement[HTMLElement]] =
+    onMountCallback(ctx => UiPreferences.bindDetails(ctx.thisNode.ref, key, defaultOpen))
+
   private def activityStatus(label: Signal[String], extraClass: String = ""): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := s"activity-status $extraClass", dataAttr("state") <-- label.map(ActivityStatus.kind).distinct,
       child.text <-- label.distinct)
 
   private def infoDetails(label: String, content: ReactiveHtmlElement[HTMLDivElement]): ReactiveHtmlElement[HTMLElement] =
     detailsTag(
-      className := "info-details",
+      className := "info-details", rememberDetails("info." + label),
       summaryTag(className := "info-summary", aria.label := s"About $label", title := s"About $label",
         svg.svg(aria.hidden := true, svg.viewBox := "0 0 24 24",
           svg.path(svg.d := "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 11v6M12 7h.01")),
@@ -395,7 +398,7 @@ object MainForm {
     div(className := "small text-body-secondary mb-3", "×1.01 per milestone · permanent"),
     ColonyMilestones.goals.map { goal =>
       def number(n: Long): String = if (goal.resource) prettyNumberStr(n) else n.toString
-      detailsTag(className := "achievement-goal border rounded p-2 mb-2",
+      detailsTag(className := "achievement-goal border rounded p-2 mb-2", rememberDetails("milestone." + goal.id),
         display <-- snapshotSignal.map(data => if (ColonyMilestones.visible(goal, data)) "" else "none").distinct,
         summaryTag(
           span(goal.title),
@@ -416,7 +419,7 @@ object MainForm {
 
   private def statisticsDiv: ReactiveHtmlElement[HTMLElement] =
     detailsTag(
-      className := "col-12 colony-statistics mb-3",
+      className := "col-12 colony-statistics mb-3", rememberDetails("statistics"),
       summaryTag("Colony statistics"),
       small("Collected resources exclude overflow discarded at full storage."),
       children <-- statisticsData.signal.combineWith(unlocksSignal, explorationSignal).map { case (stats, unlocks, exploration) =>
@@ -621,30 +624,29 @@ object MainForm {
     )
   }
 
-  private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] =
-    div(
-      className := "m-1",
-      className := "card game-panel",
-      className := "fs-4",
-      width.px := MessagesWidth,
-      maxWidth.px := MessagesWidth,
-      div(
-        className := "card-header",
-        "Messages",
-      ),
-      div(
-        className := "card-body",
-        className := "fs-5",
-        div(
-          className := "d-grid gap-2",
-          child.maybe <-- messagesSignal.signal.map(_.headOption.map(text => span(text))),
-          children <--
-            messagesSignal.map {
-              _.drop(1).map(text => div(opacity := 0.5, text))
-            }
-        )
-      )
-    )
+  private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] = {
+    val highlights = messagesSignal.map(_.filter(m => EventLog.kind(m) != "routine")).distinct
+    val routine = messagesSignal.map(EventLog.routine).distinct
+    def row(text: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      className := s"log-entry log-${EventLog.kind(text)}", text)
+    div(className := "m-1 card game-panel event-log", width.px := MessagesWidth, maxWidth.px := MessagesWidth,
+      div(className := "card-header", "Colony log"),
+      div(className := "card-body",
+        div(className := "log-highlights", children <-- highlights.map(_.take(4).map(row))),
+        detailsTag(rememberDetails("log.history"), className := "log-history mt-2",
+          display <-- highlights.map(m => if (m.size > 4) "" else "none"),
+          summaryTag(minHeight.px := 44, child.text <-- highlights.map(m => s"Earlier events (${Math.max(0, m.size - 4)})")),
+          children <-- highlights.map(_.drop(4).map(row))),
+        detailsTag(rememberDetails("log.routine"), className := "log-routine mt-2",
+          display <-- routine.map(m => if (m.nonEmpty) "" else "none"),
+          summaryTag(minHeight.px := 44, child.text <-- routine.map(m => s"Routine activity (${m.map(_.reports).sum} reports)")),
+          div(className := "small text-body-secondary", "Latest report from each source"),
+          children <-- routine.map(_.map(entry => div(className := "log-entry log-routine-entry",
+            span(entry.text), if (entry.reports > 1) small(s" · ${entry.reports} reports") else emptyNode)))),
+        child.maybe <-- messagesSignal.map(_.isEmpty).distinct.map(empty => Option.when(empty)(
+          div(className := "small text-body-secondary", "No events yet.")))
+      ))
+  }
 
   private def resourcesDiv: Modifier[ReactiveHtmlElement[HTMLDivElement]] =
     div(
@@ -811,7 +813,7 @@ object MainForm {
               className := "col-4 text-nowrap resource-name",
               child <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
                 tooltipOpt.filter(_ => mobile) match {
-                  case Some(content) => detailsTag(summaryTag(resourceName), content)
+                  case Some(content) => detailsTag(rememberDetails("resource." + resourceName), summaryTag(resourceName), content)
                   case None => resourceName
                 }
               },
@@ -959,7 +961,7 @@ object MainForm {
       ),
       detailsTag(
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
-        onMountCallback(ctx => ctx.thisNode.ref.asInstanceOf[HTMLElement].setAttribute("open", "")),
+        rememberDetails("nest.brood", defaultOpen = true),
         summaryTag(className := "brood-summary mb-2", minHeight.px := 44, "Brood"),
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
         infoHeading("Brood", div(
@@ -970,7 +972,7 @@ object MainForm {
           p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
           detailsTag(
-            className := "colony-aging mb-2",
+            className := "colony-aging mb-2", rememberDetails("nest.aging"),
             summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
               case (ants, tick) => PopulationAging.forecast(ants, tick)
             }),
@@ -1317,7 +1319,7 @@ object MainForm {
       row("DNA spent on Understandings", selected.signal.map(ids => Prestige.understandings.filter(u => ids(u.id)).map(_.cost).sum.toString)),
       row("DNA carried forward", planned.map(_.map(_.dna.toString).getOrElse("Invalid selection"))),
     )
-    def resetRows = detailsTag(className := "founding-reset my-2", summaryTag(minHeight.px := 44, "Colony reset: exact values"),
+    def resetRows = detailsTag(rememberDetails("lineage.reset"), className := "founding-reset my-2", summaryTag(minHeight.px := 44, "Colony reset: exact values"),
       children <-- snapshotSignal.map { data =>
         val fresh = AllData.initial
         def resource(label: String, before: BasicResource, after: BasicResource) = {
@@ -1346,7 +1348,7 @@ object MainForm {
           div(className := "small mt-2", s"Research reset (${data.upgrades.upgrades.count(_._2.unlocked)}): ",
             data.upgrades.upgrades.toSeq.filter(_._2.unlocked).sortBy(_._1.title).map(_._1.title).mkString(", "))
       })
-    def newResearch = detailsTag(className := "understanding-research my-2", summaryTag(minHeight.px := 44, "New colony research"),
+    def newResearch = detailsTag(rememberDetails("lineage.research"), className := "understanding-research my-2", summaryTag(minHeight.px := 44, "New colony research"),
       div(className := "small text-body-secondary my-2", "Each needs 3 studies at its outer site. Colony research resets on founding."),
       Seq(UpgradeType.AphidShelters, UpgradeType.TrailLogistics, UpgradeType.CoordinatedExpeditions).map { upgrade =>
         div(className := "border-bottom small py-2", b(upgrade.title), div(upgrade.description),
@@ -1612,7 +1614,7 @@ object MainForm {
       child.maybe <-- blockedReasonSignal.map(_.map(reason =>
         div(className := "action-blocked-reason small text-danger text-center", reason))),
           detailsTag(
-            className := "action-details",
+            className := "action-details", rememberDetails("action." + name),
             summaryTag(
               aria.label <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
               title <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
@@ -1934,7 +1936,7 @@ object MainForm {
           else div(p(className := "mb-1", "No upgrades available."))))
         else available.map(t => createUpgrade(t))
       },
-      detailsTag(className := "col-12 purchased-upgrades border-top mt-3 pt-2",
+      detailsTag(className := "col-12 purchased-upgrades border-top mt-3 pt-2", rememberDetails("upgrades.purchased"),
         summaryTag(minHeight.px := 44,
           child.text <-- upgradesSignal.map(upgrades =>
             s"Purchased upgrades (${UpgradeType.all.count(upgrades(_).unlocked)})").distinct),
@@ -1973,6 +1975,9 @@ object MainForm {
 
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val selected = Var("surroundings")
+    def validSelection(id: String, data: ExplorationData, ants: AntsData): Boolean =
+      id == "surroundings" || (ExplorationMap.availableSites(ants).exists(_.id == id) && ExplorationMap.revealed(data, id))
+
     def feedback(id: String) = explorationSignal.combineWith(currentTickSignal).map {
       case (data, tick) => MapFeedback.state(data, id, tick)
     }.distinct
@@ -2142,6 +2147,14 @@ object MainForm {
       }
     }
     div(className := "row exploration-layout hex-exploration",
+      selected.signal.changes --> (id => UiPreferences.set("explore.site", id)),
+      onMountCallback { _ => useSignalValue[AllData](snapshotSignal, data => {
+        val saved = UiPreferences.get("explore.site").filter(validSelection(_, data.exploration, data.ants)).getOrElse("surroundings")
+        selected.set(saved)
+      }) },
+      explorationSignal.combineWith(antsSignal.map(_.lineage).distinct).changes --> { case (data, lineage) =>
+        if (!validSelection(selected.now(), data, AntsData(lineage = lineage))) selected.set("surroundings")
+      },
       div(className := "col-12 p-3",
         infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
         div(className := "hex-map", className("expanded") <-- antsSignal.map(_.lineage.beyondWoodland), role := "group", aria.label := "Exploration map",
@@ -2174,7 +2187,7 @@ object MainForm {
                   case _ => "Rivals"
                 })),
               small(className := "map-state", title <-- feedback(site.id).map(_.label),
-                child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "?" else f.percent.map(p => s"$p%").getOrElse(f.label))),
+                child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "?" else f.percent.map(p => s"$p%").getOrElse(if (f.kind == "trail") "Trail" else if (f.kind == "exhausted") "✓" else f.label))),
               mapProgress(site.id),
               onClick --> (_ => selected.set(site.id)),
             )

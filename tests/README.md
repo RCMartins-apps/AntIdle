@@ -76,6 +76,13 @@ After fastOptJS, `python3 tests/polish_visual_smoke.py` checks compact resource
 values, digit alignment, control sizing, settings and queue empty state at
 390/1280px. NumberPresentationSuite covers boundaries, signs and tiny values.
 
+After fastOptJS, `python3 tests/polish_log_smoke.py` checks significant-event
+visibility, routine grouping and stable disclosure at 390/1280px. EventLogSuite
+covers bounded retention, routine floods and old string-save compatibility.
+
+After fastOptJS, `python3 tests/polish_memory_smoke.py` checks disclosure/map
+restoration, new-colony fallback and invalid preference keys at 390/1280px.
+
 After fastOptJS, `python3 tests/polish_map_smoke.py` checks active map study
 progress, hidden site labels and mission completion at 390/1280px.
 
