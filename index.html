@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="c5e70fee0427f049ab1d4b38">
+    <meta name="antidle-build" content="25473f454f90364f87ae710e">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -156,6 +156,12 @@
 .site-worker-controls input {max-width:110px;text-align:center}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
+.map-progress {height:4px;width:68%;flex-shrink:0;background:rgba(0,0,0,.15);border-radius:4px;overflow:hidden}
+.map-progress-fill {height:100%;background:currentColor}
+.hex-map .map-hex[data-activity="studying"], .hex-map .map-hex[data-activity="scouting"] {background:#d9eafb;color:#174a79}
+.hex-map .map-hex[data-activity="collecting"] {background:#d2ecdc;color:#24563c}
+.hex-map .map-hex[data-activity="trail"] .map-state {font-weight:700}
+
 .activity-status {display:inline-block;font-size:.85rem;line-height:1.5;padding:.15rem .45rem;border-radius:.35rem;background:#eef3f0;color:#235d3f;overflow-wrap:anywhere}
 .activity-status::before {content:"●";font-size:.65em;margin-right:.4em;vertical-align:.1em}
 .activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
@@ -169,7 +175,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.8d20a6300dc3c0a5.js"></script>
+<script type="text/javascript" src="game.af17719c701694d3.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="pwa.js" data-service-worker="./sw.js" defer></script>
