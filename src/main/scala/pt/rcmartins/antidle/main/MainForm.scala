@@ -1970,6 +1970,15 @@ object MainForm {
 
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val selected = Var("surroundings")
+    def feedback(id: String) = explorationSignal.combineWith(currentTickSignal).map {
+      case (data, tick) => MapFeedback.state(data, id, tick)
+    }.distinct
+    def mapProgress(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      className := "map-progress", role := "progressbar", aria.label := "Mission progress",
+      aria.valueMin := 0, aria.valueMax := 100,
+      aria.valueNow <-- feedback(id).map(_.percent.getOrElse(0).toDouble),
+      display <-- feedback(id).map(f => if (f.percent.isDefined) "" else "none"),
+      div(className := "map-progress-fill", width.percent <-- feedback(id).map(_.percent.getOrElse(0).toDouble)))
     val scoutCrew = Var(1)
     val requestedWorkers = Var(5L * u)
     val workers = requestedWorkers.signal.combineWith(availableWorkersCountSignal).map {
@@ -2136,15 +2145,16 @@ object MainForm {
           button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
             aria.label := "Nest surroundings",
             aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
-            MapIcons("surroundings"), span("Nest"), onClick --> (_ => selected.set("surroundings"))),
+            MapIcons("surroundings"), span("Nest"),
+            small(className := "map-state", child.text <-- feedback("surroundings").map(f => if (f.percent.isDefined) f.label else "")),
+            mapProgress("surroundings"), onClick --> (_ => selected.set("surroundings"))),
           children <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map { expanded =>
             ExplorationMap.availableSites(AntsData(lineage = Lineage(beyondWoodland = expanded))).map { site =>
             button(className := "map-hex", typ := "button", dataAttr("site") := site.id,
               left.percent := (if (expanded) 50 + (site.x - 50) * 3 / 4 else site.x), top.percent := (if (expanded) 62 + (site.y - 50) * 3 / 4 else site.y),
               disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
-              aria.label <-- explorationSignal.map(data =>
-                if (!ExplorationMap.revealed(data, site.id)) "Unexplored hexagon"
-                else s"${site.name}: ${if (ExplorationMap.exhausted(data, site.id)) "exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "knowledge remaining" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "aphids" else "resource deposits"}"),
+              aria.label <-- feedback(site.id).map(f => if (f.kind == "unknown") "Unexplored hexagon" else s"${site.name}: ${f.label}"),
+              dataAttr("activity") <-- feedback(site.id).map(_.kind),
               aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
               className <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "unexplored" else if (ExplorationMap.exhausted(data, site.id)) "exhausted" else "revealed"),
               child <-- explorationSignal.map(data => ExplorationMap.revealed(data, site.id)).distinct.map(known =>
@@ -2161,9 +2171,8 @@ object MainForm {
                   case "root-hollow" => "Hollow"
                   case _ => "Rivals"
                 })),
-              small(className := "map-state", aria.hidden := true, child.text <-- explorationSignal.map(data =>
-                if (!ExplorationMap.revealed(data, site.id)) "" else if (ExplorationMap.exhausted(data, site.id)) "✓"
-                else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "Aphids" else "Collect")),
+              small(className := "map-state", child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "?" else f.label)),
+              mapProgress(site.id),
               onClick --> (_ => selected.set(site.id)),
             )
             }
