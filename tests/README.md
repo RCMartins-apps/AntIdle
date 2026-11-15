@@ -75,3 +75,8 @@ finite-haul refunds, automation, prestige and legacy peak-field defaults.
 After fastOptJS, `python3 tests/polish_log_smoke.py` checks significant-event
 visibility, routine grouping and stable disclosure at 390/1280px. EventLogSuite
 covers bounded retention, routine floods and old string-save compatibility.
+
+UI polish checks: after `sbt fastOptJS`, run
+`python3 tests/polish_status_smoke.py` for shared activity states and real blockers
+at phone/desktop widths. ActivityStatusSuite covers state classes and missing
+construction materials. These checks use the development bundle.
