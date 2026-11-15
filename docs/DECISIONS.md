@@ -802,3 +802,12 @@ prerequisites. Use ordinary purchase flags and reset both goals and research on
 founding. Do not add another currency, permanent non-Understanding bonuses,
 claim buttons or repeated milestone messages. Exact initial counts, effects and
 prices are documented in MILESTONES.md and remain tunable.
+
+## D49: Five focused polish passes — approved
+
+The owner authorized implementing these sequentially in separate PRs, with native
+auto-merge after validation: consistent activity statuses; exploration-map feedback;
+persistent UI choices; a quieter event log; consistent visual spacing, controls,
+numbers and progress. Continue autonomously unless a significant design choice
+needs input. Preserve gameplay balance, clear costs/risks, hidden future unlocks
+and stable mobile disclosures. These are presentation improvements, not new systems.
