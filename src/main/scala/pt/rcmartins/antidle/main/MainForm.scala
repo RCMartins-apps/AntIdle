@@ -29,6 +29,10 @@ object MainForm {
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
 
+  private def activityStatus(label: Signal[String], extraClass: String = ""): ReactiveHtmlElement[HTMLSpanElement] =
+    span(className := s"activity-status $extraClass", dataAttr("state") <-- label.map(ActivityStatus.kind).distinct,
+      child.text <-- label.distinct)
+
   private def infoDetails(label: String, content: ReactiveHtmlElement[HTMLDivElement]): ReactiveHtmlElement[HTMLElement] =
     detailsTag(
       className := "info-details",
@@ -578,6 +582,7 @@ object MainForm {
           elem = elem, descriptionSignal = Val(None), costSignal = Val(buildTask.actionCost),
           bonusSignal = Actions.getActionBonus(buildTask.chamberType),
         )),
+        activityStatus(resourcesSignal.map(r => ActivityStatus.construction(buildTask.actionCost, r, index == 0)), "build-status small"),
         actionCosts(Val(buildTask.actionCost), Val(Nil)),
       )
 
@@ -990,14 +995,10 @@ object MainForm {
           queenRoutineControls
         },
         div(className := "brood-pipeline small mb-2",
-          className <-- antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
+          activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
             case (ants, nest, resources, upgrades, exploration, stats) =>
-              if (BroodProgression.status(ants, nest, resources, upgrades, exploration, stats).contains("Needs")) "text-danger" else ""
-          },
-          child.text <-- antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map { case (ants, nest, resources, upgrades, exploration, stats) =>
-            BroodProgression.status(ants, nest, resources, upgrades, exploration, stats)
-          },
-        ),
+              BroodProgression.status(ants, nest, resources, upgrades, exploration, stats)
+          })),
         child.maybe <-- antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Option.when(standard)(
           div(className := "brood-care-cost small mb-2", "Larvae: 20 sugar · 2 protein / worker"))),
         child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map { queued => Option.when(queued) {
@@ -1479,8 +1480,7 @@ object MainForm {
               if (rates.isEmpty) "" else rates.mkString(" · ")
             },
           ),
-          div(className := "royal-care-status small", child.text <-- statusSignal,
-            className <-- statusSignal.map(s => if (s.startsWith("Needs") || s.startsWith("Limited")) "text-danger" else "")),
+          activityStatus(statusSignal, "royal-care-status small"),
           div(className := "small text-body-secondary my-1",
             child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
               brood.map { b =>
@@ -2035,9 +2035,9 @@ object MainForm {
             List(ActionRequirement("scouts", available, PheromoneTrails.requiredScouts(next), isCost = true)) ++
               Option.when(current < PheromoneTrails.Capacity)(ActionRequirement("workers", ants.availableWorkersCount, PheromoneTrails.Step, isCost = true))
           }),
-          div(className := "trail-status small", child.text <-- snapshotSignal.map(data =>
+          activityStatus(snapshotSignal.map(data =>
             PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources, data.statistics)
-              .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned"))),
+              .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned")), "trail-status small"),
         ))),
     )
     def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(className := "site-haul my-3",
