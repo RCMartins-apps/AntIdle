@@ -71,3 +71,8 @@ verify its ×1.01 multiplier, preserve an open goal across ticks, and reload low
 holdings/current-run totals without losing lifetime progress or saved peaks.
 ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
 finite-haul refunds, automation, prestige and legacy peak-field defaults.
+
+UI polish checks: after `sbt fastOptJS`, run
+`python3 tests/polish_status_smoke.py` for shared activity states and real blockers
+at phone/desktop widths. ActivityStatusSuite covers state classes and missing
+construction materials. These checks use the development bundle.
