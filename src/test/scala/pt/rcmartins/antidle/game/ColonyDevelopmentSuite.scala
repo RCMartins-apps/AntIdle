@@ -83,7 +83,7 @@ class ColonyDevelopmentSuite extends FunSuite {
   }
 
   test("new colony upgrades and a meadow party survive save reload without changing rewards") {
-    val sent = ExplorationHelper.start(colony().copy(upgrades = UpgradesData.initial.unlock(ReinforcedMandibles, BroodCare)), 5 * u, NectarMeadow)
+    val sent = ExplorationHelper.start(ResourceVisibility.reconcile(colony().copy(upgrades = UpgradesData.initial.unlock(ReinforcedMandibles, BroodCare))), 5 * u, NectarMeadow)
     val loaded = AllDataForSave.fromAllData(sent).toAllData
     assert(loaded.upgrades(ReinforcedMandibles).unlocked && loaded.upgrades(BroodCare).unlocked)
     assertEquals(ExplorationDestination.forParty(loaded.exploration.explorationParties.head), NectarMeadow)

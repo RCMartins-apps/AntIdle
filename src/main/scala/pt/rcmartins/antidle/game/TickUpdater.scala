@@ -29,8 +29,8 @@ object TickUpdater {
           val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val totalSugarToGain: Long = Foraging.production(allData.ants, allData.upgrades) +
-            AphidHusbandry.productionPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount)
+          val totalSugarToGain: Long = ColonyMilestones.sugar(Foraging.production(allData.ants, allData.upgrades) +
+            AphidHusbandry.productionPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount), allData.statistics)
 
           val sugarToGive: Long =
             Math.min(allData.basicResources.sugar.freeSpace, totalSugarToGain)
@@ -44,7 +44,7 @@ object TickUpdater {
           val harvest = OutpostProgression.harvestPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources)
           allData.modify(_.basicResources.protein).using(_ - proteinUsed)
             .modify(_.basicResources.water).using(_ - harvest.water).giveResources(
-            sugar = sugarToGive,
+            sugar = sugarToGive, sugarBonusApplied = true,
             water = OutpostProgression.dewPerTick(allData.ants),
             tunnelingSpace = tunnelingSpaceToGive,
             protein = harvest.protein + BroodProgression.scavenged(allData.ants, allData.basicResources.protein.freeSpace - harvest.protein + proteinUsed),
