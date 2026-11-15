@@ -616,30 +616,29 @@ object MainForm {
     )
   }
 
-  private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] =
-    div(
-      className := "m-1",
-      className := "card game-panel",
-      className := "fs-4",
-      width.px := MessagesWidth,
-      maxWidth.px := MessagesWidth,
-      div(
-        className := "card-header",
-        "Messages",
-      ),
-      div(
-        className := "card-body",
-        className := "fs-5",
-        div(
-          className := "d-grid gap-2",
-          child.maybe <-- messagesSignal.signal.map(_.headOption.map(text => span(text))),
-          children <--
-            messagesSignal.map {
-              _.drop(1).map(text => div(opacity := 0.5, text))
-            }
-        )
-      )
-    )
+  private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] = {
+    val highlights = messagesSignal.map(_.filter(m => EventLog.kind(m) != "routine")).distinct
+    val routine = messagesSignal.map(EventLog.routine).distinct
+    def row(text: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      className := s"log-entry log-${EventLog.kind(text)}", text)
+    div(className := "m-1 card game-panel event-log", width.px := MessagesWidth, maxWidth.px := MessagesWidth,
+      div(className := "card-header", "Colony log"),
+      div(className := "card-body",
+        div(className := "log-highlights", children <-- highlights.map(_.take(4).map(row))),
+        detailsTag(className := "log-history mt-2",
+          display <-- highlights.map(m => if (m.size > 4) "" else "none"),
+          summaryTag(minHeight.px := 44, child.text <-- highlights.map(m => s"Earlier events (${Math.max(0, m.size - 4)})")),
+          children <-- highlights.map(_.drop(4).map(row))),
+        detailsTag(className := "log-routine mt-2",
+          display <-- routine.map(m => if (m.nonEmpty) "" else "none"),
+          summaryTag(minHeight.px := 44, child.text <-- routine.map(m => s"Routine activity (${m.map(_.reports).sum} reports)")),
+          div(className := "small text-body-secondary", "Latest report from each source"),
+          children <-- routine.map(_.map(entry => div(className := "log-entry log-routine-entry",
+            span(entry.text), if (entry.reports > 1) small(s" · ${entry.reports} reports") else emptyNode)))),
+        child.maybe <-- messagesSignal.map(_.isEmpty).distinct.map(empty => Option.when(empty)(
+          div(className := "small text-body-secondary", "No events yet.")))
+      ))
+  }
 
   private def resourcesDiv: Modifier[ReactiveHtmlElement[HTMLDivElement]] =
     div(

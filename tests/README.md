@@ -71,3 +71,7 @@ verify its ×1.01 multiplier, preserve an open goal across ticks, and reload low
 holdings/current-run totals without losing lifetime progress or saved peaks.
 ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
 finite-haul refunds, automation, prestige and legacy peak-field defaults.
+
+After fastOptJS, `python3 tests/polish_log_smoke.py` checks significant-event
+visibility, routine grouping and stable disclosure at 390/1280px. EventLogSuite
+covers bounded retention, routine floods and old string-save compatibility.
