@@ -72,6 +72,9 @@ holdings/current-run totals without losing lifetime progress or saved peaks.
 ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
 finite-haul refunds, automation, prestige and legacy peak-field defaults.
 
+After fastOptJS, `python3 tests/polish_memory_smoke.py` checks disclosure/map
+restoration, new-colony fallback and invalid preference keys at 390/1280px.
+
 After fastOptJS, `python3 tests/polish_map_smoke.py` checks active map study
 progress, hidden site labels and mission completion at 390/1280px.
 
