@@ -124,8 +124,8 @@ def check_map(page, width, url):
     page.get_by_role('tab', name='Upgrades', exact=True).click()
     expect(page.get_by_role('button', name='Expedition Supplies 1', exact=True)).to_have_count(0)
     expect(page.get_by_role('button', name='Expedition Supplies 2', exact=True)).to_be_visible()
-    expect(page.locator('.purchased-upgrades')).not_to_have_attribute('open', '')
-    page.locator('.purchased-upgrades > summary').click()
+    # UI preferences preserve the expanded purchase history across reloads.
+    expect(page.locator('.purchased-upgrades')).to_have_attribute('open', '')
     expect(page.locator('.purchased-upgrades')).to_contain_text('Expedition Supplies 1')
     page.get_by_role('button', name='Expedition Supplies 2', exact=True).click()
     expect(page.locator('.purchased-upgrades')).to_have_attribute('open', '')
