@@ -85,6 +85,42 @@ def check_milestones(page, width, base):
     print(f'PASS milestones {width}px: compact goals, real completions/births, gated research and live duration preview', flush=True)
 
 
+def check_permanent_milestones(page, width, base):
+    game = progressed_game(base)
+    game['statistics'] = {'sugarU': {'thisRun': 99 * UNIT, 'total': 99 * UNIT}}
+    game['ants'].update(workers=UNIT, smallWorkers=0, scouts=0, repletes=0, daughterQueens=0,
+        tasks=[[{'SugarCollector': {}}, UNIT]], defaultTask={'SugarCollector': {}},
+        eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[], royalBrood=None,
+        lineage={'foundings': 0, 'dna': 0, 'sharedPaths': False, 'beyondWoodland': False})
+    game['ants']['queenRoutine']['enabled'] = False
+    game['exploration'].update(explorationParties=[], collectionTrails=[], carcasses=[], retrievals=[])
+    for key in ['sugar', 'protein', 'water', 'resin', 'knowledge', 'tunnelingSpace']:
+        game['basicResources'][key]['amount'] = 100 * UNIT if key == 'sugar' else 0
+    game['basicResources']['sugar']['maxAmount'] = 1000 * UNIT
+    load_game(page, game)
+    page.get_by_role('tab', name='Milestones', exact=True).click()
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0000')
+    sugar = page.locator('.achievement-goal').filter(has=page.get_by_text('Sugar gathered', exact=True))
+    sugar.locator('summary').click()
+    page.clock.run_for(4000)
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
+    expect(sugar.get_by_text('✓ ×1.01', exact=True)).to_have_count(1)
+    assert sugar.evaluate('(el) => el.open'), 'live ticks must preserve disclosure'
+    expect(sugar.locator('summary')).to_contain_text('peak')
+    saved = save_game(page)
+    peak = saved['statistics']['maxSugarU']['total']
+    assert peak >= 100 * UNIT
+    saved['basicResources']['sugar']['amount'] = UNIT
+    saved['statistics']['sugarU']['thisRun'] = 0
+    load_game(page, saved)
+    page.get_by_role('tab', name='Milestones', exact=True).click()
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
+    assert save_game(page)['statistics']['maxSugarU']['total'] == peak
+    page.get_by_role('tab', name='Milestones', exact=True).click()
+    assert_fits(page, width)
+    print(f'PASS permanent milestones {width}px: live tier, multiplicative reward, saved peaks, stable disclosure and lifetime progress', flush=True)
+
+
 def check_brood_icons(page, width, base):
     game = progressed_game(base)
     tick = game['world']['currentTick']
@@ -298,6 +334,7 @@ def check_game(page, width, url):
     check_brood_icons(page, width, save_game(page))
     check_build_version(page, width)
     check_milestones(page, width, save_game(page))
+    check_permanent_milestones(page, width, save_game(page))
     assert not errors, errors
     print(f'PASS production {width}px: founding labels, disclosures, task geometry, research prices/purchase, hex map/scout launch/reveal, prestige/reset and resource visibility', flush=True)
 

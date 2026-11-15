@@ -803,6 +803,18 @@ founding. Do not add another currency, permanent non-Understanding bonuses,
 claim buttons or repeated milestone messages. Exact initial counts, effects and
 prices are documented in MILESTONES.md and remain tunable.
 
+## D48: Permanent achievement milestones compound sugar production — approved
+
+On November 15 the owner requested a dedicated milestone section/tab covering each
+resource and meaningful colony objectives. Each completed tier automatically grants
+×1.01 sugar production, multiplicatively: N tiers gives 1.01^N. These achievements
+use lifetime statistics and survive founding. The owner explicitly chose permanence;
+this supersedes D47's general exclusion of permanent non-Understanding bonuses, but
+D47's three paid colony-research upgrades still reset and use current-run goals.
+Save peak resource holdings as well as lifetime gathered totals and the existing
+peak worker population. Do not erase peaks on spending, deaths or founding.
+No claim buttons or repeated notifications. Hide unintroduced resources/objectives.
+
 ## D49: Five focused polish passes — approved
 
 The owner authorized implementing these sequentially in separate PRs, with native

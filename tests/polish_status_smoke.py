@@ -25,7 +25,7 @@ def check(page, width, url):
     game['ants']['eggOrders'] = 0
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
     load_game(page, game)
-    page.get_by_role('tab', name='Lineage', exact=True).click()
+    page.get_by_role('tab', name='Nest', exact=True).click()
     page.get_by_role('button', name='Raise Royal Egg', exact=True).click()
     expect(page.locator('.royal-care-status')).to_have_text('Needs Royal Nurses')
     expect(page.locator('.royal-care-status')).to_have_attribute('data-state', 'blocked')

@@ -10,6 +10,12 @@ case class StatisticsData(
     proteinU: StatLong = StatLong(),
     waterU: StatLong = StatLong(),
     resinU: StatLong = StatLong(),
+    maxSugarU: StatLong = StatLong(),
+    maxTunnelingSpaceU: StatLong = StatLong(),
+    maxKnowledgeU: StatLong = StatLong(),
+    maxProteinU: StatLong = StatLong(),
+    maxWaterU: StatLong = StatLong(),
+    maxResinU: StatLong = StatLong(),
     royalEggsRaised: StatInt = StatInt(),
     daughterQueensMatured: StatInt = StatInt(),
     explorationsCompleted: StatInt = StatInt(),
@@ -56,6 +62,8 @@ object StatisticsData {
 
   case class StatLong(thisRun: Long = 0, total: Long = 0) {
 
+    def max(value: Long): StatLong = copy(thisRun = Math.max(thisRun, value), total = Math.max(total, value))
+
     def addValue(value: Long): StatLong = {
       def add(current: Long): Long = current + Math.min(Math.max(0L, value), Long.MaxValue - current)
       copy(thisRun = add(thisRun), total = add(total))
@@ -75,6 +83,12 @@ object StatisticsData {
     proteinU = stats.proteinU.copy(thisRun = 0),
     waterU = stats.waterU.copy(thisRun = 0),
     resinU = stats.resinU.copy(thisRun = 0),
+    maxSugarU = stats.maxSugarU.copy(thisRun = 0),
+    maxTunnelingSpaceU = stats.maxTunnelingSpaceU.copy(thisRun = 0),
+    maxKnowledgeU = stats.maxKnowledgeU.copy(thisRun = 0),
+    maxProteinU = stats.maxProteinU.copy(thisRun = 0),
+    maxWaterU = stats.maxWaterU.copy(thisRun = 0),
+    maxResinU = stats.maxResinU.copy(thisRun = 0),
     royalEggsRaised = stats.royalEggsRaised.copy(thisRun = 0),
     daughterQueensMatured = stats.daughterQueensMatured.copy(thisRun = 0),
     explorationsCompleted = stats.explorationsCompleted.copy(thisRun = 0),

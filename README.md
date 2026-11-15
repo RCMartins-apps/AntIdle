@@ -214,6 +214,10 @@ unpurchased upgrades revealed prematurely in an existing save.
 
 ## Colony milestones
 
+The **Milestones** tab tracks lifetime resource and colony achievements. Each tier
+grants a permanent ×1.01 sugar multiplier; totals and resource peak records survive
+founding. Expand a goal for its tiers. See [milestone rules](docs/MILESTONES.md).
+
 Optional research opens through current-colony achievements: 20 completed
 expeditions unlock Scout Wayfinding, 25 standard workers raised unlock Nurse
 Training, and 50 unlock Queen's Rhythm, subject to their base research prerequisites.

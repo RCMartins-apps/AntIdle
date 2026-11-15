@@ -319,6 +319,9 @@ object MainForm {
               a(className := "nav-link", idAttr := "lineage-tab", dataAttr("bs-toggle") := "tab",
                 href := "#lineageContent", role := "tab", "Lineage")),
           ),
+          li(className := "nav-item",
+            a(className := "nav-link", idAttr := "milestones-tab", dataAttr("bs-toggle") := "tab",
+              href := "#milestonesContent", role := "tab", "Milestones")),
           li(
             className := "nav-item",
             a(
@@ -375,6 +378,7 @@ object MainForm {
           child.maybe <-- ifUnlockedOpt(lineageVisibleSignal)(
             div(className := "tab-pane", idAttr := "lineageContent", role := "tabpanel", prestigeDiv),
           ),
+          div(className := "tab-pane", idAttr := "milestonesContent", role := "tabpanel", milestonesDiv),
           div(
             className := "tab-pane",
             idAttr := "settingsContent",
@@ -384,6 +388,31 @@ object MainForm {
         )
       )
     )
+
+  private def milestonesDiv: ReactiveHtmlElement[HTMLDivElement] = div(
+    className := "colony-milestones",
+    h5(child.text <-- statisticsData.signal.map(s => s"Sugar production ×${ColonyMilestones.multiplier(s)}")),
+    div(className := "small text-body-secondary mb-3", "×1.01 per milestone · permanent"),
+    ColonyMilestones.goals.map { goal =>
+      def number(n: Long): String = if (goal.resource) prettyNumberStr(n) else n.toString
+      detailsTag(className := "achievement-goal border rounded p-2 mb-2",
+        display <-- snapshotSignal.map(data => if (ColonyMilestones.visible(goal, data)) "" else "none").distinct,
+        summaryTag(
+          span(goal.title),
+          span(className := "d-block small", child.text <-- statisticsData.signal.map { stats =>
+            val done = goal.completed(stats)
+            val earned = s"$done milestone" + (if (done == 1) "" else "s")
+            goal.next(stats).map(target => s"${number(goal.progress(stats))}/${number(target)} · $earned")
+              .getOrElse(s"Complete · $earned") + ColonyMilestones.peak(goal, stats).map(p => s" · peak ${number(p)}").getOrElse("")
+          }.distinct)),
+        goal.targets.map { target =>
+          div(className := "d-flex justify-content-between gap-2 small mt-2",
+            span(number(target)),
+            span(className <-- statisticsData.signal.map(s => if (goal.progress(s) >= target) "text-success fw-bold" else "text-body-secondary").distinct,
+              child.text <-- statisticsData.signal.map(s => if (goal.progress(s) >= target) "✓ ×1.01" else "×1.01").distinct))
+        })
+    }
+  )
 
   private def statisticsDiv: ReactiveHtmlElement[HTMLElement] =
     detailsTag(
@@ -966,9 +995,9 @@ object MainForm {
           queenRoutineControls
         },
         div(className := "brood-pipeline small mb-2",
-          activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal).map {
-            case (ants, nest, resources, upgrades, exploration) =>
-              BroodProgression.status(ants, nest, resources, upgrades, exploration)
+          activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
+            case (ants, nest, resources, upgrades, exploration, stats) =>
+              BroodProgression.status(ants, nest, resources, upgrades, exploration, stats)
           })),
         child.maybe <-- antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Option.when(standard)(
           div(className := "brood-care-cost small mb-2", "Larvae: 20 sugar · 2 protein / worker"))),
@@ -1282,6 +1311,7 @@ object MainForm {
       row("Generation", antsSignal.map(a => s"${a.lineage.foundings.toLong + 1} → ${a.lineage.foundings.toLong + 2}")),
       row("DNA earned", Val(s"+${Prestige.DnaReward}")),
       row("DNA available to spend", antsSignal.map(a => s"${a.lineage.dna} + ${Prestige.DnaReward} = ${BigInt(a.lineage.dna) + Prestige.DnaReward}")),
+      row("Permanent milestone sugar", statisticsData.signal.map(s => s"×${ColonyMilestones.multiplier(s)} (kept)")),
       row("Inherited sugar production", antsSignal.map(a => s"+${Prestige.sugarBonus(a.lineage)}% → +${Prestige.sugarBonus(a.lineage) + 10L}%")),
       div(className := "small text-body-secondary", "Applies to Sugar Collectors and Aphid Tenders. Adds 10 percentage points each founding."),
       row("DNA spent on Understandings", selected.signal.map(ids => Prestige.understandings.filter(u => ids(u.id)).map(_.cost).sum.toString)),
@@ -1400,9 +1430,9 @@ object MainForm {
     val nursesSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       RoyalBroodProgression.nurses(ants, nest)
     }.distinct
-    val projectedSignal = antsSignal.combineWith(nestSignal, upgradesSignal, explorationSignal, resourcesSignal).map {
-      case (ants, nest, upgrades, exploration, resources) =>
-        RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources)
+    val projectedSignal = antsSignal.combineWith(nestSignal, upgradesSignal, explorationSignal, resourcesSignal, statisticsData.signal).map {
+      case (ants, nest, upgrades, exploration, resources, stats) =>
+        RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources, stats)
     }
     val statusSignal = antsSignal.combineWith(nestSignal, projectedSignal).map { case (ants, nest, resources) =>
       RoyalBroodProgression.status(ants, nest, resources)
@@ -1713,8 +1743,8 @@ object MainForm {
     child.maybe <-- antsSignal.map(_.smallWorkers > 0L).distinct.map { alive => Option.when(alive) {
       div(className := "small-worker-tasks border rounded p-2 my-2",
         infoHeading("Small workers · 50%", div("Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
-        div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) =>
-          s"${ants.smallCollectors / u} × ${resourceRateStr(Foraging.perCollector(ants, upgrades, small = true))} sugar/s"
+        div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) =>
+          s"${ants.smallCollectors / u} × ${resourceRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = true), stats))} sugar/s"
         }),
         List(AntTask.Tunneler, AntTask.Scavenger, AntTask.BroodNurse).map { task =>
           div(className := "small-worker-job my-2",
@@ -1760,13 +1790,13 @@ object MainForm {
       antTask match {
         case AntTask.SugarCollector =>
           div(
-            child.text <-- amountSignal.combineWith(upgradesSignal, antsSignal).map { case (amount, upgrades, ants) =>
+            child.text <-- amountSignal.combineWith(upgradesSignal, antsSignal, statisticsData.signal).map { case (amount, upgrades, ants, stats) =>
               val count = amount / u
-              s"${preciseRateStr(Foraging.perCollector(ants, upgrades, small = false))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades, ants.lineage))}"
+              s"${preciseRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats))} sugar/s per collector · next: ${preciseRateStr(ColonyMilestones.sugar(Foraging.nextPerSecond(count, upgrades, ants.lineage), stats))}"
             },
           )
         case AntTask.AphidTender =>
-          div("One tender per 10 aphids.", child.text <-- antsSignal.map(a => s" ${resourceRateStr(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage))} sugar/s · −0.01 protein/s per tender"))
+          div("One tender per 10 aphids.", child.text <-- antsSignal.combineWith(statisticsData.signal).map { case (a, stats) => s" ${resourceRateStr(ColonyMilestones.sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage), stats))} sugar/s · −0.01 protein/s per tender" })
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1842,12 +1872,12 @@ object MainForm {
         ),
       ),
       div(className := "task-rate small text-body-secondary", antTask match {
-        case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) => s"${preciseRateStr(Foraging.perCollector(ants, upgrades, small = false))} sugar/s each" })
+        case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) => s"${preciseRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats))} sugar/s each" })
         case AntTask.Tunneler => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} space/s each"))
         case AntTask.Scavenger => div("+0.05 protein/s each")
         case AntTask.AphidTender => div(
           div(className := "aphid-stock", child.text <-- nestSignal.map(n => s"${n.aphids}/${AphidHusbandry.housing(n)} aphids")),
-          child.text <-- antsSignal.map(a => s"+${resourceRateStr(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage))} sugar/s · −0.01 protein/s each"),
+          child.text <-- antsSignal.combineWith(statisticsData.signal).map { case (a, stats) => s"+${resourceRateStr(ColonyMilestones.sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage), stats))} sugar/s · −0.01 protein/s each" },
           child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
         case AntTask.WaterCollector => div("+0.15 water/s each")
         case AntTask.SeedForager => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s each"),
@@ -1883,7 +1913,7 @@ object MainForm {
           case None => Seq.empty
           case Some((upgrade, progress, target, label)) => Seq(
             div(className := "milestone-goal border rounded p-2 mb-2",
-              b("Next colony milestone: ", upgrade.title),
+              b("Next research goal: ", upgrade.title),
               div(className := "milestone-progress small", s"$progress/$target $label"),
               div(className := "progress", height.px := 6, role := "progressbar", aria.label := upgrade.title,
                 aria.valueMin := 0, aria.valueMax := target, aria.valueNow := progress,
@@ -1969,7 +1999,8 @@ object MainForm {
           infoHeading("Collection trail", div(child.text <-- upgradesSignal.map(upgrades => s"${PheromoneTrails.efficiency(upgrades)}% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply.")), minor = true),
           div(className := "trail-preview small", child.text <-- snapshotSignal.map { data =>
             val count = Math.max(PheromoneTrails.Step, PheromoneTrails.target(data.exploration, route.id))
-            val (rate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
+            val (baseRate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
+            val rate = if (route.sugarReward > 0L) ColonyMilestones.sugar(baseRate, data.statistics) else baseRate
             s"+${resourceRateStr(rate * TicksPerSecond)} ${ExplorationHelper.resource(route)}/s · −${resourceRateStr(cost * TicksPerSecond)} sugar/s supplies"
           }),
           div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
@@ -1996,7 +2027,7 @@ object MainForm {
               Option.when(current < PheromoneTrails.Capacity)(ActionRequirement("workers", ants.availableWorkersCount, PheromoneTrails.Step, isCost = true))
           }),
           activityStatus(snapshotSignal.map(data =>
-            PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources)
+            PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources, data.statistics)
               .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned")), "trail-status small"),
         ))),
     )

@@ -90,6 +90,10 @@ carries the previous generation's Understandings into a new colony. The owner
 specifically chose queens as the bridge between generations, adapting the
 uplifting inspiration to ants and the incremental prestige structure.
 
+Permanent achievement milestones also grant a compounding ×1.01 sugar bonus
+per completed lifetime tier. They reward resource and colony accomplishments;
+Understandings remain the powerful inherited mechanic unlocks.
+
 Knowledge is the existing colony's research resource. Ordinary upgrades and
 map discoveries are distinct from inherited Understandings.
 Do not relabel those systems as Understandings or imply that current research

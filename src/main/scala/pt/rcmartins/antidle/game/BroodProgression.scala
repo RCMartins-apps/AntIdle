@@ -148,8 +148,8 @@ object BroodProgression {
     broods -> resources
   }
   def forecastCost(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
-      exploration: ExplorationData, resources: BasicResources): ActionCost = {
-    val projected = RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources)
+      exploration: ExplorationData, resources: BasicResources, stats: StatisticsData = StatisticsData.initial): ActionCost = {
+    val projected = RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources, stats)
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val afterRoyal = projected.spendResources(royal.cost)
     val available = afterRoyal
@@ -177,8 +177,8 @@ object BroodProgression {
         maxAliveWorkers = data.statistics.maxAliveWorkers.max(ants.totalWorkersCount)))))
   }
   def status(ants: AntsData, nest: NestAttributes, resources: BasicResources,
-      upgrades: UpgradesData = UpgradesData.initial, exploration: ExplorationData = ExplorationData.initial): String = {
-    val projected = RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources)
+      upgrades: UpgradesData = UpgradesData.initial, exploration: ExplorationData = ExplorationData.initial, stats: StatisticsData = StatisticsData.initial): String = {
+    val projected = RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources, stats)
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val feedingResources = projected.spendResources(royal.cost)
     val emergency = EmergencyRecovery.broodCount(ants)
