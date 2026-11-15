@@ -814,3 +814,12 @@ D47's three paid colony-research upgrades still reset and use current-run goals.
 Save peak resource holdings as well as lifetime gathered totals and the existing
 peak worker population. Do not erase peaks on spending, deaths or founding.
 No claim buttons or repeated notifications. Hide unintroduced resources/objectives.
+
+## D49: Five focused polish passes — approved
+
+The owner authorized implementing these sequentially in separate PRs, with native
+auto-merge after validation: consistent activity statuses; exploration-map feedback;
+persistent UI choices; a quieter event log; consistent visual spacing, controls,
+numbers and progress. Continue autonomously unless a significant design choice
+needs input. Preserve gameplay balance, clear costs/risks, hidden future unlocks
+and stable mobile disclosures. These are presentation improvements, not new systems.

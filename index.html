@@ -158,7 +158,7 @@
 .antidle-app .game-main .btn, .antidle-app .game-panel .btn {min-height:44px;min-width:44px;font-size:1rem !important;touch-action:manipulation}
 .antidle-app .game-main input:not([type="checkbox"]), .antidle-app .game-main select {min-height:44px}
 .antidle-app .resource-amount, .antidle-app .task-rate, .antidle-app .mission-preview, .antidle-app .numeric-value {font-variant-numeric:tabular-nums}
-.antidle-app .game-main .progress, .antidle-app .game-panel .progress {height:8px;border-radius:1rem;background:#e7ebef;overflow:hidden}
+.antidle-app .game-main .progress, .antidle-app .game-panel .progress {height:8px !important;border-radius:1rem;background:#e7ebef;overflow:hidden}
 .antidle-app .progress-bar {border-radius:inherit;max-width:100%}
 .antidle-app .btn:focus-visible, .antidle-app summary:focus-visible, .antidle-app input:focus-visible, .antidle-app select:focus-visible {outline:3px solid var(--bs-primary);outline-offset:2px}
 .antidle-app .game-panel .card-header {font-size:1rem;font-weight:600}
@@ -166,6 +166,18 @@
 .antidle-app .build-task {display:inline-block;min-height:44px;padding:.5rem 0;cursor:pointer}
 .antidle-app .queue-empty, .antidle-app .upgrades-empty {padding:.75rem 0;line-height:1.5}
 .antidle-app .achievement-goal summary {min-height:44px;padding:.25rem 0;cursor:pointer}
+
+.map-progress {height:4px;width:68%;flex-shrink:0;background:rgba(0,0,0,.15);border-radius:4px;overflow:hidden}
+.map-progress-fill {height:100%;background:currentColor}
+.hex-map .map-hex[data-activity="studying"], .hex-map .map-hex[data-activity="scouting"] {background:#d9eafb;color:#174a79}
+.hex-map .map-hex[data-activity="collecting"] {background:#d2ecdc;color:#24563c}
+.hex-map .map-hex[data-activity="trail"] .map-state {font-weight:700}
+
+.activity-status {display:inline-block;font-size:.85rem;line-height:1.5;padding:.15rem .45rem;border-radius:.35rem;background:#eef3f0;color:#235d3f;overflow-wrap:anywhere}
+.activity-status::before {content:"";display:inline-block;width:.5em;height:.5em;border-radius:50%;background:currentColor;margin-right:.4em;vertical-align:.1em}
+.activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
+.activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
+.activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
 </style>
 </head>
 <body>

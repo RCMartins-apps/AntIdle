@@ -7,6 +7,9 @@ import org.scalajs.dom.HTMLSpanElement
 /** Decorative terrain symbols; each map button retains a complete accessible name. */
 object MapIcons {
   private val paths = Map(
+    "studying" -> "M16 8C11 4 6 4 2 6v20c5-2 10-1 14 2 4-3 9-4 14-2V6c-4-2-9-2-14 2ZM16 8v20M6 11l6 1M6 16l6 1M20 12l6-1M20 17l6-1",
+    "collecting" -> "M5 11h22v18H5V11ZM10 11V4h12v7M5 17h22M16 11v18M11 7h10",
+    "scouting" -> "M20 20l10 10M13 3a10 10 0 1 0 0 20 10 10 0 1 0 0-20ZM13 8v10M8 13h10",
     "surroundings" -> "M3 20h26M5 20a11 11 0 0 1 22 0M12 20v-4a4 4 0 0 1 8 0v4M16 8V3m-4 3 4-3 4 3M8 24h16M11 28h10",
     "woodland-edge" -> "M16 29V13M16 22 9 15M16 18l7-6M5 5c15-4 24 1 23 12-12 5-23-1-23-12Z",
     "nectar-meadow" -> "M16 29V17m0 7c-8 0-10-5-10-5 7-1 10 5 10 5Zm0 0c8 0 10-5 10-5-7-1-10 5-10 5ZM13 8c-6-9 12-9 6 0 10-3 10 12 1 9 0 9-13 9-13 0-10 3-10-12 0-9ZM12 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0Z",
