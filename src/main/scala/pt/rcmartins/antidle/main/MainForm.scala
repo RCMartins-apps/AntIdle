@@ -613,7 +613,7 @@ object MainForm {
           className := "d-grid gap-2",
           child <-- buildQueueSignal.map {
             case Seq() =>
-              span(nbsp)
+              span(className := "queue-empty small text-body-secondary", "No construction queued.")
             case seq =>
               div(seq.zipWithIndex.map { case (buildTask, index) =>
                 buildTaskName(buildTask, index)
@@ -639,7 +639,10 @@ object MainForm {
           children <-- highlights.map(_.drop(4).map(row))),
         detailsTag(rememberDetails("log.routine"), className := "log-routine mt-2",
           display <-- routine.map(m => if (m.nonEmpty) "" else "none"),
-          summaryTag(minHeight.px := 44, child.text <-- routine.map(m => s"Routine activity (${m.map(_.reports).sum} reports)")),
+          summaryTag(minHeight.px := 44, child.text <-- routine.map { entries =>
+            val count = entries.map(_.reports).sum
+            s"Routine activity ($count ${if (count == 1) "report" else "reports"})"
+          }),
           div(className := "small text-body-secondary", "Latest report from each source"),
           children <-- routine.map(_.map(entry => div(className := "log-entry log-routine-entry",
             span(entry.text), if (entry.reports > 1) small(s" · ${entry.reports} reports") else emptyNode)))),
@@ -1471,7 +1474,9 @@ object MainForm {
           div(className := "progress my-2", role := "progressbar", aria.label := "Royal brood development",
             aria.valueMin := 0.0, aria.valueMax := 100.0,
             aria.valueNow <-- broodSignal.map(_.map(_.careUnits * 100L / RoyalBroodProgression.TotalCare).getOrElse(0L).toDouble),
-            div(className := "progress-bar", width <-- broodSignal.map(b => s"${b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)}%")),
+            div(className := "progress-bar", role := "progressbar", aria.label := "Royal brood progress", aria.valueMin := 0, aria.valueMax := 100,
+              aria.valueNow <-- broodSignal.map(b => Math.min(100.0, Math.max(0.0, b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)))),
+              width <-- broodSignal.map(b => s"${Math.min(100.0, Math.max(0.0, b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)))}%")),
           ),
           div(className := "small", child.text <-- nursesSignal.map(n => s"$n/${RoyalBroodProgression.MaxNurses} Royal Nurses")),
           div(className := "royal-feeding small my-1",
@@ -1512,7 +1517,8 @@ object MainForm {
     span(
       className := "action-cost",
       title := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
-      aria.label := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
+      aria.label := s"${requirement.label}: ${preciseRateStr(requirement.available)} available, ${preciseRateStr(requirement.required)} required",
+      title := s"${preciseRateStr(requirement.available)} / ${preciseRateStr(requirement.required)} ${requirement.label}",
       role := "img",
       ResourceIcons.forLabel(requirement.label).filter(_ => compact).map(ResourceIcons.icon),
       span(
@@ -1975,9 +1981,12 @@ object MainForm {
     def validSelection(id: String, data: ExplorationData, ants: AntsData): Boolean =
       id == "surroundings" || (ExplorationMap.availableSites(ants).exists(_.id == id) && ExplorationMap.revealed(data, id))
 
-    def feedback(id: String) = explorationSignal.combineWith(currentTickSignal).map {
-      case (data, tick) => MapFeedback.state(data, id, tick)
-    }.distinct
+    val feedbackSignals = (Vector("surroundings") ++ ExplorationMap.allSites.map(_.id)).map { id =>
+      id -> explorationSignal.combineWith(currentTickSignal).map {
+        case (data, tick) => MapFeedback.state(data, id, tick)
+      }.distinct
+    }.toMap
+    def feedback(id: String): Signal[MapFeedback.State] = feedbackSignals(id)
     def mapProgress(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
       className := "map-progress", role := "progressbar", aria.label := "Mission progress",
       aria.valueMin := 0, aria.valueMax := 100,
@@ -2158,8 +2167,8 @@ object MainForm {
           button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
             aria.label := "Nest surroundings",
             aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
-            MapIcons("surroundings"), span("Nest"),
-            small(className := "map-state", child.text <-- feedback("surroundings").map(f => if (f.percent.isDefined) f.label else "")),
+            child <-- feedback("surroundings").map(f => if (f.percent.isDefined) "scouting" else "surroundings").distinct.map(MapIcons.apply), span("Nest"),
+            small(className := "map-state", title <-- feedback("surroundings").map(_.label), child.text <-- feedback("surroundings").map(f => f.percent.map(p => s"$p%").getOrElse(""))),
             mapProgress("surroundings"), onClick --> (_ => selected.set("surroundings"))),
           children <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map { expanded =>
             ExplorationMap.availableSites(AntsData(lineage = Lineage(beyondWoodland = expanded))).map { site =>
@@ -2170,8 +2179,7 @@ object MainForm {
               dataAttr("activity") <-- feedback(site.id).map(_.kind),
               aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
               className <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "unexplored" else if (ExplorationMap.exhausted(data, site.id)) "exhausted" else "revealed"),
-              child <-- explorationSignal.map(data => ExplorationMap.revealed(data, site.id)).distinct.map(known =>
-                MapIcons(if (known) site.id else "fog")),
+              child <-- feedback(site.id).map(f => if (f.kind == "unknown") "fog" else if (f.percent.isDefined) f.kind else site.id).distinct.map(MapIcons.apply),
               span(className := "map-terrain-name", child.text <-- explorationSignal.map(data =>
                 if (!ExplorationMap.revealed(data, site.id)) "" else site.id match {
                   case "woodland-edge" => "Woodland"
@@ -2184,7 +2192,8 @@ object MainForm {
                   case "root-hollow" => "Hollow"
                   case _ => "Rivals"
                 })),
-              small(className := "map-state", child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "?" else f.label)),
+              small(className := "map-state", title <-- feedback(site.id).map(_.label),
+                child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "" else f.percent.map(p => s"$p%").getOrElse(if (f.kind == "trail") "Trail" else if (f.kind == "exhausted") "✓" else f.label))),
               mapProgress(site.id),
               onClick --> (_ => selected.set(site.id)),
             )

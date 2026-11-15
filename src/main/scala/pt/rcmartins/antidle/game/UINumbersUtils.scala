@@ -5,108 +5,45 @@ import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.HTMLSpanElement
 import pt.rcmartins.antidle.game.Constants._
 
-import scala.annotation.tailrec
 
 object UINumbersUtils {
 
   private val Suffixes: IndexedSeq[String] = IndexedSeq("", "K", "M", "B", "T", "Q")
 
-  def prettyNumberFixedSize(num: Long): ReactiveHtmlElement[HTMLSpanElement] =
-    prettyNumberFixedSize("", num, 0)
+  private def compact(num: Long, initialSuffix: Int = 0): String = {
+    var magnitude = BigInt(num).abs
+    var suffix = Math.max(0, Math.min(initialSuffix, Suffixes.size - 1))
+    while (magnitude >= BigInt(1000L * u) && suffix < Suffixes.size - 1) {
+      magnitude /= 1000
+      suffix += 1
+    }
+    val whole = magnitude / u
+    val fraction = magnitude % u
+    val decimals = if (fraction == 0) ""
+      else if (magnitude < 100L && suffix == 0) "." + f"${fraction.toInt}%04d".reverse.dropWhile(_ == '0').reverse
+      else "." + f"${(fraction / 100).toInt}%02d"
+    (if (num < 0L) "-" else "") + whole.toString + decimals + Suffixes(suffix)
+  }
 
-  @tailrec
-  private def prettyNumberFixedSize(
-      prefix: String,
-      num: Long,
-      suffixNum: Int,
-  ): ReactiveHtmlElement[HTMLSpanElement] =
-    if (num <= 9999 * u)
-      if (num % u == 0) {
-        if (suffixNum == 0)
-          span(prefix, (num / u).toString, span(opacity := 0, ".00K"))
-        else
-          span(prefix, (num / u).toString, span(opacity := 0, ".00"), Suffixes(suffixNum))
-      } else {
-        val shortValue = num / 100
-        span(
-          prefix,
-          (shortValue / 100).toString,
-          ".",
-          f"${Math.abs(shortValue) % 100}%02d",
-          if (suffixNum == 0) span(opacity := 0, "K") else Suffixes(suffixNum),
-        )
-      }
-    else
-      prettyNumberFixedSize(prefix, num / 1000, suffixNum + 1)
+  def prettyNumberFixedSize(num: Long): ReactiveHtmlElement[HTMLSpanElement] =
+    span(className := "numeric-value", compact(num))
 
   def preciseRateStr(amount: Long): String = {
-    val fraction = f"${Math.abs(amount % u)}%04d".reverse.dropWhile(_ == '0').reverse
-    if (fraction.isEmpty) (amount / u).toString else s"${amount / u}.$fraction"
+    val magnitude = BigInt(amount).abs
+    val fraction = f"${(magnitude % u).toInt}%04d".reverse.dropWhile(_ == '0').reverse
+    (if (amount < 0L) "-" else "") + (magnitude / u).toString + (if (fraction.isEmpty) "" else "." + fraction)
   }
 
-  // Keep the usual compact format, but retain meaningful fractions below one unit.
-  def resourceRateStr(amount: Long): String = {
-    val magnitude = Math.abs(amount)
-    val number = if (magnitude < u && magnitude % 100L != 0L) preciseRateStr(magnitude) else prettyNumberStr(magnitude)
-    (if (amount < 0L) "-" else "") + number
-  }
+  def resourceRateStr(amount: Long): String =
+    if (BigInt(amount).abs < u && amount % 100L != 0L) preciseRateStr(amount) else prettyNumberStr(amount)
 
-  def prettyNumberStr(num: Long): String =
-    prettyNumberStr("", num, 0)
+  def prettyNumberStr(num: Long): String = compact(num)
+  def prettyNumberStr(prefix: String, num: Long, suffix: Int): String = prefix + compact(num, suffix)
 
-  @tailrec
-  def prettyNumberStr(
-      prefix: String,
-      num: Long,
-      suffix: Int,
-  ): String =
-    if (num <= 9999 * u)
-      if (num % u == 0)
-        prefix + (num / u).toString + Suffixes(suffix)
-      else {
-        val shortValue = num / 100
-        prefix +
-          (shortValue / 100).toString +
-          "." +
-          f"${Math.abs(shortValue) % 100}%02d" +
-          Suffixes(suffix)
-      }
-    else
-      prettyNumberStr(prefix, num / 1000, suffix + 1)
-
-  def prettyNumberSimple(
-      prefix: String,
-      num: Long,
-      suffixStr: String,
-  ): ReactiveHtmlElement[HTMLSpanElement] =
-    prettyNumberSimple(prefix, num, 0, suffixStr)
-
+  def prettyNumberSimple(prefix: String, num: Long, suffixStr: String): ReactiveHtmlElement[HTMLSpanElement] =
+    span(className := "numeric-value", prefix + compact(num) + suffixStr)
   def prettyNumberSimple(num: Long): ReactiveHtmlElement[HTMLSpanElement] =
-    prettyNumberSimple("", num, 0, "")
-
-  @tailrec
-  private def prettyNumberSimple(
-      prefix: String,
-      num: Long,
-      suffixNum: Int,
-      suffixStr: String,
-  ): ReactiveHtmlElement[HTMLSpanElement] =
-    if (num <= 9999 * u)
-      if (num % u == 0)
-        span(prefix, (num / u).toString, Suffixes(suffixNum), suffixStr)
-      else {
-        val shortValue = num / 100
-        span(
-          prefix,
-          (shortValue / 100).toString,
-          ".",
-          f"${Math.abs(shortValue) % 100}%02d",
-          Suffixes(suffixNum),
-          suffixStr,
-        )
-      }
-    else
-      prettyNumberSimple(prefix, num / 1000, suffixNum + 1, suffixStr)
+    prettyNumberSimple("", num, "")
 
   def prettyNumberInt(num: Long): ReactiveHtmlElement[HTMLSpanElement] =
     span((num / u).toString)

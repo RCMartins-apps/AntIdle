@@ -1,4 +1,5 @@
 """Live map activity feedback at phone/desktop widths; run after fastOptJS."""
+import re
 from browser_smoke import *
 
 
@@ -20,7 +21,8 @@ def check(page, width, url):
     page.get_by_role('button', name='Study Site', exact=True).click()
     expect(hexagon).to_have_attribute('data-activity', 'studying')
     page.clock.run_for(10000)
-    expect(hexagon.locator('.map-state')).to_contain_text('Studying')
+    expect(hexagon.locator('.map-state')).to_have_text(re.compile(r'\d+%'))
+    expect(hexagon).to_have_attribute('aria-label', re.compile('Studying'))
     assert float(hexagon.locator('[role="progressbar"]').get_attribute('aria-valuenow')) > 0
     page.clock.run_for(180000)
     expect(hexagon).not_to_have_attribute('data-activity', 'studying')

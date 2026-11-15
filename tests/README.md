@@ -72,6 +72,10 @@ holdings/current-run totals without losing lifetime progress or saved peaks.
 ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
 finite-haul refunds, automation, prestige and legacy peak-field defaults.
 
+After fastOptJS, `python3 tests/polish_visual_smoke.py` checks compact resource
+values, digit alignment, control sizing, settings and queue empty state at
+390/1280px. NumberPresentationSuite covers boundaries, signs and tiny values.
+
 After fastOptJS, `python3 tests/polish_log_smoke.py` checks significant-event
 visibility, routine grouping and stable disclosure at 390/1280px. EventLogSuite
 covers bounded retention, routine floods and old string-save compatibility.
