@@ -21,6 +21,9 @@ def check(page, width, url):
     expect(log.locator('.log-routine-entry')).to_contain_text('collected 10 sugar.')
     page.clock.run_for(400)
     expect(log.locator('.log-routine')).to_have_attribute('open', '')
+    save_game(page)
+    page.reload(wait_until='networkidle')
+    expect(log.locator('.log-routine')).to_have_attribute('open', '')
     assert_fits(page, width)
     print(f'PASS colony log {width}px: significant events, grouped routine reports and stable disclosure', flush=True)
 
