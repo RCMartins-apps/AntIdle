@@ -71,3 +71,7 @@ verify its ×1.01 multiplier, preserve an open goal across ticks, and reload low
 holdings/current-run totals without losing lifetime progress or saved peaks.
 ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
 finite-haul refunds, automation, prestige and legacy peak-field defaults.
+
+After fastOptJS, `python3 tests/polish_visual_smoke.py` checks compact resource
+values, digit alignment, control sizing, settings and queue empty state at
+390/1280px. NumberPresentationSuite covers boundaries, signs and tiny values.

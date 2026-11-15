@@ -605,7 +605,7 @@ object MainForm {
           className := "d-grid gap-2",
           child <-- buildQueueSignal.map {
             case Seq() =>
-              span(nbsp)
+              span(className := "queue-empty small text-body-secondary", "No construction queued.")
             case seq =>
               div(seq.zipWithIndex.map { case (buildTask, index) =>
                 buildTaskName(buildTask, index)
@@ -1468,7 +1468,9 @@ object MainForm {
           div(className := "progress my-2", role := "progressbar", aria.label := "Royal brood development",
             aria.valueMin := 0.0, aria.valueMax := 100.0,
             aria.valueNow <-- broodSignal.map(_.map(_.careUnits * 100L / RoyalBroodProgression.TotalCare).getOrElse(0L).toDouble),
-            div(className := "progress-bar", width <-- broodSignal.map(b => s"${b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)}%")),
+            div(className := "progress-bar", role := "progressbar", aria.label := "Royal brood progress", aria.valueMin := 0, aria.valueMax := 100,
+              aria.valueNow <-- broodSignal.map(b => Math.min(100.0, Math.max(0.0, b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)))),
+              width <-- broodSignal.map(b => s"${Math.min(100.0, Math.max(0.0, b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)))}%")),
           ),
           div(className := "small", child.text <-- nursesSignal.map(n => s"$n/${RoyalBroodProgression.MaxNurses} Royal Nurses")),
           div(className := "royal-feeding small my-1",
@@ -1510,7 +1512,8 @@ object MainForm {
     span(
       className := "action-cost",
       title := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
-      aria.label := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
+      aria.label := s"${requirement.label}: ${preciseRateStr(requirement.available)} available, ${preciseRateStr(requirement.required)} required",
+      title := s"${preciseRateStr(requirement.available)} / ${preciseRateStr(requirement.required)} ${requirement.label}",
       role := "img",
       ResourceIcons.forLabel(requirement.label).filter(_ => compact).map(ResourceIcons.icon),
       span(
