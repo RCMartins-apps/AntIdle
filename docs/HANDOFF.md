@@ -3,8 +3,9 @@
 ## Last verified: 2026-11-15 — optional colony milestone research
 
 - PR #75 is confirmed merged. New branch `feature/colony-milestones` starts at
-  main `fa72170`; this task adds optional content after that merge. No PR for the
-  new feature has been requested yet. Commit and push this branch for backup.
+  main `fa72170`; this task adds optional content after that merge. The owner authorized a PR and auto-merge for this feature on November 15.
+  Main remains fa72170; required test/classifier checks and squash-only auto-merge
+  settings were reverified. Check GitHub for the live PR/merge state.
 - Three paid ordinary upgrades: Scout Wayfinding after 20 completed expeditions
   (−20% new scout reveal/study duration), Nurse Training after 25 standard workers
   raised (+50% Brood Nurse care), Queen's Rhythm after 50 (−20% laying interval).
