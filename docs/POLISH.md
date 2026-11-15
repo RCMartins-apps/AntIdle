@@ -14,7 +14,7 @@ Integrate current main before submitting each PR.
    with safe fallback when an old selection is no longer unlocked.
 4. **Event log (PR #81):** group routine reports and emphasize meaningful discoveries,
    research and losses without adding message spam.
-5. **Visual consistency (implemented):** align control/touch sizes, spacing, numeric presentation,
+5. **Visual consistency (implemented and verified):** align control/touch sizes, spacing, numeric presentation,
    progress and empty/completed states.
 
 Only implemented passes are described as complete in HANDOFF. Browser scenarios
@@ -41,3 +41,7 @@ Expanded map hexes show compact percentages with study/cargo/scouting symbols
 during missions. Full action labels remain in accessible names and tooltips.
 Trail/exhausted labels also stay compact to fit narrow hexes. The 320px expanded
 map and royal progress accessibility are covered in polish_visual_smoke.py.
+
+All five passes are implemented. PRs #78–81 are merged; the final visual branch
+is `polish/visual-consistency`, authorized for a separate auto-merge PR. See
+HANDOFF and GitHub for the latest verification/merge state.

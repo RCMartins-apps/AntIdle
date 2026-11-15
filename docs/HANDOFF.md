@@ -13,12 +13,14 @@
   explicit empty construction queue. Narrow map activity uses icons/percentages
   with full accessible/tooltips; duplicate fog labels and report grammar fixed.
   Map feedback signals are shared across each hex's bindings.
-- Before the last display-only fixes: 297 engine + 4 balance tests passed;
-  development/production builds passed with zero Closure errors/warnings. All
-  five scoped browser scenarios passed at 390/1280px, with expanded map and royal
-  progress additionally at 320px. Production CI flow passed 390/1280; full
-  map/trail/aphid and prestige gates passed 320/390/1280. Final copy/shared-signal
-  compilation and browser checks are being completed before PR creation.
+- Validation: 297 engine + 4 balance tests passed on the combined changes.
+  Development/production builds passed with zero Closure errors/warnings. All
+  five scoped browser scenarios passed at 390/1280px; expanded map and royal
+  progress additionally passed at 320px and the screenshots were inspected.
+  Production CI flow passed 390/1280; full map/trail/aphid and prestige gates
+  passed 320/390/1280. After the final display-copy/shared-signal changes, both
+  builds and visual/map/log browser checks plus the production CI flow passed
+  again. The final PR branch is ready; check GitHub for live auto-merge state.
 - CI hit the default ~0.9 GB Java heap on #78. Explicit 3 GB/G1 in .jvmopts fixed
   it and is merged. Timeouts and test/classifier requirements remain enforced.
   Existing map tests now match the new label and persisted purchase-history state.
