@@ -2,8 +2,8 @@
 
 ## 2026-11-15 — polish pass 4: event log
 
-Owner authorized all five passes, separate PRs and native auto-merge. Prior PRs:
-#78 statuses, #79 map feedback, #80 UI memory; verify live state before integration.
+Owner authorized all five passes, separate PRs and native auto-merge. Prior PRs #78 (statuses) and #79 (map feedback) are merged. This branch
+integrates main 009a29d; #80 UI memory is awaiting checks/auto-merge.
 Current branch `polish/event-log` retains string-save compatibility while bounding
 history to 20 significant events, 30 routine reports and 10 notices. Routine floods
 cannot erase discoveries/losses. Colony log highlights four nonroutine entries,

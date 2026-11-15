@@ -161,6 +161,12 @@
 .log-notice {color:#46535d}
 .event-log summary {font-size:.85rem;cursor:pointer;display:list-item;padding:.6rem 0}
 
+.map-progress {height:4px;width:68%;flex-shrink:0;background:rgba(0,0,0,.15);border-radius:4px;overflow:hidden}
+.map-progress-fill {height:100%;background:currentColor}
+.hex-map .map-hex[data-activity="studying"], .hex-map .map-hex[data-activity="scouting"] {background:#d9eafb;color:#174a79}
+.hex-map .map-hex[data-activity="collecting"] {background:#d2ecdc;color:#24563c}
+.hex-map .map-hex[data-activity="trail"] .map-state {font-weight:700}
+
 .activity-status {display:inline-block;font-size:.85rem;line-height:1.5;padding:.15rem .45rem;border-radius:.35rem;background:#eef3f0;color:#235d3f;overflow-wrap:anywhere}
 .activity-status::before {content:"●";font-size:.65em;margin-right:.4em;vertical-align:.1em}
 .activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
