@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="3bc42fa7eaed23cfbfc9ce56">
+    <meta name="antidle-build" content="c5e70fee0427f049ab1d4b38">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -156,6 +156,11 @@
 .site-worker-controls input {max-width:110px;text-align:center}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
+.activity-status {display:inline-block;font-size:.85rem;line-height:1.5;padding:.15rem .45rem;border-radius:.35rem;background:#eef3f0;color:#235d3f;overflow-wrap:anywhere}
+.activity-status::before {content:"●";font-size:.65em;margin-right:.4em;vertical-align:.1em}
+.activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
+.activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
+.activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
 </style>
 </head>
 <body>
@@ -164,7 +169,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.4b5adeeadbf133e0.js"></script>
+<script type="text/javascript" src="game.8d20a6300dc3c0a5.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="pwa.js" data-service-worker="./sw.js" defer></script>
