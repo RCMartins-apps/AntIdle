@@ -94,3 +94,11 @@ available; they do not shorten already-running jobs. Those must be cancelled in
 Actions. On 2026-11-14, runs 43583940403 and 43582168774 were still in progress
 while newer main deployments had succeeded; 43583940403 was stuck specifically
 at Build project. No existing run was cancelled by this change.
+
+## Compiler heap
+
+Production source-map generation exhausted the default approximately 0.9 GB Java
+heap on PR #78 (GC overhead limit, followed by the ten-minute build timeout).
+Repository .jvmopts now sets a 3 GB maximum heap, 256 MB initial heap and G1 GC,
+compatible with Java 8 and newer. This matches successful local production builds;
+workflow/job timeouts and required checks remain unchanged.
