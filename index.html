@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="a9010e6b8eb4bb4573b01260">
+    <meta name="antidle-build" content="8e28e4d3e2341b0318a35d84">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -156,6 +156,12 @@
 .site-worker-controls input {max-width:110px;text-align:center}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
+.log-entry {font-size:.9rem;line-height:1.45;padding:.45rem 0;border-bottom:1px solid #e5e7e9;overflow-wrap:anywhere}
+.log-important {font-weight:600;color:#235d3f}
+.log-loss {color:#a3212e;border-left:3px solid currentColor;padding-left:.5rem}
+.log-notice {color:#46535d}
+.event-log summary {font-size:.85rem;cursor:pointer;display:list-item;padding:.6rem 0}
+
 .map-progress {height:4px;width:68%;flex-shrink:0;background:rgba(0,0,0,.15);border-radius:4px;overflow:hidden}
 .map-progress-fill {height:100%;background:currentColor}
 .hex-map .map-hex[data-activity="studying"], .hex-map .map-hex[data-activity="scouting"] {background:#d9eafb;color:#174a79}
@@ -175,7 +181,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.82acde03d13d24e8.js"></script>
+<script type="text/javascript" src="game.99f1e85fefe8ebf9.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="pwa.js" data-service-worker="./sw.js" defer></script>
