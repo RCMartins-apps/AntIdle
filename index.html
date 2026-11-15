@@ -155,6 +155,11 @@
 .site-worker-controls input {max-width:110px;text-align:center}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
+.activity-status {display:inline-block;font-size:.85rem;line-height:1.5;padding:.15rem .45rem;border-radius:.35rem;background:#eef3f0;color:#235d3f;overflow-wrap:anywhere}
+.activity-status::before {content:"●";font-size:.65em;margin-right:.4em;vertical-align:.1em}
+.activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
+.activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
+.activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
 </style>
 </head>
 <body>
