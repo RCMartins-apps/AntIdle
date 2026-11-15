@@ -11,10 +11,11 @@ object BroodProgression {
     nest.chambers.nurseryChamber.level > 0 || (ants.standardWorkersUnlocked && exploration.proteinDiscovered)
 
   def eggCost(ants: AntsData): Long = if (ants.standardWorkersUnlocked) LayEggSugarCost else LayEggSugarCost / 2L
-  def interval(ants: AntsData, nest: NestAttributes): Long = {
+  def interval(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData = UpgradesData.initial): Long = {
     val base = (if (ants.standardWorkersUnlocked) 20L else 5L) * TicksPerSecond
     val improvements = Math.max(0, nest.chambers.queenChamber.level - 1)
-    (base * 100L + 99L + improvements * 25L) / (100L + improvements * 25L)
+    val percent = if (upgrades(UpgradeType.QueensRhythm).unlocked) MilestoneResearch.LayingIntervalPercent else 100L
+    (base * percent + 99L + improvements * 25L) / (100L + improvements * 25L)
   }
   def incoming(ants: AntsData): Int = ants.eggsAndLarvae.count {
     case b: AntBrood.Developing => b.kind != "scout"
@@ -38,7 +39,7 @@ object BroodProgression {
   def lay(data: AllData, reserve: Long = 0L): AllData = {
     if (!canLay(data.ants, data.nestAttributes, data.basicResources.sugar.amount, reserve)) data
     else data.spendResources(ActionCost(sugar = eggCost(data.ants))).copy(
-      ants = data.ants.copy(layingCooldown = interval(data.ants, data.nestAttributes),
+      ants = data.ants.copy(layingCooldown = interval(data.ants, data.nestAttributes, data.upgrades),
         eggsAndLarvae = data.ants.eggsAndLarvae :+ AntBrood.Developing(data.currentTick,
           if (data.ants.standardWorkersUnlocked) "worker" else "small")),
       statistics = data.statistics.copy(eggsCount = data.statistics.eggsCount.addValue(1L)))
@@ -112,12 +113,15 @@ object BroodProgression {
         protein = 2L * u * larvalCare / (brood.larvaEnd - brood.eggEnd))
     }
   }
-  def nursePower(ants: AntsData): Long = (ants.taskWorkers(AntTask.BroodNurse) / u * 2L + ants.smallNurses / u) * u
+  def carePerNurse(upgrades: UpgradesData): Long =
+    2L * u * (if (upgrades(UpgradeType.NurseTraining).unlocked) MilestoneResearch.NurseCarePercent else 100L) / 100L
+  def nursePower(ants: AntsData, upgrades: UpgradesData = UpgradesData.initial): Long =
+    ants.taskWorkers(AntTask.BroodNurse) / u * carePerNurse(upgrades) + ants.smallNurses / u * carePerNurse(upgrades) / 2L
   private def tend(a: AntsData, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
     val count = a.eggsAndLarvae.size
     val boost = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L
-    var budget = (3L * u + nursePower(a)) * boost / 100L
-    val perBrood = (if (nursePower(a) > 0L) 2L * u else u) * boost / 100L
+    var budget = (3L * u + nursePower(a, upgrades)) * boost / 100L
+    val perBrood = (if (nursePower(a, upgrades) > 0L) 2L * u else u) * boost / 100L
     var resources = initialResources
     var broods = a.eggsAndLarvae.toVector
     val order = if (count == 0) Seq.empty else (0 until count).map(offset => (Math.max(0, a.broodCursor) % count + offset) % count)

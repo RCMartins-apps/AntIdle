@@ -1780,7 +1780,7 @@ object MainForm {
         case AntTask.Scavenger =>
           div("+0.05 protein/s per standard gatherer. Two shared places, including small gatherers.")
         case AntTask.BroodNurse =>
-          div("Supports two additional brood at base speed. Food shortages pause development.")
+          div(child.text <-- upgradesSignal.map(upgrades => s"Supports ${prettyNumberStr(BroodProgression.carePerNurse(upgrades))} additional brood at base speed. Food shortages pause development."))
         case AntTask.TerritoryForager =>
           div("Holding contested ground. Manage staffing and withdrawal in Territory.")
         case AntTask.TrailForager =>
@@ -1876,6 +1876,23 @@ object MainForm {
 
     div(
       className := "row upgrades-grid",
+      div(className := "col-12 milestone-panel",
+        children <-- snapshotSignal.map { data =>
+          MilestoneResearch.next(data).map(goal => (goal.upgrade, goal.progress(data), goal.target, goal.label))
+        }.distinct.map {
+          case None => Seq.empty
+          case Some((upgrade, progress, target, label)) => Seq(
+            div(className := "milestone-goal border rounded p-2 mb-2",
+              b("Next colony milestone: ", upgrade.title),
+              div(className := "milestone-progress small", s"$progress/$target $label"),
+              div(className := "progress", height.px := 6, role := "progressbar", aria.label := upgrade.title,
+                aria.valueMin := 0, aria.valueMax := target, aria.valueNow := progress,
+                div(className := "progress-bar", width.percent := progress * 100 / target)),
+              div(className := "small mt-1", upgrade.description),
+              div(className := "small text-body-secondary", s"Research: ${prettyNumberStr(upgrade.cost.sugar)} sugar · ${prettyNumberStr(upgrade.cost.knowledge)} knowledge" +
+                (if (upgrade.cost.protein > 0L) s" · ${prettyNumberStr(upgrade.cost.protein)} protein" else ""))
+            ))
+        }),
       children <-- upgradesSignal.map { upgrades =>
         val available = UpgradeType.all.filter(t => upgrades(t).show && !upgrades(t).unlocked)
         if (available.isEmpty) Seq(div(className := "col-12 py-3 upgrades-empty text-body-secondary",
@@ -1929,8 +1946,8 @@ object MainForm {
       case (n, available) => ExplorationProgression.selectedWorkers(n, available)
     }.distinct
     def scoutAction(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
-      p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal).map { case (count, data) =>
-        val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings"))
+      p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal, upgradesSignal).map { case (count, data, upgrades) =>
+        val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings", upgrades))
         if (id == "surroundings") s"$time · reveals one hexagon" else s"$time · ${prettyNumberStr(ExplorationMap.studyReward(data, id))} knowledge"
       }),
       actionButton(

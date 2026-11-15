@@ -54,7 +54,7 @@ object ScoutProgression {
     else allData.spendResources(eggCost)
       .modify(_.ants.eggsAndLarvae)
       .using(_ :+ AntBrood.Developing(allData.currentTick, "scout"))
-      .modify(_.ants.layingCooldown).setTo(BroodProgression.interval(allData.ants, allData.nestAttributes))
+      .modify(_.ants.layingCooldown).setTo(BroodProgression.interval(allData.ants, allData.nestAttributes, allData.upgrades))
       .modify(_.statistics.eggsCount).using(_.addValue(1))
 
   def growBrood(allData: AllData): AllData = {

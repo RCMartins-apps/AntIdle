@@ -18,6 +18,7 @@ class UnlockDefinitionsSuite extends FunSuite {
         nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)),
       upgrades = UpgradeType.all.foldLeft(d.upgrades)((upgrades, t) => upgrades.unlock(t)),
+      statistics = d.statistics.copy(explorationsCompleted = StatisticsData.StatInt(100, 100), workersMatured = StatisticsData.StatInt(100, 100)),
       exploration = d.exploration.copy(revealedSites = 6, proteinDiscovered = true,
         surveys = DiscoveryProgression.all.map(_.destination -> 100).toMap))
   }
@@ -53,6 +54,8 @@ class UnlockDefinitionsSuite extends FunSuite {
         val discovery = DiscoveryProgression.all.find(_.id == id).get
         assert(!upgrade.shouldShow(d.copy(exploration = d.exploration.copy(surveys = d.exploration.surveys.updated(discovery.destination, discovery.trips - 1)))), upgrade.name)
       }
+      if (r.completedMissions > 0) assert(!upgrade.shouldShow(d.copy(statistics = d.statistics.copy(explorationsCompleted = StatisticsData.StatInt(r.completedMissions - 1, 1000)))), upgrade.name)
+      if (r.matureWorkers > 0) assert(!upgrade.shouldShow(d.copy(statistics = d.statistics.copy(workersMatured = StatisticsData.StatInt(r.matureWorkers - 1, 1000)))), upgrade.name)
       if (r.beyondWoodland) assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(lineage = Lineage()))), upgrade.name)
       if (r.nursery) assert(!upgrade.shouldShow(d.copy(nestAttributes = d.nestAttributes.copy(chambers = d.nestAttributes.chambers.copy(nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 0))))), upgrade.name)
       if (r.outpost) assert(!upgrade.shouldShow(d.copy(nestAttributes = d.nestAttributes.copy(dryClearingOutpost = false))), upgrade.name)

@@ -35,6 +35,7 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/AgingJobReplacement.scala`: saved old-age job vacancies, pool refill and manual cancellation.
 - `game/EmergencyRecovery.scala`: one-worker recovery after collapse and protected queen provisions.
 - `game/AphidHusbandry.scala`, `AphidRelocation.scala`: housed aphids, ten per tender, starter group and reserved relocation missions; see docs/APHIDS.md.
+- `game/MilestoneResearch.scala`: current-colony goal previews and shared research effect values; see docs/MILESTONES.md.
 - `game/Prestige.scala`: founding resets, DNA purchases and inherited production.
 - `game/PheromoneTrails.scala`: safe finite collection automation, per-route staffing/guide reservations and supply costs; see docs/COLLECTION-TRAILS.md.
 - `game/TerritoryProgression.scala`: held crews, pending hauls, recurring contests and withdrawal.
