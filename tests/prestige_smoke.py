@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import expand_resources, select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
 from ci_browser_smoke import ProductionHandler
 
 
@@ -19,6 +19,7 @@ def check_prestige(page, width, url):
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(url, wait_until='networkidle')
+    expand_resources(page)
     expect(page.locator('.resource-row').first).to_be_visible()
     fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
     initial = save_game(page)

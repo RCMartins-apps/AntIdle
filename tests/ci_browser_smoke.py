@@ -9,7 +9,7 @@ import subprocess
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
+from browser_smoke import expand_resources, select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 
 
 class ProductionHandler(QuietHandler):
@@ -169,6 +169,7 @@ def check_game(page, width, url):
     page.clock.install(time=now)
     page.clock.pause_at(now + timedelta(seconds=1))
     page.goto(url, wait_until='networkidle')
+    expand_resources(page)
     expect(page.locator('.resource-row').first).to_be_visible()
     fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
     gather = page.get_by_role('button', name='Gather Sugar', exact=True)

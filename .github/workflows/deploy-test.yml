@@ -66,11 +66,13 @@ jobs:
           ANTIDLE_ARTIFACTS: test-results
         run: python3 tests/ci_browser_smoke.py
 
-      - name: Check mobile navigation
+      - name: Check mobile navigation and resources
         timeout-minutes: 3
         env:
           ANTIDLE_PRODUCTION: "1"
-        run: python3 tests/mobile_navigation_smoke.py
+        run: |
+          python3 tests/mobile_navigation_smoke.py
+          python3 tests/mobile_resources_smoke.py
 
       - name: Check exploration and trails on phone and desktop
         timeout-minutes: 5

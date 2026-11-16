@@ -954,3 +954,8 @@ On phones, fixed bottom navigation groups Nest, Tasks, Explore, Upgrades and
 Lineage. Secondary tabs fit above the content without horizontal scrolling;
 Settings, saves, statistics and the colony log are reached through the menu.
 The wider desktop layout retains its original tabs.
+
+The phone resource header shows compact live resource totals. Tap it to expand
+the complete resource panel with capacities, rates and full/empty estimates.
+Full resources stay blue/bold; depletion estimates remain visible in the summary.
+The expand/collapse preference is saved on the device.
