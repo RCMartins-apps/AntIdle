@@ -122,3 +122,8 @@ collapse, accelerated simulated ticks, and disappearance when stored time is emp
 heading, scoped feeding details, independent disclosures, and stable egg-button
 positions through empty/large worker-and-scout queues, full brood, food pauses,
 cancellation and live ticks at 320/390/1280px.
+
+The resource regression repeatedly switches source timing between absent, full,
+full-countdown and depletion states, including changing number widths. It verifies
+unchanged panel/cell geometry in collapsed and expanded phone views and desktop
+rows, plus warning colors and complete accessible estimate labels.

@@ -1,24 +1,22 @@
 # Handoff
 
-## 2026-11-16 — stable brood panel
+## 2026-11-16 — stable resource timing layout
 
-- `polish/stable-brood-panel` starts at main 80525f0 (merged #86) and includes
-  merged #87 (88bb1f5), preserving the header/catch-up cleanup. Shared append-only
-  docs/styles were combined in order; MainForm merged cleanly. Owner requested
-  this brood implementation/follow-up and now its PR with native auto-merge.
-- One Brood heading now serves the collapsible section; its independent [i]
-  holds help, including accurately scoped worker/scout larval care. The duplicate
-  title and always-visible worker-only feeding line are removed.
-- Separate worker/egg-order, introduced scout-order and ordinary brood-place
-  counters use tabular numbers. Two-line laying status space and an always-present
-  cancel control (disabled when empty) keep normal queue updates from moving egg
-  buttons. BroodProgression.layingStatus shares the existing status logic; the
-  complete status wrapper remains compatible. No simulation/balance changes.
-- All 306 engine tests and development/production builds passed, zero Closure
-  warnings/errors. Focused browser checks passed 320/390/1280px: count/status/full/
-  food-pause/cancel transitions, one heading, correct feeding help and independent
-  disclosures and hidden founding-phase scout counters. Existing production UI
-  checks passed 390/1280px. Syntax and git diff --check passed. Regression added
-  to CI with a three-minute timeout. After integrating #87, the combined development
-  build and focused browser checks passed at 320/390/1280px too. Required main
-  checks are enforced before auto-merge. Preserve unrelated work/ and Python caches.
+- `fix/stable-resource-timing` starts at main c20a295 (merged #88). Owner requested
+  fixing resource-panel resizing and explicitly authorized a PR with auto-merge.
+- Cause: compact resources used content-sized wrapping flex cells; timing warnings
+  changed their widths and were display:none when empty. Full rows also lacked
+  reserved timing height. Fixed three-column summary tracks and two-line timing
+  slots keep existing resource/cell geometry stable. Resource reveals still add rows.
+- Compact summary now projects full as well as empty forecasts, abbreviating the
+  visible text while retaining the complete estimate in accessible labels/titles.
+  Only depletion is red. No stale estimate latching or gameplay/rate changes.
+- Added repeated full/empty/zero and varying-number-width browser checks, including
+  collapsed/expanded phone panels and desktop rows. Existing mobile resource,
+  catch-up and reveal tests remain. Development/production builds passed with
+  zero Closure warnings/errors; resource geometry/behavior passed 320/390/1280px,
+  production UI passed 390/1280px, offline/update checks passed 390/1280px.
+  Four packaging tests, JS/Python syntax and git diff --check passed. Final edits
+  were documentation only. No engine changes or additional engine tests needed.
+- Preserve unrelated work/ and Python caches. Required test and changes / classify
+  must remain enforced before enabling native squash auto-merge.
