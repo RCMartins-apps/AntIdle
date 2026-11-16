@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="de24417f7ec239ea974c1cc8">
+    <meta name="antidle-build" content="8dfbeb3492549e9c4c562f82">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -91,10 +91,6 @@
             .antidle-app .fs-4,
             .antidle-app .fs-5 { font-size: 1rem !important; }
             .antidle-app .btn { min-height: 44px; touch-action: manipulation; }
-            .antidle-app .game-topbar > .m-2 > .d-flex { height: auto !important; min-height: 44px; gap: .5rem; flex-wrap: wrap; }
-            .antidle-app .game-topbar > .m-2 > .d-flex > .d-flex { gap: .5rem; flex-wrap: wrap; }
-            .antidle-app .game-topbar .topbar-spacer,
-            .antidle-app .game-topbar > .m-2 > .d-flex > div:last-child { display: none; }
             .antidle-app .nav-tabs { flex-wrap: nowrap; overflow-x: auto; gap: .25rem; }
             .antidle-app .nav-tabs .nav-link { min-height: 44px; padding: .625rem .75rem; white-space: nowrap; }
             .antidle-app .nav-tabs .nav-item { flex-shrink: 0; }
@@ -233,6 +229,17 @@
  .resources-column .game-panel:not(.resources-expanded) > .card-body {display:none}
  .mobile-resource-toggle:focus-visible {outline:2px solid var(--bs-primary);outline-offset:4px;border-radius:3px}
 }
+
+/* Catch-up shares the resource heading without nesting controls in its disclosure. */
+.catchup-host {position:absolute;top:.35rem;right:.75rem;z-index:1;pointer-events:none}
+.catchup-controls {display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;white-space:nowrap}
+.catchup-time {font-variant-numeric:tabular-nums}
+.catchup-controls button {min-width:44px;min-height:44px;pointer-events:auto}
+.resources-column .game-panel:has(.catchup-controls) > .card-header {min-height:56px;padding-right:12rem}
+@media (max-width:767px) {
+ .resources-column .game-panel:has(.catchup-controls) > .card-header {padding-right:.75rem}
+ .resources-column .game-panel:has(.catchup-controls) .resource-summary-heading {min-height:44px;padding-right:11rem;margin-bottom:.3rem}
+}
 </style>
 </head>
 <body>
@@ -241,7 +248,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.bb8641abb1d7f0ee.js"></script>
+<script type="text/javascript" src="game.1a61f9801bc3d07d.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
