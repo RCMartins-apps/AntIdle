@@ -117,3 +117,8 @@ chamber queueing remain enabled and action reasons are accessible descriptions.
 The mobile-resource regression also checks the relocated catch-up control at
 320/390/1280px: no decorative top header, no overlap, independence from resource
 collapse, accelerated simulated ticks, and disappearance when stored time is empty.
+
+`ANTIDLE_PRODUCTION=1 python3 tests/brood_layout_smoke.py` checks a single brood
+heading, scoped feeding details, independent disclosures, and stable egg-button
+positions through empty/large worker-and-scout queues, full brood, food pauses,
+cancellation and live ticks at 320/390/1280px.

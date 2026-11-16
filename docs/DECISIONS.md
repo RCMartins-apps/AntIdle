@@ -875,3 +875,14 @@ the calendar currently has no gameplay meaning. Keep catch-up accessible beside
 the resource summary, including when resource details are collapsed. Retain the
 stored-time mechanism and simulation clocks; this is presentation only. Browser
 and installed-app names remain Ant Idle.
+
+
+## D54: Stable compact brood controls — approved
+
+The owner requested a single Brood heading and no egg-button movement when order
+counts or laying status wrap. Separate counters from status text and reserve
+normal status/control space across empty, queued, full and food-paused states.
+Keep the cancel-orders control in place, disabled when empty. Larval feeding
+costs belong in details and must correctly cover worker and scout larvae, rather
+than saying the shared care cost is worker-only. Keep native independent section
+and information disclosures, current-unlock visibility and gameplay unchanged.

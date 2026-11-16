@@ -912,6 +912,10 @@ object MainForm {
         )
       }
 
+    val scoutOrdersVisible = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+      ants.standardWorkersUnlocked && nest.chambers.nurseryChamber.level > 0
+    }.distinct
+
     div(
       className := "row",
       actionButton(
@@ -927,10 +931,10 @@ object MainForm {
         rememberDetails("nest.brood", defaultOpen = true),
         summaryTag(className := "brood-summary mb-2", minHeight.px := 44, "Brood"),
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
-        infoHeading("Brood", div(
+        infoDetails("Brood", div(
           div(className := "brood-feeding", child.text <-- antsSignal.map { ants =>
             if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein."
-            else "Worker eggs: 10 sugar · about 2m at full care. Larval care: 20 sugar + 2 protein per worker."
+            else "Worker eggs: 10 sugar · about 2m at full care. Worker and scout larvae each need 20 sugar + 2 protein."
           }),
           p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
@@ -959,17 +963,28 @@ object MainForm {
         child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked)) {
           queenRoutineControls
         },
+        div(className := "brood-counts mb-2",
+          div(className := "brood-order-count",
+            span(className := "small text-body-secondary", child.text <-- scoutOrdersVisible.map(if (_) "Worker orders" else "Egg orders")),
+            b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.eggOrders.toLong * u)).distinct)),
+          div(className := "brood-place-count",
+            span(className := "small text-body-secondary", "Brood places"),
+            b(child.text <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+              s"${prettyNumberStr((ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)).toLong * u)}/${prettyNumberStr(BroodProgression.capacity(nest).toLong * u)}"
+            }.distinct)),
+          child.maybe <-- scoutOrdersVisible.map(show => Option.when(show)(
+            div(className := "brood-scout-orders",
+              span(className := "small text-body-secondary", "Scout orders"),
+              b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.scoutEggOrders.size.toLong * u)).distinct)))),
+        ),
         div(className := "brood-pipeline small mb-2",
           activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
             case (ants, nest, resources, upgrades, exploration, stats) =>
-              BroodProgression.status(ants, nest, resources, upgrades, exploration, stats)
+              BroodProgression.layingStatus(ants, nest, resources, upgrades, exploration, stats)
           })),
-        child.maybe <-- antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Option.when(standard)(
-          div(className := "brood-care-cost small mb-2", "Larvae: 20 sugar · 2 protein / worker"))),
-        child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map { queued => Option.when(queued) {
-          button(className := "btn btn-outline-secondary mb-2", typ := "button", minHeight.px := 44, "Cancel egg orders",
-            onClick --> (_ => Actions.cancelEggOrders()))
-        } },
+        button(className := "btn btn-outline-secondary mb-2 brood-cancel-orders", typ := "button", minHeight.px := 44, "Cancel egg orders",
+          disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
+          onClick --> (_ => Actions.cancelEggOrders())),
         child.maybe <-- antsSignal.map(EmergencyRecovery.needed).distinct.map { needed => Option.when(needed) {
           div(className := "emergency-recovery row mb-2",
             actionButton(
