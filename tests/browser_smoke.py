@@ -22,6 +22,14 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
+def expand_resources(page):
+    """Open the full panel when a regression inspects rates or resource details."""
+    expect(page.locator('[data-mobile-resources=ready]')).to_be_attached()
+    toggle = page.get_by_role('button', name='Expand resource details', exact=True)
+    if toggle.is_visible():
+        toggle.click()
+
+
 def select_tab(page, name):
     """Navigate using the same visible groups as a mobile player."""
     expect(page.locator('.antidle-app[data-mobile-navigation=ready]')).to_be_attached()
@@ -50,6 +58,7 @@ def load_game(page, game):
     page.evaluate("save => localStorage.setItem('save', save)", json.dumps(game))
     page.reload(wait_until="networkidle")
     expect(page.get_by_role("button", name="Gather Sugar", exact=True)).to_be_visible()
+    expand_resources(page)
 
 
 def select_expedition(page, destination):

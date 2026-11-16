@@ -53,6 +53,9 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/EventLog.scala`: bounded compatible string history and routine report grouping.
 - `main/UiPreferences.scala`: browser-only disclosure/map choices, separate from game saves.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.
+- `assets/ui/`: progressive mobile navigation and compact resource projection.
+  Keep existing game controls/rows as the source of truth; do not duplicate engine
+  calculations here. Browser checks cover grouped views and resource disclosure.
 
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at
 `Constants.TicksPerSecond = 5`. Check units when changing counts, costs or rates.

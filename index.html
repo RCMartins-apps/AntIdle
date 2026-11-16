@@ -216,6 +216,22 @@
  [data-mobile-view=purchased] .upgrades-grid > :not(.purchased-upgrades) {display:none !important}
  [data-mobile-view=purchased] .purchased-upgrades {border:0 !important;margin-top:0 !important}
 }
+
+.mobile-resource-toggle {display:none}
+@media (max-width:767px) {
+ .desktop-resource-heading {display:none}
+ .resources-column .game-panel > .card-header {padding:.5rem .75rem}
+ .mobile-resource-toggle {display:block;width:100%;min-height:44px;border:0;padding:0;background:transparent;color:inherit;text-align:left}
+ .resource-summary-heading {display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:600;color:var(--bs-secondary-color);margin-bottom:.3rem}
+ .compact-resources {display:flex;flex-wrap:wrap;gap:.35rem .65rem}
+ .compact-resource {display:inline-grid;grid-template-columns:18px auto;align-items:center;gap:0 .25rem;min-width:60px;font-size:.9rem;font-variant-numeric:tabular-nums}
+ .compact-resource .resource-icon {width:18px;height:18px;margin:0}
+ .compact-resource.at-capacity .compact-resource-value {color:var(--bs-primary);font-weight:700}
+ .compact-resource-warning {grid-column:1 / -1;font-size:.7rem;color:var(--bs-danger)}
+ .compact-resource-warning:empty {display:none}
+ .resources-column .game-panel:not(.resources-expanded) > .card-body {display:none}
+ .mobile-resource-toggle:focus-visible {outline:2px solid var(--bs-primary);outline-offset:4px;border-radius:3px}
+}
 </style>
 </head>
 <body>
@@ -228,6 +244,7 @@
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
+<script src="assets/ui/mobile-resources.js" defer></script>
 <script src="pwa.js" defer></script>
 </body>
 </html>

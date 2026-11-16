@@ -102,3 +102,9 @@ Mobile navigation: `python3 tests/mobile_navigation_smoke.py` checks 320/390px
 bottom destinations, hidden unlocks, grouped screens, scroll restoration and
 resizing to desktop. `select_tab` in browser_smoke navigates via visible controls
 on both layouts; maintained production gates use it as well.
+
+`python3 tests/mobile_resources_smoke.py` checks compact resource amounts, hidden
+optional resources, full-capacity styling, depletion warnings, disclosure memory
+and desktop resizing at 320/390px. Use `ANTIDLE_PRODUCTION=1` for both mobile
+checks against fullOptJS. Resource-detail regressions explicitly expand the panel
+through `expand_resources`; the compact-resource test verifies the default view.
