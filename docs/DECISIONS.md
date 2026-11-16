@@ -856,3 +856,11 @@ stateful disclosures, per-view scroll positions and the desktop layout.
 Then replace the full mobile resource panel above the controls with a compact
 summary that opens the complete panel, retaining costs beside actions, live
 rates/capacity estimates and current-colony visibility rules. No balance changes.
+
+## D53: Remove the decorative calendar header — approved
+
+The owner requested removal of the in-game title/year/season/day header because
+the calendar currently has no gameplay meaning. Keep catch-up accessible beside
+the resource summary, including when resource details are collapsed. Retain the
+stored-time mechanism and simulation clocks; this is presentation only. Browser
+and installed-app names remain Ant Idle.

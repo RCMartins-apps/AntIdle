@@ -108,3 +108,7 @@ optional resources, full-capacity styling, depletion warnings, disclosure memory
 and desktop resizing at 320/390px. Use `ANTIDLE_PRODUCTION=1` for both mobile
 checks against fullOptJS. Resource-detail regressions explicitly expand the panel
 through `expand_resources`; the compact-resource test verifies the default view.
+
+The mobile-resource regression also checks the relocated catch-up control at
+320/390/1280px: no decorative top header, no overlap, independence from resource
+collapse, accelerated simulated ticks, and disappearance when stored time is empty.

@@ -116,7 +116,6 @@ object MainForm {
 
     div(
       className := "antidle-app",
-      topBarDiv,
       div(
         className := "m-2 game-layout",
         className := "d-flex justify-content-start",
@@ -161,51 +160,6 @@ object MainForm {
     )
   }
 
-  private def topBarDiv: ReactiveHtmlElement[HTMLDivElement] =
-    div(
-      className := "flex-column game-topbar",
-      div(
-        className := "m-2",
-        div(
-          className := "w-100",
-          height.px := 26,
-          className := "d-flex justify-content-between align-items-center",
-          div(
-            "Ant Idle"
-          ),
-          div(
-            className := "d-flex justify-content-between align-items-center",
-            timeDiv,
-            div(
-              className := "topbar-spacer",
-              width.px := 75,
-              nbsp,
-            ),
-            catchUpDiv,
-          ),
-          div(
-            nbsp
-          ),
-        ),
-      ),
-      hr(
-        className := "w-100",
-        className := "m-0",
-      ),
-    )
-
-  private def timeDiv: ReactiveHtmlElement[HTMLDivElement] =
-    div(
-      child <--
-        currentTickSignal.map { currentTick =>
-          val years = currentTick / TicksPerYear
-          val season: Int = ((currentTick - TicksPerYear * years) / TicksPerSeason).toInt
-          val day = (currentTick % TicksPerSeason) / TicksPerDay
-
-          span("Year ", years, " - ", Constants.seasonStr(season), ", day ", day + 1)
-        }
-    )
-
   private def catchUpDiv: ReactiveHtmlElement[HTMLDivElement] = {
     val isBehind: Signal[Boolean] =
       currentTickSignal
@@ -216,23 +170,27 @@ object MainForm {
         .distinct
 
     div(
+      className := "catchup-host",
       child <--
         isBehind.map {
           case false =>
             span()
           case true =>
             span(
-              "Catch up: [",
-              child.text <--
-                currentTickSignal.combineWith(targetTickSignal).map {
+              className := "catchup-controls",
+              span(className := "catchup-label", "Catch up"),
+              span(className := "catchup-time",
+                child.text <-- currentTickSignal.combineWith(targetTickSignal).map {
                   case (currentTick, targetTick) => prettyTimeFromTicks(targetTick - currentTick)
                 },
-              "] ",
+              ),
               button(
                 className := "btn btn-sm py-0",
                 className("btn-success active") <-- Utils.useCatchupTicksVar,
                 className("btn-secondary") <-- Utils.useCatchupTicksVar.signal.map(!_),
                 `type` := "button",
+                aria.label := "Use stored catch-up time",
+                aria.pressed <-- Utils.useCatchupTicksVar.signal.map(_.toString),
                 child.text <-- Utils.useCatchupTicksVar.signal.map(if (_) "On" else "Off"),
                 onClick --> { _ =>
                   Utils.useCatchupTicksVar.update(!_)
@@ -662,6 +620,7 @@ object MainForm {
         className := "card-header",
         "Resources",
       ),
+      catchUpDiv,
       div(
         className := "card-body",
         child.maybe <-- createResourceDiv(

@@ -1,5 +1,6 @@
 """Compact resource projection: reveal rules, live amounts, warnings and disclosure memory."""
 from functools import partial
+from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer
 from threading import Thread
 import os
@@ -62,6 +63,51 @@ def check(page, width, url):
     print(f'PASS compact resources {width}px: live values, reveal rules, capacity, depletion warning, disclosure memory and resize', flush=True)
 
 
+def check_catchup(page, width, url):
+    now = datetime(2026, 11, 16, tzinfo=timezone.utc)
+    page.clock.install(time=now)
+    page.clock.pause_at(now + timedelta(seconds=1))
+    page.goto(url, wait_until='networkidle')
+    game = save_game(page)
+    game['world'].update(currentTick=100, targetTick=18100, lastUpdateTime=page.evaluate('Date.now()'))
+    load_game(page, game)
+    expect(page.locator('.game-topbar')).to_have_count(0)
+    expect(page.get_by_text('Ant Idle', exact=True)).to_have_count(0)
+    toggle = page.get_by_role('button', name='Use stored catch-up time', exact=True)
+    expect(toggle).to_be_visible()
+    expect(toggle).to_have_attribute('aria-pressed', 'false')
+    if width <= 767:
+        page.get_by_role('button', name='Collapse resource details', exact=True).click()
+        expect(page.locator('#resource-details')).not_to_be_visible()
+        heading = page.locator('.resource-summary-heading').bounding_box()
+        catchup = page.locator('.catchup-controls').bounding_box()
+        label = page.locator('.resource-summary-heading > span').first.bounding_box()
+        assert label['x'] + label['width'] <= catchup['x'], (label, catchup)
+        assert catchup['y'] + catchup['height'] <= heading['y'] + heading['height'] + 2
+    before = save_game(page)['world']['currentTick']
+    close = page.get_by_role('alert').locator('.btn-close')
+    if close.is_visible():
+        close.click()
+    toggle.click()
+    expect(toggle).to_have_attribute('aria-pressed', 'true')
+    if width <= 767:
+        expect(page.locator('#resource-details')).not_to_be_visible()
+    page.clock.run_for(2000)
+    after = save_game(page)
+    assert after['world']['currentTick'] - before > 10, after['world']
+    expect(page.locator('.catchup-time')).not_to_have_text('1h 0m')
+    close = page.get_by_role('alert').locator('.btn-close')
+    if close.is_visible():
+        close.click()
+    toggle.click()
+    expect(toggle).to_have_attribute('aria-pressed', 'false')
+    assert_fits(page, width)
+    after['world'].update(targetTick=after['world']['currentTick'], lastUpdateTime=page.evaluate('Date.now()'))
+    load_game(page, after)
+    expect(page.locator('.catchup-controls')).to_have_count(0)
+    print(f'PASS catch-up {width}px: header removed, resource placement, independent toggle, accelerated ticks and exhausted state', flush=True)
+
+
 if __name__ == '__main__':
     server = ThreadingHTTPServer(('127.0.0.1',0),partial(ProductionHandler if os.environ.get('ANTIDLE_PRODUCTION') else QuietHandler,directory=str(ROOT)))
     Thread(target=server.serve_forever,daemon=True).start()
@@ -69,9 +115,13 @@ if __name__ == '__main__':
         with sync_playwright() as p:
             browser=p.chromium.launch(headless=True,executable_path=shutil.which('chromium'))
             try:
-                for width in [320,390]:
-                    context=browser.new_context(viewport={'width':width,'height':844},is_mobile=True,has_touch=True)
-                    check(context.new_page(),width,f'http://127.0.0.1:{server.server_port}')
+                for width in [320,390,1280]:
+                    context=browser.new_context(viewport={'width':width,'height':844},is_mobile=width<=767,has_touch=width<=767)
+                    if width <= 767:
+                        page = context.new_page()
+                        check(page,width,f'http://127.0.0.1:{server.server_port}')
+                        page.close()
+                    check_catchup(context.new_page(),width,f'http://127.0.0.1:{server.server_port}')
                     context.close()
             finally:
                 browser.close()
