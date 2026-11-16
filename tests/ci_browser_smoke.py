@@ -237,7 +237,7 @@ def check_game(page, width, url):
     assert next(u for u in researched['upgrades']['upgrades'] if u['name'] == 'ImproveSugarCollectorTask1')['unlocked']
     game = progressed_game(save_game(page))
     game['ants'].update(workers=50 * UNIT, scouts=2 * UNIT, daughterQueens=UNIT,
-        tasks=[[{'CarcassCarrier': {}}, 0], [{'Explorer': {}}, 0], [{'Tunneler': {}}, 10 * UNIT], [{'SugarCollector': {}}, 40 * UNIT], [{'TerritoryForager': {}}, 0]],
+        tasks=[[{'CarcassCarrier': {}}, 0], [{'Explorer': {}}, 0], [{'BroodNurse': {}}, 0], [{'Tunneler': {}}, 10 * UNIT], [{'SugarCollector': {}}, 40 * UNIT], [{'TerritoryForager': {}}, 0]],
         defaultTask={'SugarCollector': {}}, eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
     game['nestAttributes']['chambers']['nurseryChamber']['level'] = 1
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
