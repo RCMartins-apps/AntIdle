@@ -856,3 +856,14 @@ stateful disclosures, per-view scroll positions and the desktop layout.
 Then replace the full mobile resource panel above the controls with a compact
 summary that opens the complete panel, retaining costs beside actions, live
 rates/capacity estimates and current-colony visibility rules. No balance changes.
+
+
+## D52: Concise visible blocked-action feedback — approved
+
+The owner chose the next polish pass: disabled actions explain one specific
+current blocker beside their existing costs, without opening details. Distinguish
+resource shortages from insufficient capacity, reserved housing/mission places,
+missing crew and an action already in progress. Reasons update live and clear
+when the action is available. Keep egg orders and chamber queues independent of
+current food/material affordability where their engine rules allow queueing.
+Use current worker-pool names and preserve gameplay eligibility, prices and risk.
