@@ -110,6 +110,9 @@ Use consistent capacity/place/slot names and include derived effects (Nursery
 care places and Queen laying interval) without applying them twice to saved
 capacities. Expedition help explains finds/chances without repeating the visible
 duration/reward summary.
+Disabled action feedback uses ActionBlockers with the same live costs and
+requirements as the card. Preserve queued egg/chamber affordability semantics;
+above-capacity retained resources are still spendable.
 The common detail layout orders explanation, Requires, then Result; omit empty
 sections and keep costs visible beside the button.
 

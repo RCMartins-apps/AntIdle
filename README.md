@@ -959,3 +959,7 @@ The phone resource header shows compact live resource totals. Tap it to expand
 the complete resource panel with capacities, rates and full/empty estimates.
 Full resources stay blue/bold; depletion estimates remain visible in the summary.
 The expand/collapse preference is saved on the device.
+
+Disabled action cards show one concise blocker beside their costs, distinguishing
+resource shortages, storage limits, crew, occupied places and ongoing missions.
+Egg and chamber orders keep their normal queueing rules even without resources.

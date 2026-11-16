@@ -74,6 +74,10 @@ jobs:
           python3 tests/mobile_navigation_smoke.py
           python3 tests/mobile_resources_smoke.py
 
+      - name: Check blocked-action feedback
+        timeout-minutes: 3
+        run: python3 tests/blocked_actions_smoke.py
+
       - name: Check exploration and trails on phone and desktop
         timeout-minutes: 5
         env:

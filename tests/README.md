@@ -108,3 +108,8 @@ optional resources, full-capacity styling, depletion warnings, disclosure memory
 and desktop resizing at 320/390px. Use `ANTIDLE_PRODUCTION=1` for both mobile
 checks against fullOptJS. Resource-detail regressions explicitly expand the panel
 through `expand_resources`; the compact-resource test verifies the default view.
+
+`python3 tests/blocked_actions_smoke.py` uses the production bundle at
+320/390/1280px to verify visible housing, scout/busy, queue, storage-capacity and
+resource-shortage feedback. It also checks foodless egg orders and unfunded
+chamber queueing remain enabled and action reasons are accessible descriptions.
