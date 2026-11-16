@@ -949,3 +949,8 @@ The Brood section collapses as a whole. Starter-worker resource/task controls hi
 when no small adults remain. On mobile the build queue appears only while Nest is
 selected; desktop retains access beside other tabs. Royal egg laying needs its
 normal resources and housing, while development waits for assigned Royal Nurses.
+
+On phones, fixed bottom navigation groups Nest, Tasks, Explore, Upgrades and
+Lineage. Secondary tabs fit above the content without horizontal scrolling;
+Settings, saves, statistics and the colony log are reached through the menu.
+The wider desktop layout retains its original tabs.

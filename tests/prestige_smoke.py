@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
 from ci_browser_smoke import ProductionHandler
 
 
@@ -19,6 +19,7 @@ def check_prestige(page, width, url):
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(url, wait_until='networkidle')
+    expect(page.locator('.resource-row').first).to_be_visible()
     fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
     initial = save_game(page)
     game = progressed_game(initial)
@@ -33,7 +34,7 @@ def check_prestige(page, width, url):
     banked = copy.deepcopy(game)
     banked['ants']['lineage'].update(foundings=1, dna=1)
     load_game(page, banked)
-    page.get_by_role('tab', name='Lineage', exact=True).click()
+    select_tab(page, 'Lineage')
     page.get_by_role('button', name='Choose Understandings', exact=True).click()
     page.get_by_role('checkbox', name='Select Shared Paths', exact=True).check()
     page.get_by_role('button', name='Back to rewards', exact=True).click()
@@ -42,7 +43,7 @@ def check_prestige(page, width, url):
     expect(page.get_by_role('button', name='Review founding', exact=True)).to_be_enabled()
     expect(page.locator('.founding-rewards')).to_contain_text('DNA spent on Understandings0')
     load_game(page, game)
-    page.get_by_role('tab', name='Lineage', exact=True).click()
+    select_tab(page, 'Lineage')
     expect(page.locator('.founding-rewards')).to_contain_text('0 + 1 = 1')
     expect(page.locator('.founding-rewards')).to_contain_text('+0% → +10%')
     page.get_by_role('button', name='Choose Understandings', exact=True).click()
@@ -54,7 +55,7 @@ def check_prestige(page, width, url):
     assert unchanged['ants']['lineage']['dna'] == 0
     assert not unchanged['ants']['lineage']['sharedPaths']
     assert unchanged['ants']['daughterQueens'] == UNIT
-    page.get_by_role('tab', name='Lineage', exact=True).click()
+    select_tab(page, 'Lineage')
     page.get_by_role('button', name='Choose Understandings', exact=True).click()
     page.get_by_role('button', name='Review founding', exact=True).click()
     found = page.get_by_role('button', name='Found daughter colony', exact=True)
@@ -62,7 +63,7 @@ def check_prestige(page, width, url):
     page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     found.click()
     page.clock.run_for(1)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     first = save_game(page)
     assert first['ants']['lineage'] == {'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False}
     assert first['ants']['workers'] == 0 and first['ants']['daughterQueens'] == 0
@@ -71,7 +72,7 @@ def check_prestige(page, width, url):
     second = copy.deepcopy(game)
     second['ants']['lineage'] = first['ants']['lineage']
     load_game(page, second)
-    page.get_by_role('tab', name='Lineage', exact=True).click()
+    select_tab(page, 'Lineage')
     page.get_by_role('button', name='Choose Understandings', exact=True).click()
     page.get_by_role('checkbox', name='Select Beyond the Woodland', exact=True).check()
     page.locator('.understanding-research > summary').click()
@@ -91,7 +92,7 @@ def check_prestige(page, width, url):
     page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     found.click()
     page.clock.run_for(1)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     founded = save_game(page)
     assert founded['ants']['lineage']['beyondWoodland']
     assert founded['ants']['lineage']['dna'] == 0 and founded['ants']['lineage']['foundings'] == 2
@@ -103,7 +104,7 @@ def check_prestige(page, width, url):
     for upgrade in later['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=upgrade['name'] in ['DefaultWorkers','AphidTending'])
     load_game(page, later)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     expect(page.locator('.hex-map .map-hex')).to_have_count(10)
     page.get_by_role('button', name='3 scouts', exact=True).click()
     for site, title in [('aphid-thicket','Aphid Shelters'),('fallen-oak','Trail Logistics'),('root-hollow','Coordinated Expeditions')]:
@@ -118,12 +119,12 @@ def check_prestige(page, width, url):
             page.get_by_role('button', name='Study Site', exact=True).click()
             page.clock.run_for(61000)
         expect(page.locator('.site-knowledge')).to_have_text('0 knowledge remaining')
-        page.get_by_role('tab', name='Upgrades', exact=True).click()
+        select_tab(page, 'Upgrades')
         purchase = page.get_by_role('button', name=title, exact=True)
         expect(purchase).to_be_enabled()
         purchase.click()
         expect(purchase).to_have_count(0)
-        page.get_by_role('tab', name='Explore', exact=True).click()
+        select_tab(page, 'Explore')
     for tile in page.locator('.hex-map .map-hex').all():
         box = tile.bounding_box()
         assert box['width'] >= 44 and box['height'] >= 44, box

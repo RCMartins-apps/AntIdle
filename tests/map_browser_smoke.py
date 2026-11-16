@@ -12,7 +12,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
 from ci_browser_smoke import ProductionHandler
 
 
@@ -35,7 +35,7 @@ def check_map(page, width, url):
     for upgrade in game['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=upgrade['name'] == 'DefaultWorkers')
     load_game(page, game)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     expect(page.locator('.hex-map .map-hex')).to_have_count(7)
     expect(page.locator('.hex-map .map-terrain-icon svg')).to_have_count(7)
     expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
@@ -48,7 +48,7 @@ def check_map(page, width, url):
     sent = save_game(page)
     party = sent['exploration']['explorationParties'][0]
     assert party['scouts'] == 3 * UNIT and party['amountWorkers'] == 0 and party['mission'] == 'reveal'
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     expect(page.get_by_role('button', name='Explore Surroundings', exact=True)).to_be_disabled()
     page.clock.run_for(21000)
     expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(5)
@@ -71,21 +71,21 @@ def check_map(page, width, url):
     assert studied['exploration']['surveys']['woodland-edge'] == 1
     assert 'experience' not in studied['exploration']
     load_game(page, studied)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.locator('.site-knowledge')).to_have_text('400 knowledge remaining')
     # At capacity collection is blocked; no finite deposit is wasted.
     full = copy.deepcopy(studied)
     full['basicResources']['protein']['amount'] = full['basicResources']['protein']['maxAmount']
     load_game(page, full)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_be_disabled()
     # Spent insect deposits retain the wild aphid source, without collection controls.
     depleted = copy.deepcopy(studied)
     depleted['exploration'].update(surveys={'woodland-edge': 3}, depleted={'woodland-edge': 800 * UNIT})
     load_game(page, depleted)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.locator('.map-site-card')).not_to_contain_text('Site exhausted')
     expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_have_accessible_name('Woodland Edge: Aphids')
@@ -99,21 +99,24 @@ def check_map(page, width, url):
     ring['exploration'].update(revealedSites=6, surveys={key: 1 for key in ['woodland-edge', 'nectar-meadow', 'rotten-log', 'dry-clearing', 'fallen-pine', 'rival-food-cache']}, depleted={})
     # A studied site can still lack a collection prerequisite (resin needs seep study 3).
     load_game(page, ring)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="fallen-pine"]').click()
     expect(page.locator('#map-worker-count')).to_have_count(0)
     expect(page.get_by_role('button', name='Collect Resin', exact=True)).to_have_count(0)
     page.locator('.map-hex[data-site="nectar-meadow"]').click()
     page.locator('.hex-map').screenshot(path=str(artifacts / f'ring-{width}.png'))
     expect(page.locator('.expedition-supplies')).not_to_be_visible()
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     supplies = page.get_by_role('button', name='Expedition Supplies 1', exact=True)
     expect(supplies).to_be_visible()
     supplies.click()
     expect(supplies).to_have_count(0)
     purchased = page.locator('.purchased-upgrades')
     expect(purchased).not_to_have_attribute('open', '')
-    purchased.locator('summary').first.click()
+    if width <= 767:
+        select_tab(page, 'Purchased')
+    else:
+        purchased.locator('summary').first.click()
     expect(purchased).to_contain_text('Expedition Supplies 1')
     expect(purchased.locator('.purchased-upgrade').filter(has_text='Expedition Supplies 1')).to_have_count(1)
     page.clock.run_for(600)
@@ -121,7 +124,7 @@ def check_map(page, width, url):
     bought = save_game(page)
     assert next(u for u in bought['upgrades']['upgrades'] if u['name'] == 'ExpeditionSupplies1')['unlocked']
     load_game(page, bought)
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     expect(page.get_by_role('button', name='Expedition Supplies 1', exact=True)).to_have_count(0)
     expect(page.get_by_role('button', name='Expedition Supplies 2', exact=True)).to_be_visible()
     # UI preferences preserve the expanded purchase history across reloads.
@@ -132,8 +135,10 @@ def check_map(page, width, url):
     expect(page.locator('.purchased-upgrades')).to_contain_text('Expedition Supplies 2')
     expect(page.get_by_role('button', name='Expedition Supplies 2', exact=True)).to_have_count(0)
     assert_fits(page, width)
+    if width <= 767:
+        select_tab(page, 'Purchased')
     page.locator('.purchased-upgrades').screenshot(path=str(artifacts / f'purchased-{width}.png'))
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     expect(page.locator('.expedition-supplies')).not_to_be_visible()
     check_trails(page, width, ring)
     check_aphids(page, width, ring)
@@ -151,7 +156,7 @@ def check_trails(page, width, base):
         game['basicResources'][key].update(amount=0, maxAmount=100000 * UNIT)
     game['exploration'].update(collectionTrails=[], depleted={}, explorationParties=[])
     load_game(page, game)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="nectar-meadow"]').click()
     expect(page.locator('.pheromone-trails')).to_have_count(0)
     crew = page.locator('#map-worker-count')
@@ -183,7 +188,7 @@ def check_trails(page, width, base):
     assert active['exploration']['collectionTrails'] == [{'destination': 'nectar-meadow', 'workers': 50 * UNIT}]
     assert active['exploration']['depleted']['nectar-meadow'] > 0
     assert active['exploration']['explorationParties'] == []
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     # Manual collection remains available alongside a trail, using the same deposit.
     page.get_by_role('button', name='Collect Nectar', exact=True).click()
     trail.get_by_role('button', name='Recall trail', exact=True).click()
@@ -194,14 +199,14 @@ def check_trails(page, width, base):
     assert len(saved['exploration']['explorationParties']) == 1
     assert saved['basicResources']['protein']['amount'] > 0
     load_game(page, saved)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     wood = page.locator('.collection-trail[data-route="woodland-edge"]')
     expect(wood.locator('.trail-staffing')).to_have_text('5/50 workers')
     full = copy.deepcopy(saved)
     full['basicResources']['protein']['amount'] = full['basicResources']['protein']['maxAmount']
     load_game(page, full)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(wood.locator('.trail-status')).to_have_text('Storage full')
     page.clock.run_for(1000)
@@ -210,7 +215,7 @@ def check_trails(page, width, base):
     one_scout = copy.deepcopy(game)
     one_scout['ants']['scouts'] = UNIT
     load_game(page, one_scout)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="nectar-meadow"]').click()
     add.click()
     add.click()
@@ -222,13 +227,13 @@ def check_trails(page, width, base):
     no_scouts = copy.deepcopy(saved)
     no_scouts['ants']['scouts'] = 0
     load_game(page, no_scouts)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     page.clock.run_for(1000)
     expect(wood.locator('.trail-staffing')).to_have_text('0/50 workers')
     released = save_game(page)
     assert released['exploration']['collectionTrails'] == []
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     assert_fits(page, width)
     artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
@@ -254,7 +259,7 @@ def check_aphids(page, width, base):
         if upgrade['name'] in ['AphidTending', 'DefaultWorkers']:
             upgrade.update(show=True, unlocked=True)
     load_game(page, game)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     panel = page.locator('.aphid-relocation')
     expect(panel.locator('.aphid-housing')).to_have_text('10/20 aphids')
@@ -270,7 +275,7 @@ def check_aphids(page, width, base):
     saved = save_game(page)
     assert saved['nestAttributes']['aphids'] == 10
     load_game(page, saved)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(panel.locator('.aphid-housing')).to_have_text('10/20 aphids · 10 returning')
     page.clock.run_for(31000)

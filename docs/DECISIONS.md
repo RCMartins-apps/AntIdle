@@ -843,3 +843,16 @@ unlocks still latch through spending/losses. This supersedes the cross-founding
 visibility retention in D11/D29 and the earlier general persistence wording.
 Old untouched daughter-colony saves can safely clear inherited flags on load;
 active-run history must not be guessed from empty stocks or erased.
+
+## D51: Mobile bottom navigation and compact resources — approved
+
+The owner approved two sequential UI changes, each in its own PR with native
+squash auto-merge after validation. Replace horizontally scrolling mobile main
+tabs with five icon-and-label bottom destinations: Nest, Tasks, Explore, Upgrades,
+and Lineage. Group existing screens into short secondary navigation; keep
+Understandings inside the staged founding transaction. Settings/statistics/saves
+and the colony log are reached through the menu. Preserve locked-content reveal,
+stateful disclosures, per-view scroll positions and the desktop layout.
+Then replace the full mobile resource panel above the controls with a compact
+summary that opens the complete panel, retaining costs beside actions, live
+rates/capacity estimates and current-colony visibility rules. No balance changes.

@@ -97,3 +97,8 @@ repair an old untouched founding save without changing lifetime totals. The
 prestige gate checks both introductory foundings at 320/390/1280px. Engine
 ResourceVisibilitySuite covers all resource/caste flags, within-run retention,
 permanent milestones and preserving active-run discovery history.
+
+Mobile navigation: `python3 tests/mobile_navigation_smoke.py` checks 320/390px
+bottom destinations, hidden unlocks, grouped screens, scroll restoration and
+resizing to desktop. `select_tab` in browser_smoke navigates via visible controls
+on both layouts; maintained production gates use it as well.

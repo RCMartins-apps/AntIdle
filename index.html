@@ -184,6 +184,38 @@
 .activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
 .activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
 .activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
+
+.mobile-bottom-nav, .mobile-menu-button, .mobile-secondary, .mobile-tab-label { display:none; }
+@media (max-width:767px) {
+ .antidle-app {overflow-anchor:none;padding-bottom:calc(76px + env(safe-area-inset-bottom)) !important}
+ .mobile-bottom-nav {display:flex;position:fixed;bottom:0;left:0;right:0;z-index:1030;background:var(--bs-body-bg);border-top:1px solid var(--bs-border-color);padding:4px 4px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px #0001}
+ .mobile-bottom-nav button {flex:1;min-width:0;min-height:60px;border:0;background:transparent;color:var(--bs-secondary-color);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.72rem}
+ .mobile-bottom-nav button[hidden] {display:none}
+ .mobile-bottom-nav button[aria-current=page] {color:var(--bs-primary);background:var(--bs-primary-bg-subtle);border-radius:.5rem;font-weight:700}
+ .mobile-bottom-nav svg {width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+ .mobile-menu-button {display:block;margin-left:auto;min-width:44px}
+ .game-main > .card-header {display:flex;gap:.35rem;align-items:center;position:sticky;top:0;z-index:10;background:var(--bs-body-bg)}
+ .antidle-app .card-tabs {flex:1;min-width:0;overflow:visible;flex-wrap:wrap;gap:0;border:0}
+ .antidle-app .card-tabs .nav-item {display:none;flex:1;min-width:0}
+ .antidle-app .card-tabs .nav-link {padding:.625rem .3rem;text-align:center;font-size:.85rem;white-space:normal}
+ .antidle-app .card-tabs .nav-item[hidden] {display:none !important}
+ .mobile-secondary, .mobile-tab-label {display:block}
+ .desktop-tab-label {display:none}
+ [data-mobile-group=nest] .card-tabs [data-mobile-group=nest],
+ [data-mobile-group=tasks] .card-tabs [data-mobile-group=tasks],
+ [data-mobile-group=explore] .card-tabs [data-mobile-group=explore],
+ [data-mobile-group=upgrades] .card-tabs [data-mobile-group=upgrades],
+ [data-mobile-group=lineage] .card-tabs [data-mobile-group=lineage],
+ [data-mobile-group=menu] .card-tabs [data-mobile-group=menu] {display:block}
+ .antidle-app[data-mobile-group]:not([data-mobile-group=menu]) .event-log {display:none}
+ [data-mobile-view=nest] .nest-repletes {display:none !important}
+ [data-mobile-view=nest] .nest-chambers, [data-mobile-view=nest] .nest-outposts,
+ [data-mobile-view=chambers] .nest-brood, [data-mobile-view=chambers] .nest-royal-nursery,
+ [data-mobile-view=chambers] #nestContent > .row > .action-cell,
+ [data-mobile-view=upgrades] .purchased-upgrades,
+ [data-mobile-view=purchased] .upgrades-grid > :not(.purchased-upgrades) {display:none !important}
+ [data-mobile-view=purchased] .purchased-upgrades {border:0 !important;margin-top:0 !important}
+}
 </style>
 </head>
 <body>
@@ -195,6 +227,7 @@
 <script type="text/javascript" src="target/scala-2.13/antidle-fastopt/main.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
+<script src="assets/ui/mobile-navigation.js" defer></script>
 <script src="pwa.js" defer></script>
 </body>
 </html>
