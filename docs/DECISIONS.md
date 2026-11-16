@@ -867,3 +867,11 @@ missing crew and an action already in progress. Reasons update live and clear
 when the action is available. Keep egg orders and chamber queues independent of
 current food/material affordability where their engine rules allow queueing.
 Use current worker-pool names and preserve gameplay eligibility, prices and risk.
+
+## D53: Remove the decorative calendar header — approved
+
+The owner requested removal of the in-game title/year/season/day header because
+the calendar currently has no gameplay meaning. Keep catch-up accessible beside
+the resource summary, including when resource details are collapsed. Retain the
+stored-time mechanism and simulation clocks; this is presentation only. Browser
+and installed-app names remain Ant Idle.

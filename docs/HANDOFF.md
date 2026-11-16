@@ -1,21 +1,25 @@
 # Handoff
 
-## 2026-11-16 — blocked-action feedback
+## 2026-11-16 — remove the calendar header
 
-- Branch `polish/blocked-action-feedback` starts at main e67bfd8, merged #85.
-  Both mobile navigation/resource passes are merged. Owner authorized this
-  focused polish pass, its PR and native auto-merge; see D52.
-- Shared ActionBlockers renders one visible reason from existing action costs,
-  live requirements and specific busy/queue reasons. It never changes engine
-  eligibility or rejects queueable actions for missing materials. Egg orders
-  explain colony housing; construction explains its queue; scouting explains
-  busy parties; manual hauls distinguish exhausted sites and resource storage.
-- Task assignment shows current worker-pool/capacity/automatic-assignment reasons;
-  trails explain crew limits or missing guides/workers. Action card reasons are
-  linked as accessible button descriptions and do not recreate the action/details.
-- Capacity feedback applies only to an actual shortage, preserving spendable
-  water retained above reduced capacity. Royal brood place requirements now
-  appear alongside other action requirements. Costs and risk remain unchanged.
-- Targeted engine and production browser checks cover queue semantics, housing,
-  busy scouts, capacity vs stock, guide/worker pools and task places. Final results
-  recorded in the PR. Preserve unrelated work/ and Python caches.
+- `polish/remove-calendar-header` starts at main e67bfd8 (merged #85) and now
+  includes merged #86 (80525f0). Code merged cleanly; documentation conflicts
+  resolved retaining both decisions/test instructions and this current handoff.
+  Owner authorized the header PR and native auto-merge. Required main checks
+  test and changes / classify are active, strict, with no bypass.
+- Removed MainForm's title/calendar top bar and its obsolete responsive styles.
+  Catch-up is a sibling of the resource header/body, positioned beside the heading
+  on phone/desktop, so collapsing resource details never hides or toggles it.
+  It retains its stored-time duration and On/Off control, adds an accessible
+  pressed state, and vanishes when no stored time remains. No simulation changes.
+- D53 records the calendar decision. Mobile-resource browser coverage checks
+  narrow-screen geometry, independent resource/catch-up toggles, actual accelerated
+  ticks and the empty stored-time state. Production resource/catch-up checks passed
+  320/390/1280px; navigation passed 320/390px with desktop resize; production UI
+  passed 390/1280px. Development/production builds passed with zero Closure
+  errors/warnings, four packaging tests and syntax/diff checks passed. Geometry
+  checks now measure row and icon in one frame to tolerate restored scroll.
+  Final edits were documentation/comments and formatting only.
+- Preserve unrelated work/ and Python caches. No gameplay changes in this pass.
+  The main integration changes only previously validated code from #86; the PR
+  retains all required CI checks.

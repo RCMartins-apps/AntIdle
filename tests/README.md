@@ -113,3 +113,7 @@ through `expand_resources`; the compact-resource test verifies the default view.
 320/390/1280px to verify visible housing, scout/busy, queue, storage-capacity and
 resource-shortage feedback. It also checks foodless egg orders and unfunded
 chamber queueing remain enabled and action reasons are accessible descriptions.
+
+The mobile-resource regression also checks the relocated catch-up control at
+320/390/1280px: no decorative top header, no overlap, independence from resource
+collapse, accelerated simulated ticks, and disappearance when stored time is empty.
