@@ -90,10 +90,6 @@
             .antidle-app .fs-4,
             .antidle-app .fs-5 { font-size: 1rem !important; }
             .antidle-app .btn { min-height: 44px; touch-action: manipulation; }
-            .antidle-app .game-topbar > .m-2 > .d-flex { height: auto !important; min-height: 44px; gap: .5rem; flex-wrap: wrap; }
-            .antidle-app .game-topbar > .m-2 > .d-flex > .d-flex { gap: .5rem; flex-wrap: wrap; }
-            .antidle-app .game-topbar .topbar-spacer,
-            .antidle-app .game-topbar > .m-2 > .d-flex > div:last-child { display: none; }
             .antidle-app .nav-tabs { flex-wrap: nowrap; overflow-x: auto; gap: .25rem; }
             .antidle-app .nav-tabs .nav-link { min-height: 44px; padding: .625rem .75rem; white-space: nowrap; }
             .antidle-app .nav-tabs .nav-item { flex-shrink: 0; }
@@ -231,6 +227,17 @@
  .compact-resource-warning:empty {display:none}
  .resources-column .game-panel:not(.resources-expanded) > .card-body {display:none}
  .mobile-resource-toggle:focus-visible {outline:2px solid var(--bs-primary);outline-offset:4px;border-radius:3px}
+}
+
+/* Catch-up shares the resource heading without nesting controls in its disclosure. */
+.catchup-host {position:absolute;top:.35rem;right:.75rem;z-index:1;pointer-events:none}
+.catchup-controls {display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;white-space:nowrap}
+.catchup-time {font-variant-numeric:tabular-nums}
+.catchup-controls button {min-width:44px;min-height:44px;pointer-events:auto}
+.resources-column .game-panel:has(.catchup-controls) > .card-header {min-height:56px;padding-right:12rem}
+@media (max-width:767px) {
+ .resources-column .game-panel:has(.catchup-controls) > .card-header {padding-right:.75rem}
+ .resources-column .game-panel:has(.catchup-controls) .resource-summary-heading {min-height:44px;padding-right:11rem;margin-bottom:.3rem}
 }
 
 .nest-brood {position:relative}

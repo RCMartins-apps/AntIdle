@@ -2,9 +2,10 @@
 
 ## 2026-11-16 — stable brood panel
 
-- `polish/stable-brood-panel` starts at main 80525f0 (merged #86). Calendar/header
-  cleanup is separately in PR #87 with auto-merge enabled. Owner requested this
-  brood implementation/follow-up; ordinary branch push is authorized.
+- `polish/stable-brood-panel` starts at main 80525f0 (merged #86) and includes
+  merged #87 (88bb1f5), preserving the header/catch-up cleanup. Shared append-only
+  docs/styles were combined in order; MainForm merged cleanly. Owner requested
+  this brood implementation/follow-up; ordinary branch push is authorized.
 - One Brood heading now serves the collapsible section; its independent [i]
   holds help, including accurately scoped worker/scout larval care. The duplicate
   title and always-visible worker-only feeding line are removed.
