@@ -20,5 +20,7 @@
   untouched save while retaining lifetime totals. Production prestige gate passed
   320/390/1280 with fresh resource rows at both introductory foundings. Python
   syntax and git diff --check passed. Final formatting/docs only changed afterward.
-- This request authorizes implementation/push; no new PR requested yet. Preserve
-  unrelated work/ and Python caches. No changes to ongoing active saves' flags.
+- Owner authorized PR creation and native auto-merge. Main ruleset enforces
+  test and changes / classify with strict freshness and no bypass; queue after
+  this documentation update is pushed. Preserve unrelated work/ and Python
+  caches. No changes to ongoing active saves' flags.
