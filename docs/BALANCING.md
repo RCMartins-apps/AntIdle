@@ -38,7 +38,8 @@ later falls below its threshold. For example, losing a small worker doesn't hide
 Standard Worker Development again. Purchased research remains visible in state.
 One existing exception is retained: unpurchased Knowledge-priced upgrades are
 hidden until exploration is available, including stale saved `show` flags.
-Known resource visibility is separate and survives founding as before.
+Resource visibility is current-colony history: it latches through spending/losses
+and resets on founding. Lifetime statistics and milestone bonuses persist.
 
 There are two exploration flags in the upgrade requirements, retained for save and
 transition compatibility: `explorationTab` requires the unlocked tab flag;

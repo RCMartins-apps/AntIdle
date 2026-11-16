@@ -26,7 +26,7 @@ class PrestigeSuite extends FunSuite {
     assertEquals(next.statistics.sugarU, StatisticsData.StatLong(0L, 80L))
     assertEquals(next.statistics.maxAliveWorkers, StatisticsData.StatInt(0, 50))
     assertEquals(next.world.targetTick - next.currentTick, data.world.targetTick - data.currentTick)
-    assert(next.exploration.proteinDiscovered)
+    assert(!next.exploration.proteinDiscovered)
     assertEquals(Prestige.found(next), next)
     assertEquals(Prestige.found(AllData.initial), AllData.initial)
   }
@@ -55,11 +55,12 @@ class PrestigeSuite extends FunSuite {
     assertEquals(AphidHusbandry.productionPerTick(aphids, nest, upgrades, u), 1760L)
     assertEquals(AphidHusbandry.proteinPerTick(aphids, nest, upgrades, u), 20L)
   }
-  test("remembered protein does not reveal Nursery before standard workers in a new founding") {
+  test("founding hides protein and Nursery until current-colony standard-worker development") {
     val next = Prestige.found(colony)
-    assert(next.exploration.proteinDiscovered)
+    assert(!next.exploration.proteinDiscovered)
     assert(!BroodProgression.nurseryAvailable(next.ants, next.nestAttributes, next.exploration))
     val developed = BroodProgression.reconcile(next.copy(upgrades = next.upgrades.unlock(UpgradesData.UpgradeType.StandardWorkers)))
+    assert(developed.exploration.proteinDiscovered)
     assert(BroodProgression.nurseryAvailable(developed.ants, developed.nestAttributes, developed.exploration))
     val legacy = next.nestAttributes.copy(chambers = next.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1)))
     assert(BroodProgression.nurseryAvailable(next.ants, legacy, next.exploration))

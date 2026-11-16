@@ -831,3 +831,15 @@ persistent UI choices; a quieter event log; consistent visual spacing, controls,
 numbers and progress. Continue autonomously unless a significant design choice
 needs input. Preserve gameplay balance, clear costs/risks, hidden future unlocks
 and stable mobile disclosures. These are presentation improvements, not new systems.
+
+## D50: Rediscover resources and castes in each daughter colony — approved
+
+On November 16 the owner explicitly changed cross-prestige visibility: resource
+and population rows should start hidden as in a fresh game. Some resources are
+optional in a run; re-revealing them supports incremental progression. Founding
+resets resource flags and protein discovery, while preserving lifetime statistics,
+peaks, permanent milestone multipliers, DNA and Understandings. Current-colony
+unlocks still latch through spending/losses. This supersedes the cross-founding
+visibility retention in D11/D29 and the earlier general persistence wording.
+Old untouched daughter-colony saves can safely clear inherited flags on load;
+active-run history must not be guessed from empty stocks or erased.

@@ -1344,7 +1344,7 @@ object MainForm {
           "Explored hexes" -> s"${data.exploration.revealedSites} → 0",
           "Active missions" -> s"${data.exploration.explorationParties.size} → 0",
           "Build queue" -> s"${data.nestAttributes.buildQueue.size} → 0",
-          "Egg orders" -> s"${a.queuedEggs} → 0") ++
+          "Egg orders" -> s"${a.queuedEggs} → 0", "Resource visibility" -> "Fresh start") ++
           Seq(ChamberType.Nest, ChamberType.Queen, ChamberType.FoodStorage, ChamberType.Nursery, ChamberType.Aphid, ChamberType.Replete, ChamberType.RoyalNursery).map(kind =>
             kind.name -> s"${Construction.level(data.nestAttributes.chambers, kind)} → ${Construction.level(fresh.nestAttributes.chambers, kind)}")
         values.map { case (label, number) => div(className := "d-flex flex-wrap justify-content-between gap-2 small py-1", span(label), span(number)) } :+
@@ -1392,7 +1392,7 @@ object MainForm {
       child <-- step.signal.distinct.map {
         case 0 => div(className := "founding-step", dataAttr("step") := "rewards",
           h5(className := "mt-3", "1. Founding rewards"), rewardRows,
-          div(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
+          div(className := "small", "Keep: DNA, Understandings, lifetime statistics, milestones, settings and stored time."),
           div(className := "small", "Reset: resources, population, brood, chambers, colony research, exploration, discoveries, trails, queues and assignments."),
           resetRows,
           buttonFor("Choose Understandings")(advance(1)),

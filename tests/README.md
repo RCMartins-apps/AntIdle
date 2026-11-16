@@ -90,3 +90,10 @@ UI polish checks: after `sbt fastOptJS`, run
 `python3 tests/polish_status_smoke.py` for shared activity states and real blockers
 at phone/desktop widths. ActivityStatusSuite covers state classes and missing
 construction materials. These checks use the development bundle.
+
+Founding visibility regression: CI browser checks compare every visible resource
+row with the fresh-game panel immediately after founding and after reload, and
+repair an old untouched founding save without changing lifetime totals. The
+prestige gate checks both introductory foundings at 320/390/1280px. Engine
+ResourceVisibilitySuite covers all resource/caste flags, within-run retention,
+permanent milestones and preserving active-run discovery history.

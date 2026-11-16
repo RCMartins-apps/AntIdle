@@ -43,4 +43,47 @@ class ResourceVisibilitySuite extends FunSuite {
     val spent = TickUpdater.updateAllData(loaded.copy(basicResources = initial.basicResources), None)
     assert(spent.exploration.proteinDiscovered)
   }
+  test("founding resets every resource and population row while preserving lifetime milestones") {
+    val d = AllData.initial
+    val rich = ResourceVisibility.reconcile(d.copy(
+      basicResources = d.basicResources.copy(sugar = BasicResource(u, 1000 * u),
+        tunnelingSpace = BasicResource(u, 1000 * u), knowledge = BasicResource(u, Long.MaxValue),
+        protein = BasicResource(u, 100 * u), water = BasicResource(u, 100 * u), resin = BasicResource(u, 200 * u)),
+      ants = AntsData(workers = u, smallWorkers = u, scouts = u, repletes = u, daughterQueens = u,
+        eggsAndLarvae = Seq(AntBrood.Egg(0L))),
+      statistics = StatisticsData(sugarU = StatisticsData.StatLong(1000 * u, 1000 * u))))
+    assert(rich.unlocks.resources.productIterator.forall(_ == true))
+    val next = Prestige.found(rich)
+    assertEquals(next.unlocks, Unlocks.initial)
+    assertEquals(next.exploration, ExplorationData.initial)
+    assertEquals(ColonyMilestones.bonus(next.statistics), ColonyMilestones.bonus(rich.statistics))
+    val loaded = AllDataForSave.fromAllData(next).toAllData
+    assertEquals(loaded.unlocks.resources, Unlocks.initial.resources)
+    assert(!loaded.exploration.proteinDiscovered)
+    val ticked = TickUpdater.updateAllData(loaded, None)
+    assertEquals(ticked.unlocks.resources, Unlocks.initial.resources)
+    assert(!ticked.exploration.proteinDiscovered)
+    val protein = loaded.giveResources(protein = u)
+    val known = ResourceVisibility.reconcile(protein)
+    assert(known.exploration.proteinDiscovered)
+    assert(!known.unlocks.resources.showWater)
+    assert(!known.unlocks.resources.showResin)
+    val empty = known.copy(basicResources = BasicResources.initial)
+    assert(AllDataForSave.fromAllData(empty).toAllData.exploration.proteinDiscovered)
+  }
+  test("old untouched founding saves lose inherited flags, active colony history stays intact") {
+    val fresh = Prestige.found(AllData.initial.copy(ants = AntsData.initial.copy(daughterQueens = u)))
+    val stale = fresh.copy(unlocks = fresh.unlocks.copy(resources = Unlocks.ResourceUnlocks(
+      showKnowledge = true, showWater = true, showResin = true, showWorkers = true)),
+      exploration = fresh.exploration.copy(proteinDiscovered = true))
+    val repaired = AllDataForSave.fromAllData(stale).toAllData
+    assertEquals(repaired.unlocks.resources, Unlocks.initial.resources)
+    assert(!repaired.exploration.proteinDiscovered)
+    val active = stale.copy(statistics = stale.statistics.copy(sugarU = StatisticsData.StatLong(u, u)))
+    val loaded = AllDataForSave.fromAllData(active).toAllData
+    assert(loaded.unlocks.resources.showWater)
+    assert(loaded.exploration.proteinDiscovered)
+    assertEquals(loaded.statistics.sugarU.thisRun, u)
+  }
+
 }
