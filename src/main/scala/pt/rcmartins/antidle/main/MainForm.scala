@@ -8,6 +8,7 @@ import org.querki.jquery
 import org.scalajs.dom
 import org.scalajs.dom.{svg => _, _}
 import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.game.ActionBlockers.{Requirement => ActionRequirement}
 import pt.rcmartins.antidle.game.TickCalculator.prettyResourceEstDiv
 import pt.rcmartins.antidle.game.UINumbersUtils._
 import pt.rcmartins.antidle.game.UIUtils._
@@ -974,6 +975,7 @@ object MainForm {
             actionButton(
               name = "Raise Emergency Worker",
               enabledSignal = antsSignal.combineWith(sugarSignal).map { case (ants, sugar) => EmergencyRecovery.canRaise(ants, sugar.amount) },
+              blockedReasonSignal = antsSignal.map(ants => Option.when(ants.layingCooldown > 0L)("Queen is laying")),
               descriptionSignal = Val(Some(eggDescription(EmergencyRecovery.Kind))),
               costSignal = Val(ActionCost(sugar = EmergencyRecovery.EggCost)),
               bonusSignal = Val(ActionBonus.empty),
@@ -1002,6 +1004,7 @@ object MainForm {
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = mult => Actions.layEggAction(mult),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
+              blockedReasonSignal = broodRequirementsSignal.map(_.find(_.label == "colony slots").flatMap(ActionBlockers.missing)),
             )
           },
           child.maybe <-- ifUnlockedOpt(nestSignal.map(_.chambers.nurseryChamber.level > 0)) {
@@ -1018,6 +1021,7 @@ object MainForm {
               bonusSignal = Val(ActionBonus.empty),
               onClickAction = amount => Actions.raiseScout(amount),
               requirementsSignal = broodRequirementsSignal.map(_.filterNot(_.label == "brood places")),
+              blockedReasonSignal = antsSignal.map(ants => Option.when(!ants.standardWorkersUnlocked)("Requires Standard Worker Development")),
             )
           },
         ),
@@ -1419,6 +1423,7 @@ object MainForm {
               bonusSignal = Val(ActionBonus.empty),
               requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) => List(
                 ActionRequirement("colony slots", BroodProgression.availableColonySlots(ants, nest), isCost = true),
+                ActionRequirement("royal brood places", RoyalBroodProgression.freeSlots(ants, nest) * u),
               ) },
               descriptionSignal = Val(Some(div("Reserves one colony slot. Nurses use water throughout rearing; larvae also need sugar and protein. Progress is kept when care pauses."))),
               onClickAction = _ => Actions.raiseRoyalEgg(),
@@ -1469,8 +1474,6 @@ object MainForm {
       },
     )
   }
-
-  private case class ActionRequirement(label: String, available: Long, required: Long = u, maximum: Option[Long] = None, isCost: Boolean = false)
 
   private def requirementLabel(requirement: ActionRequirement, compact: Boolean = false): ReactiveHtmlElement[HTMLSpanElement] =
     span(
@@ -1529,6 +1532,8 @@ object MainForm {
       },
     )
 
+  private var nextActionId = 0L
+
   private def actionButton(
       name: String,
       enabledSignal: Signal[Boolean],
@@ -1541,7 +1546,13 @@ object MainForm {
       requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
       blockedReasonSignal: Signal[Option[String]] = Val(None),
       displayNameSignal: Option[Signal[String]] = None,
-  )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
+  )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
+    nextActionId += 1L
+    val reasonId = s"action-blocker-$nextActionId"
+    val blocker = enabledSignal.combineWith(costSignal, resourcesSignal, antsSignal, requirementsSignal, blockedReasonSignal)
+      .map { case (enabled, cost, resources, ants, requirements, specific) =>
+        ActionBlockers.reason(enabled, cost, resources, ants, requirements, specific)
+      }.distinct
     div(
       className := "col-6 px-3 py-2 d-grid action-cell",
       button(
@@ -1550,6 +1561,7 @@ object MainForm {
         `type` := "button",
         child.text <-- displayNameSignal.getOrElse(Val(name)),
         disabled <-- enabledSignal.map(!_),
+        aria.describedBy <-- blocker.map(_.fold("")(_ => reasonId)),
         onClick --> { _ =>
           useSignalValue[Int](modifiersMultiplierSignal, mult => onClickAction(mult))
         },
@@ -1573,8 +1585,8 @@ object MainForm {
           },
       ),
       actionCosts(costSignal, requirementsSignal),
-      child.maybe <-- blockedReasonSignal.map(_.map(reason =>
-        div(className := "action-blocked-reason small text-danger text-center", reason))),
+      child.maybe <-- blocker.map(_.map(reason =>
+          div(idAttr := reasonId, className := "action-blocked-reason small text-danger text-center", reason))),
           detailsTag(
             className := "action-details", rememberDetails("action." + name),
             summaryTag(
@@ -1588,6 +1600,7 @@ object MainForm {
             actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false),
           ),
     )
+  }
 
   private def createTooltipForActionButton(
       elem: ReactiveHtmlElement[HTMLElement],
@@ -1753,6 +1766,9 @@ object MainForm {
       antsSignal.map(_.tasks.find(_._1 == antTask).map(_._2).getOrElse(0L)).distinct
     val id = s"task-${antTask.toString.toLowerCase}$idSuffix"
 
+    val assignmentBlocker = antsSignal.combineWith(nestSignal)
+      .map { case (ants, nest) => ActionBlockers.assignment(ants, nest, antTask) }.distinct
+
     def taskDescription: ReactiveHtmlElement[HTMLDivElement] =
       antTask match {
         case AntTask.SugarCollector =>
@@ -1828,17 +1844,19 @@ object MainForm {
             cursor.pointer,
             aria.label := s"Assign ${antTask.name}",
             span(aria.hidden := true, "+"),
-            disabled <-- availableWorkersCountSignal.combineWith(antsSignal, nestSignal).map { case (available, ants, nest) =>
-              available < u || ants.effectiveDefaultTask.contains(antTask) ||
-                ants.taskWorkers(antTask) >= DefaultWorkerAssignment.availableCapacity(ants, antTask, nest)
-            },
+            disabled <-- assignmentBlocker.map(_.nonEmpty),
+            title <-- assignmentBlocker.map(_.getOrElse(s"Assign ${antTask.name}")),
             onClick --> { mouseEvent =>
               Actions.incrementAntTask(antTask, taskMultiplier(mouseEvent) * u)
             }
           ),
         ),
       ),
-      div(className := "task-rate small text-body-secondary", antTask match {
+      div(className := "task-rate small text-body-secondary",
+        when(antTask.showButtons)(span(className := "task-blocked-reason d-block",
+          className("text-danger") <-- assignmentBlocker.map(_.exists(_ != "Assigned automatically")),
+          child.text <-- assignmentBlocker.map(_.getOrElse("")))),
+        antTask match {
         case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) => s"${preciseRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats))} sugar/s each" })
         case AntTask.Tunneler => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} space/s each"))
         case AntTask.Scavenger => div("+0.05 protein/s each")
@@ -1966,6 +1984,9 @@ object MainForm {
         descriptionSignal = Val(None),
         name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
         enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) => ExplorationMap.canScout(data, id, count) },
+        blockedReasonSignal = explorationSignal.map(data =>
+          Option.when(ExplorationMap.busy(data, id, if (id == "surroundings") "reveal" else "study"))(
+            if (id == "surroundings") "Scouting in progress" else "Study in progress")),
         costSignal = scoutCrew.signal.map(ExplorationMap.scoutCost),
         bonusSignal = Val(ActionBonus.empty),
         requirementsSignal = availableScoutsSignal.combineWith(scoutCrew.signal, explorationSignal, upgradesSignal).map {
@@ -2008,6 +2029,12 @@ object MainForm {
             List(ActionRequirement("scouts", available, PheromoneTrails.requiredScouts(next), isCost = true)) ++
               Option.when(current < PheromoneTrails.Capacity)(ActionRequirement("workers", ants.availableWorkersCount, PheromoneTrails.Step, isCost = true))
           }),
+          div(className := "trail-assignment-blocker small text-danger", child.text <-- snapshotSignal.map { data =>
+            if (PheromoneTrails.canAdjust(data, route.id, PheromoneTrails.Step)) ""
+            else if (PheromoneTrails.target(data.exploration, route.id) >= PheromoneTrails.Capacity) "Trail crew full"
+            else if (data.ants.availableWorkersCount < PheromoneTrails.Step) s"Needs ${data.ants.availableWorkersLabel}"
+            else "Needs scouts"
+          }.distinct),
           activityStatus(snapshotSignal.map(data =>
             PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources, data.statistics)
               .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned")), "trail-status small"),
@@ -2030,7 +2057,8 @@ object MainForm {
         costSignal = workers.map(ExplorationHelper.cost(_, route)), bonusSignal = Val(ActionBonus.empty),
         blockedReasonSignal = snapshotSignal.combineWith(workers).map { case (data, count) =>
           val cargo = ExplorationHelper.load(data, count, route)
-          Option.when(cargo.sugar + cargo.protein + cargo.water + cargo.resin == 0L)("No storage room for this haul")
+          if (ExplorationMap.remaining(data.exploration, route.id) <= 0L) Some("Site exhausted")
+          else Option.when(cargo.sugar + cargo.protein + cargo.water + cargo.resin == 0L)(s"No ${ExplorationHelper.resource(route)} storage room")
         },
         requirementsSignal = workers.combineWith(explorationSignal, upgradesSignal, availableScoutsSignal).map { case (count, data, upgrades, scouts) =>
           List(ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u)) ++

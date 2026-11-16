@@ -2,9 +2,11 @@
 
 ## 2026-11-16 — remove the calendar header
 
-- `polish/remove-calendar-header` starts at main e67bfd8 (merged #85). The prior
-  blocked-action pass is in PR #86 with auto-merge enabled; it is separate from
-  this header follow-up. Owner requested implementation; push is authorized.
+- `polish/remove-calendar-header` starts at main e67bfd8 (merged #85) and now
+  includes merged #86 (80525f0). Code merged cleanly; documentation conflicts
+  resolved retaining both decisions/test instructions and this current handoff.
+  Owner authorized the header PR and native auto-merge. Required main checks
+  test and changes / classify are active, strict, with no bypass.
 - Removed MainForm's title/calendar top bar and its obsolete responsive styles.
   Catch-up is a sibling of the resource header/body, positioned beside the heading
   on phone/desktop, so collapsing resource details never hides or toggles it.
@@ -18,5 +20,6 @@
   errors/warnings, four packaging tests and syntax/diff checks passed. Geometry
   checks now measure row and icon in one frame to tolerate restored scroll.
   Final edits were documentation/comments and formatting only.
-- Preserve unrelated work/ and Python caches. Read the current main before a
-  subsequent PR to integrate #86 if it has merged, particularly its handoff.
+- Preserve unrelated work/ and Python caches. No gameplay changes in this pass.
+  The main integration changes only previously validated code from #86; the PR
+  retains all required CI checks.
