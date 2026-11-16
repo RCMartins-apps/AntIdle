@@ -5,7 +5,7 @@
 - `polish/stable-brood-panel` starts at main 80525f0 (merged #86) and includes
   merged #87 (88bb1f5), preserving the header/catch-up cleanup. Shared append-only
   docs/styles were combined in order; MainForm merged cleanly. Owner requested
-  this brood implementation/follow-up; ordinary branch push is authorized.
+  this brood implementation/follow-up and now its PR with native auto-merge.
 - One Brood heading now serves the collapsible section; its independent [i]
   holds help, including accurately scoped worker/scout larval care. The duplicate
   title and always-visible worker-only feeding line are removed.
@@ -19,4 +19,6 @@
   food-pause/cancel transitions, one heading, correct feeding help and independent
   disclosures and hidden founding-phase scout counters. Existing production UI
   checks passed 390/1280px. Syntax and git diff --check passed. Regression added
-  to CI with a three-minute timeout. Preserve unrelated work/ and Python caches.
+  to CI with a three-minute timeout. After integrating #87, the combined development
+  build and focused browser checks passed at 320/390/1280px too. Required main
+  checks are enforced before auto-merge. Preserve unrelated work/ and Python caches.
