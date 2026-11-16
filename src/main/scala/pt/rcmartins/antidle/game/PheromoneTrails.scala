@@ -6,6 +6,8 @@ import pt.rcmartins.antidle.game.Constants._
 /** Safe, continuous collection: shared finite deposits, no mission slots or extra rewards. */
 object PheromoneTrails {
   val EfficiencyPercent: Long = 60L
+  val LogisticsEfficiencyPercent: Long = 75L
+  def efficiency(upgrades: UpgradesData): Long = if (upgrades(UpgradesData.UpgradeType.TrailLogistics).unlocked) LogisticsEfficiencyPercent else EfficiencyPercent
   val Capacity: Long = ExplorationProgression.MaxWorkers
   val Step: Long = ExplorationProgression.WorkerStep
   private val GuideCapacity: Long = 10L * u
@@ -93,16 +95,16 @@ object PheromoneTrails {
     val denominator = route.duration * 100L
     val gain = ExplorationProgression.partyReward(
       List(route.sugarReward, route.proteinReward, route.waterReward, route.resinReward).max,
-      workers, ExplorationProgression.suppliesRank(upgrades)) * EfficiencyPercent / denominator
-    val cost = (ExplorationHelper.cost(workers, route).sugar * EfficiencyPercent + denominator - 1L) / denominator
+      workers, ExplorationProgression.suppliesRank(upgrades)) * efficiency(upgrades) / denominator
+    val cost = (ExplorationHelper.cost(workers, route).sugar * efficiency(upgrades) + denominator - 1L) / denominator
     (gain, cost)
   }
-  def applyHarvest(resources: BasicResources, harvest: Harvest): BasicResources = {
+  def applyHarvest(resources: BasicResources, harvest: Harvest, stats: StatisticsData = StatisticsData.initial): BasicResources = {
     val spent = resources.spendResources(ActionCost(sugar = harvest.sugarCost))
-    spent.copy(sugar = spent.sugar + harvest.cargo.sugar, protein = spent.protein + harvest.cargo.protein,
+    spent.copy(sugar = spent.sugar + ColonyMilestones.sugar(harvest.cargo.sugar, stats), protein = spent.protein + harvest.cargo.protein,
       water = spent.water + harvest.cargo.water, resin = spent.resin + harvest.cargo.resin)
   }
-  def forecast(ants: AntsData, exploration: ExplorationData, upgrades: UpgradesData, initialResources: BasicResources): List[Harvest] = {
+  def forecast(ants: AntsData, exploration: ExplorationData, upgrades: UpgradesData, initialResources: BasicResources, stats: StatisticsData = StatisticsData.initial): List[Harvest] = {
     if (!ants.lineage.sharedPaths) return Nil
     var availableWorkers = workers(ants)
     var availableScouts = Math.max(0L, ants.scouts - exploration.explorationParties.map(_.scouts).sum)
@@ -123,26 +125,28 @@ object PheromoneTrails {
         }
         val reserved = exploration.explorationParties.map(p => ExplorationHelper.amount(p.cargo, key)).sum
         val room = Math.max(0L, resource.freeSpace - reserved)
-        val amount = Math.min(maximum, Math.min(room, ExplorationMap.remaining(exploration, destination.id)))
+        val rawRoom = if (key == "sugar") ColonyMilestones.baseSugar(room, stats) else room
+        val amount = Math.min(maximum, Math.min(rawRoom, ExplorationMap.remaining(exploration, destination.id)))
         val cost = if (maximum == 0L || amount == 0L) 0L else (supply * amount + maximum - 1L) / maximum
         val reason = if (!guided) "Needs scouts" else if (active == 0L) "Needs workers"
           else if (room == 0L) "Storage full" else if (resources.sugar.amount < cost) "Needs sugar" else "Collecting"
         val harvest = if (reason != "Collecting") Harvest(destination.id, active, 0L, ActionCost.empty, reason)
           else Harvest(destination.id, active, cost, ExplorationHelper.resourceCost(key, amount), reason)
-        resources = applyHarvest(resources, harvest)
+        resources = applyHarvest(resources, harvest, stats)
         harvest
       }
     }
   }
-  def forecastResources(ants: AntsData, exploration: ExplorationData, upgrades: UpgradesData, resources: BasicResources): BasicResources =
-    forecast(ants, exploration, upgrades, resources).foldLeft(resources)(applyHarvest)
+  def forecastResources(ants: AntsData, exploration: ExplorationData, upgrades: UpgradesData, resources: BasicResources, stats: StatisticsData = StatisticsData.initial): BasicResources =
+    forecast(ants, exploration, upgrades, resources, stats).foldLeft(resources)((r, h) => applyHarvest(r, h, stats))
   def tick(initial: AllData): AllData = {
     val ready = reconcile(initial)
-    val next = forecast(ready.ants, ready.exploration, ready.upgrades, ready.basicResources).foldLeft(ready) { (data, harvest) =>
+    val next = forecast(ready.ants, ready.exploration, ready.upgrades, ready.basicResources, ready.statistics).foldLeft(ready) { (data, harvest) =>
       val route = ExplorationDestination.all.find(_.id == harvest.destination).get
       val amount = ExplorationHelper.amount(harvest.cargo, ExplorationHelper.resource(route))
       if (amount <= 0L) data else data.spendResources(ActionCost(sugar = harvest.sugarCost))
-        .giveResources(sugar = harvest.cargo.sugar, protein = harvest.cargo.protein, water = harvest.cargo.water, resin = harvest.cargo.resin)
+        .giveResources(sugar = ColonyMilestones.sugar(harvest.cargo.sugar, ready.statistics), sugarBonusApplied = true,
+          protein = harvest.cargo.protein, water = harvest.cargo.water, resin = harvest.cargo.resin)
         .copy(exploration = data.exploration.copy(depleted = data.exploration.depleted.updated(route.id,
           data.exploration.depleted.getOrElse(route.id, 0L) + amount)))
     }

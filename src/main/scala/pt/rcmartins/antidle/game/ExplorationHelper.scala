@@ -62,7 +62,7 @@ object ExplorationHelper {
     val reward = if (RaidProgression.isRaid(destination)) {
       val high = load(data, workers, destination, Some(RaidProgression.rewardRange(workers)._2))
       s"${UINumbersUtils.prettyNumberStr(cargo.protein)}–${UINumbersUtils.prettyNumberStr(high.protein)}"
-    } else UINumbersUtils.prettyNumberStr(amount(cargo, resource(destination)))
+    } else UINumbersUtils.prettyNumberStr(if (resource(destination) == "sugar") Math.min(free(data, "sugar"), ColonyMilestones.sugar(cargo.sugar, data.statistics)) else amount(cargo, resource(destination)))
     s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $reward ${resource(destination)}"
   }
   def outcomePreview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String =
@@ -87,7 +87,10 @@ object ExplorationHelper {
         case "resin" => received.basicResources.resin.amount - removed.basicResources.resin.amount
       }
       // Storage may fill during travel. Leave overflow at the site, never destroy finite essentials.
-      val unused = Math.max(0L, amount(cargo, key) - retained)
+      val baseRetained = if (key == "sugar")
+        ColonyMilestones.baseSugar(retained, removed.statistics)
+        else retained
+      val unused = Math.max(0L, amount(cargo, key) - baseRetained)
       val returned = received.copy(exploration = received.exploration.copy(depleted = received.exploration.depleted.updated(destination.id,
         Math.max(0L, received.exploration.depleted.getOrElse(destination.id, 0L) - unused))))
         .addMessage(s"${destination.name}: collected ${UINumbersUtils.prettyNumberStr(retained)} $key.")

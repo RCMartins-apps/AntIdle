@@ -8,8 +8,9 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 object UpgradeResearch {
   def isVisible(data: AllData, upgrade: UpgradeType): Boolean = {
     val status = data.upgrades(upgrade)
-    status.unlocked || ((status.show || upgrade.shouldShow(data)) &&
-      (upgrade.cost.knowledge == 0L || UpgradeBalance.explorationAvailable(data)))
+    (!upgrade.definition.requirements.beyondWoodland || data.ants.lineage.beyondWoodland) &&
+      (status.unlocked || ((status.show || upgrade.shouldShow(data)) &&
+      (upgrade.cost.knowledge == 0L || UpgradeBalance.explorationAvailable(data))))
   }
 
   def canPurchase(data: AllData, upgrade: UpgradeType): Boolean =
@@ -18,4 +19,5 @@ object UpgradeResearch {
   def purchase(data: AllData, upgrade: UpgradeType): AllData =
     if (!canPurchase(data, upgrade)) data
     else UpgradeVisibility.reconcile(data.spendResources(upgrade.cost).copy(upgrades = data.upgrades.unlock(upgrade)))
+      .addMessage(s"Research completed: ${upgrade.title}.")
 }

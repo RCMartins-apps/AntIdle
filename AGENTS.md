@@ -35,6 +35,8 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/AgingJobReplacement.scala`: saved old-age job vacancies, pool refill and manual cancellation.
 - `game/EmergencyRecovery.scala`: one-worker recovery after collapse and protected queen provisions.
 - `game/AphidHusbandry.scala`, `AphidRelocation.scala`: housed aphids, ten per tender, starter group and reserved relocation missions; see docs/APHIDS.md.
+- `game/ColonyMilestones.scala`: permanent achievement tiers, exact sugar multiplier and saved resource peaks.
+- `game/MilestoneResearch.scala`: current-colony goal previews and shared research effect values; see docs/MILESTONES.md.
 - `game/Prestige.scala`: founding resets, DNA purchases and inherited production.
 - `game/PheromoneTrails.scala`: safe finite collection automation, per-route staffing/guide reservations and supply costs; see docs/COLLECTION-TRAILS.md.
 - `game/TerritoryProgression.scala`: held crews, pending hauls, recurring contests and withdrawal.
@@ -47,6 +49,9 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/saves/`: serialization, restoration and load-time reconciliation.
 - `tools/balance/` (repository root): seeded real-engine pacing runner, policy config, portable reports and checkpoint saves; see its README.
 - `game/UnlockUtils.scala`, `GameTransition.scala`: pure unlock and post-action rules shared by browser and balance runner.
+- `game/ActivityStatus.scala`, `MapFeedback.scala`: compact presentation states and map mission progress.
+- `game/EventLog.scala`: bounded compatible string history and routine report grouping.
+- `main/UiPreferences.scala`: browser-only disclosure/map choices, separate from game saves.
 - `main/MainForm.scala`: game UI; responsive styling is in root `index.html`.
 
 Resources use fixed-point integers: `Constants.u = 10000`. Simulation runs at

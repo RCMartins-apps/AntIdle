@@ -114,7 +114,7 @@ class DiscoverySuite extends FunSuite {
     val empty = ExplorationData()
     assert(!hasUnfound(empty, Surroundings))
     assert(!hasUnfound(empty, CollectResin))
-    DiscoveryProgression.all.foreach { discovery =>
+    DiscoveryProgression.all.filter(d => ExplorationDestination.all.exists(_.id == d.destination)).foreach { discovery =>
       val destination = ExplorationDestination.all.find(_.id == discovery.destination).get
       assert(hasUnfound(empty, destination))
       assert(hasUnfound(empty.copy(surveys = Map(discovery.destination -> (discovery.trips - 1))), destination))

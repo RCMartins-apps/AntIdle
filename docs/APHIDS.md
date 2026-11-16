@@ -77,3 +77,8 @@ of enjoyment. Wider policies and human playtests remain useful before retuning.
 Raw temporary reports: /tmp/antidle-aphids-before and /tmp/antidle-aphids-after;
 they are not durable repository artifacts. Reproduce with scripts/balance.py,
 --policy balanced --seed 42 --seed 137 --hours 3, rebuilding at each revision.
+
+Aphid Shelters is outer-map colony research that changes housing from 10 to 20
+places per chamber level. It creates no aphids; relocate extra groups as usual.
+The one-tender-per-ten relationship and each tender's rates remain unchanged.
+Housing per level is reconciled from current research, including after save/load.

@@ -48,8 +48,10 @@ object Actions {
 
   def purchaseSharedPaths(): Unit = actionUpdater.writer.onNext(Prestige.purchase)
 
-  def foundDaughterColony(): Unit = actionUpdater.writer.onNext { data =>
-    val next = Prestige.found(data)
+  def purchaseUnderstanding(id: String): Unit = actionUpdater.writer.onNext(Prestige.purchase(_, id))
+
+  def foundDaughterColony(selected: Seq[String] = Nil): Unit = actionUpdater.writer.onNext { data =>
+    val next = Prestige.found(data, selected)
     if (next != data) {
       Utils.pause = true
       scala.scalajs.js.timers.setTimeout(0) {

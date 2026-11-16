@@ -21,9 +21,11 @@
         "UnlockFoodStorageChamber",
         "UnlockExplorerTask",
         "DefaultWorkers",
+        "ScoutWayfinding",
         "ImproveSugarCollectorTask2",
         "EstablishedTrails",
         "QueensRoutine",
+        "QueensRhythm",
         "AdditionalExpeditionSlot",
         "AphidTending",
         "RepleteStorage",
@@ -32,6 +34,7 @@
         "ImproveSugarCollectorTask3",
         "RoyalNurseryPlanning",
         "BroodCare",
+        "NurseTraining",
         "ColonyNutrition"
       ]
     },
@@ -52,9 +55,11 @@
         "UnlockFoodStorageChamber",
         "UnlockExplorerTask",
         "DefaultWorkers",
+        "ScoutWayfinding",
         "ImproveSugarCollectorTask2",
         "EstablishedTrails",
         "QueensRoutine",
+        "QueensRhythm",
         "AdditionalExpeditionSlot",
         "AphidTending",
         "RepleteStorage",
@@ -63,6 +68,7 @@
         "ImproveSugarCollectorTask3",
         "RoyalNurseryPlanning",
         "BroodCare",
+        "NurseTraining",
         "ColonyNutrition"
       ]
     },
@@ -83,9 +89,11 @@
         "UnlockFoodStorageChamber",
         "UnlockExplorerTask",
         "DefaultWorkers",
+        "ScoutWayfinding",
         "ImproveSugarCollectorTask2",
         "EstablishedTrails",
         "QueensRoutine",
+        "QueensRhythm",
         "AdditionalExpeditionSlot",
         "AphidTending",
         "RepleteStorage",
@@ -94,6 +102,7 @@
         "ImproveSugarCollectorTask3",
         "RoyalNurseryPlanning",
         "BroodCare",
+        "NurseTraining",
         "ColonyNutrition"
       ]
     }

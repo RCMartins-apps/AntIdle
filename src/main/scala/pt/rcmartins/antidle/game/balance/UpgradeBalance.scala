@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.DiscoveryProgression
+import pt.rcmartins.antidle.game.{DiscoveryProgression, AphidHusbandry, PheromoneTrails, MilestoneResearch}
 import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
@@ -21,9 +21,14 @@ case class UpgradeRequirements(
     proteinDiscovered: Boolean = false,
     minimumSmallWorkers: Int = 0,
     earlyResearch: Boolean = false,
+    beyondWoodland: Boolean = false,
+    completedMissions: Int = 0,
+    matureWorkers: Int = 0,
 ) {
   def met(data: AllData): Boolean =
-    upgrades.forall(data.upgrades(_).unlocked) &&
+    data.statistics.explorationsCompleted.thisRun >= completedMissions &&
+      MilestoneResearch.standardWorkers(data.statistics) >= matureWorkers &&
+    (!beyondWoodland || data.ants.lineage.beyondWoodland) && upgrades.forall(data.upgrades(_).unlocked) &&
       data.exploration.revealedSites >= minimumRevealedSites &&
       (!explorationTab || data.unlocks.tabs.exploreTabUnlocked) &&
       (!explorationAvailable || UpgradeBalance.explorationAvailable(data)) &&
@@ -49,6 +54,25 @@ object UpgradeBalance {
   def apply(upgrade: UpgradeType): UpgradeDefinition = definitions(upgrade)
 
   lazy val definitions: Map[UpgradeType, UpgradeDefinition] = Map(
+    ScoutWayfinding -> UpgradeDefinition("Scout Wayfinding", ActionCost(sugar = 500L * u, knowledge = 50L * u),
+      UpgradeRequirements(upgrades = List(UnlockExplorerTask), explorationTab = true, completedMissions = 20),
+      s"−${100 - MilestoneResearch.ScoutDurationPercent}% scout reveal/study time. Applies to new departures."),
+    NurseTraining -> UpgradeDefinition("Nurse Training", ActionCost(sugar = 1000L * u, protein = 30L * u, knowledge = 100L * u),
+      UpgradeRequirements(upgrades = List(BroodCare), explorationTab = true, matureWorkers = 25),
+      s"+${MilestoneResearch.NurseCarePercent - 100}% Brood Nurse care."),
+    QueensRhythm -> UpgradeDefinition("Queen's Rhythm", ActionCost(sugar = 2000L * u, protein = 50L * u, knowledge = 150L * u),
+      UpgradeRequirements(upgrades = List(QueensRoutine), explorationTab = true, matureWorkers = 50),
+      s"−${100 - MilestoneResearch.LayingIntervalPercent}% egg-laying interval for workers and scouts. Applies after the next egg."),
+
+    AphidShelters -> UpgradeDefinition("Aphid Shelters", ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
+      UpgradeRequirements(upgrades = List(AphidTending), discovery = Some("aphid-shelters"), beyondWoodland = true),
+      s"Aphid Chamber: ${AphidHusbandry.BasePlacesPerLevel} → ${AphidHusbandry.ShelteredPlacesPerLevel} aphid places per level."),
+    TrailLogistics -> UpgradeDefinition("Trail Logistics", ActionCost(sugar = 3000L * u, knowledge = 300L * u),
+      UpgradeRequirements(discovery = Some("trail-logistics"), beyondWoodland = true),
+      s"Collection trails: ${PheromoneTrails.EfficiencyPercent}% → ${PheromoneTrails.LogisticsEfficiencyPercent}% of manual haul rate; +${PheromoneTrails.LogisticsEfficiencyPercent * 100L / PheromoneTrails.EfficiencyPercent - 100L}% supply use."),
+    CoordinatedExpeditions -> UpgradeDefinition("Coordinated Expeditions", ActionCost(sugar = 4000L * u, knowledge = 400L * u),
+      UpgradeRequirements(discovery = Some("coordinated-expeditions"), beyondWoodland = true), "+1 expedition slot."),
+
     StandardWorkers -> UpgradeDefinition(
       title = "Standard Worker Development",
       cost = ActionCost(sugar = 75 * u, tunnelingSpace = 10 * u),

@@ -26,7 +26,7 @@ object ChamberBonuses {
       case ChamberType.Replete =>
         ActionBonus(repleteSlots = 1)
       case ChamberType.Aphid =>
-        ActionBonus(aphidSlots = AphidHusbandry.AphidsPerTender.toInt)
+        ActionBonus(aphidSlots = (if (upgrades(pt.rcmartins.antidle.model.UpgradesData.UpgradeType.AphidShelters).unlocked) AphidHusbandry.ShelteredPlacesPerLevel else AphidHusbandry.BasePlacesPerLevel))
       case ChamberType.Nursery =>
         ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
       case ChamberType.RoyalNursery =>
@@ -41,7 +41,7 @@ object ChamberBonuses {
       case ChamberType.Queen =>
         val next = nest.copy(chambers = nest.chambers.copy(
           queenChamber = nest.chambers.queenChamber.copy(level = nest.chambers.queenChamber.level + 1)))
-        bonus.copy(layingIntervalReduction = BroodProgression.interval(ants, nest) - BroodProgression.interval(ants, next))
+        bonus.copy(layingIntervalReduction = BroodProgression.interval(ants, nest, upgrades) - BroodProgression.interval(ants, next, upgrades))
       case _ => bonus
     }
   }

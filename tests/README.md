@@ -55,3 +55,38 @@ saving an in-flight group and receiving it without regenerating insects or Knowl
 Build-version checks compare the compiled commit link with the checkout and confirm
 Settings/footer agreement and reload stability. The offline gate also checks that
 the label remains available offline and unchanged while a new release waits.
+
+`prestige_smoke.py` is now a maintained gate (its historical XP/trail scenario was
+replaced). It checks the staged founding transaction and second-ring research at
+320/390/1280px. Run after fastOptJS, or with ANTIDLE_PRODUCTION=1 after fullOptJS.
+The PR workflow runs it in a separate five-minute step.
+
+
+The production CI gate also checks milestone research through actual expedition
+returns and worker maturation, purchases all three upgrades, and checks the scout
+duration preview at 390/1280px. Engine coverage is in MilestoneResearchSuite.
+
+Permanent milestone checks also earn a resource tier through live production,
+verify its ×1.01 multiplier, preserve an open goal across ticks, and reload lower
+holdings/current-run totals without losing lifetime progress or saved peaks.
+ColonyMilestonesSuite covers exact compounding, fixed costs, overflow, forecasts,
+finite-haul refunds, automation, prestige and legacy peak-field defaults.
+
+After fastOptJS, `python3 tests/polish_visual_smoke.py` checks compact resource
+values, digit alignment, control sizing, settings and queue empty state at
+390/1280px. NumberPresentationSuite covers boundaries, signs and tiny values.
+
+After fastOptJS, `python3 tests/polish_log_smoke.py` checks significant-event
+visibility, routine grouping and stable disclosure at 390/1280px. EventLogSuite
+covers bounded retention, routine floods and old string-save compatibility.
+
+After fastOptJS, `python3 tests/polish_memory_smoke.py` checks disclosure/map
+restoration, new-colony fallback and invalid preference keys at 390/1280px.
+
+After fastOptJS, `python3 tests/polish_map_smoke.py` checks active map study
+progress, hidden site labels and mission completion at 390/1280px.
+
+UI polish checks: after `sbt fastOptJS`, run
+`python3 tests/polish_status_smoke.py` for shared activity states and real blockers
+at phone/desktop widths. ActivityStatusSuite covers state classes and missing
+construction materials. These checks use the development bundle.

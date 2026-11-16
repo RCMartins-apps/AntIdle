@@ -14,6 +14,7 @@ case class NestAttributes(
     maxBuildQueue: Int = 1,
     dryClearingOutpost: Boolean = false,
     dryClearingExtensions: Int = 0,
+    aphidPlacesPerLevel: Int = 10, // Derived from current-colony research on reconciliation.
     aphids: Long = 0L, // Whole animals, not fixed-point worker units.
     aphidsInitialized: Boolean = false, // Missing in legacy saves; populate existing chambers once.
 ) {

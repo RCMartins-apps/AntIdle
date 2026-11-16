@@ -782,3 +782,52 @@ List jobs with assignment controls before implicit roles such as Carcass Carrier
 Trail Forager, Territory Forager and Collection Crew, retaining existing uiOrder
 within each group. Apply the sort to display only; do not reorder the saved task
 list or change aging, assignment, default-worker or production behavior.
+
+## D46: Second prestige opens the outer map; founding is a staged transaction — approved
+
+The owner approved Beyond the Woodland: three handcrafted second-ring hexes and
+new colony research, following Shared Paths. Cost 1 DNA, available at the second
+founding with Shared Paths. Initial site effects: double aphid housing per level,
+75% trail collection efficiency with proportionate supplies, and one extra mission
+slot. No duplicate protein source, new currency or challenge colony in this step.
+Research resets each colony; the Understanding permanently grants access.
+
+The owner requires a clear prestige flow: rewards and reset preview, Understanding
+selection, then explicit confirmation. Show actual DNA gained/spent/remaining,
+production bonuses and numeric upgrade effects. Preview/back navigation must not
+spend DNA. Validate and apply learning and reset together on confirmation; allow
+banking DNA. Retain old saves and existing banked-DNA purchases. PRESTIGE.md records
+exact rules, prices and the distinction between inherited and colony upgrades.
+
+## D47: Current-colony milestones open optional paid research — implemented
+
+Under the owner's request for more engaging features, connect existing statistics
+to optional Scout Wayfinding, Nurse Training and Queen's Rhythm research. Goals
+use this-colony completed expeditions and standard workers actually raised, not
+launches, small founding workers or lifetime totals. Show one relevant upcoming
+goal with progress/effect/price; reveal research only after its goal and existing
+prerequisites. Use ordinary purchase flags and reset both goals and research on
+founding. Do not add another currency, permanent non-Understanding bonuses,
+claim buttons or repeated milestone messages. Exact initial counts, effects and
+prices are documented in MILESTONES.md and remain tunable.
+
+## D48: Permanent achievement milestones compound sugar production — approved
+
+On November 15 the owner requested a dedicated milestone section/tab covering each
+resource and meaningful colony objectives. Each completed tier automatically grants
+×1.01 sugar production, multiplicatively: N tiers gives 1.01^N. These achievements
+use lifetime statistics and survive founding. The owner explicitly chose permanence;
+this supersedes D47's general exclusion of permanent non-Understanding bonuses, but
+D47's three paid colony-research upgrades still reset and use current-run goals.
+Save peak resource holdings as well as lifetime gathered totals and the existing
+peak worker population. Do not erase peaks on spending, deaths or founding.
+No claim buttons or repeated notifications. Hide unintroduced resources/objectives.
+
+## D49: Five focused polish passes — approved
+
+The owner authorized implementing these sequentially in separate PRs, with native
+auto-merge after validation: consistent activity statuses; exploration-map feedback;
+persistent UI choices; a quieter event log; consistent visual spacing, controls,
+numbers and progress. Continue autonomously unless a significant design choice
+needs input. Preserve gameplay balance, clear costs/risks, hidden future unlocks
+and stable mobile disclosures. These are presentation improvements, not new systems.

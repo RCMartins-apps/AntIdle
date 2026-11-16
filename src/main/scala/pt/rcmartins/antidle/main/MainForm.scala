@@ -29,9 +29,16 @@ object MainForm {
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
 
+  private def rememberDetails(key: String, defaultOpen: Boolean = false): Modifier[ReactiveHtmlElement[HTMLElement]] =
+    onMountCallback(ctx => UiPreferences.bindDetails(ctx.thisNode.ref, key, defaultOpen))
+
+  private def activityStatus(label: Signal[String], extraClass: String = ""): ReactiveHtmlElement[HTMLSpanElement] =
+    span(className := s"activity-status $extraClass", dataAttr("state") <-- label.map(ActivityStatus.kind).distinct,
+      child.text <-- label.distinct)
+
   private def infoDetails(label: String, content: ReactiveHtmlElement[HTMLDivElement]): ReactiveHtmlElement[HTMLElement] =
     detailsTag(
-      className := "info-details",
+      className := "info-details", rememberDetails("info." + label),
       summaryTag(className := "info-summary", aria.label := s"About $label", title := s"About $label",
         svg.svg(aria.hidden := true, svg.viewBox := "0 0 24 24",
           svg.path(svg.d := "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 11v6M12 7h.01")),
@@ -315,6 +322,9 @@ object MainForm {
               a(className := "nav-link", idAttr := "lineage-tab", dataAttr("bs-toggle") := "tab",
                 href := "#lineageContent", role := "tab", "Lineage")),
           ),
+          li(className := "nav-item",
+            a(className := "nav-link", idAttr := "milestones-tab", dataAttr("bs-toggle") := "tab",
+              href := "#milestonesContent", role := "tab", "Milestones")),
           li(
             className := "nav-item",
             a(
@@ -371,6 +381,7 @@ object MainForm {
           child.maybe <-- ifUnlockedOpt(lineageVisibleSignal)(
             div(className := "tab-pane", idAttr := "lineageContent", role := "tabpanel", prestigeDiv),
           ),
+          div(className := "tab-pane", idAttr := "milestonesContent", role := "tabpanel", milestonesDiv),
           div(
             className := "tab-pane",
             idAttr := "settingsContent",
@@ -381,9 +392,34 @@ object MainForm {
       )
     )
 
+  private def milestonesDiv: ReactiveHtmlElement[HTMLDivElement] = div(
+    className := "colony-milestones",
+    h5(child.text <-- statisticsData.signal.map(s => s"Sugar production ×${ColonyMilestones.multiplier(s)}")),
+    div(className := "small text-body-secondary mb-3", "×1.01 per milestone · permanent"),
+    ColonyMilestones.goals.map { goal =>
+      def number(n: Long): String = if (goal.resource) prettyNumberStr(n) else n.toString
+      detailsTag(className := "achievement-goal border rounded p-2 mb-2", rememberDetails("milestone." + goal.id),
+        display <-- snapshotSignal.map(data => if (ColonyMilestones.visible(goal, data)) "" else "none").distinct,
+        summaryTag(
+          span(goal.title),
+          span(className := "d-block small", child.text <-- statisticsData.signal.map { stats =>
+            val done = goal.completed(stats)
+            val earned = s"$done milestone" + (if (done == 1) "" else "s")
+            goal.next(stats).map(target => s"${number(goal.progress(stats))}/${number(target)} · $earned")
+              .getOrElse(s"Complete · $earned") + ColonyMilestones.peak(goal, stats).map(p => s" · peak ${number(p)}").getOrElse("")
+          }.distinct)),
+        goal.targets.map { target =>
+          div(className := "d-flex justify-content-between gap-2 small mt-2",
+            span(number(target)),
+            span(className <-- statisticsData.signal.map(s => if (goal.progress(s) >= target) "text-success fw-bold" else "text-body-secondary").distinct,
+              child.text <-- statisticsData.signal.map(s => if (goal.progress(s) >= target) "✓ ×1.01" else "×1.01").distinct))
+        })
+    }
+  )
+
   private def statisticsDiv: ReactiveHtmlElement[HTMLElement] =
     detailsTag(
-      className := "col-12 colony-statistics mb-3",
+      className := "col-12 colony-statistics mb-3", rememberDetails("statistics"),
       summaryTag("Colony statistics"),
       small("Collected resources exclude overflow discarded at full storage."),
       children <-- statisticsData.signal.combineWith(unlocksSignal, explorationSignal).map { case (stats, unlocks, exploration) =>
@@ -549,6 +585,7 @@ object MainForm {
           elem = elem, descriptionSignal = Val(None), costSignal = Val(buildTask.actionCost),
           bonusSignal = Actions.getActionBonus(buildTask.chamberType),
         )),
+        activityStatus(resourcesSignal.map(r => ActivityStatus.construction(buildTask.actionCost, r, index == 0)), "build-status small"),
         actionCosts(Val(buildTask.actionCost), Val(Nil)),
       )
 
@@ -576,7 +613,7 @@ object MainForm {
           className := "d-grid gap-2",
           child <-- buildQueueSignal.map {
             case Seq() =>
-              span(nbsp)
+              span(className := "queue-empty small text-body-secondary", "No construction queued.")
             case seq =>
               div(seq.zipWithIndex.map { case (buildTask, index) =>
                 buildTaskName(buildTask, index)
@@ -587,30 +624,32 @@ object MainForm {
     )
   }
 
-  private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] =
-    div(
-      className := "m-1",
-      className := "card game-panel",
-      className := "fs-4",
-      width.px := MessagesWidth,
-      maxWidth.px := MessagesWidth,
-      div(
-        className := "card-header",
-        "Messages",
-      ),
-      div(
-        className := "card-body",
-        className := "fs-5",
-        div(
-          className := "d-grid gap-2",
-          child.maybe <-- messagesSignal.signal.map(_.headOption.map(text => span(text))),
-          children <--
-            messagesSignal.map {
-              _.drop(1).map(text => div(opacity := 0.5, text))
-            }
-        )
-      )
-    )
+  private def messagesDiv: ReactiveHtmlElement[HTMLDivElement] = {
+    val highlights = messagesSignal.map(_.filter(m => EventLog.kind(m) != "routine")).distinct
+    val routine = messagesSignal.map(EventLog.routine).distinct
+    def row(text: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      className := s"log-entry log-${EventLog.kind(text)}", text)
+    div(className := "m-1 card game-panel event-log", width.px := MessagesWidth, maxWidth.px := MessagesWidth,
+      div(className := "card-header", "Colony log"),
+      div(className := "card-body",
+        div(className := "log-highlights", children <-- highlights.map(_.take(4).map(row))),
+        detailsTag(rememberDetails("log.history"), className := "log-history mt-2",
+          display <-- highlights.map(m => if (m.size > 4) "" else "none"),
+          summaryTag(minHeight.px := 44, child.text <-- highlights.map(m => s"Earlier events (${Math.max(0, m.size - 4)})")),
+          children <-- highlights.map(_.drop(4).map(row))),
+        detailsTag(rememberDetails("log.routine"), className := "log-routine mt-2",
+          display <-- routine.map(m => if (m.nonEmpty) "" else "none"),
+          summaryTag(minHeight.px := 44, child.text <-- routine.map { entries =>
+            val count = entries.map(_.reports).sum
+            s"Routine activity ($count ${if (count == 1) "report" else "reports"})"
+          }),
+          div(className := "small text-body-secondary", "Latest report from each source"),
+          children <-- routine.map(_.map(entry => div(className := "log-entry log-routine-entry",
+            span(entry.text), if (entry.reports > 1) small(s" · ${entry.reports} reports") else emptyNode)))),
+        child.maybe <-- messagesSignal.map(_.isEmpty).distinct.map(empty => Option.when(empty)(
+          div(className := "small text-body-secondary", "No events yet.")))
+      ))
+  }
 
   private def resourcesDiv: Modifier[ReactiveHtmlElement[HTMLDivElement]] =
     div(
@@ -777,7 +816,7 @@ object MainForm {
               className := "col-4 text-nowrap resource-name",
               child <-- windowWidthVar.signal.map(_ <= 767).distinct.map { mobile =>
                 tooltipOpt.filter(_ => mobile) match {
-                  case Some(content) => detailsTag(summaryTag(resourceName), content)
+                  case Some(content) => detailsTag(rememberDetails("resource." + resourceName), summaryTag(resourceName), content)
                   case None => resourceName
                 }
               },
@@ -925,7 +964,7 @@ object MainForm {
       ),
       detailsTag(
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
-        onMountCallback(ctx => ctx.thisNode.ref.asInstanceOf[HTMLElement].setAttribute("open", "")),
+        rememberDetails("nest.brood", defaultOpen = true),
         summaryTag(className := "brood-summary mb-2", minHeight.px := 44, "Brood"),
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
         infoHeading("Brood", div(
@@ -936,7 +975,7 @@ object MainForm {
           p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
           detailsTag(
-            className := "colony-aging mb-2",
+            className := "colony-aging mb-2", rememberDetails("nest.aging"),
             summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
               case (ants, tick) => PopulationAging.forecast(ants, tick)
             }),
@@ -961,14 +1000,10 @@ object MainForm {
           queenRoutineControls
         },
         div(className := "brood-pipeline small mb-2",
-          className <-- antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal).map {
-            case (ants, nest, resources, upgrades, exploration) =>
-              if (BroodProgression.status(ants, nest, resources, upgrades, exploration).contains("Needs")) "text-danger" else ""
-          },
-          child.text <-- antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal).map { case (ants, nest, resources, upgrades, exploration) =>
-            BroodProgression.status(ants, nest, resources, upgrades, exploration)
-          },
-        ),
+          activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
+            case (ants, nest, resources, upgrades, exploration, stats) =>
+              BroodProgression.status(ants, nest, resources, upgrades, exploration, stats)
+          })),
         child.maybe <-- antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard => Option.when(standard)(
           div(className := "brood-care-cost small mb-2", "Larvae: 20 sugar · 2 protein / worker"))),
         child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map { queued => Option.when(queued) {
@@ -1267,56 +1302,142 @@ object MainForm {
     )
   }
 
-  private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = div(
-    className := "col-12 lineage-section",
-    child.maybe <-- lineageVisibleSignal.map {
-      visible => Option.when(visible) {
-        div(className := "lineage-overview",
-          infoHeading("Queen's lineage", div("Daughter queens found new colonies. DNA buys permanent Understandings.")),
-          child.maybe <-- antsSignal.map(_.daughterQueens < u).distinct.map { notReady => Option.when(notReady) {
-            div(className := "lineage-queen-status small text-body-secondary mb-2",
-              child.text <-- antsSignal.map(ants => if (ants.royalBrood.nonEmpty) "Daughter queen: rearing" else "Daughter queen: not ready").distinct)
-          } },
-          div(child.text <-- antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1L} · DNA: ${a.lineage.dna} · +${a.lineage.foundings.toLong * 10L}% sugar production")),
-          child.maybe <-- antsSignal.map(_.lineage).distinct.map { lineage =>
-            Option.when(lineage.foundings > 0 && !lineage.sharedPaths) {
-              div(className := "understanding-shared-paths mt-2",
-                infoHeading("Understanding: Shared Paths", div("Automates collection from studied sites using workers and guiding scouts."), minor = true),
-                div(className := "small", "Cost: 1 DNA"),
-                button(className := "btn btn-primary mt-1", minHeight.px := 44, typ := "button",
-                  "Learn Shared Paths", disabled := (lineage.dna < 1L),
-                  onClick --> (_ => Actions.purchaseSharedPaths())),
-              )
+  private def prestigeDiv: ReactiveHtmlElement[HTMLDivElement] = {
+    val step = Var(0)
+    val selected = Var(Set.empty[String])
+    val acknowledged = Var(false)
+    val planned = snapshotSignal.combineWith(selected.signal).map { case (data, choices) => Prestige.plan(data, choices.toSeq) }
+    def buttonFor(label: String)(action: => Unit) = button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
+      label, onClick --> (_ => action))
+    def advance(next: Int): Unit = { acknowledged.set(false); step.set(next) }
+    def row(label: String, value: Signal[String]) = div(className := "d-flex flex-wrap justify-content-between gap-2 py-1",
+      span(label), b(child.text <-- value))
+    def rewardRows = div(className := "founding-rewards border rounded p-2 my-2",
+      row("Generation", antsSignal.map(a => s"${a.lineage.foundings.toLong + 1} → ${a.lineage.foundings.toLong + 2}")),
+      row("DNA earned", Val(s"+${Prestige.DnaReward}")),
+      row("DNA available to spend", antsSignal.map(a => s"${a.lineage.dna} + ${Prestige.DnaReward} = ${BigInt(a.lineage.dna) + Prestige.DnaReward}")),
+      row("Permanent milestone sugar", statisticsData.signal.map(s => s"×${ColonyMilestones.multiplier(s)} (kept)")),
+      row("Inherited sugar production", antsSignal.map(a => s"+${Prestige.sugarBonus(a.lineage)}% → +${Prestige.sugarBonus(a.lineage) + 10L}%")),
+      div(className := "small text-body-secondary", "Applies to Sugar Collectors and Aphid Tenders. Adds 10 percentage points each founding."),
+      row("DNA spent on Understandings", selected.signal.map(ids => Prestige.understandings.filter(u => ids(u.id)).map(_.cost).sum.toString)),
+      row("DNA carried forward", planned.map(_.map(_.dna.toString).getOrElse("Invalid selection"))),
+    )
+    def resetRows = detailsTag(rememberDetails("lineage.reset"), className := "founding-reset my-2", summaryTag(minHeight.px := 44, "Colony reset: exact values"),
+      children <-- snapshotSignal.map { data =>
+        val fresh = AllData.initial
+        def resource(label: String, before: BasicResource, after: BasicResource) = {
+          def stock(r: BasicResource) = prettyNumberStr(r.amount) + (if (r.maxAmount == Long.MaxValue) "" else s"/${prettyNumberStr(r.maxAmount)}")
+          label -> s"${stock(before)} → ${stock(after)}"
+        }
+        val a = data.ants
+        val values = Seq(
+          resource("Sugar", data.basicResources.sugar, fresh.basicResources.sugar),
+          resource("Protein", data.basicResources.protein, fresh.basicResources.protein),
+          resource("Water", data.basicResources.water, fresh.basicResources.water),
+          resource("Resin", data.basicResources.resin, fresh.basicResources.resin),
+          resource("Knowledge", data.basicResources.knowledge, fresh.basicResources.knowledge),
+          resource("Tunnelling space", data.basicResources.tunnelingSpace, fresh.basicResources.tunnelingSpace),
+          "Standard workers" -> s"${a.workers / u} → 0", "Small workers" -> s"${a.smallWorkers / u} → 0",
+          "Scouts" -> s"${a.scouts / u} → 0", "Repletes" -> s"${a.repletes / u} → 0",
+          "Daughter queens" -> s"${a.daughterQueens / u} → 0", "Brood" -> s"${a.eggsAndLarvae.size + a.royalBrood.size} → 0",
+          "Aphids" -> s"${data.nestAttributes.aphids} → 0",
+          "Explored hexes" -> s"${data.exploration.revealedSites} → 0",
+          "Active missions" -> s"${data.exploration.explorationParties.size} → 0",
+          "Build queue" -> s"${data.nestAttributes.buildQueue.size} → 0",
+          "Egg orders" -> s"${a.queuedEggs} → 0") ++
+          Seq(ChamberType.Nest, ChamberType.Queen, ChamberType.FoodStorage, ChamberType.Nursery, ChamberType.Aphid, ChamberType.Replete, ChamberType.RoyalNursery).map(kind =>
+            kind.name -> s"${Construction.level(data.nestAttributes.chambers, kind)} → ${Construction.level(fresh.nestAttributes.chambers, kind)}")
+        values.map { case (label, number) => div(className := "d-flex flex-wrap justify-content-between gap-2 small py-1", span(label), span(number)) } :+
+          div(className := "small mt-2", s"Research reset (${data.upgrades.upgrades.count(_._2.unlocked)}): ",
+            data.upgrades.upgrades.toSeq.filter(_._2.unlocked).sortBy(_._1.title).map(_._1.title).mkString(", "))
+      })
+    def newResearch = detailsTag(rememberDetails("lineage.research"), className := "understanding-research my-2", summaryTag(minHeight.px := 44, "New colony research"),
+      div(className := "small text-body-secondary my-2", "Each needs 3 studies at its outer site. Colony research resets on founding."),
+      Seq(UpgradeType.AphidShelters, UpgradeType.TrailLogistics, UpgradeType.CoordinatedExpeditions).map { upgrade =>
+        div(className := "border-bottom small py-2", b(upgrade.title), div(upgrade.description),
+          div(s"${prettyNumberStr(upgrade.cost.sugar)} sugar · ${prettyNumberStr(upgrade.cost.knowledge)} knowledge" +
+            (if (upgrade.cost.resin > 0L) s" · ${prettyNumberStr(upgrade.cost.resin)} resin" else "")),
+          emptyNode)
+      })
+    def choices = div(className := "understanding-choices",
+      children <-- antsSignal.map(_.lineage).distinct.combineWith(selected.signal).map { case (lineage, ids) =>
+        val available = lineage.copy(foundings = if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue,
+          sharedPaths = lineage.sharedPaths || ids(Prestige.SharedPaths.id))
+        val options = Prestige.understandings.filter(u => !u.owned(lineage) && u.available(available))
+        if (options.isEmpty) Seq(div(className := "small my-2", "No new Understandings available for this founding.")) else options.map { understanding =>
+          div(className := "understanding-choice border rounded p-2 my-2", dataAttr("understanding") := understanding.id,
+            label(className := "d-flex align-items-center gap-2", minHeight.px := 44,
+              input(typ := "checkbox", className := "form-check-input", aria.label := s"Select ${understanding.title}", checked := ids(understanding.id),
+                onChange.mapToChecked --> { checked =>
+                  selected.update { old =>
+                    if (checked) old + understanding.id
+                    else if (understanding.id == Prestige.SharedPaths.id && !lineage.sharedPaths) old - understanding.id - Prestige.BeyondWoodland.id
+                    else old - understanding.id
+                  }
+                }), b(understanding.title), span(s"${understanding.cost} DNA")),
+            div(className := "small", understanding.effect),
+            if (understanding.id == Prestige.BeyondWoodland.id) newResearch else emptyNode)
+        }
+      },
+      div(className := "small text-body-secondary", "Selections apply only on confirmation. You may keep DNA unspent. Existing Understandings are inherited automatically."))
+    div(className := "col-12 lineage-section",
+      infoHeading("Queen's lineage", div("Understandings are permanent. Colony research resets when the daughter queen founds her colony.")),
+      row("Current lineage", antsSignal.map(a => s"Generation ${a.lineage.foundings.toLong + 1} · ${a.lineage.dna} DNA · +${Prestige.sugarBonus(a.lineage)}% sugar")),
+      div(className := "lineage-queen-status small my-2", child.text <-- antsSignal.map(a =>
+        if (a.daughterQueens >= u) "Daughter queen: ready" else if (a.royalBrood.nonEmpty) "Daughter queen: rearing in Nest" else "Daughter queen: raise in Nest")),
+      div(className := "inherited-understandings small", child.text <-- antsSignal.map { a =>
+        val known = Prestige.understandings.filter(_.owned(a.lineage)).map(_.title)
+        if (known.isEmpty) "Understandings: none yet" else "Inherited: " + known.mkString(", ")
+      }.distinct),
+      child <-- step.signal.distinct.map {
+        case 0 => div(className := "founding-step", dataAttr("step") := "rewards",
+          h5(className := "mt-3", "1. Founding rewards"), rewardRows,
+          div(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
+          div(className := "small", "Reset: resources, population, brood, chambers, colony research, exploration, discoveries, trails, queues and assignments."),
+          resetRows,
+          buttonFor("Choose Understandings")(advance(1)),
+          children <-- antsSignal.map(_.lineage).distinct.map { lineage =>
+            Prestige.understandings.filter(u => !u.owned(lineage) && u.available(lineage)).map { understanding =>
+              div(className := "learn-understanding small mt-3", span(s"${understanding.title}: ${understanding.effect} "),
+                button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
+                  s"Learn ${understanding.title}", disabled := lineage.dna < understanding.cost,
+                  onClick --> (_ => { selected.set(Set.empty); acknowledged.set(false); Actions.purchaseUnderstanding(understanding.id) })), span(s" ${understanding.cost} DNA"))
             }
-          },
-          child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
-            Option.when(known)(div(className := "small mt-1", "Shared Paths inherited"))),
-          child.maybe <-- antsSignal.map(_.daughterQueens >= u).distinct.map { ready => Option.when(ready) {
-            detailsTag(className := "founding-preview mt-2",
-              summaryTag(minHeight.px := 44, "Review founding"),
-              p(className := "small my-2", "Found with your daughter queen: +1 DNA and +10% sugar production, added to your inherited bonus."),
-              p(className := "small", "Keep: DNA, Understandings, lifetime statistics, discovered resource visibility, settings and stored time."),
-              p(className := "small", "Reset: resources, ants and brood, chambers, research, explored map, discoveries, trails, queues and task assignments."),
-              button(className := "btn btn-primary", minHeight.px := 44, typ := "button", "Found daughter colony",
-                onClick --> { _ =>
-                  if (window.confirm("Found a new colony? Colony resources, ants, chambers, research and exploration will reset. DNA, Understandings, lifetime statistics, settings and stored time are kept. Gain 1 DNA and +10% sugar production."))
-                    Actions.foundDaughterColony()
-                }),
-            )
-          } },
-        )
-      }
-    },
-  )
+          })
+        case 1 => div(className := "founding-step", dataAttr("step") := "understandings",
+          h5(className := "mt-3", "2. Choose Understandings"), rewardRows, choices,
+          div(className := "text-danger small", child.text <-- planned.map(p => if (p.isEmpty) "Not enough DNA for this selection." else "")),
+          div(className := "d-flex flex-wrap gap-2 mt-2", buttonFor("Back to rewards")(advance(0)),
+            button(typ := "button", className := "btn btn-primary", minHeight.px := 44, "Review founding",
+              disabled <-- planned.map(_.isEmpty), onClick --> (_ => advance(2)))))
+        case _ => div(className := "founding-step", dataAttr("step") := "confirmation",
+          h5(className := "mt-3", "3. Confirm daughter colony"), rewardRows,
+          div(className := "selected-understandings", child.text <-- planned.map(_.map(l =>
+            "Inherited Understandings: " + Prestige.understandings.filter(_.owned(l)).map(_.title).mkString(", ")).getOrElse("Invalid selection"))),
+          resetRows,
+          div(className := "alert alert-warning small mt-2", "This replaces the current colony. Begin with the founding queen and no workers."),
+          label(className := "d-flex align-items-center gap-2 my-2", minHeight.px := 44,
+            input(typ := "checkbox", className := "form-check-input", aria.label := "Confirm colony reset", checked <-- acknowledged.signal,
+              onChange.mapToChecked --> acknowledged.writer), "I understand that this colony will reset."),
+          div(className := "d-flex flex-wrap gap-2",
+            buttonFor("Back to Understandings")(advance(1)),
+            button(className := "btn btn-primary", typ := "button", minHeight.px := 44, "Found daughter colony",
+              disabled <-- snapshotSignal.combineWith(planned, acknowledged.signal).map { case (data, plan, yes) => !yes || plan.isEmpty || !Prestige.canFound(data) },
+              onClick --> (_ => {
+                if (acknowledged.now()) { Actions.foundDaughterColony(selected.now().toSeq); selected.set(Set.empty); advance(0) }
+              }))),
+          div(className := "text-danger small mt-2", child.text <-- antsSignal.map(a => if (a.daughterQueens < u) "Requires 1 ready daughter queen." else "")))
+      })
+  }
 
   private def royalRearingDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val broodSignal = antsSignal.map(_.royalBrood).distinct
     val nursesSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       RoyalBroodProgression.nurses(ants, nest)
     }.distinct
-    val projectedSignal = antsSignal.combineWith(nestSignal, upgradesSignal, explorationSignal, resourcesSignal).map {
-      case (ants, nest, upgrades, exploration, resources) =>
-        RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources)
+    val projectedSignal = antsSignal.combineWith(nestSignal, upgradesSignal, explorationSignal, resourcesSignal, statisticsData.signal).map {
+      case (ants, nest, upgrades, exploration, resources, stats) =>
+        RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources, stats)
     }
     val statusSignal = antsSignal.combineWith(nestSignal, projectedSignal).map { case (ants, nest, resources) =>
       RoyalBroodProgression.status(ants, nest, resources)
@@ -1353,7 +1474,9 @@ object MainForm {
           div(className := "progress my-2", role := "progressbar", aria.label := "Royal brood development",
             aria.valueMin := 0.0, aria.valueMax := 100.0,
             aria.valueNow <-- broodSignal.map(_.map(_.careUnits * 100L / RoyalBroodProgression.TotalCare).getOrElse(0L).toDouble),
-            div(className := "progress-bar", width <-- broodSignal.map(b => s"${b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)}%")),
+            div(className := "progress-bar", role := "progressbar", aria.label := "Royal brood progress", aria.valueMin := 0, aria.valueMax := 100,
+              aria.valueNow <-- broodSignal.map(b => Math.min(100.0, Math.max(0.0, b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)))),
+              width <-- broodSignal.map(b => s"${Math.min(100.0, Math.max(0.0, b.map(_.careUnits * 100.0 / RoyalBroodProgression.TotalCare).getOrElse(0.0)))}%")),
           ),
           div(className := "small", child.text <-- nursesSignal.map(n => s"$n/${RoyalBroodProgression.MaxNurses} Royal Nurses")),
           div(className := "royal-feeding small my-1",
@@ -1364,8 +1487,7 @@ object MainForm {
               if (rates.isEmpty) "" else rates.mkString(" · ")
             },
           ),
-          div(className := "royal-care-status small", child.text <-- statusSignal,
-            className <-- statusSignal.map(s => if (s.startsWith("Needs") || s.startsWith("Limited")) "text-danger" else "")),
+          activityStatus(statusSignal, "royal-care-status small"),
           div(className := "small text-body-secondary my-1",
             child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
               brood.map { b =>
@@ -1395,7 +1517,8 @@ object MainForm {
     span(
       className := "action-cost",
       title := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
-      aria.label := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
+      aria.label := s"${requirement.label}: ${preciseRateStr(requirement.available)} available, ${preciseRateStr(requirement.required)} required",
+      title := s"${preciseRateStr(requirement.available)} / ${preciseRateStr(requirement.required)} ${requirement.label}",
       role := "img",
       ResourceIcons.forLabel(requirement.label).filter(_ => compact).map(ResourceIcons.icon),
       span(
@@ -1494,7 +1617,7 @@ object MainForm {
       child.maybe <-- blockedReasonSignal.map(_.map(reason =>
         div(className := "action-blocked-reason small text-danger text-center", reason))),
           detailsTag(
-            className := "action-details",
+            className := "action-details", rememberDetails("action." + name),
             summaryTag(
               aria.label <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
               title <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
@@ -1628,8 +1751,8 @@ object MainForm {
     child.maybe <-- antsSignal.map(_.smallWorkers > 0L).distinct.map { alive => Option.when(alive) {
       div(className := "small-worker-tasks border rounded p-2 my-2",
         infoHeading("Small workers · 50%", div("Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
-        div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) =>
-          s"${ants.smallCollectors / u} × ${resourceRateStr(Foraging.perCollector(ants, upgrades, small = true))} sugar/s"
+        div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) =>
+          s"${ants.smallCollectors / u} × ${resourceRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = true), stats))} sugar/s"
         }),
         List(AntTask.Tunneler, AntTask.Scavenger, AntTask.BroodNurse).map { task =>
           div(className := "small-worker-job my-2",
@@ -1675,13 +1798,13 @@ object MainForm {
       antTask match {
         case AntTask.SugarCollector =>
           div(
-            child.text <-- amountSignal.combineWith(upgradesSignal, antsSignal).map { case (amount, upgrades, ants) =>
+            child.text <-- amountSignal.combineWith(upgradesSignal, antsSignal, statisticsData.signal).map { case (amount, upgrades, ants, stats) =>
               val count = amount / u
-              s"${preciseRateStr(Foraging.perCollector(ants, upgrades, small = false))} sugar/s per collector · next: ${preciseRateStr(Foraging.nextPerSecond(count, upgrades, ants.lineage))}"
+              s"${preciseRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats))} sugar/s per collector · next: ${preciseRateStr(ColonyMilestones.sugar(Foraging.nextPerSecond(count, upgrades, ants.lineage), stats))}"
             },
           )
         case AntTask.AphidTender =>
-          div("One tender per 10 aphids.", child.text <-- antsSignal.map(a => s" ${resourceRateStr(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage))} sugar/s · −0.01 protein/s per tender"))
+          div("One tender per 10 aphids.", child.text <-- antsSignal.combineWith(statisticsData.signal).map { case (a, stats) => s" ${resourceRateStr(ColonyMilestones.sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage), stats))} sugar/s · −0.01 protein/s per tender" })
         case AntTask.Tunneler =>
           div(
             child.text <-- upgradesSignal.map { upgrades =>
@@ -1695,7 +1818,7 @@ object MainForm {
         case AntTask.Scavenger =>
           div("+0.05 protein/s per standard gatherer. Two shared places, including small gatherers.")
         case AntTask.BroodNurse =>
-          div("Supports two additional brood at base speed. Food shortages pause development.")
+          div(child.text <-- upgradesSignal.map(upgrades => s"Supports ${prettyNumberStr(BroodProgression.carePerNurse(upgrades))} additional brood at base speed. Food shortages pause development."))
         case AntTask.TerritoryForager =>
           div("Holding contested ground. Manage staffing and withdrawal in Territory.")
         case AntTask.TrailForager =>
@@ -1757,12 +1880,12 @@ object MainForm {
         ),
       ),
       div(className := "task-rate small text-body-secondary", antTask match {
-        case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) => s"${preciseRateStr(Foraging.perCollector(ants, upgrades, small = false))} sugar/s each" })
+        case AntTask.SugarCollector => div(child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) => s"${preciseRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats))} sugar/s each" })
         case AntTask.Tunneler => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} space/s each"))
         case AntTask.Scavenger => div("+0.05 protein/s each")
         case AntTask.AphidTender => div(
           div(className := "aphid-stock", child.text <-- nestSignal.map(n => s"${n.aphids}/${AphidHusbandry.housing(n)} aphids")),
-          child.text <-- antsSignal.map(a => s"+${resourceRateStr(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage))} sugar/s · −0.01 protein/s each"),
+          child.text <-- antsSignal.combineWith(statisticsData.signal).map { case (a, stats) => s"+${resourceRateStr(ColonyMilestones.sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage), stats))} sugar/s · −0.01 protein/s each" },
           child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
         case AntTask.WaterCollector => div("+0.15 water/s each")
         case AntTask.SeedForager => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s each"),
@@ -1791,6 +1914,23 @@ object MainForm {
 
     div(
       className := "row upgrades-grid",
+      div(className := "col-12 milestone-panel",
+        children <-- snapshotSignal.map { data =>
+          MilestoneResearch.next(data).map(goal => (goal.upgrade, goal.progress(data), goal.target, goal.label))
+        }.distinct.map {
+          case None => Seq.empty
+          case Some((upgrade, progress, target, label)) => Seq(
+            div(className := "milestone-goal border rounded p-2 mb-2",
+              b("Next research goal: ", upgrade.title),
+              div(className := "milestone-progress small", s"$progress/$target $label"),
+              div(className := "progress", height.px := 6, role := "progressbar", aria.label := upgrade.title,
+                aria.valueMin := 0, aria.valueMax := target, aria.valueNow := progress,
+                div(className := "progress-bar", width.percent := progress * 100 / target)),
+              div(className := "small mt-1", upgrade.description),
+              div(className := "small text-body-secondary", s"Research: ${prettyNumberStr(upgrade.cost.sugar)} sugar · ${prettyNumberStr(upgrade.cost.knowledge)} knowledge" +
+                (if (upgrade.cost.protein > 0L) s" · ${prettyNumberStr(upgrade.cost.protein)} protein" else ""))
+            ))
+        }),
       children <-- upgradesSignal.map { upgrades =>
         val available = UpgradeType.all.filter(t => upgrades(t).show && !upgrades(t).unlocked)
         if (available.isEmpty) Seq(div(className := "col-12 py-3 upgrades-empty text-body-secondary",
@@ -1799,7 +1939,7 @@ object MainForm {
           else div(p(className := "mb-1", "No upgrades available."))))
         else available.map(t => createUpgrade(t))
       },
-      detailsTag(className := "col-12 purchased-upgrades border-top mt-3 pt-2",
+      detailsTag(className := "col-12 purchased-upgrades border-top mt-3 pt-2", rememberDetails("upgrades.purchased"),
         summaryTag(minHeight.px := 44,
           child.text <-- upgradesSignal.map(upgrades =>
             s"Purchased upgrades (${UpgradeType.all.count(upgrades(_).unlocked)})").distinct),
@@ -1838,14 +1978,29 @@ object MainForm {
 
   private def exploreDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val selected = Var("surroundings")
+    def validSelection(id: String, data: ExplorationData, ants: AntsData): Boolean =
+      id == "surroundings" || (ExplorationMap.availableSites(ants).exists(_.id == id) && ExplorationMap.revealed(data, id))
+
+    val feedbackSignals = (Vector("surroundings") ++ ExplorationMap.allSites.map(_.id)).map { id =>
+      id -> explorationSignal.combineWith(currentTickSignal).map {
+        case (data, tick) => MapFeedback.state(data, id, tick)
+      }.distinct
+    }.toMap
+    def feedback(id: String): Signal[MapFeedback.State] = feedbackSignals(id)
+    def mapProgress(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      className := "map-progress", role := "progressbar", aria.label := "Mission progress",
+      aria.valueMin := 0, aria.valueMax := 100,
+      aria.valueNow <-- feedback(id).map(_.percent.getOrElse(0).toDouble),
+      display <-- feedback(id).map(f => if (f.percent.isDefined) "" else "none"),
+      div(className := "map-progress-fill", width.percent <-- feedback(id).map(_.percent.getOrElse(0).toDouble)))
     val scoutCrew = Var(1)
     val requestedWorkers = Var(5L * u)
     val workers = requestedWorkers.signal.combineWith(availableWorkersCountSignal).map {
       case (n, available) => ExplorationProgression.selectedWorkers(n, available)
     }.distinct
     def scoutAction(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
-      p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal).map { case (count, data) =>
-        val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings"))
+      p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal, upgradesSignal).map { case (count, data, upgrades) =>
+        val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings", upgrades))
         if (id == "surroundings") s"$time · reveals one hexagon" else s"$time · ${prettyNumberStr(ExplorationMap.studyReward(data, id))} knowledge"
       }),
       actionButton(
@@ -1864,10 +2019,11 @@ object MainForm {
     def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
       child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
         Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
-          infoHeading("Collection trail", div("60% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply."), minor = true),
+          infoHeading("Collection trail", div(child.text <-- upgradesSignal.map(upgrades => s"${PheromoneTrails.efficiency(upgrades)}% of manual haul rate. One scout per ten workers, rounded up. Supplies and normal upkeep apply.")), minor = true),
           div(className := "trail-preview small", child.text <-- snapshotSignal.map { data =>
             val count = Math.max(PheromoneTrails.Step, PheromoneTrails.target(data.exploration, route.id))
-            val (rate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
+            val (baseRate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
+            val rate = if (route.sugarReward > 0L) ColonyMilestones.sugar(baseRate, data.statistics) else baseRate
             s"+${resourceRateStr(rate * TicksPerSecond)} ${ExplorationHelper.resource(route)}/s · −${resourceRateStr(cost * TicksPerSecond)} sugar/s supplies"
           }),
           div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
@@ -1893,9 +2049,9 @@ object MainForm {
             List(ActionRequirement("scouts", available, PheromoneTrails.requiredScouts(next), isCost = true)) ++
               Option.when(current < PheromoneTrails.Capacity)(ActionRequirement("workers", ants.availableWorkersCount, PheromoneTrails.Step, isCost = true))
           }),
-          div(className := "trail-status small", child.text <-- snapshotSignal.map(data =>
-            PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources)
-              .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned"))),
+          activityStatus(snapshotSignal.map(data =>
+            PheromoneTrails.forecast(data.ants, data.exploration, data.upgrades, data.basicResources, data.statistics)
+              .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned")), "trail-status small"),
         ))),
     )
     def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(className := "site-haul my-3",
@@ -1948,12 +2104,14 @@ object MainForm {
     def sitePanel(id: String): ReactiveHtmlElement[HTMLDivElement] = {
       if (id == "surroundings") div(className := "map-site-card card p-3",
         h5("Nest surroundings"),
-        p(child.text <-- explorationSignal.map(data => s"${data.revealedSites} / 6 hexagons revealed")),
-        child.maybe <-- explorationSignal.map(_.revealedSites < 6).distinct.map(more => Option.when(more)(scoutAction(id))),
-        child.maybe <-- explorationSignal.map(_.revealedSites >= 6).distinct.map(done => Option.when(done)(span("First ring mapped"))),
+        p(child.text <-- explorationSignal.combineWith(antsSignal).map { case (data, ants) => s"${data.revealedSites} / ${ExplorationMap.availableSites(ants).size} hexagons revealed" }),
+        child.maybe <-- explorationSignal.combineWith(antsSignal).map { case (data, ants) => data.revealedSites < ExplorationMap.availableSites(ants).size }.distinct.map(more => Option.when(more)(scoutAction(id))),
+        child.maybe <-- explorationSignal.combineWith(antsSignal).map { case (data, ants) => data.revealedSites >= ExplorationMap.availableSites(ants).size }.distinct.map(done => Option.when(done)(span("Current range mapped"))),
       ) else {
         val site = ExplorationMap.site(id)
+        val unlockLabel: String = DiscoveryProgression.all.find(_.destination == id).map(d => s"3 studies: ${d.title} research").getOrElse("")
         div(className := "map-site-card card p-3", h5(site.name),
+          if (ExplorationMap.outerSites.exists(_.id == id)) div(className := "site-unlock small mb-2", unlockLabel) else emptyNode,
           p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
           child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
           child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
@@ -1995,24 +2153,33 @@ object MainForm {
       }
     }
     div(className := "row exploration-layout hex-exploration",
+      selected.signal.changes --> (id => UiPreferences.set("explore.site", id)),
+      onMountCallback { _ => useSignalValue[AllData](snapshotSignal, data => {
+        val saved = UiPreferences.get("explore.site").filter(validSelection(_, data.exploration, data.ants)).getOrElse("surroundings")
+        selected.set(saved)
+      }) },
+      explorationSignal.combineWith(antsSignal.map(_.lineage).distinct).changes --> { case (data, lineage) =>
+        if (!validSelection(selected.now(), data, AntsData(lineage = lineage))) selected.set("surroundings")
+      },
       div(className := "col-12 p-3",
         infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
-        div(className := "hex-map", role := "group", aria.label := "First exploration ring",
-          button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent := 50,
+        div(className := "hex-map", className("expanded") <-- antsSignal.map(_.lineage.beyondWoodland), role := "group", aria.label := "Exploration map",
+          button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
             aria.label := "Nest surroundings",
             aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
-            MapIcons("surroundings"), span("Nest"), onClick --> (_ => selected.set("surroundings"))),
-          ExplorationMap.sites.map { site =>
+            child <-- feedback("surroundings").map(f => if (f.percent.isDefined) "scouting" else "surroundings").distinct.map(MapIcons.apply), span("Nest"),
+            small(className := "map-state", title <-- feedback("surroundings").map(_.label), child.text <-- feedback("surroundings").map(f => f.percent.map(p => s"$p%").getOrElse(""))),
+            mapProgress("surroundings"), onClick --> (_ => selected.set("surroundings"))),
+          children <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map { expanded =>
+            ExplorationMap.availableSites(AntsData(lineage = Lineage(beyondWoodland = expanded))).map { site =>
             button(className := "map-hex", typ := "button", dataAttr("site") := site.id,
-              left.percent := site.x, top.percent := site.y,
+              left.percent := (if (expanded) 50 + (site.x - 50) * 3 / 4 else site.x), top.percent := (if (expanded) 62 + (site.y - 50) * 3 / 4 else site.y),
               disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
-              aria.label <-- explorationSignal.map(data =>
-                if (!ExplorationMap.revealed(data, site.id)) "Unexplored hexagon"
-                else s"${site.name}: ${if (ExplorationMap.exhausted(data, site.id)) "exhausted" else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "knowledge remaining" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "aphids" else "resource deposits"}"),
+              aria.label <-- feedback(site.id).map(f => if (f.kind == "unknown") "Unexplored hexagon" else s"${site.name}: ${f.label}"),
+              dataAttr("activity") <-- feedback(site.id).map(_.kind),
               aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
               className <-- explorationSignal.map(data => if (!ExplorationMap.revealed(data, site.id)) "unexplored" else if (ExplorationMap.exhausted(data, site.id)) "exhausted" else "revealed"),
-              child <-- explorationSignal.map(data => ExplorationMap.revealed(data, site.id)).distinct.map(known =>
-                MapIcons(if (known) site.id else "fog")),
+              child <-- feedback(site.id).map(f => if (f.kind == "unknown") "fog" else if (f.percent.isDefined) f.kind else site.id).distinct.map(MapIcons.apply),
               span(className := "map-terrain-name", child.text <-- explorationSignal.map(data =>
                 if (!ExplorationMap.revealed(data, site.id)) "" else site.id match {
                   case "woodland-edge" => "Woodland"
@@ -2020,13 +2187,17 @@ object MainForm {
                   case "rotten-log" => "Deadwood"
                   case "dry-clearing" => "Dry ground"
                   case "fallen-pine" => "Pine"
+                  case "aphid-thicket" => "Thicket"
+                  case "fallen-oak" => "Oak"
+                  case "root-hollow" => "Hollow"
                   case _ => "Rivals"
                 })),
-              small(className := "map-state", aria.hidden := true, child.text <-- explorationSignal.map(data =>
-                if (!ExplorationMap.revealed(data, site.id)) "" else if (ExplorationMap.exhausted(data, site.id)) "✓"
-                else if (ExplorationMap.knowledgeRemaining(data, site.id) > 0L) "Study" else if (site.id == "woodland-edge" && ExplorationMap.remaining(data, site.id) == 0L) "Aphids" else "Collect")),
+              small(className := "map-state", title <-- feedback(site.id).map(_.label),
+                child.text <-- feedback(site.id).map(f => if (f.kind == "unknown") "" else f.percent.map(p => s"$p%").getOrElse(if (f.kind == "trail") "Trail" else if (f.kind == "exhausted") "✓" else f.label))),
+              mapProgress(site.id),
               onClick --> (_ => selected.set(site.id)),
             )
+            }
           },
         ),
         div(className := "scout-crew-control d-flex flex-wrap gap-2 align-items-center mb-2",

@@ -127,6 +127,10 @@
 
 .hex-map {position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:0 auto 1rem;background:radial-gradient(ellipse,#e5edda 0%,#f3f5eb 58%,transparent 72%);border-radius:50%}
 .map-hex {position:absolute;transform:translate(-50%,-50%);width:29%;height:31%;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);border:0;background:#d9e8d0;color:#183722;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 6px;font-size:clamp(.72rem,2.6vw,.95rem);font-weight:600;gap:3px;cursor:pointer}
+.hex-map.expanded {max-width:600px}
+.hex-map.expanded .map-hex {width:21.75%;height:23.25%;padding:3px 1px;font-size:clamp(.65rem,2.2vw,.85rem);gap:1px}
+.hex-map.expanded .map-hex small {font-size:.6rem}
+.hex-map.expanded .map-terrain-icon {width:20px;height:20px}
 .map-hex small {font-size:.7rem;font-weight:400}
 .map-terrain-icon {display:block;width:clamp(24px,7vw,38px);height:clamp(24px,7vw,38px);flex-shrink:0}
 .map-terrain-icon svg {display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -151,6 +155,35 @@
 .site-worker-controls input {max-width:110px;text-align:center}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
+.antidle-app .game-main .btn, .antidle-app .game-panel .btn {min-height:44px;min-width:44px;font-size:1rem !important;touch-action:manipulation}
+.antidle-app .game-main input:not([type="checkbox"]), .antidle-app .game-main select {min-height:44px}
+.antidle-app .resource-amount, .antidle-app .task-rate, .antidle-app .mission-preview, .antidle-app .numeric-value {font-variant-numeric:tabular-nums}
+.antidle-app .game-main .progress, .antidle-app .game-panel .progress {height:8px !important;border-radius:1rem;background:#e7ebef;overflow:hidden}
+.antidle-app .progress-bar {border-radius:inherit;max-width:100%}
+.antidle-app .btn:focus-visible, .antidle-app summary:focus-visible, .antidle-app input:focus-visible, .antidle-app select:focus-visible {outline:3px solid var(--bs-primary);outline-offset:2px}
+.antidle-app .game-panel .card-header {font-size:1rem;font-weight:600}
+.antidle-app .queued-building {line-height:1.5}
+.antidle-app .build-task {display:inline-block;min-height:44px;padding:.5rem 0;cursor:pointer}
+.antidle-app .queue-empty, .antidle-app .upgrades-empty {padding:.75rem 0;line-height:1.5}
+.antidle-app .achievement-goal summary {min-height:44px;padding:.25rem 0;cursor:pointer}
+
+.log-entry {font-size:.9rem;line-height:1.45;padding:.45rem 0;border-bottom:1px solid #e5e7e9;overflow-wrap:anywhere}
+.log-important {font-weight:600;color:#235d3f}
+.log-loss {color:#a3212e;border-left:3px solid currentColor;padding-left:.5rem}
+.log-notice {color:#46535d}
+.event-log summary {font-size:.85rem;cursor:pointer;display:list-item;padding:.6rem 0}
+
+.map-progress {height:4px;width:68%;flex-shrink:0;background:rgba(0,0,0,.15);border-radius:4px;overflow:hidden}
+.map-progress-fill {height:100%;background:currentColor}
+.hex-map .map-hex[data-activity="studying"], .hex-map .map-hex[data-activity="scouting"] {background:#d9eafb;color:#174a79}
+.hex-map .map-hex[data-activity="collecting"] {background:#d2ecdc;color:#24563c}
+.hex-map .map-hex[data-activity="trail"] .map-state {font-weight:700}
+
+.activity-status {display:inline-block;font-size:.85rem;line-height:1.5;padding:.15rem .45rem;border-radius:.35rem;background:#eef3f0;color:#235d3f;overflow-wrap:anywhere}
+.activity-status::before {content:"";display:inline-block;width:.5em;height:.5em;border-radius:50%;background:currentColor;margin-right:.4em;vertical-align:.1em}
+.activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
+.activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
+.activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
 </style>
 </head>
 <body>

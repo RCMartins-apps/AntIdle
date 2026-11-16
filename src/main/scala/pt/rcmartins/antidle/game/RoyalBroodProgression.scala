@@ -54,10 +54,10 @@ object RoyalBroodProgression {
   // Forecast the same steady-state production and ordinary upkeep that precede royal care.
   // Unstored sugar production can feed brood directly, just as it feeds adult ants.
   def forecastResources(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
-      exploration: ExplorationData, resources: BasicResources): BasicResources = {
-    val trailResources = PheromoneTrails.forecastResources(ants, exploration, upgrades, resources)
-    val sugar = Foraging.production(ants, upgrades) +
-      AphidHusbandry.productionPerTick(ants, nest, upgrades, trailResources.protein.amount)
+      exploration: ExplorationData, resources: BasicResources, stats: StatisticsData = StatisticsData.initial): BasicResources = {
+    val trailResources = PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
+    val sugar = ColonyMilestones.sugar(Foraging.production(ants, upgrades) +
+      AphidHusbandry.productionPerTick(ants, nest, upgrades, trailResources.protein.amount), stats)
     val feeding = AphidHusbandry.proteinPerTick(ants, nest, upgrades, trailResources.protein.amount)
     val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, trailResources)
     val upkeep = ScoutProgression.upkeepPerTick(ants, exploration) - CarcassProgression.foodOffset(exploration, ants)
@@ -66,8 +66,8 @@ object RoyalBroodProgression {
   }
 
   def forecast(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData,
-      exploration: ExplorationData, resources: BasicResources): Care =
-    care(ants, nest, forecastResources(ants, nest, upgrades, exploration, resources))
+      exploration: ExplorationData, resources: BasicResources, stats: StatisticsData = StatisticsData.initial): Care =
+    care(ants, nest, forecastResources(ants, nest, upgrades, exploration, resources, stats))
 
   def canStart(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
     ants.royalBrood.isEmpty && freeSlots(ants, nest) > 0L && BroodProgression.availableColonySlots(ants, nest) >= u &&
