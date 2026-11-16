@@ -22,8 +22,26 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
+def select_tab(page, name):
+    """Navigate using the same visible groups as a mobile player."""
+    expect(page.locator('.antidle-app[data-mobile-navigation=ready]')).to_be_attached()
+    nav = page.locator('.mobile-bottom-nav')
+    if nav.is_visible():
+        group = {'Chambers': 'Nest', 'Purchased': 'Upgrades', 'Discoveries': 'Explore', 'Territory': 'Explore', 'Milestones': 'Lineage'}.get(name, name)
+        if name == 'Settings' or (name == 'Milestones' and not nav.get_by_role('button', name='Lineage', exact=True).is_visible()):
+            page.get_by_role('button', name='Game menu', exact=True).click()
+        else:
+            nav.get_by_role('button', name=group, exact=True).click()
+        if name in ['Nest', 'Explore', 'Upgrades', 'Lineage']:
+            page.get_by_role('tab', name={'Nest':'Brood','Explore':'Map','Upgrades':'Available','Lineage':'Founding'}[name], exact=True).click()
+        if name in ['Chambers', 'Purchased', 'Discoveries', 'Territory', 'Milestones']:
+            page.get_by_role('tab', name=name, exact=True).click()
+    else:
+        page.get_by_role('tab', name={'Chambers': 'Nest', 'Purchased': 'Upgrades'}.get(name, name), exact=name != 'Tasks').click()
+
+
 def save_game(page):
-    page.get_by_role("tab", name="Settings", exact=True).click()
+    select_tab(page, "Settings")
     page.get_by_role("button", name="Manual Save", exact=True).click()
     return json.loads(base64.b64decode(page.evaluate("localStorage.getItem('save')")))
 
@@ -97,7 +115,7 @@ def check_nest_capacity(page, initial):
     restored = save_game(page)
     assert restored["version"] == 6
     assert restored["basicResources"]["tunnelingSpace"]["maxAmount"] == 3500 * UNIT
-    page.get_by_role("tab", name="Nest", exact=True).click()
+    select_tab(page, "Nest")
     page.get_by_label("Details for Expand Nest", exact=True).click()
     expect(page.locator("details[open]")).to_contain_text("+500 tunneling space capacity")
     page.get_by_role("button", name="Expand Nest", exact=False).click()
@@ -124,7 +142,7 @@ def check_nest_capacity(page, initial):
 
 def check_compact_details(page):
     before = save_game(page)
-    page.get_by_role("tab", name="Nest", exact=True).click()
+    select_tab(page, "Nest")
     action = page.locator(".action-cell").filter(has=page.get_by_role("button", name="Raise Worker Egg", exact=True))
     primary = action.get_by_role("button", name="Raise Worker Egg", exact=True)
     toggle = action.get_by_label("Details for Raise Worker Egg", exact=True)
@@ -255,7 +273,7 @@ def run_checks(browser, url):
                     assert cost.get_attribute("aria-label")
                     expect(cost.locator(".visually-hidden")).to_have_count(1)
 
-        page.get_by_role("tab", name="Nest", exact=True).click()
+        select_tab(page, "Nest")
         page.get_by_role("button", name="Expand Nest", exact=True).click()
         queued = page.locator(".build-task")
         expect(queued).to_have_count(1)
@@ -274,7 +292,7 @@ def run_checks(browser, url):
                 page.get_by_label("Details for Raise Worker Egg", exact=True).click()
                 expect(page.locator("details[open] .action-result")).to_be_empty()
             page.get_by_role("button", name="Raise Worker Egg", exact=False).click(modifiers=modifiers)
-            page.get_by_role("tab", name="Tasks").click()
+            select_tab(page, "Tasks")
             if width <= 767:
                 page.locator("#tasks-action-amount").select_option(str(multiplier))
             page.get_by_role("button", name="Assign Sugar Collector", exact=True).click(modifiers=modifiers)
@@ -315,7 +333,7 @@ def run_checks(browser, url):
         assert laid["basicResources"]["sugar"]["amount"] == 25 * UNIT
         assert laid["ants"]["eggOrders"] == 2
         assert len(laid["ants"]["eggsAndLarvae"]) == 1
-        page.get_by_role("tab", name="Nest", exact=True).click()
+        select_tab(page, "Nest")
         expect(egg_action.locator(".action-costs")).to_contain_text("25/20 sugar" if width <= 767 else "25/10 sugar")
         load_game(page, game)
 
@@ -330,7 +348,7 @@ def run_checks(browser, url):
 
         # Crossing the breakpoint must restore desktop shortcuts and mobile details.
         page.set_viewport_size({"width": 1920, "height": 844})
-        page.get_by_role("tab", name="Nest", exact=True).click()
+        select_tab(page, "Nest")
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()
         expect(page.locator(".action-details[open]")).to_contain_text("Shared laying queue")
         page.get_by_label("Details for Raise Worker Egg", exact=True).click()

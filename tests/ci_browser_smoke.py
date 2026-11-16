@@ -9,7 +9,7 @@ import subprocess
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
+from browser_smoke import select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_expedition
 
 
 class ProductionHandler(QuietHandler):
@@ -25,7 +25,7 @@ def check_build_version(page, width):
     expect(footer).to_contain_text('Build ' + revision[:8])
     expect(footer.locator('a')).to_have_attribute('href', 'https://github.com/RCMartins-apps/AntIdle/commit/' + revision)
     displayed = footer.inner_text()
-    page.get_by_role('tab', name='Settings', exact=True).click()
+    select_tab(page, 'Settings')
     expect(page.locator('.settings-build .build-version')).to_have_text(displayed)
     page.clock.run_for(1000)
     expect(footer).to_have_text(displayed)
@@ -51,24 +51,24 @@ def check_milestones(page, width, base):
     for upgrade in game['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=upgrade['name'] in ['UnlockExplorerTask', 'DefaultWorkers', 'BroodCare', 'QueensRoutine'])
     load_game(page, game)
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     expect(page.locator('.milestone-progress')).to_have_text('19/20 expeditions completed')
     expect(page.get_by_role('button', name='Scout Wayfinding', exact=True)).to_have_count(0)
     assert_fits(page, width)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.get_by_role('button', name='3 scouts', exact=True).click()
     page.get_by_role('button', name='Explore Surroundings', exact=True).click()
     page.clock.run_for(21000)
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     expect(page.locator('.milestone-progress')).to_have_text('24/25 standard workers raised')
     page.get_by_role('button', name='Scout Wayfinding', exact=True).click()
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     expect(page.locator('.map-site-card .mission-preview')).to_contain_text('16.0s')
     saved = save_game(page)
     saved['ants']['eggsAndLarvae'] = [{'Developing': {'initialTick': saved['world']['currentTick'], 'kind': 'worker', 'care': 600 * UNIT - 1}}]
     load_game(page, saved)
     page.clock.run_for(400)
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     expect(page.locator('.milestone-progress')).to_have_text('25/50 standard workers raised')
     page.get_by_role('button', name='Nurse Training', exact=True).click()
     trained = save_game(page)
@@ -76,7 +76,7 @@ def check_milestones(page, width, base):
     trained['ants']['eggsAndLarvae'] = [{'Developing': {'initialTick': trained['world']['currentTick'], 'kind': 'worker', 'care': 600 * UNIT - 1}}]
     load_game(page, trained)
     page.clock.run_for(400)
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     expect(page.locator('.milestone-goal')).to_have_count(0)
     page.get_by_role('button', name="Queen's Rhythm", exact=True).click()
     result = save_game(page)
@@ -98,7 +98,7 @@ def check_permanent_milestones(page, width, base):
         game['basicResources'][key]['amount'] = 100 * UNIT if key == 'sugar' else 0
     game['basicResources']['sugar']['maxAmount'] = 1000 * UNIT
     load_game(page, game)
-    page.get_by_role('tab', name='Milestones', exact=True).click()
+    select_tab(page, 'Milestones')
     expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0000')
     sugar = page.locator('.achievement-goal').filter(has=page.get_by_text('Sugar gathered', exact=True))
     sugar.locator('summary').click()
@@ -113,10 +113,10 @@ def check_permanent_milestones(page, width, base):
     saved['basicResources']['sugar']['amount'] = UNIT
     saved['statistics']['sugarU']['thisRun'] = 0
     load_game(page, saved)
-    page.get_by_role('tab', name='Milestones', exact=True).click()
+    select_tab(page, 'Milestones')
     expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
     assert save_game(page)['statistics']['maxSugarU']['total'] == peak
-    page.get_by_role('tab', name='Milestones', exact=True).click()
+    select_tab(page, 'Milestones')
     assert_fits(page, width)
     print(f'PASS permanent milestones {width}px: live tier, multiplicative reward, saved peaks, stable disclosure and lifetime progress', flush=True)
 
@@ -169,6 +169,7 @@ def check_game(page, width, url):
     page.clock.install(time=now)
     page.clock.pause_at(now + timedelta(seconds=1))
     page.goto(url, wait_until='networkidle')
+    expect(page.locator('.resource-row').first).to_be_visible()
     fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
     gather = page.get_by_role('button', name='Gather Sugar', exact=True)
     expect(gather).to_have_css('background-color', 'rgb(13, 110, 253)')
@@ -205,7 +206,7 @@ def check_game(page, width, url):
     assert queued['basicResources']['sugar']['amount'] == 0
     assert queued['basicResources']['protein']['amount'] == 0
     # The entire brood panel collapses and stays closed over live ticks.
-    page.get_by_role('tab', name='Nest', exact=True).click()
+    select_tab(page, 'Nest')
     brood_panel = page.locator('details.nest-brood')
     brood_panel.locator(':scope > summary').click()
     expect(worker).not_to_be_visible()
@@ -223,13 +224,13 @@ def check_game(page, width, url):
     for upgrade in research['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=False)
     load_game(page, research)
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     foraging = page.get_by_role('button', name='Foraging Techniques 1', exact=True)
     expect(foraging).to_be_disabled()
     expect(page.get_by_role('button', name='Foraging Techniques 2', exact=True)).to_have_count(0)
-    page.get_by_role('tab', name='Nest', exact=True).click()
+    select_tab(page, 'Nest')
     page.get_by_role('button', name='Gather Sugar', exact=True).click()
-    page.get_by_role('tab', name='Upgrades', exact=True).click()
+    select_tab(page, 'Upgrades')
     expect(foraging).to_be_enabled()
     foraging.click()
     expect(foraging).to_have_count(0)
@@ -246,12 +247,13 @@ def check_game(page, width, url):
     for upgrade in game['upgrades']['upgrades']:
         upgrade.update(show=False, unlocked=upgrade['name'] == 'DefaultWorkers')
     load_game(page, game)
+    select_tab(page, 'Chambers')
     page.get_by_label('Details for Establish Dry Clearing Outpost', exact=True).click()
     outpost = page.locator('.nest-outposts .action-details')
     page.clock.run_for(600)
     expect(outpost).to_have_attribute('open', '')
     outpost.locator('summary').click()
-    page.get_by_role('tab', name='Tasks').click()
+    select_tab(page, 'Tasks')
     manual = page.locator('.task-row:visible').evaluate_all(
         '(rows) => rows.map(row => !!row.querySelector(".task-controls button"))')
     assert True in manual and False in manual and manual == sorted(manual, reverse=True), manual
@@ -263,9 +265,9 @@ def check_game(page, width, url):
     expect(page.locator('.resource-row').filter(has=page.get_by_text('Small workers', exact=True))).to_have_count(0)
     if width <= 767:
         expect(page.locator('.build-queue-panel')).not_to_be_visible()
-        page.get_by_role('tab', name='Nest', exact=True).click()
+        select_tab(page, 'Nest')
         expect(page.locator('.build-queue-panel')).to_be_visible()
-        page.get_by_role('tab', name='Tasks').click()
+        select_tab(page, 'Tasks')
     else:
         expect(page.locator('.build-queue-panel')).to_be_visible()
     # Replacing native select options must retain the actual default task.
@@ -273,11 +275,11 @@ def check_game(page, width, url):
     unlocking['nestAttributes']['chambers']['nurseryChamber']['level'] = 0
     unlocking['ants']['tasks'] = [[{'SugarCollector': {}}, 40 * UNIT], [{'Tunneler': {}}, 10 * UNIT]]
     load_game(page, unlocking)
-    page.get_by_role('tab', name='Tasks').click()
+    select_tab(page, 'Tasks')
     expect(page.locator('#default-worker-task')).to_have_value('SugarCollector')
-    page.get_by_role('tab', name='Nest', exact=True).click()
+    select_tab(page, 'Chambers')
     page.get_by_role('button', name='Nursery Chamber', exact=True).click()
-    page.get_by_role('tab', name='Tasks').click()
+    select_tab(page, 'Tasks')
     page.clock.run_for(600)
     expect(page.locator('#default-worker-task option[value="BroodNurse"]')).to_have_count(1)
     expect(page.locator('#default-worker-task')).to_have_value('SugarCollector')
@@ -294,11 +296,11 @@ def check_game(page, width, url):
     waiting_royal = save_game(page)
     assert waiting_royal['ants']['royalBrood']['careUnits'] == 0
     load_game(page, game)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     # A fresh ring reveals through scout-only missions, with identical mobile/desktop rules.
     game['exploration'].update(revealedSites=0, surveys={}, depleted={}, explorationParties=[])
     load_game(page, game)
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     expect(page.locator('.hex-map .map-hex')).to_have_count(7)
     expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
     expect(page.locator('.exploration-progress')).to_have_count(0)
@@ -310,14 +312,14 @@ def check_game(page, width, url):
     party = sent['exploration']['explorationParties'][0]
     assert party['mission'] == 'reveal' and party['scouts'] == 2 * UNIT and party['amountWorkers'] == 0
     assert 'experience' not in sent['exploration']
-    page.get_by_role('tab', name='Explore', exact=True).click()
+    select_tab(page, 'Explore')
     page.clock.run_for(31000)
     expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_be_enabled()
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.get_by_role('button', name='Study Site', exact=True)).to_be_enabled()
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_have_count(0)
     assert_fits(page, width)
-    page.get_by_role('tab', name='Lineage', exact=True).click()
+    select_tab(page, 'Lineage')
     page.get_by_role('button', name='Choose Understandings', exact=True).click()
     page.get_by_role('button', name='Review founding', exact=True).click()
     expect(page.get_by_role('button', name='Found daughter colony', exact=True)).to_be_disabled()
@@ -327,22 +329,22 @@ def check_game(page, width, url):
     assert founded['ants']['lineage']['foundings'] == 1
     assert not founded['ants']['standardWorkersUnlocked']
     assert founded['exploration']['revealedSites'] == 0 and not founded['exploration']['surveys']
-    page.get_by_role('tab', name='Nest', exact=True).click()
+    select_tab(page, 'Nest')
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
     protein = page.locator('.resource-row').filter(has=page.get_by_text('Protein', exact=True))
     expect(protein).to_have_count(0)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     page.reload(wait_until='networkidle')
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
     expect(protein).to_have_count(0)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     # Repair old untouched daughter colonies that saved inherited visibility.
     legacy_founding = save_game(page)
     lifetime_sugar = legacy_founding['statistics']['sugarU']['total']
     legacy_founding['unlocks']['resources'] = {key: True for key in legacy_founding['unlocks']['resources']}
     legacy_founding['exploration']['proteinDiscovered'] = True
     load_game(page, legacy_founding)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     repaired = save_game(page)
     assert repaired['statistics']['sugarU']['total'] == lifetime_sugar
     assert not repaired['exploration']['proteinDiscovered']
