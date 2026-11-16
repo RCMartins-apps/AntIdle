@@ -74,6 +74,12 @@ jobs:
           python3 tests/mobile_navigation_smoke.py
           python3 tests/mobile_resources_smoke.py
 
+      - name: Check stable brood layout
+        timeout-minutes: 3
+        env:
+          ANTIDLE_PRODUCTION: "1"
+        run: python3 tests/brood_layout_smoke.py
+
       - name: Check blocked-action feedback
         timeout-minutes: 3
         run: python3 tests/blocked_actions_smoke.py

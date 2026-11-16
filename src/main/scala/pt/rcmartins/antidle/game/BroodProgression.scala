@@ -176,18 +176,13 @@ object BroodProgression {
         smallWorkersMatured = data.statistics.smallWorkersMatured.addValue(small), scoutsMatured = data.statistics.scoutsMatured.addValue(scouts),
         maxAliveWorkers = data.statistics.maxAliveWorkers.max(ants.totalWorkersCount)))))
   }
-  def status(ants: AntsData, nest: NestAttributes, resources: BasicResources,
+  def layingStatus(ants: AntsData, nest: NestAttributes, resources: BasicResources,
       upgrades: UpgradesData = UpgradesData.initial, exploration: ExplorationData = ExplorationData.initial, stats: StatisticsData = StatisticsData.initial): String = {
     val projected = RoyalBroodProgression.forecastResources(ants, nest, upgrades, exploration, resources, stats)
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val feedingResources = projected.spendResources(royal.cost)
-    val emergency = EmergencyRecovery.broodCount(ants)
-    val extra = if (emergency > 0) " · 1 queen-tended recovery brood" else ""
-    val orders = if (ants.scoutEggOrders.isEmpty) s"${ants.eggOrders} eggs ordered"
-      else s"${ants.eggOrders} worker · ${ants.scoutEggOrders.size} scout eggs ordered"
     val nextScout = ants.scoutEggOrders.headOption.contains(0)
     val nextCost = if (nextScout) ScoutProgression.eggCost else ActionCost(sugar = eggCost(ants))
-    val queue = s"$orders · ${ants.eggsAndLarvae.size - emergency}/${capacity(nest)} brood places$extra"
     val waiting = if (ants.queuedEggs > 0 && resources.sugar.amount < nextCost.sugar) "Needs sugar"
       else if (nextScout && resources.protein.amount < nextCost.protein) "Needs protein for scout egg"
       else if (ants.queuedEggs > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"
@@ -200,6 +195,15 @@ object BroodProgression {
     val larvae = ants.eggsAndLarvae.collect { case b: AntBrood.Developing if b.isLarvae && !b.small => b }
     val hungry = if (larvae.nonEmpty && feedingResources.protein.amount < 50L) " · Needs protein for larvae"
       else if (larvae.nonEmpty && feedingResources.sugar.amount < 500L) " · Needs sugar for larvae" else ""
-    s"$queue · $waiting$hungry"
+    s"$waiting$hungry"
+  }
+
+  def status(ants: AntsData, nest: NestAttributes, resources: BasicResources,
+      upgrades: UpgradesData = UpgradesData.initial, exploration: ExplorationData = ExplorationData.initial, stats: StatisticsData = StatisticsData.initial): String = {
+    val emergency = EmergencyRecovery.broodCount(ants)
+    val extra = if (emergency > 0) " · 1 queen-tended recovery brood" else ""
+    val orders = if (ants.scoutEggOrders.isEmpty) s"${ants.eggOrders} eggs ordered"
+      else s"${ants.eggOrders} worker · ${ants.scoutEggOrders.size} scout eggs ordered"
+    s"$orders · ${ants.eggsAndLarvae.size - emergency}/${capacity(nest)} brood places$extra · ${layingStatus(ants, nest, resources, upgrades, exploration, stats)}"
   }
 }

@@ -1,21 +1,21 @@
 # Handoff
 
-## 2026-11-16 — blocked-action feedback
+## 2026-11-16 — stable brood panel
 
-- Branch `polish/blocked-action-feedback` starts at main e67bfd8, merged #85.
-  Both mobile navigation/resource passes are merged. Owner authorized this
-  focused polish pass, its PR and native auto-merge; see D52.
-- Shared ActionBlockers renders one visible reason from existing action costs,
-  live requirements and specific busy/queue reasons. It never changes engine
-  eligibility or rejects queueable actions for missing materials. Egg orders
-  explain colony housing; construction explains its queue; scouting explains
-  busy parties; manual hauls distinguish exhausted sites and resource storage.
-- Task assignment shows current worker-pool/capacity/automatic-assignment reasons;
-  trails explain crew limits or missing guides/workers. Action card reasons are
-  linked as accessible button descriptions and do not recreate the action/details.
-- Capacity feedback applies only to an actual shortage, preserving spendable
-  water retained above reduced capacity. Royal brood place requirements now
-  appear alongside other action requirements. Costs and risk remain unchanged.
-- Targeted engine and production browser checks cover queue semantics, housing,
-  busy scouts, capacity vs stock, guide/worker pools and task places. Final results
-  recorded in the PR. Preserve unrelated work/ and Python caches.
+- `polish/stable-brood-panel` starts at main 80525f0 (merged #86). Calendar/header
+  cleanup is separately in PR #87 with auto-merge enabled. Owner requested this
+  brood implementation/follow-up; ordinary branch push is authorized.
+- One Brood heading now serves the collapsible section; its independent [i]
+  holds help, including accurately scoped worker/scout larval care. The duplicate
+  title and always-visible worker-only feeding line are removed.
+- Separate worker/egg-order, introduced scout-order and ordinary brood-place
+  counters use tabular numbers. Two-line laying status space and an always-present
+  cancel control (disabled when empty) keep normal queue updates from moving egg
+  buttons. BroodProgression.layingStatus shares the existing status logic; the
+  complete status wrapper remains compatible. No simulation/balance changes.
+- All 306 engine tests and development/production builds passed, zero Closure
+  warnings/errors. Focused browser checks passed 320/390/1280px: count/status/full/
+  food-pause/cancel transitions, one heading, correct feeding help and independent
+  disclosures and hidden founding-phase scout counters. Existing production UI
+  checks passed 390/1280px. Syntax and git diff --check passed. Regression added
+  to CI with a three-minute timeout. Preserve unrelated work/ and Python caches.

@@ -113,3 +113,8 @@ through `expand_resources`; the compact-resource test verifies the default view.
 320/390/1280px to verify visible housing, scout/busy, queue, storage-capacity and
 resource-shortage feedback. It also checks foodless egg orders and unfunded
 chamber queueing remain enabled and action reasons are accessible descriptions.
+
+`ANTIDLE_PRODUCTION=1 python3 tests/brood_layout_smoke.py` checks a single brood
+heading, scoped feeding details, independent disclosures, and stable egg-button
+positions through empty/large worker-and-scout queues, full brood, food pauses,
+cancellation and live ticks at 320/390/1280px.
