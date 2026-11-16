@@ -40,9 +40,8 @@ object Prestige {
       AllData.initial.copy(world = data.world.copy(saveSeed = data.world.saveSeed + 1L),
         ants = AntsData.initial.copy(lineage = lineage),
         statistics = StatisticsData.newColony(data.statistics),
-        exploration = ExplorationData.initial.copy(proteinDiscovered = data.exploration.proteinDiscovered),
+        exploration = ExplorationData.initial,
         messages = Seq("A daughter queen founds a new colony. Your lineage endures."))
-        .copy(unlocks = AllData.initial.unlocks.copy(resources = data.unlocks.resources))
     }
   }
   def purchase(data: AllData): AllData = purchase(data, SharedPaths.id)

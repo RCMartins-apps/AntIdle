@@ -30,7 +30,7 @@ case class AllDataForSave(
       statistics = statistics,
       messages = messages,
     )
-    DefaultWorkerAssignment.normalize(UpgradeVisibility.reconcile(ResourceVisibility.reconcile(PopulationAging.reconcile(PheromoneTrails.migrateLegacy(ExplorationProgression.migrateLegacySupplies(loaded))))))
+    DefaultWorkerAssignment.normalize(UpgradeVisibility.reconcile(ResourceVisibility.reconcile(PopulationAging.reconcile(PheromoneTrails.migrateLegacy(ExplorationProgression.migrateLegacySupplies(ResourceVisibility.resetUnstartedFounding(loaded)))))))
   }
 
   private def toUpgrades: UpgradesData = {

@@ -19,6 +19,7 @@ def check_prestige(page, width, url):
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(url, wait_until='networkidle')
+    fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
     initial = save_game(page)
     game = progressed_game(initial)
     game['ants'].update(workers=20 * UNIT, scouts=3 * UNIT, daughterQueens=UNIT,
@@ -61,6 +62,7 @@ def check_prestige(page, width, url):
     page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     found.click()
     page.clock.run_for(1)
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
     first = save_game(page)
     assert first['ants']['lineage'] == {'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False}
     assert first['ants']['workers'] == 0 and first['ants']['daughterQueens'] == 0
@@ -89,6 +91,7 @@ def check_prestige(page, width, url):
     page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     found.click()
     page.clock.run_for(1)
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
     founded = save_game(page)
     assert founded['ants']['lineage']['beyondWoodland']
     assert founded['ants']['lineage']['dna'] == 0 and founded['ants']['lineage']['foundings'] == 2

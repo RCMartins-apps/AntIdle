@@ -24,6 +24,19 @@ handcrafted distance-two sites after the six original reveals, in fixed order.
 Banked DNA may also buy an available Understanding outside the founding flow,
 for compatibility with existing lineages. Preview choices are not saved purchases.
 
+## Current-colony visibility
+
+Founding resets resource and population rows to the same visibility as a fresh
+game. Sugar remains visible; other resources and castes unlock through this
+colony's actions. Spending the last unit or losing ants keeps earned rows visible
+for that colony. Lifetime statistics, milestone rewards, DNA and Understandings
+remain permanent, but do not reveal optional current-run resources.
+
+Older saves at an untouched daughter-colony start are repaired on load if all
+current-colony state and statistics are still initial. Active runs keep their
+saved discovery history; empty stocks alone never imply an undiscovered resource.
+No save reset or new schema is needed.
+
 ## Beyond the Woodland
 
 The inner ring, its deposits and progression remain unchanged. No extra protein

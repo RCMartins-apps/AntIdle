@@ -4,7 +4,22 @@ import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.model._
 
 object ResourceVisibility {
-  // Resource unlocks are permanent, even after spending the last unit or losing ants.
+  // Visibility latches within a colony; founding starts a new discovery history.
+  // Old pristine daughter-colony saves may still contain inherited visibility.
+  // Only repair an untouched start: never infer unlock history from an empty stock.
+  def resetUnstartedFounding(data: AllData): AllData = {
+    val pristine = data.statistics == StatisticsData.newColony(data.statistics) &&
+      data.ants == AntsData.initial.copy(lineage = data.ants.lineage) &&
+      data.basicResources == BasicResources.initial && data.nestAttributes == NestAttributes.initial &&
+      data.upgrades == UpgradesData.initial &&
+      data.unlocks.copy(resources = Unlocks.initial.resources) == Unlocks.initial &&
+      data.exploration.copy(proteinDiscovered = false) == ExplorationData.initial
+    if (data.ants.lineage.foundings > 0 && pristine)
+      data.copy(unlocks = data.unlocks.copy(resources = Unlocks.initial.resources), exploration = ExplorationData.initial)
+    else data
+  }
+
+  // Spending the last unit or losing ants does not hide current-colony unlocks.
   def reconcile(data: AllData): AllData = {
     val known = data.unlocks.resources
     ColonyMilestones.recordPeaks(data)

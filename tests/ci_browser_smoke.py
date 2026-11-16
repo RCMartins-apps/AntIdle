@@ -169,6 +169,7 @@ def check_game(page, width, url):
     page.clock.install(time=now)
     page.clock.pause_at(now + timedelta(seconds=1))
     page.goto(url, wait_until='networkidle')
+    fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
     gather = page.get_by_role('button', name='Gather Sugar', exact=True)
     expect(gather).to_have_css('background-color', 'rgb(13, 110, 253)')
     for _ in range(5):
@@ -329,10 +330,23 @@ def check_game(page, width, url):
     page.get_by_role('tab', name='Nest', exact=True).click()
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
     protein = page.locator('.resource-row').filter(has=page.get_by_text('Protein', exact=True))
-    expect(protein).to_be_visible()
+    expect(protein).to_have_count(0)
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
     page.reload(wait_until='networkidle')
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
-    expect(protein).to_be_visible()
+    expect(protein).to_have_count(0)
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    # Repair old untouched daughter colonies that saved inherited visibility.
+    legacy_founding = save_game(page)
+    lifetime_sugar = legacy_founding['statistics']['sugarU']['total']
+    legacy_founding['unlocks']['resources'] = {key: True for key in legacy_founding['unlocks']['resources']}
+    legacy_founding['exploration']['proteinDiscovered'] = True
+    load_game(page, legacy_founding)
+    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources
+    repaired = save_game(page)
+    assert repaired['statistics']['sugarU']['total'] == lifetime_sugar
+    assert not repaired['exploration']['proteinDiscovered']
+    assert not any(repaired['unlocks']['resources'].values())
     assert_fits(page, width)
     check_brood_icons(page, width, save_game(page))
     check_build_version(page, width)

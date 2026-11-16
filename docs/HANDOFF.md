@@ -1,21 +1,26 @@
 # Handoff
 
-## 2026-11-16 — repair task-ordering PR #74
+## 2026-11-16 — reset visibility on founding
 
-- PRs #78–82 are confirmed merged; main is bcad158. PR #74 remained open on
-  `ui/manual-tasks-first`, with auto-merge enabled but an old failed build and
-  a stale branch. Its task-ordering change was absent from main.
-- Original CI job 132450871930 failed with Java heap space exhaustion and then
-  the ten-minute build timeout. Current main's explicit 3 GB/G1 .jvmopts fix is
-  now integrated; preserve all required checks and timeouts.
-- This branch merges current main without rewriting history. Game diff is only
-  the display sort: manually assignable tasks before implicit roles, with uiOrder
-  retained inside each group. The browser fixture deliberately mixes both kinds
-  and checks ordering and mobile geometry. Saved task order/gameplay stay intact.
-- D45 restored alongside later decisions; latest polish context is preserved.
-  Development build and maintained gameplay browser checks passed at 390/1280,
-  including the mixed task fixture with a later-order manual Brood Nurse, ordering
-  assertions and control geometry. git diff --check passed. Repaired #74 is
-  authorized for push and native auto-merge; check GitHub for live state.
-- Preserve unrelated work/ and Python caches. Check GitHub for live merge state;
-  finish after queued native auto-merge with enforced checks, without CI polling.
+- Branch `fix/prestige-visibility-reset` starts at main bf8bf05, merged #74.
+  All five polish PRs #78–82 and the repaired #74 are now on main. Owner requested
+  resource/population rows reset like a fresh game each prestige; see D50.
+- Prestige.found stops copying resource unlock flags and protein discovery.
+  Rows unlock through current-colony actions and still latch through spending
+  or losses. Standard Worker Development still introduces protein and Nursery
+  normally. Lifetime statistics/peaks, milestone bonuses, DNA and Understandings
+  are preserved. Founding preview/help now describes fresh visibility correctly.
+- On load, old pristine daughter-colony saves clear inherited visibility only if
+  all current-colony state/statistics match the initial state. Active histories
+  are preserved; zero stock alone is never used to erase an unlock. No schema
+  bump or save wipe. ResourceVisibility.resetUnstartedFounding owns this check.
+- Validation: 299 engine tests + 4 balance tests passed; fastOptJS/fullOptJS passed
+  with zero Closure errors/warnings. Production CI browser gate passed 390/1280,
+  comparing all rows to fresh start after founding/reload and repairing an old
+  untouched save while retaining lifetime totals. Production prestige gate passed
+  320/390/1280 with fresh resource rows at both introductory foundings. Python
+  syntax and git diff --check passed. Final formatting/docs only changed afterward.
+- Owner authorized PR creation and native auto-merge. Main ruleset enforces
+  test and changes / classify with strict freshness and no bypass; queue after
+  this documentation update is pushed. Preserve unrelated work/ and Python
+  caches. No changes to ongoing active saves' flags.

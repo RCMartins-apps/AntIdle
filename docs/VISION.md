@@ -42,6 +42,9 @@ The colony should need better methods because supporting growth creates natural
 constraints. Basic sugar collection has diminishing returns, giving exploration
 and alternative food sources a purpose. New content should deepen decisions
 and create longer-term goals without burying the player in explanations.
+Resource and caste rows reset to a fresh-game reveal sequence on founding,
+including optional resources. Unlocks stay visible for the rest of that colony;
+lifetime milestones and inherited powers remain permanent.
 Default screens should show concise live data and controls. Important mechanics
 belong behind [i] buttons; redundant descriptive prose should be removed.
 

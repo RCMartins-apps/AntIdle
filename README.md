@@ -152,8 +152,8 @@ supplies and outpost-extension Knowledge costs, so optional research spending do
 not block founding. Sugar-only founding research still precedes exploration.
 
 Resource statistics count retained gains, not spending or discarded overflow.
-Tunnelling capacity remains limited and grows with Nest chambers. Permanent
-resource visibility is separate from current-colony unlocks and survives founding.
+Tunnelling capacity remains limited and grows with Nest chambers. Resource
+visibility latches within the current colony and resets on founding.
 
 ## Running build version
 
@@ -490,8 +490,8 @@ with a ready daughter queen:
 
 - Reset colony resources, ants/brood, chambers, research, explored map,
   discoveries, trails, queues and worker assignments.
-- Keep DNA, purchased Understandings, lifetime statistics, discovered resource
-  visibility, settings and stored simulation time. The new colony begins with
+- Keep DNA, purchased Understandings, lifetime statistics/milestones, settings
+  and stored simulation time. Resource and population rows unlock again in the new colony. The new colony begins with
   its queen and no workers, using the normal initial economy.
 - Each founding awards **1 DNA** and automatically adds **+10% sugar production**,
   stacked additively (+10%, +20%, etc.). Sugar Collectors and Aphid Tenders receive this bonus. Sugar gathering clicks, expedition rewards, costs, upkeep,
@@ -911,9 +911,9 @@ open across unrelated chamber/research updates.
 `python3 tests/concise_ui_smoke.py` checks those details and live panel stability
 at 320/390/1920px; outpost progression checks cover upgraded rates and staffing.
 
-After founding, remembered protein stays visible but does not reveal Nursery
-Chamber during the small-worker phase. Normal Nursery access returns with
-standard-worker progression; already-built Nurseries remain visible.
+After founding, resources and castes unlock again through the new colony.
+Standard Worker Development introduces protein and restores normal Nursery
+access; already-built Nurseries remain visible within a colony.
 
 ## Balance experiments
 
