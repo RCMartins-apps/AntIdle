@@ -64,6 +64,13 @@ def check(page, width, url):
 
 
 def check_timing_layout(page, width, url):
+    # A common wider Linux font reproduces CI's bold-number wrap even on hosts
+    # whose default UI font is narrower. Keep all geometry assertions unchanged.
+    page.add_init_script("""addEventListener('DOMContentLoaded', () => {
+        const style = document.createElement('style');
+        style.textContent = '.compact-resource-value { font-family: "DejaVu Sans", sans-serif; }';
+        document.head.append(style);
+    });""")
     now = datetime(2026, 11, 16, tzinfo=timezone.utc)
     page.clock.install(time=now)
     page.clock.pause_at(now + timedelta(seconds=1))
@@ -107,6 +114,11 @@ def check_timing_layout(page, width, url):
                     expected += ' left'
                 expect(sugar.locator('.compact-resource-warning')).to_have_text(expected)
                 expect(sugar).to_have_attribute('title', 'Sugar: ' + amount + (', ' + timing if timing else ''))
+                values = summary.locator('.compact-resource-value').evaluate_all("""nodes => nodes.map(el => ({
+                    value: el.textContent, width: el.clientWidth, contentWidth: el.scrollWidth,
+                    height: el.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(el).lineHeight)
+                }))""")
+                assert all(v['contentWidth'] <= v['width'] + 1 and v['height'] <= v['lineHeight'] + 1 for v in values), values
                 warning = sugar.locator('.compact-resource-warning')
                 if timing.startswith('Empty'):
                     expect(warning).to_have_css('color', 'rgb(220, 53, 69)')
@@ -176,7 +188,10 @@ if __name__ == '__main__':
     Thread(target=server.serve_forever,daemon=True).start()
     try:
         with sync_playwright() as p:
-            browser=p.chromium.launch(headless=True,executable_path=shutil.which('chromium'))
+            chromium = os.environ.get('CHROMIUM_PATH')
+            if not chromium and not os.environ.get('GITHUB_ACTIONS'):
+                chromium = shutil.which('chromium')
+            browser=p.chromium.launch(headless=True,executable_path=chromium)
             try:
                 for width in [320,390,1280]:
                     context=browser.new_context(viewport={'width':width,'height':844},is_mobile=width<=767,has_touch=width<=767)

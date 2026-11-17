@@ -222,6 +222,7 @@
  .compact-resources {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem .65rem}
  .compact-resource {display:grid;grid-template-columns:18px minmax(0,1fr);grid-template-rows:auto minmax(1.82rem,auto);align-items:center;gap:0 .25rem;min-width:0;font-size:.9rem;font-variant-numeric:tabular-nums}
  .compact-resource .resource-icon {width:18px;height:18px;margin:0}
+ .compact-resource-value {white-space:nowrap;font-size:clamp(.75rem,3.5vw,.9rem)}
  .compact-resource.at-capacity .compact-resource-value {color:var(--bs-primary);font-weight:700}
  .compact-resource-warning {grid-column:1 / -1;align-self:start;line-height:1.3;font-size:.7rem;color:var(--bs-secondary-color);overflow-wrap:anywhere}
  .compact-resource.running-low .compact-resource-warning {color:var(--bs-danger)}

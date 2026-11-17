@@ -1,22 +1,25 @@
 # Handoff
 
-## 2026-11-16 — stable resource timing layout
+## 2026-11-17 — repair PR #89's narrow-font layout failure
 
-- `fix/stable-resource-timing` starts at main c20a295 (merged #88). Owner requested
-  fixing resource-panel resizing and explicitly authorized a PR with auto-merge.
-- Cause: compact resources used content-sized wrapping flex cells; timing warnings
-  changed their widths and were display:none when empty. Full rows also lacked
-  reserved timing height. Fixed three-column summary tracks and two-line timing
-  slots keep existing resource/cell geometry stable. Resource reveals still add rows.
-- Compact summary now projects full as well as empty forecasts, abbreviating the
-  visible text while retaining the complete estimate in accessible labels/titles.
-  Only depletion is red. No stale estimate latching or gameplay/rate changes.
-- Added repeated full/empty/zero and varying-number-width browser checks, including
-  collapsed/expanded phone panels and desktop rows. Existing mobile resource,
-  catch-up and reveal tests remain. Development/production builds passed with
-  zero Closure warnings/errors; resource geometry/behavior passed 320/390/1280px,
-  production UI passed 390/1280px, offline/update checks passed 390/1280px.
-  Four packaging tests, JS/Python syntax and git diff --check passed. Final edits
-  were documentation only. No engine changes or additional engine tests needed.
-- Preserve unrelated work/ and Python caches. Required test and changes / classify
-  must remain enforced before enabling native squash auto-merge.
+- Continue `fix/stable-resource-timing`, PR #89, at 2866d9e. Auto-merge was enabled
+  but required test failed in job 133127511588/run 43815802931: on 320px, full-state
+  bold 999.99K wrapped, increasing panel height by exactly 21.609375px. This was
+  a real CSS issue, not missing auto-merge or a reason to weaken the checks.
+- Reproduced the exact CI height sequence locally using DejaVu Sans for compact
+  values (the local default font was narrower). Values now use nowrap and a
+  bounded responsive font size to fit narrow fixed cells without clipping.
+- The resource regression keeps all geometry assertions and adds single-line /
+  no-horizontal-overflow checks for values, using the wider font across reloads.
+  Its launcher honors CHROMIUM_PATH and uses Playwright-managed Chromium on
+  GitHub Actions, matching the production gate's browser selection.
+- Pinned Chromium download was denied by the environment's CDN policy; local
+  system Chromium plus the wider-font fixture reproduces the CI failure exactly.
+  The corrected production resource/catch-up/stability suite passed at
+  320/390/1280px, including all unchanged geometry assertions and the new
+  non-wrapping/non-overflow checks. Production UI passed 390/1280px. fullOptJS
+  passed with zero Closure warnings/errors; four packaging tests and syntax/diff
+  checks passed. No engine changes. Push this repair to the same PR branch;
+  native squash auto-merge remains authorized with enforced required checks.
+- Preserve unrelated work/ and Python caches; keep required test and changes /
+  classify enforced. Owner requested fixing the existing PR and retaining auto-merge.
