@@ -19,7 +19,7 @@
       const a = app.querySelector('#' + id + '-tab');
       if (a) a.innerHTML = `<span class=desktop-tab-label>${a.textContent}</span><span class=mobile-tab-label>${label}</span>`;
     }
-    let current = 'nest', group = 'nest', changing = false;
+    let current = 'nest', group = 'nest', changing = false, returnView = 'nest';
     const tab = id => app.querySelector('#' + id + '-tab');
     const available = id => !!tab(id) && !tab(id).parentElement.hidden;
     const groupFor = id => id === 'milestones' && !available('lineage') ? 'menu' : Object.keys(groups).find(key => groups[key].tabs.includes(id)) || 'menu';
@@ -36,7 +36,14 @@
     const menu = document.createElement('button');
     menu.type = 'button'; menu.className = 'mobile-menu-button btn btn-outline-secondary';
     menu.textContent = '☰'; menu.setAttribute('aria-label', 'Game menu');
-    menu.addEventListener('click', () => select('settings'));
+    menu.setAttribute('aria-controls', 'settingsContent');
+    function closeMenu() { select(available(returnView) && groupFor(returnView) !== 'menu' ? returnView : 'nest'); }
+    menu.addEventListener('click', () => group === 'menu' ? closeMenu() : select('settings'));
+    app.addEventListener('keydown', event => {
+      if (media.matches && group === 'menu' && event.key === 'Escape') {
+        event.preventDefault(); closeMenu(); menu.focus();
+      }
+    });
     tabs.parentElement.append(menu);
     // Secondary views share their existing panels without duplicating controls/state.
     function secondary(id, label, parent) {
@@ -61,6 +68,9 @@
           a.classList.toggle('active', id === current);
         }
       }
+      menu.setAttribute('aria-expanded', String(group === 'menu'));
+      menu.textContent = group === 'menu' ? '×' : '☰';
+      menu.title = group === 'menu' ? 'Close game menu' : 'Open game menu';
       app.dataset.mobileGroup = group;
       app.dataset.mobileView = current;
       for (const button of nav.children) {
@@ -72,6 +82,7 @@
     function select(id) {
       if (!id || !available(id)) return;
       if (media.matches) scroll[current] = window.scrollY;
+      if (groupFor(id) === 'menu' && group !== 'menu') returnView = current;
       current = id; group = groupFor(id); last[group] = id;
       if (id === 'purchased') { const purchased = app.querySelector('.purchased-upgrades'); if (purchased) purchased.open = true; }
       const base = id === 'chambers' ? 'nest' : id === 'purchased' ? 'upgrades' : id;
@@ -84,6 +95,7 @@
       if (!changing) {
         const id = event.target.id.replace(/-tab$/, '');
         if (media.matches) scroll[current] = window.scrollY;
+        if (groupFor(id) === 'menu' && group !== 'menu') returnView = current;
         current = id; group = groupFor(id); last[group] = id; refresh();
         if (media.matches) requestAnimationFrame(() => window.scrollTo({top: scroll[id] || 0, behavior: 'instant'}));
       }
