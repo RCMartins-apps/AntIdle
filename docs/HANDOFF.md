@@ -22,5 +22,8 @@
   check passed, including strengthened actual restore through index.html.
   Final actionlint, Python syntax, documentation links and diff checks passed.
 - No visual UI change; screenshots not applicable. Live GitHub publish/cleanup
-  still requires opening a PR; not claimed tested. No PR requested for this branch.
+  is not yet verified. Owner authorized PR and auto-merge. Main rules verified
+  active with required test and changes / classify, strict up-to-date, no bypass.
+  New standing rule: include preview links in PR handoffs, with honest pending/
+  live/ineligible/removed status. No extra CI polling required.
   Preserve unrelated work/ and Python caches.

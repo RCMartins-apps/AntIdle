@@ -948,3 +948,8 @@ Saves and UI preferences must be isolated per PR, keeping production keys intact
 Production offline caching must not intercept preview navigation. Use read-only
 build/test jobs and separate static publishing, shared publication concurrency,
 revision freshness guards and explicit runtime limits. See PR-PREVIEWS.md.
+
+Always include the playable preview URL alongside PR links in handoffs. Mark
+its actual state (pending, confirmed live, ineligible, or removed after closure);
+do not claim a deployment is available merely because the URL is predictable.
+This does not require polling after auto-merge is enabled.

@@ -4,6 +4,10 @@ A passing, non-documentation PR from this repository publishes its game at:
 
 `https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-<number>/`
 
+PR handoffs include the GitHub PR link and this preview URL, labeled pending
+until deployment is confirmed. Docs-only/fork PRs have no generated preview;
+merged/closed previews are removed. Screenshots remain required for visual changes.
+
 Use the PR's deployment/environment link or the **Preview link** in the PR Test
 workflow summary. New pushes update that URL after validation; publication checks
 the revision marker before reporting success. Closing/merging the PR removes its

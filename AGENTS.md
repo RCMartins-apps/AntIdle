@@ -179,6 +179,13 @@ See [CI handoff setup](docs/CI-WORKFLOW.md). Do not change protection requiremen
 or bypass checks merely to queue a merge. If setup is missing, report it and use
 normal checked merging for an explicitly authorized merge request.
 
+Whenever creating or handing off a PR, include both its GitHub link and its
+playable preview link: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-N/.
+Label a preview pending until deployment is confirmed; do not poll CI just to
+make it live. For docs-only/fork PRs explain that no preview is generated; after
+merge/closure explain that the preview is removed rather than presenting it as
+live. This link requirement supplements screenshots for visual changes.
+
 Once GitHub confirms auto-merge is queued with enforced checks, finish the turn
 without polling CI. Report “auto-merge enabled; pending CI,” not “merged.” GitHub
 performs the merge after requirements pass; failures remain on the PR and are not
