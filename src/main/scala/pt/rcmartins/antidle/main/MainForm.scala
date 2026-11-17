@@ -30,8 +30,13 @@ object MainForm {
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
 
-  private def rememberDetails(key: String, defaultOpen: Boolean = false): Modifier[ReactiveHtmlElement[HTMLElement]] =
-    onMountCallback(ctx => UiPreferences.bindDetails(ctx.thisNode.ref, key, defaultOpen))
+  private def rememberDetails(key: String, defaultOpen: Boolean = false): Modifier[ReactiveHtmlElement[HTMLElement]] = {
+    var disconnect: () => Unit = () => ()
+    onMountUnmountCallback(
+      ctx => disconnect = UiPreferences.bindDetails(ctx.thisNode.ref, key, defaultOpen),
+      _ => disconnect(),
+    )
+  }
 
   private def activityStatus(label: Signal[String], extraClass: String = ""): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := s"activity-status $extraClass", dataAttr("state") <-- label.map(ActivityStatus.kind).distinct,
@@ -1726,43 +1731,50 @@ object MainForm {
           )
         }
       },
-      span(
-        "Available standard workers: ",
-        b(child.text <-- availableWorkersCountSignal.map(prettyNumberStr)),
-      ),
       smallWorkerTasks,
+      span(className := "idle-worker-summary",
+        "Idle workers: ",
+        b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.idleWorkersCount))),
+      ),
       children <-- unlockedAntTasks.map(_.sortBy(task => (if (task.showButtons) 0 else 1, task.uiOrder)).map(task => taskDiv(task))),
     )
 
   private def smallWorkerTasks: ReactiveHtmlElement[HTMLDivElement] = div(
+    display <-- antsSignal.map(ants => if (ants.smallWorkers > 0L) "block" else "none").distinct,
     child.maybe <-- antsSignal.map(_.smallWorkers > 0L).distinct.map { alive => Option.when(alive) {
-      div(className := "small-worker-tasks border rounded p-2 my-2",
-        infoHeading("Small workers · 50%", div("Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
-        div(className := "small-collector-summary", child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) =>
-          s"${ants.smallCollectors / u} × ${resourceRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = true), stats))} sugar/s"
-        }),
+      detailsTag(className := "small-worker-tasks border rounded p-2 my-2",
+        rememberDetails("tasks.small-workers", defaultOpen = true),
+        summaryTag(className := "small-workers-summary", minHeight.px := 44,
+          "Small workers · ", child.text <-- antsSignal.map(ants => prettyNumberStr(ants.smallWorkers)).distinct),
+        infoDetails("Small workers", div("50% task output and upkeep. Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
+        div(className := "small-collector-summary",
+          div(child.text <-- antsSignal.map(ants => s"Sugar Collector (${ants.smallCollectors / u})")),
+          div(className := "small text-body-secondary", child.text <-- antsSignal.combineWith(upgradesSignal, statisticsData.signal).map { case (ants, upgrades, stats) =>
+            s"${resourceRateStr(ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = true), stats))} sugar/s each"
+          })),
         List(AntTask.Tunneler, AntTask.Scavenger, AntTask.BroodNurse).map { task =>
-          div(className := "small-worker-job my-2",
+          div(className := "small-worker-job task-row row my-2",
             display <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
-              if (task == AntTask.Scavenger && !ants.standardWorkersUnlocked || task == AntTask.BroodNurse && nest.chambers.nurseryChamber.level == 0) "none" else "block"
+              if (task == AntTask.Scavenger && !ants.standardWorkersUnlocked || task == AntTask.BroodNurse && nest.chambers.nurseryChamber.level == 0) "none" else "flex"
             },
-            span(child.text <-- antsSignal.map { ants =>
+            span(className := "col-6", child.text <-- antsSignal.map { ants =>
               val count = if (task == AntTask.Tunneler) ants.smallTunnelers else if (task == AntTask.Scavenger) ants.smallScavengers else ants.smallNurses
               s"${task.name}: ${count / u} "
             }),
-            button(className := "btn btn-outline-primary mx-1", typ := "button", minHeight.px := 44, minWidth.px := 44, "−", aria.label := s"Remove small ${task.name}",
+            div(className := "task-controls",
+            button(className := "btn btn-primary m-1", typ := "button", minHeight.px := 44, minWidth.px := 44, "−", aria.label := s"Remove small ${task.name}",
               disabled <-- antsSignal.map { ants =>
                 (if (task == AntTask.Tunneler) ants.smallTunnelers else if (task == AntTask.Scavenger) ants.smallScavengers else ants.smallNurses) == 0L
               },
               onClick --> (event => Actions.assignSmallWorker(task, -taskMultiplier(event).toLong * u))),
-            button(className := "btn btn-outline-primary mx-1", typ := "button", minHeight.px := 44, minWidth.px := 44, "+", aria.label := s"Assign small ${task.name}",
+            button(className := "btn btn-primary m-1", typ := "button", minHeight.px := 44, minWidth.px := 44, "+", aria.label := s"Assign small ${task.name}",
               disabled <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
                 val current = if (task == AntTask.Tunneler) ants.smallTunnelers else if (task == AntTask.Scavenger) ants.smallScavengers else ants.smallNurses
                 val max = if (task == AntTask.Tunneler) Long.MaxValue else DefaultWorkerAssignment.capacity(task, nest) - ants.taskWorkers(task)
                 ants.smallCollectors < u || current >= max
               },
-              onClick --> (event => Actions.assignSmallWorker(task, taskMultiplier(event).toLong * u))),
-            div(className := "small text-body-secondary", task match {
+              onClick --> (event => Actions.assignSmallWorker(task, taskMultiplier(event).toLong * u)))),
+            div(className := "task-rate small text-body-secondary", task match {
               case AntTask.Tunneler => ""
               case AntTask.Scavenger => "+0.025 protein/s each"
               case _ => ""

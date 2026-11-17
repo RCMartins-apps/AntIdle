@@ -132,3 +132,12 @@ Resource timing geometry checks also use a wider Linux numeric font to reproduce
 PR #89's bold-value wrap at 320px, and assert every compact value stays on one
 line and fits its cell without clipping. The mobile-resource launcher honors
 CHROMIUM_PATH; GitHub Actions uses the pinned Playwright browser by default.
+
+`python3 tests/task_controls_smoke.py` checks the production task UI at
+320/390/1280px: persistent small-worker folding and total count, matching right
+aligned primary controls, mobile batch assignment, actual idle/default-pool
+semantics, hiding the exhausted small-worker section and stable blocker geometry.
+
+Brood disclosure tests block native toggle events and keep the browser clock
+paused while asserting saved closed/open preferences and reload behavior. The
+open-attribute observer must persist state without timer advances or retries.

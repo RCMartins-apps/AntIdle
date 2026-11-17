@@ -12,6 +12,9 @@ from ci_browser_smoke import ProductionHandler
 
 
 def check(page, width, url):
+    # Persistence must not depend on native toggle delivery. Suppressing those
+    # events deterministically reproduces the original saved-state failure.
+    page.add_init_script("document.addEventListener('toggle', event => event.stopImmediatePropagation(), true)")
     now=datetime(2026,11,16,tzinfo=timezone.utc)
     page.clock.install(time=now)
     page.clock.pause_at(now+timedelta(seconds=1))
@@ -67,12 +70,17 @@ def check(page, width, url):
     assert abs(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")-before)<=1
     panel.locator(':scope > .brood-summary').click()
     expect(worker).not_to_be_visible()
+    # Attribute observation persists state even with native toggle events blocked,
+    # without advancing the paused clock or allowing a timed retry.
+    assert page.evaluate("localStorage.getItem('antidle.ui.details.nest.brood')") == 'closed'
     panel.locator(':scope > .brood-summary').click()
     expect(worker).to_be_visible()
+    assert page.evaluate("localStorage.getItem('antidle.ui.details.nest.brood')") == 'open'
     founding=copy.deepcopy(game)
     founding['ants'].update(standardWorkersUnlocked=False,workers=0,smallWorkers=2*UNIT,tasks=[])
     founding['nestAttributes']['chambers']['nurseryChamber']['level']=0
     load_game(page,founding)
+    expect(panel).to_have_attribute('open','')
     expect(panel.locator('.brood-scout-orders')).to_have_count(0)
     expect(panel.locator('.brood-order-count')).to_contain_text('Egg orders')
     expect(page.get_by_role('button',name='Raise Small Worker Egg',exact=True)).to_be_visible()
@@ -85,7 +93,10 @@ if __name__=='__main__':
     Thread(target=server.serve_forever,daemon=True).start()
     try:
         with sync_playwright() as p:
-            browser=p.chromium.launch(headless=True,executable_path=shutil.which('chromium'))
+            chromium=os.environ.get('CHROMIUM_PATH')
+            if not chromium and not os.environ.get('GITHUB_ACTIONS'):
+                chromium=shutil.which('chromium')
+            browser=p.chromium.launch(headless=True,executable_path=chromium)
             try:
                 for width in [320,390,1280]:
                     context=browser.new_context(viewport={'width':width,'height':844},is_mobile=width<=767,has_touch=width<=767)

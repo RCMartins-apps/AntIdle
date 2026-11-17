@@ -1,25 +1,22 @@
 # Handoff
 
-## 2026-11-17 — repair PR #89's narrow-font layout failure
+## 2026-11-17 — replace PR #90's unreliable toggle-event persistence
 
-- Continue `fix/stable-resource-timing`, PR #89, at 2866d9e. Auto-merge was enabled
-  but required test failed in job 133127511588/run 43815802931: on 320px, full-state
-  bold 999.99K wrapped, increasing panel height by exactly 21.609375px. This was
-  a real CSS issue, not missing auto-merge or a reason to weaken the checks.
-- Reproduced the exact CI height sequence locally using DejaVu Sans for compact
-  values (the local default font was narrower). Values now use nowrap and a
-  bounded responsive font size to fit narrow fixed cells without clipping.
-- The resource regression keeps all geometry assertions and adds single-line /
-  no-horizontal-overflow checks for values, using the wider font across reloads.
-  Its launcher honors CHROMIUM_PATH and uses Playwright-managed Chromium on
-  GitHub Actions, matching the production gate's browser selection.
-- Pinned Chromium download was denied by the environment's CDN policy; local
-  system Chromium plus the wider-font fixture reproduces the CI failure exactly.
-  The corrected production resource/catch-up/stability suite passed at
-  320/390/1280px, including all unchanged geometry assertions and the new
-  non-wrapping/non-overflow checks. Production UI passed 390/1280px. fullOptJS
-  passed with zero Closure warnings/errors; four packaging tests and syntax/diff
-  checks passed. No engine changes. Push this repair to the same PR branch;
-  native squash auto-merge remains authorized with enforced required checks.
-- Preserve unrelated work/ and Python caches; keep required test and changes /
-  classify enforced. Owner requested fixing the existing PR and retaining auto-merge.
+- Continue `polish/task-controls`, PR #90, head 072d2d0. Second CI attempt failed
+  job 133869603733 at the new closed-preference assertion: advancing a simulated
+  clock does not guarantee native toggle delivery. The prior timing-only repair
+  was insufficient. No required checks are removed or weakened.
+- UiPreferences now observes the details element's open attribute and saves at
+  the mutation microtask checkpoint. Restore happens before observation starts.
+  bindDetails returns a disconnect function; rememberDetails binds/disconnects it
+  through Laminar mount/unmount callbacks, preventing detached stale writes.
+- Brood regression blocks all native toggle events and asserts saved closed/open
+  states immediately, with no waits or timer advances, then checks reload. This
+  deterministically failed against the old production bundle and passed against
+  the new development and production bundles at 320/390/1280px.
+- Wide-font task controls passed 320/390/1280px. Development/production builds
+  passed with zero Closure warnings/errors. Existing production UI checks passed
+  390/1280px, and Python syntax/diff checks passed. Final edits were docs only.
+  No simulation/balance changes.
+- Push this repair to the existing branch. Owner authorizes PR #90 auto-merge
+  with enforced test and changes / classify checks. Preserve work/ and caches.

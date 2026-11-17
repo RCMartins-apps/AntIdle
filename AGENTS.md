@@ -120,6 +120,8 @@ Preserve disclosure/control nodes across live ticks. Project minimal visibility
 and structural flags, then apply distinct before creating their DOM. Bind live
 costs, rates, levels and labels inside that stable structure; do not recreate an
 entire section for unrelated model updates and reset its open/focus state.
+Persist native disclosures from open-attribute observation, rather than deferred
+native toggle delivery; disconnect observers when their elements unmount.
 
 ## Verification
 
