@@ -927,3 +927,12 @@ all progression/reward rules unchanged.
 Selection and keyboard focus must follow the six hexagon edges, rather than
 using rectangular inset shadows or outlines. Use a solid blue selection border
 and a distinct dashed keyboard-focus border.
+
+## D59: Screenshots accompany visual changes
+
+The owner requires screenshots in chat for every visual/UI change so results
+can be reviewed from a phone. Capture the implemented game, mobile first, plus
+other affected layouts/states as appropriate. Use supported chat image delivery;
+local file links are insufficient. Report capture/delivery limitations honestly.
+This is a standing workflow rule in AGENTS.md, not a requirement for docs-only
+or nonvisual work.
