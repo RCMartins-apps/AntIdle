@@ -887,6 +887,15 @@ costs belong in details and must correctly cover worker and scout larvae, rather
 than saying the shared care cost is worker-only. Keep native independent section
 and information disclosures, current-unlock visibility and gameplay unchanged.
 
+## D55: Resource estimates must not resize the panel — approved
+
+The owner reported resource-panel jumps when full/empty estimates briefly appear
+and disappear. Use fixed mobile resource columns and reserve timing space in both
+the compact summary and complete rows. Forecast text and number width must not
+change positions for already introduced resources. Keep valid live estimates and
+capacity/depletion colors; do not retain stale warnings or alter simulation rates.
+Compact text may be shorter when the complete estimate remains accessible.
+
 
 ## D56: Collapsible small workers and stable task assignment — approved
 
