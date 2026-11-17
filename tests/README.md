@@ -141,3 +141,7 @@ semantics, hiding the exhausted small-worker section and stable blocker geometry
 Brood disclosure tests block native toggle events and keep the browser clock
 paused while asserting saved closed/open preferences and reload behavior. The
 open-attribute observer must persist state without timer advances or retries.
+
+Exploration map and prestige regressions verify regular hex proportions, board
+containment, 44px targets and two coincident edge endpoints for every axial
+neighbor pair in the first and expanded rings at 320/390/1280px.

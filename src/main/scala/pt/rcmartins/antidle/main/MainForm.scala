@@ -88,6 +88,10 @@ object MainForm {
     nest.royalBroodSlots > 0 || ants.daughterQueens > 0L || ants.lineage.foundings > 0
   }.distinct
 
+  // Flat-top regular hexagons: adjacent columns step by 3/4 width and half height.
+  private def mapHexWidth(expanded: Boolean): Double = if (expanded) 27.0 else 36.0
+  private def mapHexHeight(expanded: Boolean): Double = mapHexWidth(expanded) * Math.sqrt(3.0) / 2.0
+
   private val ResourcesWidth = 500
   private val NestWidth = 800
   private val MessagesWidth = 575
@@ -2177,8 +2181,10 @@ object MainForm {
       },
       div(className := "col-12 p-3",
         infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
-        div(className := "hex-map", className("expanded") <-- antsSignal.map(_.lineage.beyondWoodland), role := "group", aria.label := "Exploration map",
-          button(className := "map-hex nest-hex", typ := "button", left.percent := 50, top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
+        div(className := "hex-map", className("expanded") <-- antsSignal.map(_.lineage.beyondWoodland),
+          styleAttr <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map(expanded =>
+            s"--hex-width:${mapHexWidth(expanded)}%;--hex-height:${mapHexHeight(expanded)}%"), role := "group", aria.label := "Exploration map",
+          button(className := "map-hex nest-hex", typ := "button", dataAttr("q") := "0", dataAttr("r") := "0", left.percent := 50, top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
             aria.label := "Nest surroundings",
             aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
             child <-- feedback("surroundings").map(f => if (f.percent.isDefined) "scouting" else "surroundings").distinct.map(MapIcons.apply), span("Nest"),
@@ -2187,7 +2193,9 @@ object MainForm {
           children <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map { expanded =>
             ExplorationMap.availableSites(AntsData(lineage = Lineage(beyondWoodland = expanded))).map { site =>
             button(className := "map-hex", typ := "button", dataAttr("site") := site.id,
-              left.percent := (if (expanded) 50 + (site.x - 50) * 3 / 4 else site.x), top.percent := (if (expanded) 62 + (site.y - 50) * 3 / 4 else site.y),
+              dataAttr("q") := site.q.toString, dataAttr("r") := site.r.toString,
+              left.percent := 50.0 + .75 * mapHexWidth(expanded) * site.q,
+              top.percent := (if (expanded) 62.0 else 50.0) + mapHexHeight(expanded) * (site.r + site.q / 2.0),
               disabled <-- explorationSignal.map(data => !ExplorationMap.revealed(data, site.id)),
               aria.label <-- feedback(site.id).map(f => if (f.kind == "unknown") "Unexplored hexagon" else s"${site.name}: ${f.label}"),
               dataAttr("activity") <-- feedback(site.id).map(_.kind),

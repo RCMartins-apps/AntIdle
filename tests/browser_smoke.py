@@ -92,6 +92,33 @@ def assert_fits(page, width):
                 assert box["height"] >= 44, button.inner_text()
 
 
+def assert_touching_hexes(page):
+    """Every axial neighbor shares both endpoints of a complete hex edge."""
+    import math
+    tiles = page.locator('.hex-map .map-hex').evaluate_all("""nodes => nodes.map(el => {
+        const b = el.getBoundingClientRect(), map = el.closest('.hex-map').getBoundingClientRect();
+        return {q:Number(el.dataset.q),r:Number(el.dataset.r),x:b.x,y:b.y,w:b.width,h:b.height,
+            map:{x:map.x,y:map.y,w:map.width,h:map.height}};
+    })""")
+    def vertices(t):
+        return [(t['x']+x*t['w'],t['y']+y*t['h']) for x,y in [(.25,0),(.75,0),(1,.5),(.75,1),(.25,1),(0,.5)]]
+    adjacent = 0
+    for index,t in enumerate(tiles):
+        assert t['w'] >= 44 and t['h'] >= 44, t
+        assert abs(t['h']-math.sqrt(3)*t['w']/2) < .5, t
+        m=t['map']
+        assert t['x'] >= m['x']-.5 and t['y'] >= m['y']-.5, t
+        assert t['x']+t['w'] <= m['x']+m['w']+.5 and t['y']+t['h'] <= m['y']+m['h']+.5, t
+        for other in tiles[index+1:]:
+            dq,dr=t['q']-other['q'],t['r']-other['r']
+            if max(abs(dq),abs(dr),abs(dq+dr)) != 1:
+                continue
+            adjacent += 1
+            shared=sum(any(math.hypot(x-u,y-v)<.5 for u,v in vertices(other)) for x,y in vertices(t))
+            assert shared==2,(t,other,shared)
+    assert adjacent >= 6, tiles
+
+
 def progressed_game(initial):
     game = copy.deepcopy(initial)
     for group in ("actions", "tabs", "resources"):

@@ -906,3 +906,11 @@ Remember the fold state, hide the section when no small workers remain and keep
 50% mechanics in help. Idle workers means genuinely unassigned standard workers;
 the existing default-task pool remains usable for jobs and missions. Reserve
 status space rather than hiding important assignment blockers. No balance changes.
+
+## D58: Exploration hexagons share edges — approved
+
+The owner requested a connected hex map rather than separated columns. Use
+regular flat-top hexagon proportions and matching axial spacing so neighboring
+cells share complete edges in both current map ranges. Keep thin outlines for
+individual tile clarity, existing selection/fog behavior, safe touch targets and
+all progression/reward rules unchanged.
