@@ -970,17 +970,25 @@ object MainForm {
         },
         div(className := "brood-counts mb-2",
           div(className := "brood-order-count",
-            span(className := "small text-body-secondary", child.text <-- scoutOrdersVisible.map(if (_) "Worker orders" else "Egg orders")),
-            b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.eggOrders.toLong * u)).distinct)),
+            span(className := "small text-body-secondary", "Egg orders"),
+            div(className := "brood-order-types",
+              span(className := "brood-worker-orders", role := "img",
+                title <-- antsSignal.map(a => if (a.standardWorkersUnlocked) "Worker egg orders" else "Small worker egg orders").distinct,
+                aria.label <-- antsSignal.map(a => s"${a.eggOrders} ${if (a.standardWorkersUnlocked) "worker" else "small worker"} egg orders").distinct,
+                b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.eggOrders.toLong * u)).distinct),
+                ResourceIcons.icon(ResourceIcons.Workers)),
+              child.maybe <-- scoutOrdersVisible.map(show => Option.when(show)(
+                span(className := "brood-scout-orders", role := "img", title := "Scout egg orders",
+                  aria.label <-- antsSignal.map(a => s"${a.scoutEggOrders.size} scout egg orders").distinct,
+                  b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.scoutEggOrders.size.toLong * u)).distinct),
+                  ResourceIcons.icon(ResourceIcons.Scouts)))),
+            ),
+          ),
           div(className := "brood-place-count",
             span(className := "small text-body-secondary", "Brood places"),
             b(child.text <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
               s"${prettyNumberStr((ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)).toLong * u)}/${prettyNumberStr(BroodProgression.capacity(nest).toLong * u)}"
             }.distinct)),
-          child.maybe <-- scoutOrdersVisible.map(show => Option.when(show)(
-            div(className := "brood-scout-orders",
-              span(className := "small text-body-secondary", "Scout orders"),
-              b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.scoutEggOrders.size.toLong * u)).distinct)))),
         ),
         div(className := "brood-pipeline small mb-2",
           activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {

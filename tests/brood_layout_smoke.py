@@ -50,6 +50,16 @@ def check(page, width, url):
         expect(panel.locator('.brood-care-cost')).to_have_count(0)
         expect(panel.locator('.brood-feeding')).not_to_be_visible()
         expect(panel.locator('.brood-pipeline')).to_contain_text(text)
+        expect(panel.locator('.brood-worker-orders b')).to_have_text(str(state['ants']['eggOrders']))
+        expect(panel.locator('.brood-scout-orders b')).to_have_text(str(len(state['ants']['scoutEggOrders'])))
+        expect(panel.locator('.brood-worker-orders .resource-icon-workers')).to_have_count(1)
+        expect(panel.locator('.brood-scout-orders .resource-icon-scouts')).to_have_count(1)
+        expect(panel.get_by_role('img',name=f"{state['ants']['eggOrders']} worker egg orders",exact=True)).to_have_count(1)
+        expect(panel.get_by_role('img',name=f"{len(state['ants']['scoutEggOrders'])} scout egg orders",exact=True)).to_have_count(1)
+        worker_box=panel.locator('.brood-worker-orders').bounding_box()
+        scout_box=panel.locator('.brood-scout-orders').bounding_box()
+        assert abs(worker_box['y']-scout_box['y']) <= 1
+        assert scout_box['x'] >= worker_box['x']+worker_box['width']+12
         tops.append(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top"))
         assert_fits(page,width)
     assert max(tops)-min(tops) <= 1, tops
@@ -57,7 +67,7 @@ def check(page, width, url):
     before=worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")
     cancel.click()
     expect(cancel).to_be_disabled()
-    expect(panel.locator('.brood-order-count b')).to_have_text('0')
+    expect(panel.locator('.brood-worker-orders b')).to_have_text('0')
     expect(panel.locator('.brood-scout-orders b')).to_have_text('0')
     after=worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")
     assert abs(before-after)<=1,(before,after)

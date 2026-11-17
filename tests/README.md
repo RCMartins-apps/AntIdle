@@ -145,3 +145,6 @@ open-attribute observer must persist state without timer advances or retries.
 Mobile navigation checks cover bottom sub-tab placement above the main bar,
 fully unlocked Explore labels, menu open/close/Escape, restoring the previous
 sub-tab and scroll, exiting through main navigation, and desktop resizing.
+
+Brood layout checks cover worker/scout order counts with matching icons and
+accessible labels, same-line spacing, founding visibility and stable controls.
