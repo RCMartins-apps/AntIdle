@@ -27,3 +27,10 @@
   UI. Reordered both caste entries; development build and mobile capture checks
   passed, with worker/scout countdown states captured and updated view shown in
   chat. Diff check passed. No gameplay changes.
+
+- Compact cancellation follow-up: red × in the summary row on mobile replaces
+  the separate cancel row; desktop retains its text label in that row. Accessible
+  name/title and 44px minimum target remain, disabled when queue is empty.
+  Development build and brood layout checks passed at 320/390/1280px, including
+  target geometry, cancel behavior, stable actions and desktop label. Mobile
+  screenshot shown in chat; syntax/diff checks passed.

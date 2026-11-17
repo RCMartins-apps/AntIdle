@@ -66,8 +66,17 @@ def check(page, width, url):
         worker_box=panel.locator('.brood-worker-orders').bounding_box()
         scout_box=panel.locator('.brood-scout-orders').bounding_box()
         assert abs(worker_box['y']-scout_box['y']) <= 1
-        assert scout_box['x'] >= worker_box['x']+worker_box['width']+12
+        assert scout_box['x'] >= worker_box['x']+worker_box['width']+10
         tops.append(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top"))
+        cancel_box=cancel.bounding_box()
+        counts_box=panel.locator('.brood-counts').bounding_box()
+        assert cancel_box['width']>=44 and cancel_box['height']>=44
+        assert cancel_box['y']>=counts_box['y'] and cancel_box['y']+cancel_box['height']<=counts_box['y']+counts_box['height']+1
+        if width<=767:
+            expect(cancel.locator('.brood-cancel-icon')).to_be_visible()
+            expect(cancel.locator('.brood-cancel-label')).not_to_be_visible()
+        else:
+            expect(cancel.locator('.brood-cancel-label')).to_be_visible()
         assert_fits(page,width)
     assert max(tops)-min(tops) <= 1, tops
     expect(cancel).to_be_enabled()

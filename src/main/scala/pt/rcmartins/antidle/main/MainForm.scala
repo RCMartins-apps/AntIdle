@@ -989,6 +989,12 @@ object MainForm {
             b(child.text <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
               s"${prettyNumberStr((ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)).toLong * u)}/${prettyNumberStr(BroodProgression.capacity(nest).toLong * u)}"
             }.distinct)),
+          button(className := "btn btn-outline-danger brood-cancel-orders", typ := "button",
+            aria.label := "Cancel egg orders", title := "Cancel egg orders",
+            span(className := "brood-cancel-icon", aria.hidden := true, "×"),
+            span(className := "brood-cancel-label", "Cancel egg orders"),
+            disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
+            onClick --> (_ => Actions.cancelEggOrders())),
         ),
         div(className := "brood-pipeline small mb-2",
           {
@@ -1006,9 +1012,6 @@ object MainForm {
                 case (label, _, _) => span(label)
               })
           }),
-        button(className := "btn btn-outline-secondary mb-2 brood-cancel-orders", typ := "button", minHeight.px := 44, "Cancel egg orders",
-          disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
-          onClick --> (_ => Actions.cancelEggOrders())),
         child.maybe <-- antsSignal.map(EmergencyRecovery.needed).distinct.map { needed => Option.when(needed) {
           div(className := "emergency-recovery row mb-2",
             actionButton(
