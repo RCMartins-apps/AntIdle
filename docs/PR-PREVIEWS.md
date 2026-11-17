@@ -32,7 +32,8 @@ Removing a hosted preview does not erase browser saves or an installed offline c
 
 PR Test keeps read-only access while building, running tests and packaging via
 `scripts/package_site.py`. Its separate write-enabled job downloads static assets;
-it never checks out or executes PR source. It skips closed/superseded revisions.
+it checks out only gh-pages to initialize the publishing action, and never
+executes PR source. It skips closed/superseded revisions.
 The environment and workflow summary supply the preview link without PR comments.
 
 Production builds only on main. Its publishing job downloads the package and
@@ -40,6 +41,10 @@ preserves `pr-preview/`. There is no special `debug*` deployment path anymore.
 Publishers and cleanup share a non-cancelling concurrency group for gh-pages.
 Cleanup uses `pull_request_target` only for closed events and checks out gh-pages,
 never PR source. All jobs and steps have explicit runtime limits.
+
+The required `test` check aggregates validation and eligible preview deployment,
+so a failed preview blocks auto-merge. Fork/manual runs need validation only;
+docs-only runs pass the gate after successful classification without deployment.
 
 These workflows require GitHub Pages to publish gh-pages, and the Actions token
 to have contents write permission in publishing/cleanup jobs. They preserve the

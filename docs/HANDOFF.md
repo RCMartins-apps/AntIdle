@@ -1,37 +1,19 @@
 # Handoff
 
-## 2026-11-17 — playable isolated PR previews
+## 2026-11-17 — fix Pages checkout and gate auto-merge on preview
 
-- `feature/pr-previews` starts at main e391991 (#93). Owner requested an Ant Idle
-  equivalent of time-loop PR #9 to test PRs before merge, and explicitly removed
-  debug-prefix deployments (D60). Pending `polish/safer-queue-controls` at
-  07a323b remains unmerged and remotely saved. Brood PR #94 is separate.
-- PR Test keeps required check names/docs-only behavior and adds a packaged
-  static artifact after successful validation. A separate write job publishes
-  same-repository previews to pr-preview/pr-N, guarded by open/current head.
-  Environment/summary link and bounded HTTP revision verification included.
-- Main builds/publishes separately, preserves previews and skips superseded code
-  (newer docs-only commits do not suppress a valid game release). Closed-event
-  cleanup checks out gh-pages only. Writes share non-cancelling concurrency.
-- Production save remains save; previews use save:pr-preview:N and isolated UI
-  preferences, canonical across index URLs. Production service worker bypasses
-  preview paths. Documentation describes existing-worker updates and lifecycle.
-- Development/production builds passed, zero Closure warnings/errors. Two Scala
-  namespace tests, four packaging tests, six classification tests, actionlint,
-  and existing offline suite at 390/1280px passed. Packaged three-site browser
-  check passed, including strengthened actual restore through index.html.
-  Final actionlint, Python syntax, documentation links and diff checks passed.
-- No visual UI change; screenshots not applicable. Live GitHub publish/cleanup
-  is not yet verified. Owner authorized PR and auto-merge. Main rules verified
-  active with required test and changes / classify, strict up-to-date, no bypass.
-  New standing rule: include preview links in PR handoffs, with honest pending/
-  live/ineligible/removed status. No extra CI polling required.
+- PR #95 merged as main 54d3e41 after all tests passed; deploy-preview failed
+  because the Pages action had no Git checkout. `fix/pages-publishing-checkout`
+  starts at that main and adds gh-pages checkout to both publishers before
+  artifact download. No PR code executes; checkout credentials disabled.
+- Required test check now aggregates validate + eligible preview publication,
+  preventing auto-merge before a working preview. Fork/manual runs still require
+  validation, docs-only require successful classification and skip game/deploy.
+  Required check identities test and changes / classify remain unchanged.
+- Actionlint and diff checks passed; workflow-only fix, no game rebuild needed.
+  Live publication awaits CI on the follow-up PR; auto-merge authorized as part
+  of repairing #95. Ruleset verified active, strict checks, no bypass.
+- feature/pr-previews was briefly recreated by the repair push after #95 deleted
+  it; the focused follow-up branch is authoritative. No branches deleted.
+- Pending queue work remains at polish/safer-queue-controls 07a323b; not merged.
   Preserve unrelated work/ and Python caches.
-
-- PR #95 failed its first engine test run: eager SaveLoad initialization accessed
-  window in Node during pure save serialization (KnowledgeEconomySuite and
-  ExplorationSuite). SaveGameName is now lazy so only browser storage operations
-  resolve the pathname. Auto-merge remains enabled. Development/production builds
-  passed (zero Closure warnings/errors), all 308 engine + 4 balance tests passed,
-  and the packaged preview isolation/restore browser check passed. Diff check
-  passed. No UI changes/screenshots needed; push retriggers CI.
