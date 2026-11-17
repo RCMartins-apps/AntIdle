@@ -27,3 +27,11 @@
   New standing rule: include preview links in PR handoffs, with honest pending/
   live/ineligible/removed status. No extra CI polling required.
   Preserve unrelated work/ and Python caches.
+
+- PR #95 failed its first engine test run: eager SaveLoad initialization accessed
+  window in Node during pure save serialization (KnowledgeEconomySuite and
+  ExplorationSuite). SaveGameName is now lazy so only browser storage operations
+  resolve the pathname. Auto-merge remains enabled. Development/production builds
+  passed (zero Closure warnings/errors), all 308 engine + 4 balance tests passed,
+  and the packaged preview isolation/restore browser check passed. Diff check
+  passed. No UI changes/screenshots needed; push retriggers CI.
