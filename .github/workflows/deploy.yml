@@ -1,58 +1,84 @@
 name: Build and Deploy
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [main]
 
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   changes:
-    if: >-
-      ${{ github.event_name == 'push' ||
-          (startsWith(github.head_ref, 'debug') &&
-           github.event.pull_request.head.repo.full_name == github.repository) }}
     uses: ./.github/workflows/game-changes.yml
 
-  build-and-deploy:
+  build:
     needs: changes
-    if: >-
-      ${{ needs.changes.outputs.run_game_jobs == 'true' &&
-          (github.event_name == 'push' ||
-          (startsWith(github.head_ref, 'debug') &&
-           github.event.pull_request.head.repo.full_name == github.repository)) }}
+    if: needs.changes.outputs.run_game_jobs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: write
-
+    concurrency:
+      group: production-build
+      cancel-in-progress: true
     steps:
       - name: Checkout
         timeout-minutes: 3
         uses: actions/checkout@v4
-
       - name: Setup Scala and SBT
         timeout-minutes: 5
         uses: olafurpg/setup-scala@v14
-
       - name: Build project
         timeout-minutes: 10
         run: sbt fullOptJS
-
-      - name: Prepare files for GitHub Pages
+      - name: Package release
         timeout-minutes: 2
-        run: python3 scripts/package_site.py --out publish-folder
-
-      - name: Deploy to GitHub Pages
-        timeout-minutes: 5
-        uses: peaceiris/actions-gh-pages@v4
+        run: |
+          python3 scripts/package_site.py --out publish-folder
+          touch publish-folder/.nojekyll
+      - name: Upload release
+        timeout-minutes: 2
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./publish-folder
+          name: production-site
+          path: publish-folder
+          include-hidden-files: true
+          retention-days: 3
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    concurrency:
+      group: github-pages-publish
+      cancel-in-progress: false
+    steps:
+      - name: Check revision is current
+        id: revision
+        timeout-minutes: 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data: branch} = await github.rest.repos.getBranch({...context.repo, branch: 'main'});
+            let current = branch.commit.sha === context.sha;
+            if (!current) {
+              const {data: diff} = await github.rest.repos.compareCommits({...context.repo, base: context.sha, head: branch.commit.sha});
+              const documentation = path => path.startsWith('docs/') || (!path.includes('/') && path.toLowerCase().endsWith('.md'));
+              current = diff.status === 'ahead' && diff.files && diff.files.length < 300 &&
+                diff.files.every(file => documentation(file.filename) && (!file.previous_filename || documentation(file.previous_filename)));
+            }
+            core.setOutput('publish', current);
+      - name: Download release
+        if: steps.revision.outputs.publish == 'true'
+        timeout-minutes: 2
+        uses: actions/download-artifact@v4
+        with:
+          name: production-site
+          path: publish-folder
+      - name: Deploy to GitHub Pages
+        if: steps.revision.outputs.publish == 'true'
+        timeout-minutes: 3
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: publish-folder
+          clean-exclude: pr-preview/

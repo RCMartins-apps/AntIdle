@@ -24,8 +24,9 @@ PR tests and deployment share a lightweight change check. Changes limited to
 `docs/**` and root Markdown files skip game builds/tests and deployment; a mixed
 or non-documentation change runs normal validation. The workflows still report
 completed/skipped job statuses, so documentation PRs do not leave required checks
-pending. Manual PR-test dispatch always validates the game. Main deployment and
-same-repository `debug*` PR deployment retain their existing branch restrictions.
+pending. Manual PR-test dispatch always validates the game. Production deploys only from main. Passing same-repository PRs publish
+isolated [playable previews](docs/PR-PREVIEWS.md); `debug*` names have no special
+deployment behavior.
 Unknown comparisons run validation conservatively. Non-documentation PRs also
 run a small production-bundle browser gate at 390px and 1280px, covering navigation,
 disclosure stability, task controls, launching, founding and remembered resources.
