@@ -940,7 +940,10 @@ or nonvisual work.
 ## Build-queue cancellation and mobile automation controls
 
 Queued construction has a separate, accessible red cancel button with a 44px
-target. Tapping its name must not cancel it. Keep the first-entry resource wait
-estimate and avoid duplicating Queued beside the status. Automation numeric
+target. Tapping its name must not cancel it. Remove Ready/Queued labels: affordable construction completes next tick.
+Show Resources in ~time for each entry, forecasting sequential costs at current
+net production and capacity. No feasible current-rate estimate shows Needs
+resources in red; do not promise an arrival time for manual income or predict
+future chamber bonuses. Automation numeric
 fields use numeric keyboards and 44px-high controls; its toggle label is tappable.
 These are presentation/interaction changes, without balance changes.

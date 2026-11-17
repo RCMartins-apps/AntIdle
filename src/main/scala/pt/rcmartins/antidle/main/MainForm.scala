@@ -538,7 +538,6 @@ object MainForm {
           buildTask.chamberType.name,
           " → ", child.text <-- nestSignal.map(nest =>
             Construction.level(nest.chambers, buildTask.chamberType) + nest.buildQueue.take(index + 1).count(_.chamberType == buildTask.chamberType)),
-          Option.when(index == 0)(span(" [", TickCalculator.calculateTicksToResources(buildTask.actionCost), "]")),
         ).amendThis(elem => createTooltipForActionButton(
           elem = elem, descriptionSignal = Val(None), costSignal = Val(buildTask.actionCost),
           bonusSignal = Actions.getActionBonus(buildTask.chamberType),
@@ -546,7 +545,18 @@ object MainForm {
         button(className := "btn btn-outline-danger build-cancel", typ := "button",
           aria.label := s"Cancel ${buildTask.chamberType.name}", title := s"Cancel ${buildTask.chamberType.name}",
           span(aria.hidden := true, "×"), onClick --> (_ => Actions.removeBuildTask(index))),
-        activityStatus(resourcesSignal.map(r => ActivityStatus.construction(buildTask.actionCost, r, index == 0)), "build-status small"),
+        span(className := "build-estimate small",
+          title := "Estimated simulated time at current net production, including earlier queued costs; future chamber bonuses are not predicted.",
+          child <-- resourcesSignal.combineWith(nestSignal, TickCalculator.sugarTickGain.sum, TickCalculator.proteinTickGain.sum,
+            TickCalculator.waterTickGain.sum, TickCalculator.resinTickGain.sum, TickCalculator.tunnelingSpaceTickGain.sum).map {
+            case (resources, nest, sugar, protein, water, resin, space) =>
+              ConstructionWait.ticks(nest.buildQueue.take(index + 1).map(_.actionCost), resources,
+                ActionCost(sugar = sugar, protein = protein, water = water, resin = resin, tunnelingSpace = space)).lastOption.getOrElse(0L)
+          }.distinct.map {
+            case ticks if ticks < 0L => span(className := "text-danger", "Needs resources")
+            case 0L => span()
+            case ticks => span(s"Resources in ~${prettyTimeFromTicks(ticks)}")
+          }),
         actionCosts(Val(buildTask.actionCost), Val(Nil)),
       )
 
