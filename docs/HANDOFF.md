@@ -7,7 +7,8 @@
   change, mobile first and other affected states/layouts as needed (D59).
   If capture/delivery is unavailable, report it; local file links do not suffice.
 - Documentation-only change; diff/wording checks passed. No game rebuild needed.
-  Owner authorized commit/push by standing workflow; no PR requested yet.
+  Owner authorized PR creation and auto-merge. Verified active main rules
+  enforce test and changes / classify, strict up-to-date, with no bypass.
 - Pending separate work: `polish/egg-order-icons` at a56cc47 is pushed and ready,
   with no PR requested. It groups worker/scout egg orders with caste icons.
   Development build and brood layout checks passed at 320/390/1280px, including
