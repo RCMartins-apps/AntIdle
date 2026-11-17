@@ -12,7 +12,7 @@ import shutil
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import assert_touching_hexes, select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import assert_hex_selection, assert_touching_hexes, select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
 from ci_browser_smoke import ProductionHandler
 
 
@@ -74,6 +74,7 @@ def check_map(page, width, url):
     load_game(page, studied)
     select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
+    assert_hex_selection(page)
     expect(page.locator('.site-knowledge')).to_have_text('400 knowledge remaining')
     # At capacity collection is blocked; no finite deposit is wasted.
     full = copy.deepcopy(studied)

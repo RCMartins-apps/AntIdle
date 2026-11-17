@@ -122,6 +122,24 @@ def assert_touching_hexes(page):
     assert adjacent >= 6, tiles
 
 
+def assert_hex_selection(page):
+    from urllib.parse import unquote
+    selected = page.locator('.map-hex[aria-pressed="true"]')
+    expect(selected).to_have_count(1)
+    selected.click()  # Use pointer selection, independently of keyboard focus.
+    expect(selected).to_have_css('box-shadow', 'none')
+    border = unquote(selected.evaluate("el => getComputedStyle(el, '::after').backgroundImage"))
+    assert '<polygon' in border and '#087cf1' in border and '<rect' not in border, border
+    page.locator('.nest-hex').focus()
+    page.keyboard.press('Tab')
+    focused = page.locator('.map-hex:focus-visible')
+    expect(focused).to_have_count(1)
+    expect(focused).to_have_css('outline-style', 'none')
+    focus_border = unquote(focused.evaluate("el => getComputedStyle(el, '::after').backgroundImage"))
+    assert '<polygon' in focus_border and 'stroke-dasharray' in focus_border and '#08477b' in focus_border, focus_border
+    selected.click()
+
+
 def progressed_game(initial):
     game = copy.deepcopy(initial)
     for group in ("actions", "tabs", "resources"):

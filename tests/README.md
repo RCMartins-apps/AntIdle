@@ -149,3 +149,6 @@ sub-tab and scroll, exiting through main navigation, and desktop resizing.
 Exploration map and prestige regressions verify regular hex proportions, board
 containment, 44px targets and two coincident edge endpoints for every axial
 neighbor pair in the first and expanded rings at 320/390/1280px.
+
+Map checks also verify that pointer selection uses a blue polygon border without
+an inset shadow, and keyboard focus uses a distinct dashed polygon outline.

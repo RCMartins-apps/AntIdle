@@ -20,4 +20,9 @@
   passed with zero Closure warnings/errors; four packaging tests and syntax/diff
   checks passed. After integrating #91, both map ranges and navigation were
   rechecked at 320/390/1280px with shared-edge and containment assertions.
+- Selection follow-up replaces the rectangular inset shadow with a blue SVG
+  polygon border; keyboard focus uses a distinct dashed polygon. Maintained
+  production map/trail/aphid checks passed at 320/390/1280px, including pointer
+  selection and keyboard-focus assertions. Four packaging tests, Python syntax
+  and diff checks passed. No new PR requested.
 - Preserve unrelated work/ and Python caches. No engine or save-format changes.

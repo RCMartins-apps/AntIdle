@@ -923,3 +923,7 @@ regular flat-top hexagon proportions and matching axial spacing so neighboring
 cells share complete edges in both current map ranges. Keep thin outlines for
 individual tile clarity, existing selection/fog behavior, safe touch targets and
 all progression/reward rules unchanged.
+
+Selection and keyboard focus must follow the six hexagon edges, rather than
+using rectangular inset shadows or outlines. Use a solid blue selection border
+and a distinct dashed keyboard-focus border.
