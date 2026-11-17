@@ -42,6 +42,10 @@ Publishers and cleanup share a non-cancelling concurrency group for gh-pages.
 Cleanup uses `pull_request_target` only for closed events and checks out gh-pages,
 never PR source. All jobs and steps have explicit runtime limits.
 
+The required `test` check aggregates validation and eligible preview deployment,
+so a failed preview blocks auto-merge. Fork/manual runs need validation only;
+docs-only runs pass the gate after successful classification without deployment.
+
 These workflows require GitHub Pages to publish gh-pages, and the Actions token
 to have contents write permission in publishing/cleanup jobs. They preserve the
 existing required `test` and `changes / classify` checks and docs-only policy.
