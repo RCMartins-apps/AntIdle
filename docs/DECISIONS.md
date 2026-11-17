@@ -930,3 +930,7 @@ and an accessible caste label, following the actual shared queue order.
 Keep brood cancellation beside the egg-order summary, with a red × on mobile
 and a labeled desktop control. Preserve a 44px touch target, accessible name,
 disabled empty-queue state and stable layout. Avoid a separate cancel-button row.
+
+Raise-egg buttons show live compact counts in queue → developing brood → adult
+order, using icons and accessible labels. Counts follow the relevant caste,
+including the small/standard worker phase; they are feedback, not requirements.

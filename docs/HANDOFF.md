@@ -34,3 +34,11 @@
   Development build and brood layout checks passed at 320/390/1280px, including
   target geometry, cancel behavior, stable actions and desktop label. Mobile
   screenshot shown in chat; syntax/diff checks passed.
+
+- Raise-button follow-up adds live queue / brood / adult badges for each caste,
+  with icons, tooltip labels and accessible descriptions. Worker badges follow
+  the small/standard phase and count matching brood; scout badges are separate.
+  Button accessible names remain stable. Development build and brood checks
+  passed at 320/390/1280px, including immediate worker/scout click updates,
+  cancellation and founding adult counts. Mobile screenshot shown in chat.
+  Python syntax and diff checks passed; no gameplay changes.

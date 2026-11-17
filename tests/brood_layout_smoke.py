@@ -67,6 +67,14 @@ def check(page, width, url):
         scout_box=panel.locator('.brood-scout-orders').bounding_box()
         assert abs(worker_box['y']-scout_box['y']) <= 1
         assert scout_box['x'] >= worker_box['x']+worker_box['width']+10
+        badge=worker.locator('.brood-action-counts')
+        expect(badge.locator('.egg-count-ordered')).to_have_text(f"Ordered: {state['ants']['eggOrders']}")
+        expect(badge.locator('.egg-count-brood')).to_have_text(f"Brood: {len(state['ants']['eggsAndLarvae'])}")
+        expect(badge.locator('.egg-count-adults')).to_have_text('Adults: 10')
+        scout_button=page.get_by_role('button',name='Raise Scout Egg',exact=True)
+        expect(scout_button.locator('.egg-count-ordered')).to_have_text(f"Ordered: {len(state['ants']['scoutEggOrders'])}")
+        expect(scout_button.locator('.egg-count-brood')).to_have_text('Brood: 0')
+        expect(scout_button.locator('.egg-count-adults')).to_have_text('Adults: 0')
         tops.append(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top"))
         cancel_box=cancel.bounding_box()
         counts_box=panel.locator('.brood-counts').bounding_box()
@@ -81,6 +89,10 @@ def check(page, width, url):
     assert max(tops)-min(tops) <= 1, tops
     expect(cancel).to_be_enabled()
     before=worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")
+    worker.click()
+    expect(worker.locator('.egg-count-ordered')).to_have_text('Ordered: 124')
+    page.get_by_role('button',name='Raise Scout Egg',exact=True).click()
+    expect(page.get_by_role('button',name='Raise Scout Egg',exact=True).locator('.egg-count-ordered')).to_have_text('Ordered: 2')
     cancel.click()
     expect(cancel).to_be_disabled()
     expect(panel.locator('.brood-worker-orders b')).to_have_text('0')
@@ -109,7 +121,9 @@ def check(page, width, url):
     expect(panel).to_have_attribute('open','')
     expect(panel.locator('.brood-scout-orders')).to_have_count(0)
     expect(panel.locator('.brood-order-count')).to_contain_text('Egg orders')
-    expect(page.get_by_role('button',name='Raise Small Worker Egg',exact=True)).to_be_visible()
+    small=page.get_by_role('button',name='Raise Small Worker Egg',exact=True)
+    expect(small).to_be_visible()
+    expect(small.locator('.egg-count-adults')).to_have_text('Adults: 2')
     assert not errors,errors
     print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help and independent disclosures',flush=True)
 
