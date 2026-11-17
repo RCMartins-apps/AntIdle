@@ -5,7 +5,7 @@
 - `polish/touching-map-hexes` starts at main 5cc539f and integrates merged #91
   (16e8444), preserving bottom sub-tabs/settings behavior. Shared docs combined
   in order; code/styles merged cleanly. Owner requested this map UI fix;
-  implementation/push authorized, no new PR requested yet (D58).
+  implementation and PR auto-merge authorized (D58).
 - MainForm derives regular flat-top tile dimensions from one width helper and
   sqrt(3)/2 height, sharing dimensions with CSS through map-level variables.
   Positions use axial q/r: 3/4 width horizontally, one height per row with half
@@ -24,5 +24,6 @@
   polygon border; keyboard focus uses a distinct dashed polygon. Maintained
   production map/trail/aphid checks passed at 320/390/1280px, including pointer
   selection and keyboard-focus assertions. Four packaging tests, Python syntax
-  and diff checks passed. No new PR requested.
+  and diff checks passed. Owner requested PR creation with auto-merge; verified active
+  main rules require test and changes / classify, strict up-to-date, no bypass.
 - Preserve unrelated work/ and Python caches. No engine or save-format changes.
