@@ -536,8 +536,11 @@ object MainForm {
         span(
           className := "build-task",
           buildTask.chamberType.name,
-          " → ", child.text <-- nestSignal.map(nest =>
-            Construction.level(nest.chambers, buildTask.chamberType) + nest.buildQueue.take(index + 1).count(_.chamberType == buildTask.chamberType)),
+          " · ", child.text <-- nestSignal.map { nest =>
+            val from = Construction.level(nest.chambers, buildTask.chamberType) +
+              nest.buildQueue.take(index).count(_.chamberType == buildTask.chamberType)
+            s"$from → ${from + 1}"
+          }.distinct,
         ).amendThis(elem => createTooltipForActionButton(
           elem = elem, descriptionSignal = Val(None), costSignal = Val(buildTask.actionCost),
           bonusSignal = Actions.getActionBonus(buildTask.chamberType),

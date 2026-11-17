@@ -24,3 +24,8 @@
   passed (prior costs/storage, ready/unreachable, water/resin, consumption).
   Updated browser checks passed 320/390/1280px with both queue estimates visible;
   mobile screenshot shown in chat. Diff check passed.
+
+- Queued levels now show from → to, accounting for earlier queued upgrades to
+  the same chamber. Development build and 320/390/1280px browser checks passed,
+  including repeated-chamber transitions. Updated mobile screenshot shown in
+  chat; diff check passed.

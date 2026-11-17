@@ -947,3 +947,6 @@ resources in red; do not promise an arrival time for manual income or predict
 future chamber bonuses. Automation numeric
 fields use numeric keyboards and 44px-high controls; its toggle label is tappable.
 These are presentation/interaction changes, without balance changes.
+
+Queued chamber levels show from → to (for example 1 → 2), including earlier
+queued upgrades of the same chamber when calculating each transition.
