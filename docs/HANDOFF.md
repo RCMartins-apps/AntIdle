@@ -1,24 +1,21 @@
 # Handoff
 
-## 2026-11-17 — task controls polish
+## 2026-11-17 — repair PR #90's disclosure-persistence race
 
-- `polish/task-controls` starts at main c20a295 and integrates merged #89
-  (94fa264), retaining the fixed resource layout. Owner authorized all task
-  fixes, a PR and native auto-merge; see D56. Shared docs were combined in order.
-- Small workers use a persistent native disclosure headed by their total.
-  Help retains 50% mechanics; no duplicate heading. The section disappears fully
-  when none remain. Small/standard +/- controls share primary styling and sizing;
-  small row controls align right. Existing quantity/multiplier rules are preserved.
-- Idle workers appears below the small-worker section and counts actually idle
-  standard ants. Default-task ants remain available via the existing engine pool.
-  Assignment blockers reserve a compact status line, so their appearance/clearing
-  does not move the row or following controls. No gameplay or balance changes.
-- Development/production builds passed with zero Closure warnings/errors.
-  Targeted production checks passed 320/390/1280px: persistent folding/count,
-  batch assignment, styling/alignment, idle vs default pool, disappearance and
-  unchanged row geometry with both idle and longer default-pool blockers.
-  Existing production UI passed 390/1280px and blocked actions passed
-  320/390/1280px. After integrating #89, targeted checks passed again; a wider
-  Linux status font also passed at 320/390/1280px. Python syntax and diff checks
-  passed. Final changes were test coverage/documentation only. Preserve unrelated
-  work/ and Python caches. Required checks must stay enforced for auto-merge.
+- Continue `polish/task-controls`, PR #90, head 6962b89. Required test failed in
+  run 43996007646/job 133748214679 during the desktop brood regression, before
+  the new task-controls check. Production UI, resources and mobile brood passed.
+- The test closed/reopened native details and immediately reloaded a founding
+  fixture. The DOM was open but its queued toggle event had not reliably saved
+  the reopened preference, so reload restored closed. It passed intermittently
+  locally. No task/gameplay failure was reported by CI.
+- The brood regression now advances its paused browser clock after each toggle,
+  asserts localStorage contains closed/open respectively, and explicitly checks
+  open survives reload before inspecting the founding egg action. All original
+  geometry, disclosure and visibility assertions remain. Browser selection honors
+  CHROMIUM_PATH and uses Playwright-managed Chromium on GitHub Actions.
+- Corrected production brood checks and wide-font task-control checks passed
+  320/390/1280px. fullOptJS passed with zero Closure warnings/errors; Python
+  syntax and git diff --check passed. No gameplay or application code changes.
+  Owner requested repair of this existing PR; auto-merge remains authorized with
+  required test and changes / classify enforced. Preserve work/ and Python caches.

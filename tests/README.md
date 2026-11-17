@@ -137,3 +137,7 @@ CHROMIUM_PATH; GitHub Actions uses the pinned Playwright browser by default.
 320/390/1280px: persistent small-worker folding and total count, matching right
 aligned primary controls, mobile batch assignment, actual idle/default-pool
 semantics, hiding the exhausted small-worker section and stable blocker geometry.
+
+Brood disclosure tests assert saved closed/open preferences after processing the
+native toggle event, before reloading. With the browser clock paused, immediate
+DOM visibility alone does not prove the asynchronous preference write finished.
