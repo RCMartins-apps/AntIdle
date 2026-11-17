@@ -18,5 +18,7 @@
   batch assignment, styling/alignment, idle vs default pool, disappearance and
   unchanged row geometry with both idle and longer default-pool blockers.
   Existing production UI passed 390/1280px and blocked actions passed
-  320/390/1280px. Python syntax and git diff --check passed. Preserve unrelated
+  320/390/1280px. After integrating #89, targeted checks passed again; a wider
+  Linux status font also passed at 320/390/1280px. Python syntax and diff checks
+  passed. Final changes were test coverage/documentation only. Preserve unrelated
   work/ and Python caches. Required checks must stay enforced for auto-merge.

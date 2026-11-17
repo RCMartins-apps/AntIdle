@@ -19,6 +19,11 @@ def geometry(page):
 
 
 def check(page, width, url):
+    page.add_init_script("""addEventListener('DOMContentLoaded', () => {
+        const style=document.createElement('style');
+        style.textContent='.task-blocked-reason {font-family:"DejaVu Sans",sans-serif}';
+        document.head.append(style);
+    });""")
     now=datetime(2026,11,17,tzinfo=timezone.utc)
     page.clock.install(time=now); page.clock.pause_at(now+timedelta(seconds=1))
     errors=[]; page.on('pageerror',lambda e:errors.append(str(e)))
