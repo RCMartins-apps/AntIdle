@@ -132,6 +132,16 @@ native toggle delivery; disconnect observers when their elements unmount.
 - Choose checks for the change. Documentation-only work needs link/path checks
   and `git diff --check`, not a game rebuild. Report checks actually run.
 
+For every visual/UI change, capture and show screenshots of the implemented
+result in chat before handing it back for review. Use a representative mobile
+viewport by default; add desktop or other states when the change affects them.
+Show the affected area clearly with realistic game state, rather than only a
+written description. Use actual rendered-game screenshots, not generated mockups.
+Screenshots supplement the relevant checks. If capture or chat attachment is
+unavailable, explicitly report that limitation; never claim a screenshot was
+shared or substitute a local filesystem link that the owner cannot open.
+Documentation-only and nonvisual changes do not require screenshots.
+
 Use the environment's sbt installation; do not commit machine-specific tool paths.
 Do not commit generated builds, browser caches or scratch screenshots. Preserve
 unrelated local files. Screenshots in a temporary workspace are not durable chat
