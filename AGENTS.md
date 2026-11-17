@@ -211,8 +211,8 @@ project changes to `origin`, including documentation-only design decisions.
   never describe an unpushed commit as remotely preserved.
 - This authorizes ordinary pushes to work branches. It does not authorize
   force-pushes, direct pushes to `main`, branch deletion, PR creation, merging or
-  deployment; those still need user authorization. Avoid `debug*` names unless
-  deployment is intended: such branches deploy when in a same-repository PR.
+  deployment; those still need user authorization. Production deploys only from main. Same-repository PRs publish isolated
+  previews after validation; `debug*` branch names have no special behavior.
 - A pushed branch is remotely saved, but new checkouts of `main` receive its
   context only after merge. Keep pending work discoverable in the handoff and
   inspect relevant remote branches when resuming unfinished work. Once the owner

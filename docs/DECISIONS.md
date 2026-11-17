@@ -936,3 +936,15 @@ other affected layouts/states as appropriate. Use supported chat image delivery;
 local file links are insufficient. Report capture/delivery limitations honestly.
 This is a standing workflow rule in AGENTS.md, not a requirement for docs-only
 or nonvisual work.
+
+## D60: Playable isolated PR previews replace debug deployments
+
+The owner requested the per-PR preview approach from time-loop PR #9 before
+merging the pending queue work. Same-repository game PRs publish passing static
+builds under pr-preview/pr-<number>/; new revisions replace them and closing
+removes hosted files. Main deployments preserve previews. Fork/doc-only PRs do
+not publish. Production deploys only from main; remove the debug-prefix exception.
+Saves and UI preferences must be isolated per PR, keeping production keys intact.
+Production offline caching must not intercept preview navigation. Use read-only
+build/test jobs and separate static publishing, shared publication concurrency,
+revision freshness guards and explicit runtime limits. See PR-PREVIEWS.md.

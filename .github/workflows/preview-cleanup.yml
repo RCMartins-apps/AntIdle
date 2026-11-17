@@ -1,0 +1,36 @@
+name: Remove closed PR preview
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  cleanup:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    concurrency:
+      group: github-pages-publish
+      cancel-in-progress: false
+    steps:
+      - name: Checkout published files only
+        timeout-minutes: 2
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Remove preview directory
+        timeout-minutes: 2
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
+          git rm -r --ignore-unmatch -- "pr-preview/pr-${PR_NUMBER}"
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Remove preview for PR #${PR_NUMBER}"
+            git push origin HEAD:gh-pages
+          fi
