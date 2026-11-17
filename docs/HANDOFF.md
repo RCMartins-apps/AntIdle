@@ -6,7 +6,7 @@
   compact worker/scout counts in Egg orders. PR #92 is merged on main; this branch still starts before its map changes.
   Screenshot workflow docs are separate in PR #93. Integrate their context when
   preparing a PR; no PR requested for this branch yet.
-- Egg orders now groups number + worker icon and number + scout icon with space
+- Egg orders now groups worker icon + number and scout icon + number with space
   between them. Brood places stays a separate column. Scout counts retain the
   existing unlock visibility. Founding workers have a small-worker accessible
   label; all icon counts have accessible names and hover titles.
@@ -22,3 +22,8 @@
   countdown screenshots were captured and shown in chat. Syntax/diff passed.
 - Implementation is ready; no PR requested for this change yet. Preserve
   unrelated work/ and Python caches.
+
+- Icon-first follow-up: owner requested [icon] count to match the rest of the
+  UI. Reordered both caste entries; development build and mobile capture checks
+  passed, with worker/scout countdown states captured and updated view shown in
+  chat. Diff check passed. No gameplay changes.

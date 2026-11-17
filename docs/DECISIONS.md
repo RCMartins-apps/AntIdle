@@ -918,8 +918,8 @@ This is a UI trial for feedback, without gameplay changes.
 
 ## Egg-order counts use caste icons
 
-Show ordered egg counts together under Egg orders: number then worker icon,
-space, number then scout icon. Keep Brood places separate. Hide the scout entry
+Show ordered egg counts together under Egg orders: worker icon then number,
+space, scout icon then number, matching the other UI. Keep Brood places separate. Hide the scout entry
 until its existing unlock; provide accessible count/type labels and preserve
 stable action positions. This changes presentation only.
 
