@@ -37,7 +37,10 @@ def select_tab(page, name):
     if nav.is_visible():
         group = {'Chambers': 'Nest', 'Purchased': 'Upgrades', 'Discoveries': 'Explore', 'Territory': 'Explore', 'Milestones': 'Lineage'}.get(name, name)
         if name == 'Settings' or (name == 'Milestones' and not nav.get_by_role('button', name='Lineage', exact=True).is_visible()):
-            page.get_by_role('button', name='Game menu', exact=True).click()
+            if page.locator('.antidle-app').get_attribute('data-mobile-group') != 'menu':
+                page.get_by_role('button', name='Game menu', exact=True).click()
+            if name == 'Settings':
+                page.get_by_role('tab', name='Settings', exact=True).click()
         else:
             nav.get_by_role('button', name=group, exact=True).click()
         if name in ['Nest', 'Explore', 'Upgrades', 'Lineage']:
