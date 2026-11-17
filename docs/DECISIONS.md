@@ -916,6 +916,27 @@ visibility. The settings/menu button must toggle closed, returning to the exact
 previous sub-tab and scroll position; Escape and primary navigation also exit it.
 This is a UI trial for feedback, without gameplay changes.
 
+## D58: Exploration hexagons share edges — approved
+
+The owner requested a connected hex map rather than separated columns. Use
+regular flat-top hexagon proportions and matching axial spacing so neighboring
+cells share complete edges in both current map ranges. Keep thin outlines for
+individual tile clarity, existing selection/fog behavior, safe touch targets and
+all progression/reward rules unchanged.
+
+Selection and keyboard focus must follow the six hexagon edges, rather than
+using rectangular inset shadows or outlines. Use a solid blue selection border
+and a distinct dashed keyboard-focus border.
+
+## D59: Screenshots accompany visual changes
+
+The owner requires screenshots in chat for every visual/UI change so results
+can be reviewed from a phone. Capture the implemented game, mobile first, plus
+other affected layouts/states as appropriate. Use supported chat image delivery;
+local file links are insufficient. Report capture/delivery limitations honestly.
+This is a standing workflow rule in AGENTS.md, not a requirement for docs-only
+or nonvisual work.
+
 ## Egg-order counts use caste icons
 
 Show ordered egg counts together under Egg orders: worker icon then number,

@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import expand_resources, select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import assert_touching_hexes, expand_resources, select_tab, ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
 from ci_browser_smoke import ProductionHandler
 
 
@@ -107,6 +107,7 @@ def check_prestige(page, width, url):
     load_game(page, later)
     select_tab(page, 'Explore')
     expect(page.locator('.hex-map .map-hex')).to_have_count(10)
+    assert_touching_hexes(page)
     page.get_by_role('button', name='3 scouts', exact=True).click()
     for site, title in [('aphid-thicket','Aphid Shelters'),('fallen-oak','Trail Logistics'),('root-hollow','Coordinated Expeditions')]:
         page.get_by_role('button', name='Nest surroundings', exact=True).click()
