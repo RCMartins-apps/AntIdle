@@ -991,10 +991,21 @@ object MainForm {
             }.distinct)),
         ),
         div(className := "brood-pipeline small mb-2",
-          activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
-            case (ants, nest, resources, upgrades, exploration, stats) =>
-              BroodProgression.layingStatus(ants, nest, resources, upgrades, exploration, stats)
-          })),
+          {
+            val status = antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
+              case (ants, nest, resources, upgrades, exploration, stats) =>
+                BroodProgression.layingStatus(ants, nest, resources, upgrades, exploration, stats)
+            }.distinct
+            span(className := "activity-status", dataAttr("state") <-- status.map(ActivityStatus.kind).distinct,
+              child <-- status.combineWith(antsSignal.map(a => (a.scoutEggOrders.headOption.contains(0), a.standardWorkersUnlocked)).distinct).map {
+                case (label, scout, standard) if label.startsWith("Next egg in ") =>
+                  span(className := "brood-next-egg", "Next ",
+                    ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.Workers),
+                    span(className := "visually-hidden", if (scout) "scout" else if (standard) "worker" else "small worker"),
+                    label.stripPrefix("Next"))
+                case (label, _, _) => span(label)
+              })
+          }),
         button(className := "btn btn-outline-secondary mb-2 brood-cancel-orders", typ := "button", minHeight.px := 44, "Cancel egg orders",
           disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
           onClick --> (_ => Actions.cancelEggOrders())),

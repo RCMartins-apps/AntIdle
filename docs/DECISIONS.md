@@ -922,3 +922,7 @@ Show ordered egg counts together under Egg orders: number then worker icon,
 space, number then scout icon. Keep Brood places separate. Hide the scout entry
 until its existing unlock; provide accessible count/type labels and preserve
 stable action positions. This changes presentation only.
+
+Related UI polish should be handled proactively without repeated owner feedback.
+The laying countdown identifies the next queued caste with its worker/scout icon
+and an accessible caste label, following the actual shared queue order.

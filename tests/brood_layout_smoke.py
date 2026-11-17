@@ -35,7 +35,9 @@ def check(page, width, url):
     cases=[]
     cases.append((copy.deepcopy(game),'Queen ready'))
     queued=copy.deepcopy(game);queued['ants'].update(eggOrders=123,scoutEggOrders=[123],layingCooldown=100)
-    cases.append((queued,'Next egg in'))
+    cases.append((queued,'Next worker egg in'))
+    scout_next=copy.deepcopy(queued);scout_next['ants']['scoutEggOrders']=[0,0,0]
+    cases.append((scout_next,'Next scout egg in'))
     full=copy.deepcopy(queued)
     tick=full['world']['currentTick']
     full['ants']['eggsAndLarvae']=[{'Developing':{'initialTick':tick,'kind':'worker','care':0}} for _ in range(5)]
@@ -50,6 +52,11 @@ def check(page, width, url):
         expect(panel.locator('.brood-care-cost')).to_have_count(0)
         expect(panel.locator('.brood-feeding')).not_to_be_visible()
         expect(panel.locator('.brood-pipeline')).to_contain_text(text)
+        if text.startswith('Next '):
+            icon='scouts' if 'scout' in text else 'workers'
+            expect(panel.locator(f'.brood-next-egg .resource-icon-{icon}')).to_have_count(1)
+        else:
+            expect(panel.locator('.brood-next-egg')).to_have_count(0)
         expect(panel.locator('.brood-worker-orders b')).to_have_text(str(state['ants']['eggOrders']))
         expect(panel.locator('.brood-scout-orders b')).to_have_text(str(len(state['ants']['scoutEggOrders'])))
         expect(panel.locator('.brood-worker-orders .resource-icon-workers')).to_have_count(1)
