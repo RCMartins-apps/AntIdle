@@ -249,6 +249,14 @@
 .brood-order-types {display:flex;align-items:center;gap:1rem;min-height:1.5em}
 .brood-order-types > span {display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap}
 .brood-counts b {font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Keep raise-button help centered as its live count badge changes height. */
+.antidle-app .action-cell:has(.brood-action-counts) {grid-template-columns:minmax(0,1fr) 44px;column-gap:.75rem;align-items:start}
+.antidle-app .action-cell:has(.brood-action-counts) > button {grid-column:1;grid-row:1;margin-right:0}
+.antidle-app .action-cell:has(.brood-action-counts) > :not(button):not(.action-details) {grid-column:1 / -1}
+.antidle-app .action-cell:has(.brood-action-counts) > .action-details {display:contents}
+.antidle-app .action-cell:has(.brood-action-counts) > .action-details > summary {position:static;grid-column:2;grid-row:1;align-self:center}
+.antidle-app .action-cell:has(.brood-action-counts) > .action-details > div {grid-column:1 / -1}
+.antidle-app .action-cell:has(.brood-action-counts) > .action-details:not([open]) > div {display:none}
 .brood-action-counts {display:flex;justify-content:center;gap:.75rem;width:max-content;max-width:100%;margin:.3rem auto 0;padding:.2rem .5rem;border-radius:1rem;background:rgba(0,0,0,.16);font-size:.75rem;font-weight:normal;line-height:1.3}
 .brood-action-counts > span {display:inline-flex;align-items:center;gap:.2rem;white-space:nowrap}
 .antidle-app .brood-action-counts .resource-icon {color:inherit;margin:0}

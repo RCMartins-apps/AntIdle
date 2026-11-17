@@ -42,3 +42,10 @@
   passed at 320/390/1280px, including immediate worker/scout click updates,
   cancellation and founding adult counts. Mobile screenshot shown in chat.
   Python syntax and diff checks passed; no gameplay changes.
+
+- Raise-button info alignment now uses a two-column grid: help is centered
+  against the full button (including badge), costs/details span both columns.
+  Scoped to badge-bearing raise actions; native disclosure state remains intact.
+  CSS-only follow-up passed brood checks at 320/390/1280px, including center
+  alignment, separation, open/close and stable control positions. Updated mobile
+  screenshot shown in chat; Python syntax and diff checks passed.

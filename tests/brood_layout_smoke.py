@@ -76,6 +76,12 @@ def check(page, width, url):
         expect(scout_button.locator('.egg-count-brood')).to_have_text('Brood: 0')
         expect(scout_button.locator('.egg-count-adults')).to_have_text('Adults: 0')
         tops.append(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top"))
+        for action in [worker,scout_button]:
+            button_box=action.bounding_box()
+            info=action.locator('..').locator('.action-details > summary')
+            info_box=info.bounding_box()
+            assert abs(button_box['y']+button_box['height']/2-info_box['y']-info_box['height']/2)<=1
+            assert info_box['x']>=button_box['x']+button_box['width']+8
         cancel_box=cancel.bounding_box()
         counts_box=panel.locator('.brood-counts').bounding_box()
         assert cancel_box['width']>=44 and cancel_box['height']>=44
@@ -87,6 +93,12 @@ def check(page, width, url):
             expect(cancel.locator('.brood-cancel-label')).to_be_visible()
         assert_fits(page,width)
     assert max(tops)-min(tops) <= 1, tops
+    worker_info=worker.locator('..').locator('.action-details > summary')
+    worker_info.click()
+    expect(worker.locator('..').locator('.action-details')).to_have_attribute('open','')
+    expect(worker.locator('..').locator('.action-details > div')).to_be_visible()
+    worker_info.click()
+    expect(worker.locator('..').locator('.action-details > div')).not_to_be_visible()
     expect(cancel).to_be_enabled()
     before=worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")
     worker.click()
