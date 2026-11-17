@@ -2,7 +2,8 @@
 (() => {
   'use strict';
   const media = matchMedia('(max-width: 767px)');
-  const key = 'antidle.ui.resources.expanded';
+  const preview = location.pathname.match(/(?:^|\/)pr-preview\/pr-([1-9][0-9]*)(?:\/|$)/);
+  const key = `antidle.ui${preview ? ':pr-preview:' + preview[1] : ''}.resources.expanded`;
   function start(app) {
     const panel = app.querySelector('.resources-column .game-panel');
     if (!panel || panel.dataset.mobileResources) return;

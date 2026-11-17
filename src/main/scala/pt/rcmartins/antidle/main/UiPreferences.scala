@@ -6,7 +6,7 @@ import scala.scalajs.js
 
 /** Browser preferences are separate from colony saves and tolerate unavailable storage. */
 object UiPreferences {
-  private val prefix = "antidle.ui."
+  private val prefix = pt.rcmartins.antidle.game.saves.BrowserStorage.key("antidle.ui", dom.window.location.pathname) + "."
   def get(key: String): Option[String] = Try(Option(dom.window.localStorage.getItem(prefix + key))).toOption.flatten
   def set(key: String, value: String): Unit = { Try(dom.window.localStorage.setItem(prefix + key, value)); () }
   def bindDetails(element: dom.HTMLElement, key: String, defaultOpen: Boolean = false): () => Unit = {
