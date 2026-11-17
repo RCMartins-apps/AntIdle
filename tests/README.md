@@ -122,3 +122,13 @@ collapse, accelerated simulated ticks, and disappearance when stored time is emp
 heading, scoped feeding details, independent disclosures, and stable egg-button
 positions through empty/large worker-and-scout queues, full brood, food pauses,
 cancellation and live ticks at 320/390/1280px.
+
+The resource regression repeatedly switches source timing between absent, full,
+full-countdown and depletion states, including changing number widths. It verifies
+unchanged panel/cell geometry in collapsed and expanded phone views and desktop
+rows, plus warning colors and complete accessible estimate labels.
+
+Resource timing geometry checks also use a wider Linux numeric font to reproduce
+PR #89's bold-value wrap at 320px, and assert every compact value stays on one
+line and fits its cell without clipping. The mobile-resource launcher honors
+CHROMIUM_PATH; GitHub Actions uses the pinned Playwright browser by default.

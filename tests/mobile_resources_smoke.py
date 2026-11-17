@@ -63,6 +63,81 @@ def check(page, width, url):
     print(f'PASS compact resources {width}px: live values, reveal rules, capacity, depletion warning, disclosure memory and resize', flush=True)
 
 
+def check_timing_layout(page, width, url):
+    # A common wider Linux font reproduces CI's bold-number wrap even on hosts
+    # whose default UI font is narrower. Keep all geometry assertions unchanged.
+    page.add_init_script("""addEventListener('DOMContentLoaded', () => {
+        const style = document.createElement('style');
+        style.textContent = '.compact-resource-value { font-family: "DejaVu Sans", sans-serif; }';
+        document.head.append(style);
+    });""")
+    now = datetime(2026, 11, 16, tzinfo=timezone.utc)
+    page.clock.install(time=now)
+    page.clock.pause_at(now + timedelta(seconds=1))
+    page.goto(url, wait_until='networkidle')
+    game = progressed_game(save_game(page))
+    game['ants']['queenRoutine']['enabled'] = False
+    load_game(page, game)
+    panel = page.locator('[data-mobile-resources=ready]')
+    summary = page.locator('.compact-resources')
+    for expanded in ([False, True] if width <= 767 else [True]):
+        if width <= 767:
+            button = page.get_by_role('button', name=('Expand' if expanded else 'Collapse') + ' resource details', exact=True)
+            if button.is_visible():
+                button.click()
+        measurements = []
+        # Drive the live DOM projection through intermittent timing labels. Freeze
+        # simulation so the source fixtures are not overwritten between assertions.
+        variants = [('', '0'), ('Full', '999.99K'), ('Full in ~48m 21s', '1.16K'),
+                    ('Empty in ~1h 24m', '604.20'), ('Empty in ~14m 54s', '22.35'), ('', '0')]
+        for timing, amount in variants * 2:
+            page.evaluate("""({timing, amount}) => {
+                for (const row of document.querySelectorAll('#resource-details .resource-row')) {
+                    const name = row.querySelector('.resource-label')?.textContent.trim();
+                    if (!['Sugar', 'Protein'].includes(name)) continue;
+                    const value = row.querySelector('.resource-amount');
+                    value.textContent = amount;
+                    value.classList.toggle('text-primary', timing === 'Full');
+                    const target = row.querySelector('.resource-timing');
+                    target.replaceChildren();
+                    if (timing) {
+                        const span = document.createElement('span');
+                        span.className = timing.startsWith('Empty') ? 'text-danger' : 'text-body-secondary';
+                        span.textContent = timing; target.append(span);
+                    }
+                }
+            }""", {'timing': timing, 'amount': amount})
+            if width <= 767:
+                sugar = summary.locator('[data-resource="Sugar"]')
+                expected = timing.replace('Empty in ~', '~').replace('Full in ~', 'Full ~')
+                if timing.startswith('Empty in ~'):
+                    expected += ' left'
+                expect(sugar.locator('.compact-resource-warning')).to_have_text(expected)
+                expect(sugar).to_have_attribute('title', 'Sugar: ' + amount + (', ' + timing if timing else ''))
+                values = summary.locator('.compact-resource-value').evaluate_all("""nodes => nodes.map(el => ({
+                    value: el.textContent, width: el.clientWidth, contentWidth: el.scrollWidth,
+                    height: el.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(el).lineHeight)
+                }))""")
+                assert all(v['contentWidth'] <= v['width'] + 1 and v['height'] <= v['lineHeight'] + 1 for v in values), values
+                warning = sugar.locator('.compact-resource-warning')
+                if timing.startswith('Empty'):
+                    expect(warning).to_have_css('color', 'rgb(220, 53, 69)')
+                elif timing:
+                    expect(warning).not_to_have_css('color', 'rgb(220, 53, 69)')
+            measurements.append(panel.evaluate("""el => ({
+                height: el.getBoundingClientRect().height,
+                chips: [...el.querySelectorAll('.compact-resource')].map(chip => {
+                    const r = chip.getBoundingClientRect(); return [r.x, r.y - el.getBoundingClientRect().y, r.width, r.height];
+                })
+            })"""))
+        heights = [m['height'] for m in measurements]
+        assert max(heights) - min(heights) <= 1, (width, expanded, heights)
+        if width <= 767:
+            assert all(m['chips'] == measurements[0]['chips'] for m in measurements), (width, expanded, measurements)
+        assert_fits(page, width)
+    print(f'PASS stable resource timing {width}px: repeated full/empty/zero and value-width changes preserve panel/chip geometry', flush=True)
+
+
 def check_catchup(page, width, url):
     now = datetime(2026, 11, 16, tzinfo=timezone.utc)
     page.clock.install(time=now)
@@ -113,7 +188,10 @@ if __name__ == '__main__':
     Thread(target=server.serve_forever,daemon=True).start()
     try:
         with sync_playwright() as p:
-            browser=p.chromium.launch(headless=True,executable_path=shutil.which('chromium'))
+            chromium = os.environ.get('CHROMIUM_PATH')
+            if not chromium and not os.environ.get('GITHUB_ACTIONS'):
+                chromium = shutil.which('chromium')
+            browser=p.chromium.launch(headless=True,executable_path=chromium)
             try:
                 for width in [320,390,1280]:
                     context=browser.new_context(viewport={'width':width,'height':844},is_mobile=width<=767,has_touch=width<=767)
@@ -122,6 +200,9 @@ if __name__ == '__main__':
                         check(page,width,f'http://127.0.0.1:{server.server_port}')
                         page.close()
                     check_catchup(context.new_page(),width,f'http://127.0.0.1:{server.server_port}')
+                    timing_page = context.new_page()
+                    check_timing_layout(timing_page,width,f'http://127.0.0.1:{server.server_port}')
+                    timing_page.close()
                     context.close()
             finally:
                 browser.close()
