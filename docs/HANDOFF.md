@@ -2,9 +2,10 @@
 
 ## 2026-11-17 — touching exploration hexagons
 
-- `polish/touching-map-hexes` starts at main 5cc539f, merged #90. Bottom sub-tab
-  trial is separately in PR #91 with auto-merge enabled. Owner requested this
-  map UI fix; implementation/push authorized, no new PR requested yet (D58).
+- `polish/touching-map-hexes` starts at main 5cc539f and integrates merged #91
+  (16e8444), preserving bottom sub-tabs/settings behavior. Shared docs combined
+  in order; code/styles merged cleanly. Owner requested this map UI fix;
+  implementation/push authorized, no new PR requested yet (D58).
 - MainForm derives regular flat-top tile dimensions from one width helper and
   sqrt(3)/2 height, sharing dimensions with CSS through map-level variables.
   Positions use axial q/r: 3/4 width horizontally, one height per row with half

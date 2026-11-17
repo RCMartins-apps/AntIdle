@@ -907,6 +907,15 @@ Remember the fold state, hide the section when no small workers remain and keep
 the existing default-task pool remains usable for jobs and missions. Reserve
 status space rather than hiding important assignment blockers. No balance changes.
 
+## D57: Trial mobile sub-tabs at the bottom and a closable settings menu
+
+The owner asked to try placing mobile sub-tabs at the bottom for one-handed use.
+Use a fixed row immediately above the main bottom navigation, with enough content
+padding to keep controls reachable. Keep the desktop layout and current-unlock
+visibility. The settings/menu button must toggle closed, returning to the exact
+previous sub-tab and scroll position; Escape and primary navigation also exit it.
+This is a UI trial for feedback, without gameplay changes.
+
 ## D58: Exploration hexagons share edges — approved
 
 The owner requested a connected hex map rather than separated columns. Use
