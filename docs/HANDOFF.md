@@ -18,5 +18,6 @@
   checked both ranges at 320/390/1280px, including unchanged map/trails and
   prestige flows. Production UI passed 390/1280px. Development/production builds
   passed with zero Closure warnings/errors; four packaging tests and syntax/diff
-  checks passed.
+  checks passed. After integrating #91, both map ranges and navigation were
+  rechecked at 320/390/1280px with shared-edge and containment assertions.
 - Preserve unrelated work/ and Python caches. No engine or save-format changes.
