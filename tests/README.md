@@ -138,6 +138,6 @@ CHROMIUM_PATH; GitHub Actions uses the pinned Playwright browser by default.
 aligned primary controls, mobile batch assignment, actual idle/default-pool
 semantics, hiding the exhausted small-worker section and stable blocker geometry.
 
-Brood disclosure tests assert saved closed/open preferences after processing the
-native toggle event, before reloading. With the browser clock paused, immediate
-DOM visibility alone does not prove the asynchronous preference write finished.
+Brood disclosure tests block native toggle events and keep the browser clock
+paused while asserting saved closed/open preferences and reload behavior. The
+open-attribute observer must persist state without timer advances or retries.

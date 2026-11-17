@@ -1,21 +1,22 @@
 # Handoff
 
-## 2026-11-17 — repair PR #90's disclosure-persistence race
+## 2026-11-17 — replace PR #90's unreliable toggle-event persistence
 
-- Continue `polish/task-controls`, PR #90, head 6962b89. Required test failed in
-  run 43996007646/job 133748214679 during the desktop brood regression, before
-  the new task-controls check. Production UI, resources and mobile brood passed.
-- The test closed/reopened native details and immediately reloaded a founding
-  fixture. The DOM was open but its queued toggle event had not reliably saved
-  the reopened preference, so reload restored closed. It passed intermittently
-  locally. No task/gameplay failure was reported by CI.
-- The brood regression now advances its paused browser clock after each toggle,
-  asserts localStorage contains closed/open respectively, and explicitly checks
-  open survives reload before inspecting the founding egg action. All original
-  geometry, disclosure and visibility assertions remain. Browser selection honors
-  CHROMIUM_PATH and uses Playwright-managed Chromium on GitHub Actions.
-- Corrected production brood checks and wide-font task-control checks passed
-  320/390/1280px. fullOptJS passed with zero Closure warnings/errors; Python
-  syntax and git diff --check passed. No gameplay or application code changes.
-  Owner requested repair of this existing PR; auto-merge remains authorized with
-  required test and changes / classify enforced. Preserve work/ and Python caches.
+- Continue `polish/task-controls`, PR #90, head 072d2d0. Second CI attempt failed
+  job 133869603733 at the new closed-preference assertion: advancing a simulated
+  clock does not guarantee native toggle delivery. The prior timing-only repair
+  was insufficient. No required checks are removed or weakened.
+- UiPreferences now observes the details element's open attribute and saves at
+  the mutation microtask checkpoint. Restore happens before observation starts.
+  bindDetails returns a disconnect function; rememberDetails binds/disconnects it
+  through Laminar mount/unmount callbacks, preventing detached stale writes.
+- Brood regression blocks all native toggle events and asserts saved closed/open
+  states immediately, with no waits or timer advances, then checks reload. This
+  deterministically failed against the old production bundle and passed against
+  the new development and production bundles at 320/390/1280px.
+- Wide-font task controls passed 320/390/1280px. Development/production builds
+  passed with zero Closure warnings/errors. Existing production UI checks passed
+  390/1280px, and Python syntax/diff checks passed. Final edits were docs only.
+  No simulation/balance changes.
+- Push this repair to the existing branch. Owner authorizes PR #90 auto-merge
+  with enforced test and changes / classify checks. Preserve work/ and caches.

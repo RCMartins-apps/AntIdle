@@ -30,8 +30,13 @@ object MainForm {
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
 
-  private def rememberDetails(key: String, defaultOpen: Boolean = false): Modifier[ReactiveHtmlElement[HTMLElement]] =
-    onMountCallback(ctx => UiPreferences.bindDetails(ctx.thisNode.ref, key, defaultOpen))
+  private def rememberDetails(key: String, defaultOpen: Boolean = false): Modifier[ReactiveHtmlElement[HTMLElement]] = {
+    var disconnect: () => Unit = () => ()
+    onMountUnmountCallback(
+      ctx => disconnect = UiPreferences.bindDetails(ctx.thisNode.ref, key, defaultOpen),
+      _ => disconnect(),
+    )
+  }
 
   private def activityStatus(label: Signal[String], extraClass: String = ""): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := s"activity-status $extraClass", dataAttr("state") <-- label.map(ActivityStatus.kind).distinct,

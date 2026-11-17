@@ -12,6 +12,9 @@ from ci_browser_smoke import ProductionHandler
 
 
 def check(page, width, url):
+    # Persistence must not depend on native toggle delivery. Suppressing those
+    # events deterministically reproduces the original saved-state failure.
+    page.add_init_script("document.addEventListener('toggle', event => event.stopImmediatePropagation(), true)")
     now=datetime(2026,11,16,tzinfo=timezone.utc)
     page.clock.install(time=now)
     page.clock.pause_at(now+timedelta(seconds=1))
@@ -67,14 +70,11 @@ def check(page, width, url):
     assert abs(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")-before)<=1
     panel.locator(':scope > .brood-summary').click()
     expect(worker).not_to_be_visible()
-    # Native <details> changes open immediately, but its toggle event (which
-    # saves the preference) is queued. Advance the paused clock before navigating
-    # away, and assert persistence rather than racing it with the next reload.
-    page.clock.run_for(50)
+    # Attribute observation persists state even with native toggle events blocked,
+    # without advancing the paused clock or allowing a timed retry.
     assert page.evaluate("localStorage.getItem('antidle.ui.details.nest.brood')") == 'closed'
     panel.locator(':scope > .brood-summary').click()
     expect(worker).to_be_visible()
-    page.clock.run_for(50)
     assert page.evaluate("localStorage.getItem('antidle.ui.details.nest.brood')") == 'open'
     founding=copy.deepcopy(game)
     founding['ants'].update(standardWorkersUnlocked=False,workers=0,smallWorkers=2*UNIT,tasks=[])
