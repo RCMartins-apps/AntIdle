@@ -67,6 +67,13 @@ jobs:
                 diff.files.every(file => documentation(file.filename) && (!file.previous_filename || documentation(file.previous_filename)));
             }
             core.setOutput('publish', current);
+      - name: Checkout published branch
+        if: steps.revision.outputs.publish == 'true'
+        timeout-minutes: 2
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          persist-credentials: false
       - name: Download release
         if: steps.revision.outputs.publish == 'true'
         timeout-minutes: 2

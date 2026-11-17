@@ -32,7 +32,8 @@ Removing a hosted preview does not erase browser saves or an installed offline c
 
 PR Test keeps read-only access while building, running tests and packaging via
 `scripts/package_site.py`. Its separate write-enabled job downloads static assets;
-it never checks out or executes PR source. It skips closed/superseded revisions.
+it checks out only gh-pages to initialize the publishing action, and never
+executes PR source. It skips closed/superseded revisions.
 The environment and workflow summary supply the preview link without PR comments.
 
 Production builds only on main. Its publishing job downloads the package and

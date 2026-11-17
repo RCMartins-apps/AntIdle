@@ -35,3 +35,10 @@
   passed (zero Closure warnings/errors), all 308 engine + 4 balance tests passed,
   and the packaged preview isolation/restore browser check passed. Diff check
   passed. No UI changes/screenshots needed; push retriggers CI.
+
+- Second #95 run passed every test but deploy-preview failed because the Pages
+  action ran outside a Git checkout. Both preview and production publishers now
+  checkout gh-pages before downloading artifacts, with checkout credentials
+  disabled (the deploy action receives its own token). No PR code executes.
+  Actionlint and diff checks passed; workflow-only correction, no game rebuild.
+  Push retriggers CI; publication still awaits live verification.

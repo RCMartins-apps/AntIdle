@@ -164,6 +164,13 @@ jobs:
           script: |
             const {data: pr} = await github.rest.pulls.get({...context.repo, pull_number: context.issue.number});
             core.setOutput('deploy', pr.state === 'open' && pr.head.sha === context.payload.pull_request.head.sha);
+      - name: Checkout published branch
+        if: steps.pr.outputs.deploy == 'true'
+        timeout-minutes: 2
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          persist-credentials: false
       - name: Download static preview
         if: steps.pr.outputs.deploy == 'true'
         timeout-minutes: 2
