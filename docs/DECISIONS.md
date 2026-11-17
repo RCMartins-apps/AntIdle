@@ -936,3 +936,11 @@ other affected layouts/states as appropriate. Use supported chat image delivery;
 local file links are insufficient. Report capture/delivery limitations honestly.
 This is a standing workflow rule in AGENTS.md, not a requirement for docs-only
 or nonvisual work.
+
+## Build-queue cancellation and mobile automation controls
+
+Queued construction has a separate, accessible red cancel button with a 44px
+target. Tapping its name must not cancel it. Keep the first-entry resource wait
+estimate and avoid duplicating Queued beside the status. Automation numeric
+fields use numeric keyboards and 44px-high controls; its toggle label is tappable.
+These are presentation/interaction changes, without balance changes.

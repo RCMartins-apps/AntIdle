@@ -1,17 +1,19 @@
 # Handoff
 
-## 2026-11-17 — screenshots for visual changes
+## 2026-11-17 — safer queue and mobile automation controls
 
-- `docs/visual-change-screenshots` starts at main 2c8cfd2, merged #92.
-  AGENTS.md now requires actual rendered screenshots in chat for every visual
-  change, mobile first and other affected states/layouts as needed (D59).
-  If capture/delivery is unavailable, report it; local file links do not suffice.
-- Documentation-only change; diff/wording checks passed. No game rebuild needed.
-  Owner authorized PR creation and auto-merge. Verified active main rules
-  enforce test and changes / classify, strict up-to-date, with no bypass.
-- Pending separate work: `polish/egg-order-icons` at a56cc47 is pushed and ready,
-  with no PR requested. It groups worker/scout egg orders with caste icons.
-  Development build and brood layout checks passed at 320/390/1280px, including
-  counts/accessibility, spacing, stable controls and founding visibility. Its
-  earlier handoff predates merged #92; combine context when merging that branch.
-- Preserve unrelated work/ and Python caches. No gameplay or save changes.
+- `polish/safer-queue-controls` starts at main e391991 (#93). Separate brood UI
+  work is in PR #94 with auto-merge enabled; this branch does not include it.
+- Build queue names no longer cancel on tap. Separate red × buttons have
+  accessible names and 44px targets. Costs/status remain visible, first-entry
+  wait estimate retained, duplicate Queued text removed.
+- Queen's Routine numeric fields use numeric keyboards and 44px minimum height;
+  the automation checkbox label has a 44px tappable height.
+- Development build and focused browser checks at 320/390/1280px verified
+  non-destructive name taps, explicit keyboard cancellation, target sizes,
+  numeric input modes, label toggling and no horizontal overflow. Mobile queue
+  and automation screenshots shown in chat. Final build and all three viewport
+  checks passed after removing duplicate queue copy; refreshed queue screenshot
+  shown in chat. Diff check passed.
+- No gameplay/save changes. Preserve unrelated work/ and Python caches.
+  No PR requested for this branch yet; standing authorization covers push.
