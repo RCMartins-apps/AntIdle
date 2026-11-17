@@ -1,22 +1,29 @@
 # Handoff
 
-## 2026-11-17 — bottom mobile sub-tabs and settings toggle
+## 2026-11-17 — touching exploration hexagons
 
-- `polish/mobile-bottom-subtabs` starts at main 5cc539f, merged #90. Owner requested
-  this mobile trial (D57) and now authorized its PR with native auto-merge.
-- Existing mobile sub-tabs/menu header now sits in a fixed 56px row above the
-  68px main navigation, with safe-area-aware content padding. Desktop keeps its
-  original tabs. Dense Explore sub-tabs remain visible without horizontal scroll.
-- Settings button toggles open/closed with an expanded state and close icon.
-  Closing/Escape restores the previous valid sub-tab and its scroll; choosing a
-  main destination exits the menu. Hidden/removed prior destinations fall back to
-  Nest. Tests' select_tab helper remains idempotent when already in Settings.
-- Production build passed with zero Closure warnings/errors. Focused 320/390px
-  checks passed for bottom geometry, full Explore group, toggling/Escape, scroll,
-  navigation and desktop resize; the same checks passed with a wider Linux font.
-  Production UI passed 390/1280px, map/trails and prestige passed 320/390/1280px,
-  offline/update checks passed 390/1280px. Four packaging tests and JS/Python
-  syntax/diff checks passed. Final edits were test coverage/documentation only.
-- Required main checks test and changes / classify are active, strict and have
-  no bypass. Squash auto-merge is enabled in repository settings. Preserve
-  unrelated work/ and Python caches. No gameplay or balance changes.
+- `polish/touching-map-hexes` starts at main 5cc539f and integrates merged #91
+  (16e8444), preserving bottom sub-tabs/settings behavior. Shared docs combined
+  in order; code/styles merged cleanly. Owner requested this map UI fix;
+  implementation and PR auto-merge authorized (D58).
+- MainForm derives regular flat-top tile dimensions from one width helper and
+  sqrt(3)/2 height, sharing dimensions with CSS through map-level variables.
+  Positions use axial q/r: 3/4 width horizontally, one height per row with half
+  height per column. No integer truncation in expanded-map placement.
+- Normal width is 36% and expanded width 27%, keeping both current ranges inside
+  their square board with >=44px targets. A non-interactive SVG outline keeps
+  shared boundaries visible. Existing fog, status, selection and missions remain.
+- Browser geometry helper verifies regular proportions, containment and both
+  shared vertices for every axial-neighbor edge. Maintained map/prestige suites
+  checked both ranges at 320/390/1280px, including unchanged map/trails and
+  prestige flows. Production UI passed 390/1280px. Development/production builds
+  passed with zero Closure warnings/errors; four packaging tests and syntax/diff
+  checks passed. After integrating #91, both map ranges and navigation were
+  rechecked at 320/390/1280px with shared-edge and containment assertions.
+- Selection follow-up replaces the rectangular inset shadow with a blue SVG
+  polygon border; keyboard focus uses a distinct dashed polygon. Maintained
+  production map/trail/aphid checks passed at 320/390/1280px, including pointer
+  selection and keyboard-focus assertions. Four packaging tests, Python syntax
+  and diff checks passed. Owner requested PR creation with auto-merge; verified active
+  main rules require test and changes / classify, strict up-to-date, no bypass.
+- Preserve unrelated work/ and Python caches. No engine or save-format changes.

@@ -915,3 +915,15 @@ padding to keep controls reachable. Keep the desktop layout and current-unlock
 visibility. The settings/menu button must toggle closed, returning to the exact
 previous sub-tab and scroll position; Escape and primary navigation also exit it.
 This is a UI trial for feedback, without gameplay changes.
+
+## D58: Exploration hexagons share edges — approved
+
+The owner requested a connected hex map rather than separated columns. Use
+regular flat-top hexagon proportions and matching axial spacing so neighboring
+cells share complete edges in both current map ranges. Keep thin outlines for
+individual tile clarity, existing selection/fog behavior, safe touch targets and
+all progression/reward rules unchanged.
+
+Selection and keyboard focus must follow the six hexagon edges, rather than
+using rectangular inset shadows or outlines. Use a solid blue selection border
+and a distinct dashed keyboard-focus border.
