@@ -80,6 +80,10 @@ jobs:
           ANTIDLE_PRODUCTION: "1"
         run: python3 tests/brood_layout_smoke.py
 
+      - name: Check task controls
+        timeout-minutes: 3
+        run: python3 tests/task_controls_smoke.py
+
       - name: Check blocked-action feedback
         timeout-minutes: 3
         run: python3 tests/blocked_actions_smoke.py

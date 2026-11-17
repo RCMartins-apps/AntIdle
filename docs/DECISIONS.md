@@ -886,3 +886,14 @@ Keep the cancel-orders control in place, disabled when empty. Larval feeding
 costs belong in details and must correctly cover worker and scout larvae, rather
 than saying the shared care cost is worker-only. Keep native independent section
 and information disclosures, current-unlock visibility and gameplay unchanged.
+
+
+## D56: Collapsible small workers and stable task assignment — approved
+
+The owner requested a collapsible Small workers section whose heading shows its
+live total, matching primary +/- controls aligned to the right, an Idle workers
+count below the section, and no task-row movement when staffing blockers appear.
+Remember the fold state, hide the section when no small workers remain and keep
+50% mechanics in help. Idle workers means genuinely unassigned standard workers;
+the existing default-task pool remains usable for jobs and missions. Reserve
+status space rather than hiding important assignment blockers. No balance changes.

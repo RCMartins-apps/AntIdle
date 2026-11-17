@@ -122,3 +122,8 @@ collapse, accelerated simulated ticks, and disappearance when stored time is emp
 heading, scoped feeding details, independent disclosures, and stable egg-button
 positions through empty/large worker-and-scout queues, full brood, food pauses,
 cancellation and live ticks at 320/390/1280px.
+
+`python3 tests/task_controls_smoke.py` checks the production task UI at
+320/390/1280px: persistent small-worker folding and total count, matching right
+aligned primary controls, mobile batch assignment, actual idle/default-pool
+semantics, hiding the exhausted small-worker section and stable blocker geometry.
