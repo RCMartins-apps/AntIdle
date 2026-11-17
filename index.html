@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="2b5bffed7f1a106000e19666">
+    <meta name="antidle-build" content="598dcb19b67c3ebcd09c17f8">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -251,6 +251,16 @@
 .brood-counts b {font-variant-numeric:tabular-nums;white-space:nowrap}
 .brood-counts .small {font-size:.75rem;white-space:nowrap}
 .brood-pipeline .activity-status {display:block;line-height:1.5;min-height:calc(3em + .3rem)}
+
+/* Reserve a status line and share task button geometry across worker castes. */
+.antidle-app .task-blocked-reason {min-height:1.5em;line-height:1.5;font-size:.75rem}
+.antidle-app .task-row > .col-6 {flex:1;min-width:0}
+.antidle-app .task-controls {display:flex;flex:0 0 auto;justify-content:flex-end;width:auto;padding-left:0;margin-left:auto}
+.antidle-app .task-controls .btn {min-width:44px;min-height:44px}
+.antidle-app .small-worker-job {padding-right:0;margin-left:0;margin-right:0}
+.antidle-app .small-worker-tasks {position:relative}
+.small-workers-summary {padding-right:52px;font-weight:600}
+.small-worker-tasks > .info-details > .info-summary {position:absolute;top:.5rem;right:.5rem}
 </style>
 </head>
 <body>
@@ -259,7 +269,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.753556f8ee491c4d.js"></script>
+<script type="text/javascript" src="game.06cf632d643fd2ed.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
