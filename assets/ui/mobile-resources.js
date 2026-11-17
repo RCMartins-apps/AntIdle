@@ -66,11 +66,13 @@
         const text = amount.textContent.trim();
         if (value.textContent !== text) value.textContent = text;
         chip.classList.toggle('at-capacity', amount.classList.contains('text-primary'));
-        const empty = row.querySelector('.resource-timing .text-danger')?.textContent.trim() || '';
+        const timing = row.querySelector('.resource-timing > span')?.textContent.trim() || '';
+        const draining = timing.startsWith('Empty');
+        const compactTiming = timing.replace(/^Empty in ~(.*)$/, '~$1 left').replace(/^Full in ~/, 'Full ~');
         const warning = chip.querySelector('.compact-resource-warning');
-        if (warning.textContent !== empty) warning.textContent = empty;
-        chip.classList.toggle('running-low', !!empty);
-        const description = `${name}: ${text}${empty ? ', ' + empty : ''}`;
+        if (warning.textContent !== compactTiming) warning.textContent = compactTiming;
+        chip.classList.toggle('running-low', draining);
+        const description = `${name}: ${text}${timing ? ', ' + timing : ''}`;
         chip.setAttribute('aria-label', description); chip.title = description;
       }
       for (const [name, chip] of chips) if (!present.has(name)) { chip.remove(); chips.delete(name); }
