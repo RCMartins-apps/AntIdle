@@ -973,6 +973,20 @@ Raise-egg buttons show live compact counts in queue → developing brood → adu
 order, using icons and accessible labels. Counts follow the relevant caste,
 including the small/standard worker phase; they are feedback, not requirements.
 
+## Build-queue cancellation and mobile automation controls
+
+Queued construction has a separate, accessible red cancel button with a 44px
+target. Tapping its name must not cancel it. Remove Ready/Queued labels: affordable construction completes next tick.
+Show Resources in ~time for each entry, forecasting sequential costs at current
+net production and capacity. No feasible current-rate estimate shows Needs
+resources in red; do not promise an arrival time for manual income or predict
+future chamber bonuses. Automation numeric
+fields use numeric keyboards and 44px-high controls; its toggle label is tappable.
+These are presentation/interaction changes, without balance changes.
+
+Queued chamber levels show from → to (for example 1 → 2), including earlier
+queued upgrades of the same chamber when calculating each transition.
+
 PR descriptions must put the Markdown preview link on their very first line,
 with availability status. Update the description immediately after creation to
 use the actual assigned PR number. Ineligible previews must be labeled clearly.
