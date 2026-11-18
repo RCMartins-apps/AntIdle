@@ -38,6 +38,10 @@ object MainForm {
     )
   }
 
+  private def workerCasteIcon: ReactiveHtmlElement[HTMLSpanElement] =
+    span(child <-- antsSignal.map(_.standardWorkersUnlocked).distinct.map(standard =>
+      ResourceIcons.icon(ResourceIcons.forWorker(standard))))
+
   private def activityStatus(label: Signal[String], extraClass: String = ""): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := s"activity-status $extraClass", dataAttr("state") <-- label.map(ActivityStatus.kind).distinct,
       child.text <-- label.distinct)
@@ -241,7 +245,7 @@ object MainForm {
                 dataAttr("bs-toggle") := "tab",
                 href := "#tasksContent",
                 role := "tab",
-                "Tasks",
+                "Jobs",
                 child <-- availableWorkersCountSignal.map {
                   case 0 => span()
                   case n => span(s" (", prettyNumberInt(n), ")")
@@ -948,7 +952,7 @@ object MainForm {
         span(className := "egg-count-brood", ResourceIcons.icon(ResourceIcons.Eggs),
           span(className := "visually-hidden", "Brood: "),
           child.text <-- counts.map(c => prettyNumberStr(c._2.toLong * u))),
-        span(className := "egg-count-adults", ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.Workers),
+        span(className := "egg-count-adults", if (scout) ResourceIcons.icon(ResourceIcons.Scouts) else workerCasteIcon,
           span(className := "visually-hidden", "Adults: "),
           child.text <-- counts.map(c => prettyNumberStr(c._3))),
       )
@@ -1012,7 +1016,7 @@ object MainForm {
               span(className := "brood-worker-orders", role := "img",
                 title <-- antsSignal.map(a => if (a.standardWorkersUnlocked) "Worker egg orders" else "Small worker egg orders").distinct,
                 aria.label <-- antsSignal.map(a => s"${a.eggOrders} ${if (a.standardWorkersUnlocked) "worker" else "small worker"} egg orders").distinct,
-                ResourceIcons.icon(ResourceIcons.Workers),
+                workerCasteIcon,
                 b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.eggOrders.toLong * u)).distinct)),
               child.maybe <-- scoutOrdersVisible.map(show => Option.when(show)(
                 span(className := "brood-scout-orders", role := "img", title := "Scout egg orders",
@@ -1043,7 +1047,7 @@ object MainForm {
               child <-- status.combineWith(antsSignal.map(a => (a.scoutEggOrders.headOption.contains(0), a.standardWorkersUnlocked)).distinct).map {
                 case (label, scout, standard) if label.startsWith("Next egg in ") =>
                   span(className := "brood-next-egg", "Next ",
-                    ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.Workers),
+                    ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.forWorker(standard)),
                     span(className := "visually-hidden", if (scout) "scout" else if (standard) "worker" else "small worker"),
                     label.stripPrefix("Next"))
                 case (label, _, _) => span(label)
@@ -1797,7 +1801,7 @@ object MainForm {
       },
       smallWorkerTasks,
       span(className := "idle-worker-summary",
-        "Idle workers: ",
+        ResourceIcons.icon(ResourceIcons.Workers), "Idle workers: ",
         b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.idleWorkersCount))),
       ),
       children <-- unlockedAntTasks.map(_.sortBy(task => (if (task.showButtons) 0 else 1, task.uiOrder)).map(task => taskDiv(task))),
@@ -1809,7 +1813,7 @@ object MainForm {
       detailsTag(className := "small-worker-tasks border rounded p-2 my-2",
         rememberDetails("tasks.small-workers", defaultOpen = true),
         summaryTag(className := "small-workers-summary", minHeight.px := 44,
-          "Small workers · ", child.text <-- antsSignal.map(ants => prettyNumberStr(ants.smallWorkers)).distinct),
+          ResourceIcons.icon(ResourceIcons.SmallWorkers), "Small workers · ", child.text <-- antsSignal.map(ants => prettyNumberStr(ants.smallWorkers)).distinct),
         infoDetails("Small workers", div("50% task output and upkeep. Unassigned small workers collect sugar. They share scraps and nurse places with standard workers, but cannot join expeditions or promotions.")),
         div(className := "small-collector-summary",
           div(child.text <-- antsSignal.map(ants => s"Sugar Collector (${ants.smallCollectors / u})")),

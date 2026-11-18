@@ -1,14 +1,30 @@
 # Handoff
 
-## 2026-11-18 — preview-first PR descriptions ready for auto-merge
+## 2026-11-18 — worker icons and grouped mobile colony navigation
 
-- `docs/preview-first-pr-descriptions` integrates main ea85e54 (merged #97).
-  Documentation conflicts combined; this PR changes only context/instructions.
-- AGENTS.md and preview docs require a Markdown preview link plus availability
-  status on the very first line of every PR description. Use the actual assigned
-  PR number and immediately update after creation. Label ineligible previews.
-- Existing #97 description was updated; it has since merged. No preview is
-  generated for this documentation-only PR. No game build/screenshot needed.
-- Owner authorized PR and auto-merge. Main rules verified active with required
-  test and changes / classify, strict up-to-date, no bypass. Wording/link and
-  diff checks passed. Preserve unrelated work/ and Python caches.
+- `polish/worker-caste-icons`, PR #99, starts at main 4a67020. Manual review only:
+  auto-merge remains off. Owner approved S-marked small ants, colony Nest icon,
+  icon Nest sub-tabs, moving Tasks into Nest, and primary Settings (D61–D62).
+- Mobile Nest now groups Brood/Tasks/Chambers with egg/worker/tunneling icons
+  above labels. Settings has a main gear button, replacing the hamburger. A lone
+  Settings strip hides; Milestones stays under Settings before Lineage unlocks.
+  Escape returns to prior view. Desktop tabs and gameplay unchanged.
+- Decorative icons preserve live task-label node parents. Captured mobile arrow
+  handling prevents Bootstrap selecting hidden desktop tabs. Existing unlocks,
+  remembered sub-views/scroll and idle-count updates remain functional.
+- S is orange on light surfaces and pale gold in blue badges. It is reused in
+  resources, task headings, orders, countdown and caste-dependent adult badges.
+- Production build passed, zero Closure warnings/errors. Final navigation checks
+  passed 320/390px, including milestone fallback and desktop resizing; task
+  checks passed 320/390/1280px; production UI gate passed 390/1280px. JavaScript/
+  Python syntax and diff checks passed. Updated mobile screenshot shown in chat.
+- Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-99/ — refresh
+  pending push/CI. Preserve unrelated work/ and Python caches.
+
+- Naming follow-up: owner chose Jobs for the worker-assignment sub-tab. Renamed
+  visible mobile/desktop label while retaining tasks DOM/model identifiers.
+  Navigation helper accepts historical Tasks calls and selects Jobs. PR #99
+  remains manual review without auto-merge. Development/production builds passed
+  with zero Closure warnings/errors; navigation checks passed 320/390px and
+  live Jobs-count/task controls passed 320/390/1280px. Updated screenshot shown
+  in chat; Python syntax and diff checks passed.

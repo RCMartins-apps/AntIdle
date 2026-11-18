@@ -136,6 +136,17 @@ def check(page, width, url):
     small=page.get_by_role('button',name='Raise Small Worker Egg',exact=True)
     expect(small).to_be_visible()
     expect(small.locator('.egg-count-adults')).to_have_text('Adults: 2')
+    expect(small.locator('.egg-count-adults .resource-icon-small-workers')).to_have_count(1)
+    assert small.locator('.small-worker-mark').evaluate('el => getComputedStyle(el).stroke') != small.locator('.egg-count-adults .resource-icon-small-workers path').first.evaluate('el => getComputedStyle(el).stroke')
+    expect(panel.locator('.brood-worker-orders .resource-icon-small-workers')).to_have_count(1)
+    # The same retained order switches caste icon when standard development unlocks.
+    founding['ants'].update(eggOrders=1,layingCooldown=100)
+    load_game(page,founding)
+    expect(panel.locator('.brood-next-egg .resource-icon-small-workers')).to_have_count(1)
+    founding['ants']['standardWorkersUnlocked']=True
+    load_game(page,founding)
+    expect(panel.locator('.brood-worker-orders .resource-icon-workers')).to_have_count(1)
+    expect(panel.locator('.brood-next-egg .resource-icon-workers')).to_have_count(1)
     assert not errors,errors
     print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help and independent disclosures',flush=True)
 

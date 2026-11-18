@@ -22,6 +22,10 @@ object ResourceIcons {
     "M3 21 16 8M5 6c7-6 14-4 17 4l-6-2-4-5M5 6l7-3")
   case object Workers extends ResourceIcon("workers",
     "M12 3a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM12 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM12 14a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7ZM10 4 8 2M14 4l2-2M10 10 5 8l-2 2M14 10l5-2 2 2M10 12l-5 1-2 3M14 12l5 1 2 3M9 17l-3 1v3M15 17l3 1v3")
+  case object SmallWorkers extends ResourceIcon("small-workers", Workers.path)
+
+  def forWorker(standard: Boolean): ResourceIcon = if (standard) Workers else SmallWorkers
+
   case object Repletes extends ResourceIcon("repletes",
     "M12 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM12 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM12 11a7 5 0 1 0 0 10 7 5 0 0 0 0-10ZM10 4 7 2M14 4l3-2M10 8 5 7M14 8l5-1M6 14l-3-2M18 14l3-2M6 18l-3 2M18 18l3 2")
   case object Scouts extends ResourceIcon("scouts",
@@ -50,7 +54,8 @@ object ResourceIcons {
     case "repletes" | "replete slots" => Some(Repletes)
     case "eggs" | "egg slots" | "brood" | "brood places" => Some(Eggs)
     case "ants" | "colony slots" => Some(Colony)
-    case "small workers" | "workers" | "idle workers" | "party workers" => Some(Workers)
+    case "small workers" => Some(SmallWorkers)
+    case "workers" | "idle workers" | "party workers" => Some(Workers)
     case resourceLabel if resourceLabel.endsWith(" workers") => Some(Workers)
     case _ => None
   }
@@ -62,6 +67,8 @@ object ResourceIcons {
     span(
       className := s"resource-icon resource-icon-${resource.id}",
       aria.hidden := true,
-      svg.svg(svg.viewBox := "0 0 24 24", svg.path(svg.d := resource.path)),
+      svg.svg(svg.viewBox := "0 0 24 24", svg.path(svg.d := resource.path),
+        // An S drawn as a path keeps the icon decorative for screen readers.
+        Option.when(resource == SmallWorkers)(svg.path(svg.className := "small-worker-mark", svg.d := "M6 1.5C5 0 1 0 1 3C1 5 6 4 6 6C6 9 2 9 1 7.5", svg.strokeWidth := "1.3"))),
     )
 }

@@ -143,8 +143,8 @@ paused while asserting saved closed/open preferences and reload behavior. The
 open-attribute observer must persist state without timer advances or retries.
 
 Mobile navigation checks cover bottom sub-tab placement above the main bar,
-fully unlocked Explore labels, menu open/close/Escape, restoring the previous
-sub-tab and scroll, exiting through main navigation, and desktop resizing.
+fully unlocked Explore labels, primary Settings/Escape, restoring the previous
+sub-tab and scroll, Milestones fallback before Lineage, and desktop resizing.
 
 Exploration map and prestige regressions verify regular hex proportions, board
 containment, 44px targets and two coincident edge endpoints for every axial
@@ -164,3 +164,11 @@ accessible labels, same-line spacing, founding visibility and stable controls.
 
 Raise-egg badge checks verify queue, developing brood and adult counts, immediate
 manual order feedback, cancellation, and founding small-worker counts.
+
+Caste-icon regressions in task/brood checks verify the marked small-worker SVG,
+unmarked standard heading, colony/Nest navigation consistency and icon changes
+after Standard Worker Development, without changing control names or layout.
+
+Nest navigation checks cover Brood/Jobs/Chambers icons, no standalone Jobs
+primary button, remembered Jobs return, arrow keys within visible sub-tabs,
+phone fit/desktop resize and live idle-worker counts after assignment.

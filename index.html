@@ -24,7 +24,10 @@
         .antidle-app .resource-icon-resin { color: #ad6b00; }
         .antidle-app .resource-icon-knowledge { color: #355fc5; }
         .antidle-app .resource-icon-tunneling { color: #795b3c; }
+        .antidle-app .resource-icon-small-workers,
         .antidle-app .resource-icon-workers { color: #495057; }
+        .antidle-app .small-worker-mark {stroke:#b34b00}
+        .antidle-app .brood-action-counts .small-worker-mark {stroke:#ffe08a}
         .antidle-app .resource-icon-queens { color: #8159a6; }
         .antidle-app .resource-icon-scouts { color: #187563; }
         .antidle-app .resource-icon-eggs { color: #826227; }
@@ -183,7 +186,7 @@
 .activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
 .activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
 
-.mobile-bottom-nav, .mobile-menu-button, .mobile-secondary, .mobile-tab-label { display:none; }
+.mobile-bottom-nav, .mobile-secondary, .mobile-tab-label, .nest-subtab-icon { display:none; }
 @media (max-width:767px) {
  .antidle-app {overflow-anchor:none;padding-bottom:calc(132px + env(safe-area-inset-bottom)) !important}
  .mobile-bottom-nav {display:flex;position:fixed;bottom:0;left:0;right:0;z-index:1030;background:var(--bs-body-bg);border-top:1px solid var(--bs-border-color);padding:4px 4px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px #0001}
@@ -191,21 +194,23 @@
  .mobile-bottom-nav button[hidden] {display:none}
  .mobile-bottom-nav button[aria-current=page] {color:var(--bs-primary);background:var(--bs-primary-bg-subtle);border-radius:.5rem;font-weight:700}
  .mobile-bottom-nav svg {width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
- .mobile-menu-button {display:block;margin-left:auto;min-width:44px}
  .game-main > .card-header {display:flex;gap:.35rem;align-items:center;position:fixed;top:auto;bottom:calc(68px + env(safe-area-inset-bottom));left:0;right:0;height:56px;padding:4px 8px;z-index:1030;background:var(--bs-body-bg);border-top:1px solid var(--bs-border-color);border-radius:0;box-shadow:0 -2px 10px #0001}
+ .antidle-app[data-mobile-group=settings][data-mobile-subtabs="1"] .game-main > .card-header {display:none}
+ .antidle-app[data-mobile-group=settings][data-mobile-subtabs="1"] {padding-bottom:calc(76px + env(safe-area-inset-bottom)) !important}
  .antidle-app .card-tabs {flex:1;min-width:0;overflow:visible;flex-wrap:wrap;gap:0;border:0}
  .antidle-app .card-tabs .nav-item {display:none;flex:1;min-width:0}
  .antidle-app .card-tabs .nav-link {padding:.625rem .3rem;text-align:center;font-size:clamp(.75rem,3.5vw,.85rem);white-space:nowrap}
  .antidle-app .card-tabs .nav-item[hidden] {display:none !important}
  .mobile-secondary, .mobile-tab-label {display:block}
+ [data-mobile-group=nest] .card-tabs .nav-link {position:relative;min-height:44px;padding:23px .15rem 3px;line-height:18px}
+ .nest-subtab-icon {display:block;position:absolute;top:3px;left:50%;transform:translateX(-50%);width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
  .desktop-tab-label {display:none}
  [data-mobile-group=nest] .card-tabs [data-mobile-group=nest],
- [data-mobile-group=tasks] .card-tabs [data-mobile-group=tasks],
  [data-mobile-group=explore] .card-tabs [data-mobile-group=explore],
  [data-mobile-group=upgrades] .card-tabs [data-mobile-group=upgrades],
  [data-mobile-group=lineage] .card-tabs [data-mobile-group=lineage],
- [data-mobile-group=menu] .card-tabs [data-mobile-group=menu] {display:block}
- .antidle-app[data-mobile-group]:not([data-mobile-group=menu]) .event-log {display:none}
+ [data-mobile-group=settings] .card-tabs [data-mobile-group=settings] {display:block}
+ .antidle-app[data-mobile-group]:not([data-mobile-group=settings]) .event-log {display:none}
  [data-mobile-view=nest] .nest-repletes {display:none !important}
  [data-mobile-view=nest] .nest-chambers, [data-mobile-view=nest] .nest-outposts,
  [data-mobile-view=chambers] .nest-brood, [data-mobile-view=chambers] .nest-royal-nursery,
