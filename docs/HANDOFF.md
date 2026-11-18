@@ -1,22 +1,16 @@
 # Handoff
 
-## 2026-11-17 — queue preview for manual review
+## 2026-11-18 — update queue PR #97 from main
 
-- `polish/safer-queue-controls` integrates main 9b0f3e5, including merged #95/#96
-  PR previews and publishing fix. Documentation conflicts combined; code merged
-  cleanly. Owner authorized PR creation to test the preview, explicitly no merge
-  or auto-merge until further approval.
-- Dedicated red 44px cancel buttons replace cancelling by tapping queued names.
-  Entries show current → next chamber level, including earlier same-chamber
-  queued upgrades. Sequential current-net-production estimates include earlier
-  spending, capacity and consumption. No Ready/Queued labels. Missing feasible
-  income shows Needs resources; future chamber bonuses are not forecast.
-- Queen's Routine has numeric keyboards, 44px input heights and tappable label.
-- Prior development builds, four forecast tests and 320/390/1280px queue checks
-  passed; screenshots shown. Updated development build, all four forecast
-  tests and queue/automation browser checks at 320/390/1280px passed after
-  integration, including repeated levels and non-destructive name taps. Updated
-  mobile screenshot shown. Actionlint and diff checks passed.
-- Preview saves/preferences are isolated from production; PR handoff must include
-  preview URL with pending/live status. No PR code executes in publishing jobs.
-- Preserve unrelated work/ and Python caches. No gameplay/save-format changes.
+- `polish/safer-queue-controls` integrates main 441534f, merged #94 brood UI.
+  Documentation conflicts combined; MainForm/CSS merged cleanly. PR #97 stays
+  open for manual playtesting with auto-merge off, verified on GitHub.
+- Preserves queue red cancel controls, from → to levels, sequential current-rate
+  estimates, numeric mobile automation inputs, and main's compact brood controls
+  with live caste count badges and centered help buttons.
+- Development build and all four construction forecast tests passed. Queue and
+  brood browser checks passed at 320/390/1280px, covering transitions, estimates,
+  cancellation, numeric controls, live badges and disclosure/layout stability.
+  Diff checks passed. No new feature/design or visual changes in this update.
+- Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-97/ — next
+  deployment pending push/CI. Preserve unrelated work/ and Python caches.

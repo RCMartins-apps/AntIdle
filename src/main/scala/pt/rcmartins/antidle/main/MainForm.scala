@@ -927,6 +927,33 @@ object MainForm {
         )
       }
 
+    def eggCounts(scout: Boolean): ReactiveHtmlElement[HTMLSpanElement] = {
+      val counts = antsSignal.map { ants =>
+        val small = !ants.standardWorkersUnlocked
+        val brood = ants.eggsAndLarvae.count {
+          case b: AntBrood.Developing => if (scout) b.kind == "scout" else if (small) b.small else !b.small && b.kind != "scout"
+          case _: AntBrood.ScoutEgg => scout
+          case _ => !scout && !small
+        }
+        val adults = if (scout) ants.scouts else if (small) ants.smallWorkers else ants.workers
+        (if (scout) ants.scoutEggOrders.size else ants.eggOrders, brood, adults)
+      }.distinct
+      span(className := "brood-action-counts",
+        title <-- counts.map { case (ordered, brood, adults) => s"Ordered: $ordered · Brood: $brood · Adults: ${adults / u}" },
+        span(className := "egg-count-ordered",
+          span(className := "resource-icon", aria.hidden := true,
+            svg.svg(svg.viewBox := "0 0 24 24", svg.path(svg.d := "M4 5h16M4 12h16M4 19h16"))),
+          span(className := "visually-hidden", "Ordered: "),
+          child.text <-- counts.map(c => prettyNumberStr(c._1.toLong * u))),
+        span(className := "egg-count-brood", ResourceIcons.icon(ResourceIcons.Eggs),
+          span(className := "visually-hidden", "Brood: "),
+          child.text <-- counts.map(c => prettyNumberStr(c._2.toLong * u))),
+        span(className := "egg-count-adults", ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.Workers),
+          span(className := "visually-hidden", "Adults: "),
+          child.text <-- counts.map(c => prettyNumberStr(c._3))),
+      )
+    }
+
     val scoutOrdersVisible = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       ants.standardWorkersUnlocked && nest.chambers.nurseryChamber.level > 0
     }.distinct
@@ -980,26 +1007,48 @@ object MainForm {
         },
         div(className := "brood-counts mb-2",
           div(className := "brood-order-count",
-            span(className := "small text-body-secondary", child.text <-- scoutOrdersVisible.map(if (_) "Worker orders" else "Egg orders")),
-            b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.eggOrders.toLong * u)).distinct)),
+            span(className := "small text-body-secondary", "Egg orders"),
+            div(className := "brood-order-types",
+              span(className := "brood-worker-orders", role := "img",
+                title <-- antsSignal.map(a => if (a.standardWorkersUnlocked) "Worker egg orders" else "Small worker egg orders").distinct,
+                aria.label <-- antsSignal.map(a => s"${a.eggOrders} ${if (a.standardWorkersUnlocked) "worker" else "small worker"} egg orders").distinct,
+                ResourceIcons.icon(ResourceIcons.Workers),
+                b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.eggOrders.toLong * u)).distinct)),
+              child.maybe <-- scoutOrdersVisible.map(show => Option.when(show)(
+                span(className := "brood-scout-orders", role := "img", title := "Scout egg orders",
+                  aria.label <-- antsSignal.map(a => s"${a.scoutEggOrders.size} scout egg orders").distinct,
+                  ResourceIcons.icon(ResourceIcons.Scouts),
+                  b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.scoutEggOrders.size.toLong * u)).distinct)))),
+            ),
+          ),
           div(className := "brood-place-count",
             span(className := "small text-body-secondary", "Brood places"),
             b(child.text <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
               s"${prettyNumberStr((ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)).toLong * u)}/${prettyNumberStr(BroodProgression.capacity(nest).toLong * u)}"
             }.distinct)),
-          child.maybe <-- scoutOrdersVisible.map(show => Option.when(show)(
-            div(className := "brood-scout-orders",
-              span(className := "small text-body-secondary", "Scout orders"),
-              b(child.text <-- antsSignal.map(ants => prettyNumberStr(ants.scoutEggOrders.size.toLong * u)).distinct)))),
+          button(className := "btn btn-outline-danger brood-cancel-orders", typ := "button",
+            aria.label := "Cancel egg orders", title := "Cancel egg orders",
+            span(className := "brood-cancel-icon", aria.hidden := true, "×"),
+            span(className := "brood-cancel-label", "Cancel egg orders"),
+            disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
+            onClick --> (_ => Actions.cancelEggOrders())),
         ),
         div(className := "brood-pipeline small mb-2",
-          activityStatus(antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
-            case (ants, nest, resources, upgrades, exploration, stats) =>
-              BroodProgression.layingStatus(ants, nest, resources, upgrades, exploration, stats)
-          })),
-        button(className := "btn btn-outline-secondary mb-2 brood-cancel-orders", typ := "button", minHeight.px := 44, "Cancel egg orders",
-          disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
-          onClick --> (_ => Actions.cancelEggOrders())),
+          {
+            val status = antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
+              case (ants, nest, resources, upgrades, exploration, stats) =>
+                BroodProgression.layingStatus(ants, nest, resources, upgrades, exploration, stats)
+            }.distinct
+            span(className := "activity-status", dataAttr("state") <-- status.map(ActivityStatus.kind).distinct,
+              child <-- status.combineWith(antsSignal.map(a => (a.scoutEggOrders.headOption.contains(0), a.standardWorkersUnlocked)).distinct).map {
+                case (label, scout, standard) if label.startsWith("Next egg in ") =>
+                  span(className := "brood-next-egg", "Next ",
+                    ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.Workers),
+                    span(className := "visually-hidden", if (scout) "scout" else if (standard) "worker" else "small worker"),
+                    label.stripPrefix("Next"))
+                case (label, _, _) => span(label)
+              })
+          }),
         child.maybe <-- antsSignal.map(EmergencyRecovery.needed).distinct.map { needed => Option.when(needed) {
           div(className := "emergency-recovery row mb-2",
             actionButton(
@@ -1022,6 +1071,7 @@ object MainForm {
             }.distinct
             actionButton(
               name = LayEggAction,
+              progressBadge = Some(eggCounts(scout = false)),
               displayNameSignal = Some(antsSignal.map(_.standardWorkersUnlocked).distinct.map(
                 standard => if (standard) LayEggAction else "Raise Small Worker Egg")),
               topLeftBadgeSignal = displayedBatch.map {
@@ -1043,6 +1093,7 @@ object MainForm {
             }.distinct
             actionButton(
               name = "Raise Scout Egg",
+              progressBadge = Some(eggCounts(scout = true)),
               topLeftBadgeSignal = displayedBatch.map(amount => Option.when(amount > 1)(span(s"x$amount"))),
               enabledSignal = antsSignal.combineWith(nestSignal)
                 .map { case (ants, nest) => ScoutProgression.canRaise(ants, nest) },
@@ -1576,6 +1627,7 @@ object MainForm {
       requirementsSignal: Signal[List[ActionRequirement]] = Val(Nil),
       blockedReasonSignal: Signal[Option[String]] = Val(None),
       displayNameSignal: Option[Signal[String]] = None,
+      progressBadge: Option[ReactiveHtmlElement[HTMLSpanElement]] = None,
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     nextActionId += 1L
     val reasonId = s"action-blocker-$nextActionId"
@@ -1589,9 +1641,11 @@ object MainForm {
         className := "btn btn-primary position-relative",
         className := "fs-4",
         `type` := "button",
+        aria.label <-- displayNameSignal.getOrElse(Val(name)),
         child.text <-- displayNameSignal.getOrElse(Val(name)),
+        progressBadge.map(badge => badge.amend(idAttr := s"$reasonId-counts")),
         disabled <-- enabledSignal.map(!_),
-        aria.describedBy <-- blocker.map(_.fold("")(_ => reasonId)),
+        aria.describedBy <-- blocker.map(reason => (reason.map(_ => reasonId).toList ++ progressBadge.map(_ => s"$reasonId-counts")).mkString(" ")),
         onClick --> { _ =>
           useSignalValue[Int](modifiersMultiplierSignal, mult => onClickAction(mult))
         },
