@@ -172,3 +172,7 @@ after Standard Worker Development, without changing control names or layout.
 Nest navigation checks cover Brood/Jobs/Chambers icons, no standalone Jobs
 primary button, remembered Jobs return, arrow keys within visible sub-tabs,
 phone fit/desktop resize and live idle-worker counts after assignment.
+
+Mobile resource checks require compact chips and detailed rows to be mutually
+exclusive while preserving header/catch-up controls, saved expansion and timing
+layout stability. Hidden summary data is not used as a disclosure description.

@@ -1016,3 +1016,10 @@ retain the strip when Milestones needs it. Escape returns to the prior view.
 
 The worker-assignment sub-tab is named Jobs (Brood · Jobs · Chambers). Internal
 tasks identifiers remain unchanged; the visible label also changes on desktop.
+
+## D63: Expanded mobile resources replace the compact summary
+
+Show either compact resource chips or detailed rows, never both together on
+mobile. Expansion retains the Resources/collapse header and independent catch-up
+controls. Collapsing restores the live compact view and remembered fold state.
+The disclosure references summary data only while that summary is displayed.

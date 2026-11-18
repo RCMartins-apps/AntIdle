@@ -28,3 +28,10 @@
   with zero Closure warnings/errors; navigation checks passed 320/390px and
   live Jobs-count/task controls passed 320/390/1280px. Updated screenshot shown
   in chat; Python syntax and diff checks passed.
+
+- Resource expansion follow-up (D63): expanded mobile resources hide compact
+  chips, retaining the header/collapse and catch-up controls. Collapsing restores
+  chips. aria-describedby no longer references the hidden summary while expanded.
+  Resource/catch-up/timing checks passed 320/390/1280px, including reload and
+  desktop resizing. Updated expanded/collapsed screenshots shown in chat.
+  CSS/JS-only change; syntax and diff checks passed. PR #99 stays manual review.

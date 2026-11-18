@@ -28,6 +28,8 @@
     function apply() {
       panel.classList.toggle('resources-expanded', expanded);
       toggle.setAttribute('aria-expanded', String(expanded));
+      if (expanded) toggle.removeAttribute('aria-describedby');
+      else toggle.setAttribute('aria-describedby', summary.id);
       toggle.setAttribute('aria-label', expanded ? 'Collapse resource details' : 'Expand resource details');
       arrow.textContent = expanded ? '▴' : '▾';
       // Prevent hidden controls remaining focused across a viewport change/collapse.

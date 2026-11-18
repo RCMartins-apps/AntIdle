@@ -25,7 +25,11 @@ def check(page, width, url):
     expect(sugar.locator('.compact-resource-value')).to_have_text('1')
     page.get_by_role('button', name='Expand resource details', exact=True).click()
     expect(panel.locator('.card-body')).to_be_visible()
+    expect(summary).not_to_be_visible()
+    expect(page.locator('.resource-summary-heading')).to_be_visible()
+    expect(page.locator('.mobile-resource-toggle')).not_to_have_attribute('aria-describedby','compact-resource-summary')
     page.get_by_role('button', name='Collapse resource details', exact=True).click()
+    expect(summary).to_be_visible()
     page.reload(wait_until='networkidle')
     expect(panel.locator('.card-body')).not_to_be_visible()
     base = save_game(page)
@@ -85,6 +89,8 @@ def check_timing_layout(page, width, url):
             button = page.get_by_role('button', name=('Expand' if expanded else 'Collapse') + ' resource details', exact=True)
             if button.is_visible():
                 button.click()
+        if width<=767:
+            expect(summary).not_to_be_visible() if expanded else expect(summary).to_be_visible()
         measurements = []
         # Drive the live DOM projection through intermittent timing labels. Freeze
         # simulation so the source fixtures are not overwritten between assertions.
@@ -107,7 +113,7 @@ def check_timing_layout(page, width, url):
                     }
                 }
             }""", {'timing': timing, 'amount': amount})
-            if width <= 767:
+            if width <= 767 and not expanded:
                 sugar = summary.locator('[data-resource="Sugar"]')
                 expected = timing.replace('Empty in ~', '~').replace('Full in ~', 'Full ~')
                 if timing.startswith('Empty in ~'):
@@ -132,7 +138,7 @@ def check_timing_layout(page, width, url):
             })"""))
         heights = [m['height'] for m in measurements]
         assert max(heights) - min(heights) <= 1, (width, expanded, heights)
-        if width <= 767:
+        if width <= 767 and not expanded:
             assert all(m['chips'] == measurements[0]['chips'] for m in measurements), (width, expanded, measurements)
         assert_fits(page, width)
     print(f'PASS stable resource timing {width}px: repeated full/empty/zero and value-width changes preserve panel/chip geometry', flush=True)
