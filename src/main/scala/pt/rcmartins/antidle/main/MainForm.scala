@@ -535,25 +535,31 @@ object MainForm {
         className := "queued-building border-bottom pb-2 mb-2",
         span(
           className := "build-task",
-          role := "button", tabIndex := 0,
-          title := "Select to cancel this planned upgrade",
-          aria.label := s"Cancel ${buildTask.chamberType.name}",
           buildTask.chamberType.name,
-          " → ", child.text <-- nestSignal.map(nest =>
-            Construction.level(nest.chambers, buildTask.chamberType) + nest.buildQueue.take(index + 1).count(_.chamberType == buildTask.chamberType)),
-          " [", if (index == 0) TickCalculator.calculateTicksToResources(buildTask.actionCost) else span("Queued"), "] ×",
-          onClick --> { _ => Actions.removeBuildTask(index) },
-          onKeyDown --> { event =>
-            if (event.key == "Enter" || event.key == " ") {
-              event.preventDefault()
-              Actions.removeBuildTask(index)
-            }
-          },
+          " · ", child.text <-- nestSignal.map { nest =>
+            val from = Construction.level(nest.chambers, buildTask.chamberType) +
+              nest.buildQueue.take(index).count(_.chamberType == buildTask.chamberType)
+            s"$from → ${from + 1}"
+          }.distinct,
         ).amendThis(elem => createTooltipForActionButton(
           elem = elem, descriptionSignal = Val(None), costSignal = Val(buildTask.actionCost),
           bonusSignal = Actions.getActionBonus(buildTask.chamberType),
         )),
-        activityStatus(resourcesSignal.map(r => ActivityStatus.construction(buildTask.actionCost, r, index == 0)), "build-status small"),
+        button(className := "btn btn-outline-danger build-cancel", typ := "button",
+          aria.label := s"Cancel ${buildTask.chamberType.name}", title := s"Cancel ${buildTask.chamberType.name}",
+          span(aria.hidden := true, "×"), onClick --> (_ => Actions.removeBuildTask(index))),
+        span(className := "build-estimate small",
+          title := "Estimated simulated time at current net production, including earlier queued costs; future chamber bonuses are not predicted.",
+          child <-- resourcesSignal.combineWith(nestSignal, TickCalculator.sugarTickGain.sum, TickCalculator.proteinTickGain.sum,
+            TickCalculator.waterTickGain.sum, TickCalculator.resinTickGain.sum, TickCalculator.tunnelingSpaceTickGain.sum).map {
+            case (resources, nest, sugar, protein, water, resin, space) =>
+              ConstructionWait.ticks(nest.buildQueue.take(index + 1).map(_.actionCost), resources,
+                ActionCost(sugar = sugar, protein = protein, water = water, resin = resin, tunnelingSpace = space)).lastOption.getOrElse(0L)
+          }.distinct.map {
+            case ticks if ticks < 0L => span(className := "text-danger", "Needs resources")
+            case 0L => span()
+            case ticks => span(s"Resources in ~${prettyTimeFromTicks(ticks)}")
+          }),
         actionCosts(Val(buildTask.actionCost), Val(Nil)),
       )
 
@@ -862,7 +868,7 @@ object MainForm {
             "Cancel replacements", onClick --> (_ => Actions.cancelAgingJobReplacements())),
         )
       } },
-      label(
+      label(className := "queen-routine-toggle",
         input(
           idAttr := "queen-routine-enabled", typ := "checkbox", className := "form-check-input me-2",
           checked <-- antsSignal.map(_.queenRoutine.enabled).distinct,
@@ -873,14 +879,14 @@ object MainForm {
       div(className := "row g-2 mt-1",
         div(className := "col-6",
           label(forId := "queen-routine-target", "Target workers"),
-          input(idAttr := "queen-routine-target", typ := "number", minAttr := "0", maxAttr := "1000000", className := "form-control",
+          input(idAttr := "queen-routine-target", typ := "number", inputMode := "numeric", minAttr := "0", maxAttr := "1000000", className := "form-control",
             value <-- antsSignal.map(_.queenRoutine.targetWorkers.toString).distinct,
             onChange.mapToValue --> (value => update(_.copy(targetWorkers = value.toIntOption.getOrElse(0)))),
           ),
         ),
         div(className := "col-6",
           label(forId := "queen-routine-reserve", "Sugar reserve"),
-          input(idAttr := "queen-routine-reserve", typ := "number", minAttr := "0", maxAttr := "1000000000", className := "form-control",
+          input(idAttr := "queen-routine-reserve", typ := "number", inputMode := "numeric", minAttr := "0", maxAttr := "1000000000", className := "form-control",
             value <-- antsSignal.map(a => (a.queenRoutine.sugarReserve / u).toString).distinct,
             onChange.mapToValue --> (value => update(_.copy(sugarReserve = Math.max(0L, Math.min(1000000000L, value.toLongOption.getOrElse(0L))) * u))),
           ),
