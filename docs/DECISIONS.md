@@ -990,3 +990,12 @@ queued upgrades of the same chamber when calculating each transition.
 PR descriptions must put the Markdown preview link on their very first line,
 with availability status. Update the description immediately after creation to
 use the actual assigned PR number. Ineligible previews must be labeled clearly.
+
+## D61: Distinct small-worker icon and colony navigation
+
+Use the worker ant with an S at its top-left for small workers, consistently in
+resources, task headings and phase-dependent brood order/countdown/adult badges.
+The S uses contrasting orange on light surfaces and pale gold in blue badges.
+Standard workers keep the unmarked ant. Nest navigation uses the same colony
+icon as Ants resources rather than a human house. Task caste summaries carry
+the matching icon, retaining readable labels and decorative SVG accessibility.

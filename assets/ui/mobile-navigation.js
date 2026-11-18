@@ -3,7 +3,7 @@
   'use strict';
   const media = matchMedia('(max-width: 767px)');
   const groups = {
-    nest: { label: 'Nest', tabs: ['nest', 'chambers'], path: 'M3 10 12 3l9 7v11H3ZM8 21v-8h8v8' },
+    nest: { label: 'Nest', tabs: ['nest', 'chambers'], path: 'M2 21 9 7h6l7 14H2ZM9 21v-3a3 3 0 0 1 6 0v3M10 7V3h4v4M8 12h3M15 12h1' },
     tasks: { label: 'Tasks', tabs: ['tasks'], path: 'M9 9h6v9H9ZM12 3v6M5 6l4 4M19 6l-4 4M3 13h6M15 13h6M5 21l4-5M19 21l-4-5' },
     explore: { label: 'Explore', tabs: ['explore', 'discoveries', 'territory'], path: 'm12 2 9 5v10l-9 5-9-5V7ZM12 8l4 4-4 4-4-4Z' },
     upgrades: { label: 'Upgrades', tabs: ['upgrades', 'purchased'], path: 'm12 3 8 8h-5v10H9V11H4Z' },

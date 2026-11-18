@@ -164,3 +164,7 @@ accessible labels, same-line spacing, founding visibility and stable controls.
 
 Raise-egg badge checks verify queue, developing brood and adult counts, immediate
 manual order feedback, cancellation, and founding small-worker counts.
+
+Caste-icon regressions in task/brood checks verify the marked small-worker SVG,
+unmarked standard heading, colony/Nest navigation consistency and icon changes
+after Standard Worker Development, without changing control names or layout.
