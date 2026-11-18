@@ -17,7 +17,7 @@ jobs:
   changes:
     uses: ./.github/workflows/game-changes.yml
 
-  test:
+  validate:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.run_game_jobs == 'true') }}
     runs-on: ubuntu-latest
@@ -108,6 +108,10 @@ jobs:
           ANTIDLE_ARTIFACTS: test-results
         run: python3 tests/offline_browser_smoke.py
 
+      - name: Check preview save and worker isolation
+        timeout-minutes: 3
+        run: python3 tests/preview_browser_smoke.py
+
       - name: Upload browser failure screenshots
         timeout-minutes: 2
         if: failure()
@@ -116,3 +120,118 @@ jobs:
           name: production-browser-failures
           path: test-results/
           if-no-files-found: ignore
+
+      - name: Package PR preview
+        timeout-minutes: 2
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 scripts/package_site.py --out preview-site
+          touch preview-site/.nojekyll
+          echo "$PR_HEAD_SHA" > preview-site/preview-revision.txt
+
+      - name: Upload PR preview
+        timeout-minutes: 2
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-preview
+          path: preview-site
+          include-hidden-files: true
+          retention-days: 3
+
+  deploy-preview:
+    needs: validate
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: read
+    concurrency:
+      group: github-pages-publish
+      cancel-in-progress: false
+    environment:
+      name: pr-${{ github.event.number }}
+      url: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-${{ github.event.number }}/
+    steps:
+      - name: Check PR is open and current
+        id: pr
+        timeout-minutes: 1
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data: pr} = await github.rest.pulls.get({...context.repo, pull_number: context.issue.number});
+            core.setOutput('deploy', pr.state === 'open' && pr.head.sha === context.payload.pull_request.head.sha);
+      - name: Checkout published branch
+        if: steps.pr.outputs.deploy == 'true'
+        timeout-minutes: 2
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          persist-credentials: false
+      - name: Download static preview
+        if: steps.pr.outputs.deploy == 'true'
+        timeout-minutes: 2
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-preview
+          path: preview-site
+      - name: Publish preview
+        if: steps.pr.outputs.deploy == 'true'
+        timeout-minutes: 3
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: preview-site
+          target-folder: pr-preview/pr-${{ github.event.number }}
+      - name: Verify published preview
+        if: steps.pr.outputs.deploy == 'true'
+        timeout-minutes: 4
+        env:
+          PREVIEW_URL: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-${{ github.event.number }}/
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          for attempt in $(seq 1 18); do
+            revision=$(curl -fsS --max-time 5 "${PREVIEW_URL}preview-revision.txt?revision=${PR_HEAD_SHA}" || true)
+            if [ "$revision" = "$PR_HEAD_SHA" ] && curl -fsS --max-time 5 -o /dev/null "${PREVIEW_URL}"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Preview did not become available on GitHub Pages in time." >&2
+          exit 1
+      - name: Preview link
+        if: steps.pr.outputs.deploy == 'true'
+        timeout-minutes: 1
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: echo "Preview — https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-${PR_NUMBER}/" >> "$GITHUB_STEP_SUMMARY"
+
+  # Preserve the protected check name, but wait for eligible previews too.
+  test:
+    needs: [changes, validate, deploy-preview]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require validation and eligible preview
+        timeout-minutes: 1
+        env:
+          CLASSIFICATION: ${{ needs.changes.result }}
+          RUN_GAME: ${{ needs.changes.outputs.run_game_jobs }}
+          VALIDATION: ${{ needs.validate.result }}
+          PREVIEW: ${{ needs.deploy-preview.result }}
+          EXPECT_PREVIEW: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          test "$CLASSIFICATION" = success
+          if [ "$RUN_GAME" = true ]; then
+            test "$VALIDATION" = success
+            if [ "$EXPECT_PREVIEW" = true ]; then
+              test "$PREVIEW" = success
+            fi
+          else
+            test "$VALIDATION" = skipped
+            test "$PREVIEW" = skipped
+          fi

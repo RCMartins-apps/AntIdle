@@ -29,6 +29,8 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (event.request.method !== 'GET' || url.origin !== self.location.origin ||
       !url.href.startsWith(self.registration.scope)) return;
+  // A production worker must never serve its cached game for a PR preview.
+  if (url.pathname.startsWith(new URL('pr-preview/', self.registration.scope).pathname)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const response = await cache.match(event.request.mode === 'navigate' ? INDEX : event.request);

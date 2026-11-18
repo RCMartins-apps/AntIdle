@@ -83,11 +83,12 @@ A timeout fails the check; it never waives required validation or proceeds to
 publish after a failed build. Recent successful runs were roughly six minutes for
 PR validation and three for deployment, leaving room for cold setup.
 
-PR and deploy workflows cancel superseded runs for the same PR or branch, grouped
-by workflow name plus PR number/ref. Different PRs/workflows remain independent.
-Newer main pushes cancel older main deployment workflows, preventing a hung old
-build from later publishing over a newer release. Docs-only classification and
-existing main/debug deployment gates remain unchanged.
+PR test workflows cancel superseded runs for the same PR. Production build jobs
+cancel older production builds. Publishing and preview cleanup share the
+`github-pages-publish` concurrency group with cancellation disabled, serializing
+writes to gh-pages. Publishers check revision freshness before writing.
+Docs-only classification remains unchanged. Main is the only production deploy
+source; the former debug-prefix rule is removed. See [PR previews](PR-PREVIEWS.md).
 
 These settings apply to newly started workflow executions after the change is
 available; they do not shorten already-running jobs. Those must be cancelled in

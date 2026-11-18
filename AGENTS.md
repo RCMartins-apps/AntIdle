@@ -186,6 +186,13 @@ See [CI handoff setup](docs/CI-WORKFLOW.md). Do not change protection requiremen
 or bypass checks merely to queue a merge. If setup is missing, report it and use
 normal checked merging for an explicitly authorized merge request.
 
+Whenever creating or handing off a PR, include both its GitHub link and its
+playable preview link: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-N/.
+Label a preview pending until deployment is confirmed; do not poll CI just to
+make it live. For docs-only/fork PRs explain that no preview is generated; after
+merge/closure explain that the preview is removed rather than presenting it as
+live. This link requirement supplements screenshots for visual changes.
+
 Once GitHub confirms auto-merge is queued with enforced checks, finish the turn
 without polling CI. Report “auto-merge enabled; pending CI,” not “merged.” GitHub
 performs the merge after requirements pass; failures remain on the PR and are not
@@ -218,8 +225,8 @@ project changes to `origin`, including documentation-only design decisions.
   never describe an unpushed commit as remotely preserved.
 - This authorizes ordinary pushes to work branches. It does not authorize
   force-pushes, direct pushes to `main`, branch deletion, PR creation, merging or
-  deployment; those still need user authorization. Avoid `debug*` names unless
-  deployment is intended: such branches deploy when in a same-repository PR.
+  deployment; those still need user authorization. Production deploys only from main. Same-repository PRs publish isolated
+  previews after validation; `debug*` branch names have no special behavior.
 - A pushed branch is remotely saved, but new checkouts of `main` receive its
   context only after merge. Keep pending work discoverable in the handoff and
   inspect relevant remote branches when resuming unfinished work. Once the owner

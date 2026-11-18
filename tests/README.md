@@ -153,6 +153,12 @@ neighbor pair in the first and expanded rings at 320/390/1280px.
 Map checks also verify that pointer selection uses a blue polygon border without
 an inset shadow, and keyboard focus uses a distinct dashed polygon outline.
 
+PR preview isolation: after `sbt fullOptJS`, run
+`python3 tests/preview_browser_smoke.py`. It packages production plus two preview
+subpaths on one origin, verifies the production worker bypass, canonical preview
+URLs, saved-colony restoration, unchanged production/other-PR saves and isolated
+UI preferences. See [preview lifecycle](../docs/PR-PREVIEWS.md).
+
 Brood layout checks cover worker/scout order counts with matching icons and
 accessible labels, same-line spacing, founding visibility and stable controls.
 
