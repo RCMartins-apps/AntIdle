@@ -972,3 +972,7 @@ disabled empty-queue state and stable layout. Avoid a separate cancel-button row
 Raise-egg buttons show live compact counts in queue → developing brood → adult
 order, using icons and accessible labels. Counts follow the relevant caste,
 including the small/standard worker phase; they are feedback, not requirements.
+
+PR descriptions must put the Markdown preview link on their very first line,
+with availability status. Update the description immediately after creation to
+use the actual assigned PR number. Ineligible previews must be labeled clearly.

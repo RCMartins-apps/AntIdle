@@ -1,20 +1,15 @@
 # Handoff
 
-## 2026-11-18 — repair brood UI PR #94
+## 2026-11-18 — preview link first in PR descriptions
 
-- `polish/egg-order-icons` integrates main 9b0f3e5 (#96), including isolated
-  previews and the preview-aware required test gate. Documentation conflicts
-  combined; source merged cleanly. PR #94 remains authorized for auto-merge.
-- The failed check was blocked_actions_smoke.py expecting aria-describedby to
-  contain only the blocker ID. Live count badges correctly add their own ID.
-  Updated regression asserts both IDs, both existing descriptions and caste
-  counts, rather than removing accessible badge information.
-- Brood changes retain compact caste/order counts, next-caste countdown, red
-  cancel button, live raise-button badges and centered info controls.
-- Development and production builds passed, zero Closure warnings/errors.
-  The exact failed production blocked-action check and production brood layout
-  suite passed at 320/390/1280px. Python syntax and diff checks passed. No new
-  visual changes; earlier screenshots show the intended UI. Auto-merge remains
-  enabled with required test and changes / classify enforced; push reruns CI.
-- #97 polish/safer-queue-controls is separate manual playtesting work. Leave it
-  open without auto-merge. Preserve unrelated work/ and Python caches.
+- `docs/preview-first-pr-descriptions` starts at main 441534f. AGENTS.md and
+  preview docs now require a Markdown preview link and availability status on
+  the first line of every PR description. Use the actual assigned PR number;
+  update immediately after creation. Ineligible previews are explicitly labeled.
+- Updated existing #97 description accordingly; its body otherwise preserved.
+  Preview HTTP verification returned 403 here, so labeled not yet verified.
+  #97 stays open without auto-merge for owner playtesting.
+- Documentation-only rule change: wording/path and diff checks passed; no game
+  build or screenshot needed. Standing authorization covers commit/push, no new
+  PR requested for this docs branch. Queue work remains in #97.
+- Preserve unrelated work/ and Python caches.
