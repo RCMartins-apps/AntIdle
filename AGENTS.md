@@ -188,6 +188,11 @@ normal checked merging for an explicitly authorized merge request.
 
 Whenever creating or handing off a PR, include both its GitHub link and its
 playable preview link: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-N/.
+The first line of every PR description must be its Markdown preview link, using
+the actual PR number, followed by its availability status. After creation, update
+the description immediately once GitHub assigns the number; never guess it.
+For ineligible docs-only/fork PRs, keep the preview link first and explicitly say
+no preview is generated.
 Label a preview pending until deployment is confirmed; do not poll CI just to
 make it live. For docs-only/fork PRs explain that no preview is generated; after
 merge/closure explain that the preview is removed rather than presenting it as

@@ -986,3 +986,7 @@ These are presentation/interaction changes, without balance changes.
 
 Queued chamber levels show from → to (for example 1 → 2), including earlier
 queued upgrades of the same chamber when calculating each transition.
+
+PR descriptions must put the Markdown preview link on their very first line,
+with availability status. Update the description immediately after creation to
+use the actual assigned PR number. Ineligible previews must be labeled clearly.
