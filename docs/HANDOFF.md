@@ -17,5 +17,6 @@
   phase transitions, navigation icon match and unchanged control/layout behavior.
   Python/JavaScript syntax and diff checks passed.
 - Tests extended for caste icons, colony navigation match and phase transition.
-  No PR requested yet; standing workflow authorizes push. Preserve unrelated
+  Owner authorized PR creation for playtesting, explicitly without auto-merge.
+  Current main remains 4a67020; no integration needed. Preserve unrelated
   work/ and Python caches.
