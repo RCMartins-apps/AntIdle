@@ -32,10 +32,11 @@ def expand_resources(page):
 
 def select_tab(page, name):
     """Navigate using the same visible groups as a mobile player."""
+    name = 'Jobs' if name == 'Tasks' else name
     expect(page.locator('.antidle-app[data-mobile-navigation=ready]')).to_be_attached()
     nav = page.locator('.mobile-bottom-nav')
     if nav.is_visible():
-        group = {'Tasks': 'Nest', 'Chambers': 'Nest', 'Purchased': 'Upgrades', 'Discoveries': 'Explore', 'Territory': 'Explore', 'Milestones': 'Lineage'}.get(name, name)
+        group = {'Jobs': 'Nest', 'Chambers': 'Nest', 'Purchased': 'Upgrades', 'Discoveries': 'Explore', 'Territory': 'Explore', 'Milestones': 'Lineage'}.get(name, name)
         if name == 'Milestones' and not nav.get_by_role('button', name='Lineage', exact=True).is_visible():
             group = 'Settings'
         nav.get_by_role('button', name=group, exact=True).click()
@@ -43,12 +44,12 @@ def select_tab(page, name):
             page.get_by_role('tab',name='Settings',exact=True).click()
         if name in ['Nest', 'Explore', 'Upgrades', 'Lineage']:
             page.get_by_role('tab', name={'Nest':'Brood','Explore':'Map','Upgrades':'Available','Lineage':'Founding','Settings':'Settings'}[name], exact=True).click()
-        if name == 'Tasks':
-            page.get_by_role('tab', name='Tasks', exact=False).click()
+        if name == 'Jobs':
+            page.get_by_role('tab', name='Jobs', exact=False).click()
         if name in ['Chambers', 'Purchased', 'Discoveries', 'Territory', 'Milestones']:
             page.get_by_role('tab', name=name, exact=True).click()
     else:
-        page.get_by_role('tab', name={'Chambers': 'Nest', 'Purchased': 'Upgrades'}.get(name, name), exact=name != 'Tasks').click()
+        page.get_by_role('tab', name={'Chambers': 'Nest', 'Purchased': 'Upgrades'}.get(name, name), exact=name != 'Jobs').click()
 
 
 def save_game(page):
@@ -318,8 +319,8 @@ def run_checks(browser, url):
             label_box = row.locator(".resource-label").bounding_box()
             amount_box = row.locator(".resource-amount").bounding_box()
             assert label_box["x"] + label_box["width"] <= amount_box["x"] + 1
-        for tab in ("Nest", "Tasks", "Upgrades", "Explore", "Settings"):
-            page.get_by_role("tab", name=tab, exact=tab != "Tasks").click()
+        for tab in ("Nest", "Jobs", "Upgrades", "Explore", "Settings"):
+            page.get_by_role("tab", name=tab, exact=tab != "Jobs").click()
             assert_fits(page, width)
             for cell in page.locator(".action-cell:visible").all():
                 expect(cell.locator(".action-costs")).to_be_visible()

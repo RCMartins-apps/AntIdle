@@ -245,7 +245,7 @@ object MainForm {
                 dataAttr("bs-toggle") := "tab",
                 href := "#tasksContent",
                 role := "tab",
-                "Tasks",
+                "Jobs",
                 child <-- availableWorkersCountSignal.map {
                   case 0 => span()
                   case n => span(s" (", prettyNumberInt(n), ")")

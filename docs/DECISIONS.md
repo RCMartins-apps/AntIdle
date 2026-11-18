@@ -1013,3 +1013,6 @@ Settings is a primary mobile destination with a gear icon, replacing the D57
 hamburger-menu placement. Milestones remains under Settings until Lineage is
 available. Hide a lone Settings sub-tab strip to avoid repeating its label;
 retain the strip when Milestones needs it. Escape returns to the prior view.
+
+The worker-assignment sub-tab is named Jobs (Brood · Jobs · Chambers). Internal
+tasks identifiers remain unchanged; the visible label also changes on desktop.

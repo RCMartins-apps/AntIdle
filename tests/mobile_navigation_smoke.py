@@ -28,9 +28,9 @@ def check(page, width, url):
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
     game['exploration'].update(revealedSites=6, surveys={'woodland-edge':1,'rival-food-cache':1})
     load_game(page, game)
-    for name in ['Tasks', 'Explore', 'Upgrades', 'Lineage', 'Settings', 'Nest']:
+    for name in ['Jobs', 'Explore', 'Upgrades', 'Lineage', 'Settings', 'Nest']:
         select_tab(page, name)
-        expect(nav.get_by_role('button', name='Nest' if name=='Tasks' else name, exact=True)).to_have_attribute('aria-current', 'page')
+        expect(nav.get_by_role('button', name='Nest' if name=='Jobs' else name, exact=True)).to_have_attribute('aria-current', 'page')
         main = nav.bounding_box()
         if name=='Settings':
             expect(page.locator('.game-main > .card-header')).not_to_be_visible()
@@ -43,8 +43,8 @@ def check(page, width, url):
     select_tab(page, 'Chambers')
     expect(page.locator('.nest-chambers')).to_be_visible()
     expect(page.locator('.nest-brood')).not_to_be_visible()
-    select_tab(page, 'Tasks')
-    expect(nav.get_by_role('button',name='Tasks',exact=True)).to_have_count(0)
+    select_tab(page, 'Jobs')
+    expect(nav.get_by_role('button',name='Jobs',exact=True)).to_have_count(0)
     expect(page.locator('.antidle-app')).to_have_attribute('data-mobile-group','nest')
     for tab_id in ['nest','tasks','chambers']:
         expect(page.locator('#'+tab_id+'-tab .nest-subtab-icon')).to_be_visible()
@@ -52,7 +52,7 @@ def check(page, width, url):
     select_tab(page, 'Explore')
     nav.get_by_role('button', name='Nest', exact=True).click()
     expect(page.locator('#tasksContent')).to_be_visible()
-    page.get_by_role('tab',name='Tasks',exact=False).focus()
+    page.get_by_role('tab',name='Jobs',exact=False).focus()
     page.keyboard.press('ArrowRight')
     expect(page.locator('.nest-chambers')).to_be_visible()
     page.get_by_role('tab', name='Brood', exact=True).click()
@@ -101,7 +101,7 @@ def check(page, width, url):
     page.evaluate("window.scrollTo({top:160,behavior:'instant'})")
     page.wait_for_timeout(100)
     previous = page.evaluate('window.scrollY')
-    select_tab(page, 'Tasks')
+    select_tab(page, 'Jobs')
     select_tab(page, 'Nest')
     page.wait_for_timeout(100)
     assert abs(page.evaluate('window.scrollY') - previous) <= 2, (previous, page.evaluate('window.scrollY'), page.locator('.antidle-app').get_attribute('data-mobile-view'))

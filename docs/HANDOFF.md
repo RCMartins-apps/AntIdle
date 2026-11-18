@@ -20,3 +20,11 @@
   Python syntax and diff checks passed. Updated mobile screenshot shown in chat.
 - Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-99/ — refresh
   pending push/CI. Preserve unrelated work/ and Python caches.
+
+- Naming follow-up: owner chose Jobs for the worker-assignment sub-tab. Renamed
+  visible mobile/desktop label while retaining tasks DOM/model identifiers.
+  Navigation helper accepts historical Tasks calls and selects Jobs. PR #99
+  remains manual review without auto-merge. Development/production builds passed
+  with zero Closure warnings/errors; navigation checks passed 320/390px and
+  live Jobs-count/task controls passed 320/390/1280px. Updated screenshot shown
+  in chat; Python syntax and diff checks passed.

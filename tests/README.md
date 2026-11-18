@@ -169,6 +169,6 @@ Caste-icon regressions in task/brood checks verify the marked small-worker SVG,
 unmarked standard heading, colony/Nest navigation consistency and icon changes
 after Standard Worker Development, without changing control names or layout.
 
-Nest navigation checks cover Brood/Tasks/Chambers icons, no standalone Tasks
-primary button, remembered Tasks return, arrow keys within visible sub-tabs,
+Nest navigation checks cover Brood/Jobs/Chambers icons, no standalone Jobs
+primary button, remembered Jobs return, arrow keys within visible sub-tabs,
 phone fit/desktop resize and live idle-worker counts after assignment.
