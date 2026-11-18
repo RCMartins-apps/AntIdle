@@ -999,3 +999,17 @@ The S uses contrasting orange on light surfaces and pale gold in blue badges.
 Standard workers keep the unmarked ant. Nest navigation uses the same colony
 icon as Ants resources rather than a human house. Task caste summaries carry
 the matching icon, retaining readable labels and decorative SVG accessibility.
+
+## D62: Mobile Nest groups brood, tasks and chambers — UI trial
+
+The owner requested icons on Nest sub-tabs and moving Tasks out of the primary
+mobile navigation into Nest. Use Brood (egg), Tasks (worker), Chambers (tunneling)
+with icons above readable labels to fit narrow phones. Keep existing unlock
+visibility, live task counts, remembered sub-views/scroll and accessible keyboard
+navigation. Preserve reactive label node parents when adding icons. Desktop
+retains its existing tab layout. This trial changes navigation, not mechanics.
+
+Settings is a primary mobile destination with a gear icon, replacing the D57
+hamburger-menu placement. Milestones remains under Settings until Lineage is
+available. Hide a lone Settings sub-tab strip to avoid repeating its label;
+retain the strip when Milestones needs it. Escape returns to the prior view.

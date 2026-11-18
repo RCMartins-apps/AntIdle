@@ -35,16 +35,16 @@ def select_tab(page, name):
     expect(page.locator('.antidle-app[data-mobile-navigation=ready]')).to_be_attached()
     nav = page.locator('.mobile-bottom-nav')
     if nav.is_visible():
-        group = {'Chambers': 'Nest', 'Purchased': 'Upgrades', 'Discoveries': 'Explore', 'Territory': 'Explore', 'Milestones': 'Lineage'}.get(name, name)
-        if name == 'Settings' or (name == 'Milestones' and not nav.get_by_role('button', name='Lineage', exact=True).is_visible()):
-            if page.locator('.antidle-app').get_attribute('data-mobile-group') != 'menu':
-                page.get_by_role('button', name='Game menu', exact=True).click()
-            if name == 'Settings':
-                page.get_by_role('tab', name='Settings', exact=True).click()
-        else:
-            nav.get_by_role('button', name=group, exact=True).click()
+        group = {'Tasks': 'Nest', 'Chambers': 'Nest', 'Purchased': 'Upgrades', 'Discoveries': 'Explore', 'Territory': 'Explore', 'Milestones': 'Lineage'}.get(name, name)
+        if name == 'Milestones' and not nav.get_by_role('button', name='Lineage', exact=True).is_visible():
+            group = 'Settings'
+        nav.get_by_role('button', name=group, exact=True).click()
+        if name=='Settings' and page.get_by_role('tab',name='Settings',exact=True).is_visible():
+            page.get_by_role('tab',name='Settings',exact=True).click()
         if name in ['Nest', 'Explore', 'Upgrades', 'Lineage']:
-            page.get_by_role('tab', name={'Nest':'Brood','Explore':'Map','Upgrades':'Available','Lineage':'Founding'}[name], exact=True).click()
+            page.get_by_role('tab', name={'Nest':'Brood','Explore':'Map','Upgrades':'Available','Lineage':'Founding','Settings':'Settings'}[name], exact=True).click()
+        if name == 'Tasks':
+            page.get_by_role('tab', name='Tasks', exact=False).click()
         if name in ['Chambers', 'Purchased', 'Discoveries', 'Territory', 'Milestones']:
             page.get_by_role('tab', name=name, exact=True).click()
     else:
