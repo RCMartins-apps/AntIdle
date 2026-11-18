@@ -176,3 +176,7 @@ phone fit/desktop resize and live idle-worker counts after assignment.
 Mobile resource checks require compact chips and detailed rows to be mutually
 exclusive while preserving header/catch-up controls, saved expansion and timing
 layout stability. Hidden summary data is not used as a disclosure description.
+
+Resource navigation checks verify collapse on primary/sub-tab changes, keeping
+expansion on active-tab clicks, saved closed state and unaffected desktop detail
+visibility. UI flows explicitly expand resources before inspecting detailed rows.

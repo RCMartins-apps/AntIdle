@@ -1023,3 +1023,7 @@ Show either compact resource chips or detailed rows, never both together on
 mobile. Expansion retains the Resources/collapse header and independent catch-up
 controls. Collapsing restores the live compact view and remembered fold state.
 The disclosure references summary data only while that summary is displayed.
+
+Changing the active mobile tab or sub-tab automatically collapses Resources
+and saves the closed state. Reselecting the same view does not close it. Initial
+page setup, live ticks and desktop navigation do not trigger this collapse.
