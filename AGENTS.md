@@ -91,6 +91,13 @@ aspiration. See D33–D34 and tools/balance/README.md.
 
 ## UI copy and information
 
+Proactively apply small, related UI consistency and clarity improvements within
+the requested area, using existing patterns and icons. Do not require repeated
+owner feedback for obvious presentation polish. Keep gameplay/balance decisions
+out of that scope unless authorized. Show actual screenshots for visual changes
+in chat, mobile first; report capture/delivery limitations instead of giving
+local file links.
+
 Keep default screens compact. Show counts, rates, costs, progress and relevant
 blocking/risk warnings directly. Remove explanations that repeat those values.
 Describe base/current behavior concisely. Do not append obvious claims such as

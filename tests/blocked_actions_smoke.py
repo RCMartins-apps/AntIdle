@@ -32,6 +32,8 @@ def check(page, width, url):
     for name in ['Raise Worker Egg', 'Raise Scout Egg']:
         expect(card(page,name).get_by_role('button',name=name,exact=True)).to_be_enabled()
         expect(card(page,name).locator('.action-blocked-reason')).to_have_count(0)
+        badge_id=card(page,name).locator('.brood-action-counts').get_attribute('id')
+        expect(card(page,name).get_by_role('button',name=name,exact=True)).to_have_attribute('aria-describedby',badge_id)
     full=copy.deepcopy(game)
     full['nestAttributes']['maxAnts']=20*UNIT
     load_game(page, full)
@@ -40,7 +42,14 @@ def check(page, width, url):
         expect(action.get_by_role('button',name=name,exact=True)).to_be_disabled()
         expect(action.locator('.action-blocked-reason')).to_have_text('No free colony slots')
         reason_id=action.locator('.action-blocked-reason').get_attribute('id')
-        expect(action.get_by_role('button',name=name,exact=True)).to_have_attribute('aria-describedby',reason_id)
+        badge=action.locator('.brood-action-counts')
+        expect(badge).to_have_count(1)
+        badge_id=badge.get_attribute('id')
+        described_by=action.get_by_role('button',name=name,exact=True).get_attribute('aria-describedby').split()
+        assert len(described_by)==2 and set(described_by)=={reason_id,badge_id}, described_by
+        expect(badge).to_contain_text('Ordered: 0')
+        expect(badge).to_contain_text('Brood: 0')
+        expect(badge).to_contain_text('Adults: 20' if name=='Raise Worker Egg' else 'Adults: 0')
     load_game(page,game)
     select_tab(page,'Chambers')
     build=card(page,'Expand Nest')

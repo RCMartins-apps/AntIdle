@@ -953,3 +953,22 @@ Always include the playable preview URL alongside PR links in handoffs. Mark
 its actual state (pending, confirmed live, ineligible, or removed after closure);
 do not claim a deployment is available merely because the URL is predictable.
 This does not require polling after auto-merge is enabled.
+
+## Egg-order counts use caste icons
+
+Show ordered egg counts together under Egg orders: worker icon then number,
+space, scout icon then number, matching the other UI. Keep Brood places separate. Hide the scout entry
+until its existing unlock; provide accessible count/type labels and preserve
+stable action positions. This changes presentation only.
+
+Related UI polish should be handled proactively without repeated owner feedback.
+The laying countdown identifies the next queued caste with its worker/scout icon
+and an accessible caste label, following the actual shared queue order.
+
+Keep brood cancellation beside the egg-order summary, with a red × on mobile
+and a labeled desktop control. Preserve a 44px touch target, accessible name,
+disabled empty-queue state and stable layout. Avoid a separate cancel-button row.
+
+Raise-egg buttons show live compact counts in queue → developing brood → adult
+order, using icons and accessible labels. Counts follow the relevant caste,
+including the small/standard worker phase; they are feedback, not requirements.
