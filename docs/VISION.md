@@ -123,7 +123,9 @@ outposts and founding a new generation through a daughter queen.
 The first roughly three or four prestiges should introduce mechanics in a
 mostly linear sequence so players learn colony management gradually. Afterwards,
 shorter and longer runs should offer meaningful choices in DNA accumulation.
-Remaining introductory rewards, exact count and later DNA scaling remain undecided.
+Satellite Nests is the third introductory Understanding. It reduces the cost of
+reestablishing Dry Clearing and opens a per-colony choice between Seed Station
+and Scout Station. Later introductory rewards and DNA scaling remain undecided.
 
 The first implemented Understanding is Shared Paths, automating safe collection
 from studied sites with workers and one guiding scout per ten workers, rounded up.

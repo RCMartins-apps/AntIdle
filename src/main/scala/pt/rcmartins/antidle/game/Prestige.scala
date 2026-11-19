@@ -15,7 +15,15 @@ object Prestige {
   val BeyondWoodland = Understanding("beyond-woodland", "Beyond the Woodland", 1L, 2,
     "Opens 3 handcrafted second-ring sites after the 6 nearby hexes. Discover Aphid Shelters, Trail Logistics and Coordinated Expeditions.",
     _.beyondWoodland, _.copy(beyondWoodland = true), _.sharedPaths)
-  val understandings: List[Understanding] = List(SharedPaths, BeyondWoodland)
+  val SatelliteNests = Understanding("satellite-nests", "Satellite Nests", 1L, 3,
+    "Dry Clearing: half the sugar and Knowledge to establish. Choose Seed Station (+50% protein, +25% water use) or Scout Station (40% shorter studies with 2–3 scouts, 5 water per study).",
+    _.satelliteNests, _.copy(satelliteNests = true), _.beyondWoodland)
+  val understandings: List[Understanding] = List(SharedPaths, BeyondWoodland, SatelliteNests)
+
+  def projectedPrerequisites(lineage: Lineage, selected: Set[String]): Lineage =
+    understandings.filter(u => selected(u.id)).foldLeft(lineage) { (current, understanding) =>
+      if (understanding.available(current)) understanding.grant(current) else current
+    }
   val DnaReward: Long = 1L
   def sugarBonus(lineage: Lineage): Long = Math.max(0, lineage.foundings).toLong * 10L
   def canFound(data: AllData): Boolean = data.ants.daughterQueens >= u &&

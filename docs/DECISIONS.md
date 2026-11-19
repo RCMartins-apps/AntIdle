@@ -1040,3 +1040,9 @@ it is part of the combined Upgrades screen there, not a separate sub-tab.
 
 Expanded purchased-upgrade help spans the full row below the title and info
 button, preserving both controls' size and position when toggled.
+
+## D65: Satellite Nests specializes Dry Clearing
+
+The third introductory Understanding gives a shorter route back to Dry Clearing
+and unlocks an exclusive current-colony choice between food production and faster
+scout studies. Both options use water and existing castes. See [Prestige](PRESTIGE.md#satellite-nests).

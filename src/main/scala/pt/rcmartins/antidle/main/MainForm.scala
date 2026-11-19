@@ -26,6 +26,12 @@ import scala.scalajs.js
 import scala.util.chaining.scalaUtilChainingOps
 
 object MainForm {
+  private def seedForagerRates = upgradesSignal.combineWith(nestSignal, antsSignal).map { case (upgrades, nest, ants) =>
+    val station = OutpostProgression.specialization(nest, ants.lineage)
+    val protein = preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades, station))
+    val water = preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades, station))
+    s"+$protein protein/s · −$water water/s"
+  }.distinct
 
   private val detailsTag = htmlTag("details")
   private val summaryTag = htmlTag("summary")
@@ -1172,6 +1178,21 @@ object MainForm {
                   else s"+${preciseRateStr(harvest.protein * TicksPerSecond)} protein/s · −${preciseRateStr(harvest.water * TicksPerSecond)} water/s"
                 state
               }),
+              child.maybe <-- antsSignal.map(_.lineage.satelliteNests).distinct.combineWith(
+                nestSignal.map(_.dryClearingSpecialization).distinct).map {
+                case (false, _) => None
+                case (true, OutpostProgression.SeedStation) => Some(div(b("Seed Station")))
+                case (true, OutpostProgression.ScoutStation) => Some(div(b("Scout Station")))
+                case (true, _) => Some(div(className := "mt-2 d-grid gap-2",
+                  b("Choose one station for this colony"),
+                  button(typ := "button", className := "btn btn-outline-primary",
+                    "Seed Station", onClick --> (_ => Actions.specializeDryClearingOutpost(OutpostProgression.SeedStation))),
+                  small("+50% protein · +25% water per Seed Forager"),
+                  button(typ := "button", className := "btn btn-outline-primary",
+                    "Scout Station", onClick --> (_ => Actions.specializeDryClearingOutpost(OutpostProgression.ScoutStation))),
+                  small("−40% study time · 2–3 scouts · 5 water per study"),
+                ))
+              },
               if (expansionVisible) div(className := "row mt-2",
                 actionButton(
                   name = "Expand Dry Clearing Outpost",
@@ -1185,8 +1206,8 @@ object MainForm {
             ) else div(className := "row",
               actionButton(
                 name = "Establish Dry Clearing Outpost",
-                enabledSignal = nestSignal.combineWith(explorationSignal, resourcesSignal).map { case (n, e, r) => OutpostProgression.canEstablish(n, e, r) },
-                costSignal = Val(OutpostProgression.cost),
+                enabledSignal = snapshotSignal.map(OutpostProgression.canEstablish),
+                costSignal = antsSignal.map(a => OutpostProgression.establishmentCost(a.lineage)).distinct,
                 bonusSignal = Val(ActionBonus(maxAnts = OutpostProgression.Housing, seedForagerSlots = (OutpostProgression.ForagerSlots / u).toInt)),
                 descriptionSignal = Val(None),
                 onClickAction = _ => Actions.establishDryClearingOutpost(),
@@ -1409,9 +1430,9 @@ object MainForm {
       })
     def choices = div(className := "understanding-choices",
       children <-- antsSignal.map(_.lineage).distinct.combineWith(selected.signal).map { case (lineage, ids) =>
-        val available = lineage.copy(foundings = if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue,
-          sharedPaths = lineage.sharedPaths || ids(Prestige.SharedPaths.id))
-        val options = Prestige.understandings.filter(u => !u.owned(lineage) && u.available(available))
+        val available = lineage.copy(foundings = if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue)
+        val projected = Prestige.projectedPrerequisites(available, ids)
+        val options = Prestige.understandings.filter(u => !u.owned(lineage) && u.available(projected))
         if (options.isEmpty) Seq(div(className := "small my-2", "No new Understandings available for this founding.")) else options.map { understanding =>
           div(className := "understanding-choice border rounded p-2 my-2", dataAttr("understanding") := understanding.id,
             label(className := "d-flex align-items-center gap-2", minHeight.px := 44,
@@ -1419,8 +1440,11 @@ object MainForm {
                 onChange.mapToChecked --> { checked =>
                   selected.update { old =>
                     if (checked) old + understanding.id
-                    else if (understanding.id == Prestige.SharedPaths.id && !lineage.sharedPaths) old - understanding.id - Prestige.BeyondWoodland.id
-                    else old - understanding.id
+                    else {
+                      val remaining = old - understanding.id
+                      val projected = Prestige.projectedPrerequisites(available, remaining)
+                      remaining.filter(id => Prestige.understandings.exists(u => u.id == id && u.available(projected)))
+                    }
                   }
                 }), b(understanding.title), span(s"${understanding.cost} DNA")),
             div(className := "small", understanding.effect),
@@ -1883,8 +1907,7 @@ object MainForm {
           )
         case AntTask.WaterCollector => div("+0.15 water/s per worker · 5 places")
         case AntTask.SeedForager =>
-          div(child.text <-- upgradesSignal.map(upgrades =>
-            s"${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s per forager"))
+          div(child.text <-- seedForagerRates.map(_ + " per forager"))
         case AntTask.Scavenger =>
           div("+0.05 protein/s per standard gatherer. Two shared places, including small gatherers.")
         case AntTask.BroodNurse =>
@@ -1960,7 +1983,7 @@ object MainForm {
           child.text <-- antsSignal.combineWith(statisticsData.signal).map { case (a, stats) => s"+${resourceRateStr(ColonyMilestones.sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage), stats))} sugar/s · −0.01 protein/s each" },
           child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
         case AntTask.WaterCollector => div("+0.15 water/s each")
-        case AntTask.SeedForager => div(child.text <-- upgradesSignal.map(upgrades => s"+${preciseRateStr(OutpostProgression.proteinPerWorkerSecond(upgrades))} protein/s · −${preciseRateStr(OutpostProgression.waterPerWorkerSecond(upgrades))} water/s each"),
+        case AntTask.SeedForager => div(child.text <-- seedForagerRates.map(_ + " each"),
           child.maybe <-- antsSignal.combineWith(resourcesSignal).map { case (ants, resources) =>
             if (ants.taskWorkers(antTask) == 0L) None
             else if (resources.protein.atCapacity) Some(div("Protein full"))
@@ -2070,27 +2093,34 @@ object MainForm {
     val workers = requestedWorkers.signal.combineWith(availableWorkersCountSignal).map {
       case (n, available) => ExplorationProgression.selectedWorkers(n, available)
     }.distinct
-    def scoutAction(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
-      p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal, upgradesSignal).map { case (count, data, upgrades) =>
-        val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings", upgrades))
-        if (id == "surroundings") s"$time · reveals one hexagon" else s"$time · ${prettyNumberStr(ExplorationMap.studyReward(data, id))} knowledge"
-      }),
-      actionButton(
-        descriptionSignal = Val(None),
-        name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
-        enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) => ExplorationMap.canScout(data, id, count) },
-        blockedReasonSignal = explorationSignal.map(data =>
-          Option.when(ExplorationMap.busy(data, id, if (id == "surroundings") "reveal" else "study"))(
-            if (id == "surroundings") "Scouting in progress" else "Study in progress")),
-        costSignal = scoutCrew.signal.map(ExplorationMap.scoutCost),
-        bonusSignal = Val(ActionBonus.empty),
-        requirementsSignal = availableScoutsSignal.combineWith(scoutCrew.signal, explorationSignal, upgradesSignal).map {
-          case (available, count, data, upgrades) => List(ActionRequirement("scouts", available, count.toLong * u, isCost = true),
-            ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u))
-        },
-        onClickAction = _ => Actions.scoutMap(id, scoutCrew.now()),
-      ).amend(className := "col-12"),
-    )
+    def scoutAction(id: String): ReactiveHtmlElement[HTMLDivElement] = {
+      val supported = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) =>
+        ExplorationMap.supportedStudy(data, id, count)
+      }.distinct
+      div(
+        p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal, upgradesSignal, supported).map { case (count, data, upgrades, stationSupport) =>
+          val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings", upgrades, stationSupport))
+          if (id == "surroundings") s"$time · reveals one hexagon" else s"$time · ${prettyNumberStr(ExplorationMap.studyReward(data, id))} knowledge"
+        }),
+        actionButton(
+          descriptionSignal = Val(None),
+          name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
+          enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) => ExplorationMap.canScout(data, id, count) },
+          blockedReasonSignal = explorationSignal.map(data =>
+            Option.when(ExplorationMap.busy(data, id, if (id == "surroundings") "reveal" else "study"))(
+              if (id == "surroundings") "Scouting in progress" else "Study in progress")),
+          costSignal = scoutCrew.signal.combineWith(supported).map { case (count, stationSupport) =>
+            ExplorationMap.scoutCost(count, stationSupport)
+          },
+          bonusSignal = Val(ActionBonus.empty),
+          requirementsSignal = availableScoutsSignal.combineWith(scoutCrew.signal, explorationSignal, upgradesSignal).map {
+            case (available, count, data, upgrades) => List(ActionRequirement("scouts", available, count.toLong * u, isCost = true),
+              ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u))
+          },
+          onClickAction = _ => Actions.scoutMap(id, scoutCrew.now()),
+        ).amend(className := "col-12"),
+      )
+    }
     def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
       child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
         Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
