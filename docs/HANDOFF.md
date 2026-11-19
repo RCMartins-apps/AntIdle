@@ -1,30 +1,19 @@
 # Handoff
 
-## 2026-11-18 — worker icons and grouped mobile colony navigation
+## 2026-11-19 — continuous expanded resource panel
 
-- `polish/worker-caste-icons`, PR #99, starts at main 4a67020. Manual review only:
-  auto-merge remains off. Owner approved S-marked small ants, colony Nest icon,
-  icon Nest sub-tabs, moving Tasks into Nest, and primary Settings (D61–D62).
-- Mobile Nest now groups Brood/Tasks/Chambers with egg/worker/tunneling icons
-  above labels. Settings has a main gear button, replacing the hamburger. A lone
-  Settings strip hides; Milestones stays under Settings before Lineage unlocks.
-  Escape returns to prior view. Desktop tabs and gameplay unchanged.
-- Decorative icons preserve live task-label node parents. Captured mobile arrow
-  handling prevents Bootstrap selecting hidden desktop tabs. Existing unlocks,
-  remembered sub-views/scroll and idle-count updates remain functional.
-- S is orange on light surfaces and pale gold in blue badges. It is reused in
-  resources, task headings, orders, countdown and caste-dependent adult badges.
-- Production build passed, zero Closure warnings/errors. Final navigation checks
-  passed 320/390px, including milestone fallback and desktop resizing; task
-  checks passed 320/390/1280px; production UI gate passed 390/1280px. JavaScript/
-  Python syntax and diff checks passed. Updated mobile screenshot shown in chat.
-- Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-99/ — refresh
+- `fix/mobile-resource-expansion`, PR #100, is open with auto-merge off for
+  manual preview. The owner requested the expanded panel use its header color
+  throughout, appearing as one block. Mobile CSS applies the existing card-cap
+  color to the panel and removes the transparent header's bottom divider.
+- Expanded view still replaces compact chips; real tab/sub-tab changes collapse
+  and remember the panel. Same-view clicks and desktop behavior are preserved.
+  Catch-up controls stay independent. No gameplay/save changes.
+- Resource browser checks passed 320/390/1280px, verifying the matching header
+  background, transparent inner surfaces, no divider, timing stability, saved
+  expansion, navigation collapse, catch-up and resize. Updated screenshot shown
+  in chat. Python syntax/diff checks passed; CSS-only, no rebuild needed.
+- Previous prestige-test repair explicitly expands details before checking reset
+  visibility; prestige/outer-map, offline and preview isolation checks passed.
+- Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-100/ — update
   pending push/CI. Preserve unrelated work/ and Python caches.
-
-- Naming follow-up: owner chose Jobs for the worker-assignment sub-tab. Renamed
-  visible mobile/desktop label while retaining tasks DOM/model identifiers.
-  Navigation helper accepts historical Tasks calls and selects Jobs. PR #99
-  remains manual review without auto-merge. Development/production builds passed
-  with zero Closure warnings/errors; navigation checks passed 320/390px and
-  live Jobs-count/task controls passed 320/390/1280px. Updated screenshot shown
-  in chat; Python syntax and diff checks passed.

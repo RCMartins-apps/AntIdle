@@ -337,6 +337,7 @@ def check_game(page, width, url):
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)
     protein = page.locator('.resource-row').filter(has=page.get_by_text('Protein', exact=True))
     expect(protein).to_have_count(0)
+    expand_resources(page)
     assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     page.reload(wait_until='networkidle')
     expect(page.get_by_role('button', name='Nursery Chamber', exact=False)).to_have_count(0)

@@ -64,6 +64,7 @@ def check_prestige(page, width, url):
     page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     found.click()
     page.clock.run_for(1)
+    expand_resources(page)
     assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     first = save_game(page)
     assert first['ants']['lineage'] == {'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False}
@@ -93,6 +94,7 @@ def check_prestige(page, width, url):
     page.get_by_role('checkbox', name='Confirm colony reset', exact=True).check()
     found.click()
     page.clock.run_for(1)
+    expand_resources(page)
     assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     founded = save_game(page)
     assert founded['ants']['lineage']['beyondWoodland']
