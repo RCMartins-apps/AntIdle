@@ -1,14 +1,18 @@
 # Handoff
 
-## 2026-11-19 — full-width purchased-upgrade descriptions
+## 2026-11-19 — third founding
 
-- `polish/purchased-upgrades-view`, PR #101: manual preview, auto-merge off.
-  Already incorporates main dc89fb7 (#100).
-- Purchased upgrade help now expands below its title/button at full row width,
-  preserving their position and size. CSS grid includes native details-content
-  wrapper handling. Mobile direct list and desktop history disclosure retained.
-- Navigation regression passed 320/390px; focused full-width description and
-  stable-control geometry checks passed 320/390/1280px. Python syntax and diff
-  checks passed. Actual mobile screenshot shown in chat. CSS-only presentation;
-  no engine/save changes or rebuild needed.
-- Preserve unrelated work/ and Python caches.
+- `feature/third-founding` starts from main c5f8db0 (#101). Satellite Nests is
+  the third Understanding. It discounts Dry Clearing establishment and unlocks
+  a per-colony Seed Station or Scout Station choice. See [Prestige](PRESTIGE.md#satellite-nests).
+- Save defaults keep existing colonies compatible. Founding carries the
+  Understanding and resets the station. The balance runner learns it and
+  selects Seed Station once the outpost is established.
+- Passed 312 existing engine tests, 3 new third-founding tests, 4 balance tool
+  tests, and the development build. The browser founding and station flow
+  passed at 320, 390 and 1280px. Mobile screenshots captured.
+- Station tuning still needs a full playthrough. Preserve unrelated scratch
+  files and Python caches.
+- PR #102's first CI run failed in the prestige browser test because its
+  exact save comparison predated the Satellite Nests field. The corrected
+  test checks the field stays false at both earlier foundings.

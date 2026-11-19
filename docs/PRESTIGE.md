@@ -79,3 +79,23 @@ Reproduce with scripts/balance.py --policy balanced --seed 42 --seed 137 --hours
 and a copy of tools/balance/default.json with foundings set to 3. Build the runner
 first. Temporary reports/checkpoint saves were produced under
 /tmp/antidle-second-prestige-pacing; they are not durable repository artifacts.
+
+## Satellite Nests
+
+At the third founding, a lineage with Beyond the Woodland can learn Satellite
+Nests for 1 DNA. Earlier colonies keep their original costs. Once inherited,
+Dry Clearing costs 1,500 sugar and 150 Knowledge to establish, down from 3,000
+and 300. Water, protein, tunneling space and discovery requirements still apply.
+
+After establishing the outpost, choose one specialization for the current colony.
+
+| Station | Effect | Tradeoff |
+| --- | --- | --- |
+| Seed Station | +50% protein per Seed Forager | +25% water per Seed Forager |
+| Scout Station | 40% shorter site studies with 2–3 scouts | 5 water per supported study |
+
+Both stations keep ordinary outpost housing and Seed Forager slots. Scout
+Station leaves one-scout studies and map reveals at their ordinary costs
+and times. Study duration bonuses stack multiplicatively with Scout Wayfinding.
+Stations leave finite Knowledge rewards unchanged. The permanent Understanding
+survives founding, while the outpost and station choice reset.

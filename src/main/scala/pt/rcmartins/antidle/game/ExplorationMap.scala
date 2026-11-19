@@ -45,15 +45,21 @@ object ExplorationMap {
     Math.max(0L, deposits.getOrElse(route, 0L) - data.depleted.getOrElse(route, 0L))
   def busy(data: ExplorationData, id: String, mission: String): Boolean =
     data.explorationParties.exists(p => p.destination == id && p.mission == mission)
-  def scoutCost(count: Int): ActionCost = ActionCost(sugar = count.toLong * ScoutSugar)
-  def scoutDuration(count: Int, reveal: Boolean, upgrades: UpgradesData = UpgradesData.initial): Long = {
+  def supportedStudy(data: AllData, id: String, count: Int): Boolean =
+    id != "surroundings" && count >= 2 &&
+      OutpostProgression.specialization(data.nestAttributes, data.ants.lineage) == OutpostProgression.ScoutStation
+
+  def scoutCost(count: Int, supported: Boolean = false): ActionCost =
+    ActionCost(sugar = count.toLong * ScoutSugar, water = if (supported) OutpostProgression.SurveyWater else 0L)
+  def scoutDuration(count: Int, reveal: Boolean, upgrades: UpgradesData = UpgradesData.initial, supported: Boolean = false): Long = {
     val percent = if (upgrades(UpgradesData.UpgradeType.ScoutWayfinding).unlocked) MilestoneResearch.ScoutDurationPercent else 100L
-    val denominator = Math.max(1, count).toLong * 100L
-    ((if (reveal) RevealTicks else SurveyTicks) * percent + denominator - 1L) / denominator
+    val stationPercent = if (supported && !reveal) 60L else 100L
+    val denominator = Math.max(1, count).toLong * 10000L
+    ((if (reveal) RevealTicks else SurveyTicks) * percent * stationPercent + denominator - 1L) / denominator
   }
   def canScout(data: AllData, id: String, count: Int): Boolean =
     data.unlocks.tabs.exploreTabUnlocked && count >= 1 && count <= MaxSurveyScouts &&
-      ScoutProgression.available(data.ants, data.exploration) >= count.toLong * u && data.hasResources(scoutCost(count)) &&
+      ScoutProgression.available(data.ants, data.exploration) >= count.toLong * u && data.hasResources(scoutCost(count, supportedStudy(data, id, count))) &&
       data.exploration.explorationParties.size < ExplorationProgression.maxParties(data.exploration, data.upgrades) &&
       (if (id == "surroundings") data.exploration.revealedSites < availableSites(data.ants).size && !busy(data.exploration, id, "reveal")
       else availableSites(data.ants).exists(_.id == id) && revealed(data.exploration, id) && studyReward(data.exploration, id) > 0L && !busy(data.exploration, id, "study"))
@@ -61,9 +67,10 @@ object ExplorationMap {
     if (!canScout(data, id, count)) data else {
       val (ready, ages) = PopulationAging.depart(data, 0L, count.toLong * u)
       val reveal = id == "surroundings"
-      val party = ExplorationParty(0L, data.currentTick, data.currentTick + scoutDuration(count, reveal, data.upgrades),
+      val supported = supportedStudy(data, id, count)
+      val party = ExplorationParty(0L, data.currentTick, data.currentTick + scoutDuration(count, reveal, data.upgrades, supported),
         scouts = count.toLong * u, destination = id, ages = ages, mission = if (reveal) "reveal" else "study")
-      ready.spendResources(scoutCost(count)).copy(exploration = ready.exploration.copy(explorationParties = party :: ready.exploration.explorationParties),
+      ready.spendResources(scoutCost(count, supported)).copy(exploration = ready.exploration.copy(explorationParties = party :: ready.exploration.explorationParties),
         statistics = ready.statistics.copy(explorationsCount = ready.statistics.explorationsCount.addValue(1)))
     }
   }

@@ -100,7 +100,9 @@ object Strategy {
     def select(c: Option[Choice]): Option[Decision] = c.map(done)
     if (Prestige.canFound(d)) {
       val learn = if (!a.lineage.sharedPaths) Seq(Prestige.SharedPaths.id)
-        else if (!a.lineage.beyondWoodland && a.lineage.foundings >= 1) Seq(Prestige.BeyondWoodland.id) else Nil
+        else if (!a.lineage.beyondWoodland && a.lineage.foundings >= 1) Seq(Prestige.BeyondWoodland.id)
+        else if (Prestige.SatelliteNests.available(a.lineage.copy(foundings = a.lineage.foundings + 1)) && !a.lineage.satelliteNests)
+          Seq(Prestige.SatelliteNests.id) else Nil
       return done(Choice("Found daughter colony", "founding", Prestige.found(_, learn)))
     }
     if (a.lineage.foundings > 0 && !a.lineage.sharedPaths && a.lineage.dna >= 1L)
@@ -145,6 +147,8 @@ object Strategy {
       return done(Choice("Promote Replete", "promotion", RepleteProgression.promote))
     if (OutpostProgression.canEstablish(d))
       return done(Choice("Establish Dry Clearing Outpost", "construction", OutpostProgression.establish))
+    if (nest.dryClearingOutpost && a.lineage.satelliteNests && nest.dryClearingSpecialization.isEmpty)
+      return done(Choice("Choose Seed Station", "construction", OutpostProgression.specialize(_, OutpostProgression.SeedStation)))
     if (RoyalNurseryProgression.canPlan(nest, d.upgrades))
       select(build(d, ChamberType.RoyalNursery)).foreach(x => return x)
 

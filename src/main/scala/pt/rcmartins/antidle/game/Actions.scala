@@ -44,6 +44,9 @@ object Actions {
 
   def establishDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.establish)
 
+  def specializeDryClearingOutpost(station: String): Unit =
+    actionUpdater.writer.onNext(data => OutpostProgression.specialize(data, station))
+
   def expandDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.expand)
 
   def purchaseSharedPaths(): Unit = actionUpdater.writer.onNext(Prestige.purchase)
