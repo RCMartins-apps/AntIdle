@@ -1592,14 +1592,14 @@ object MainForm {
           ),
           activityStatus(statusSignal, "royal-care-status small"),
           div(className := "small text-body-secondary my-1",
-            child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
-              brood.map { b =>
-                val ticks = RoyalBroodProgression.remainingTicks(b, count)
-                if (ticks < 0L) ""
-                else s"~${prettyTimeFromTicks(ticks)} remaining"
-              }.getOrElse("")
+            child.text <-- broodSignal.combineWith(nursesSignal, statusSignal).map { case (brood, count, status) =>
+              val ticks = brood.filter(_ => status.startsWith("Tending ")).map(RoyalBroodProgression.remainingTicks(_, count)).getOrElse(-1L)
+              if (ticks < 0L) "" else s"~${prettyTimeFromTicks(ticks)} remaining at current staffing"
             },
           ),
+          child.maybe <-- statusSignal.map(status => Option.when(status == "Needs Royal Nurses")(
+            button(className := "btn btn-outline-primary me-2 mt-1", minHeight.px := 44, typ := "button", "Assign Royal Nurses",
+              onClick --> (_ => Option(dom.document.getElementById("tasks-tab")).foreach(_.asInstanceOf[dom.html.Element].click()))))),
           button(className := "btn btn-outline-primary royal-care-toggle mt-1", minHeight.px := 44,
             `type` := "button",
             child.text <-- broodSignal.map(b => if (b.exists(_.paused)) "Resume care" else "Pause care"),
@@ -2250,6 +2250,14 @@ object MainForm {
         },
         onClickAction = _ => useSignalValue[Long](workers, Actions.explore(_, route)),
       ).amend(className := "col-12"),
+      if (RaidProgression.isRaid(route)) emptyNode else {
+        val fitted = snapshotSignal.map(data => ExplorationHelper.fitCrew(data, route)).distinct
+        button(typ := "button", className := "btn btn-sm btn-outline-secondary mt-2", minHeight.px := 44,
+          display <-- fitted.map(_.fold("none")(_ => "")),
+          disabled <-- fitted.combineWith(workers).map { case (crew, current) => crew.forall(_ == current) },
+          child.text <-- fitted.map(_.fold("Fit crew")(n => s"Fit crew: ${n / u}")),
+          onClick --> (_ => useSignalValue[Option[Long]](fitted, _.foreach(requestedWorkers.set))))
+      },
       trailControls(route),
     )
     def relocateAphids: ReactiveHtmlElement[HTMLDivElement] = div(className := "aphid-relocation",

@@ -30,6 +30,17 @@ object ExplorationHelper {
     val key = resource(destination)
     resourceCost(key, Math.min(base, Math.min(ExplorationMap.remaining(data.exploration, destination.id), free(data, key))))
   }
+  /** Smallest crew yielding the maximum cargo that can fit on this safe trip. */
+  def fitCrew(data: AllData, destination: ExplorationDestination): Option[Long] = {
+    val max = Math.min(ExplorationProgression.MaxWorkers, data.ants.availableWorkersCount)
+    val crews = (destination.minimumWorkers to max by ExplorationProgression.WorkerStep)
+    Option.unless(RaidProgression.isRaid(destination) || crews.isEmpty) {
+      val key = resource(destination)
+      val bestCargo = amount(load(data, crews.last, destination), key)
+      crews.find(crew => bestCargo > 0L && amount(load(data, crew, destination), key) >= bestCargo)
+    }.flatten
+  }
+
   def canDepart(data: ExplorationData, ants: AntsData, upgrades: UpgradesData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): Boolean =
     workers >= destination.minimumWorkers && workers <= ExplorationProgression.MaxWorkers && workers % ExplorationProgression.WorkerStep == 0 &&
       extraScouts >= 0 && extraScouts <= ExplorationProgression.MaxExtraScouts && destination.progressionUnlocked(data) &&
