@@ -126,7 +126,9 @@ mostly linear sequence so players learn colony management gradually. Afterwards,
 shorter and longer runs should offer meaningful choices in DNA accumulation.
 Satellite Nests is the third introductory Understanding. It reduces the cost of
 reestablishing Dry Clearing and opens a per-colony choice between Seed Station
-and Scout Station. Later introductory rewards and DNA scaling remain undecided.
+and Scout Station. Founding Provisions is the fourth and final introductory Understanding.
+It gives the founding queen sugar for three small-worker eggs. Later DNA
+scaling remains undecided.
 
 The first implemented Understanding is Shared Paths, automating safe collection
 from studied sites with workers and one guiding scout per ten workers, rounded up.

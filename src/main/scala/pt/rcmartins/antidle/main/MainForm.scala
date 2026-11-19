@@ -1396,15 +1396,16 @@ object MainForm {
       row("DNA carried forward", planned.map(_.map(_.dna.toString).getOrElse("Invalid selection"))),
     )
     def resetRows = detailsTag(rememberDetails("lineage.reset"), className := "founding-reset my-2", summaryTag(minHeight.px := 44, "Colony reset: exact values"),
-      children <-- snapshotSignal.map { data =>
+      children <-- snapshotSignal.combineWith(planned).map { case (data, plan) =>
         val fresh = AllData.initial
+        val starting = Prestige.startingResources(plan.getOrElse(data.ants.lineage))
         def resource(label: String, before: BasicResource, after: BasicResource) = {
           def stock(r: BasicResource) = prettyNumberStr(r.amount) + (if (r.maxAmount == Long.MaxValue) "" else s"/${prettyNumberStr(r.maxAmount)}")
           label -> s"${stock(before)} → ${stock(after)}"
         }
         val a = data.ants
         val values = Seq(
-          resource("Sugar", data.basicResources.sugar, fresh.basicResources.sugar),
+          resource("Sugar", data.basicResources.sugar, starting.sugar),
           resource("Protein", data.basicResources.protein, fresh.basicResources.protein),
           resource("Water", data.basicResources.water, fresh.basicResources.water),
           resource("Resin", data.basicResources.resin, fresh.basicResources.resin),
