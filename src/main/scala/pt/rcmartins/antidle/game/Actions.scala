@@ -42,6 +42,8 @@ object Actions {
 
   def promoteReplete(): Unit = actionUpdater.writer.onNext(RepleteProgression.promote)
 
+  def buildMidden(): Unit = actionUpdater.writer.onNext(Midden.build)
+
   def establishDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.establish)
 
   def specializeDryClearingOutpost(station: String): Unit =

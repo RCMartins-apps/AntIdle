@@ -69,6 +69,11 @@ object AntTask {
     override val showButtons: Boolean = false
   }
 
+  case object RefuseCarrier extends AntTask {
+    val uiOrder: Int = 7
+    val name: String = "Refuse Carrier"
+  }
+
   case object RoyalNurse extends AntTask {
     val uiOrder: Int = 6
     val name: String = "Royal Nurse"

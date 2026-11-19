@@ -1222,6 +1222,22 @@ object MainForm {
           if (actions.canBuildNestUpgrade || actions.canBuildQueenChamber || actions.canBuildFoodStorageChamber || nursery) "block" else "none"
         },
         h5(className := "mt-3", "Chambers"),
+        child.maybe <-- nestSignal.map(n => (Midden.visible(n), n.middenBuilt)).distinct.map {
+          case (_, true) => Some(div(className := "midden-status border rounded p-2 my-2",
+            infoHeading("Refuse Midden", div("Larvae leave refuse. Carriers take it out of the nursery. A staffed, clean midden speeds ordinary brood care.")),
+            div(className := "small", child.text <-- nestSignal.combineWith(antsSignal).map { case (nest, ants) =>
+              val bonus = if (Midden.clean(ants, nest)) s"+${Midden.CareBonusPercent}% brood care"
+                else if (Midden.carriers(ants) == 0L) "Assign Refuse Carriers in Jobs"
+                else s"Clear refuse to ${Midden.CleanLimit / u} for faster care"
+              s"${prettyNumberStr(nest.nurseryRefuse)}/${Midden.Capacity / u} refuse · $bonus"
+            }.distinct)))
+          case (true, false) => Some(div(className := "row",
+            actionButton(name = "Build Refuse Midden", enabledSignal = snapshotSignal.map(Midden.canBuild),
+              costSignal = Val(Midden.Cost), bonusSignal = Val(ActionBonus.empty),
+              descriptionSignal = Val(Some(div(s"${Midden.Places} Refuse Carrier places · +${Midden.CareBonusPercent}% care when clean"))),
+              onClickAction = _ => Actions.buildMidden())))
+          case _ => None
+        },
         div(
           className := "row",
           child.maybe <-- standardBuyChamber(
@@ -1946,6 +1962,7 @@ object MainForm {
           div("Holding contested ground. Manage staffing and withdrawal in Territory.")
         case AntTask.TrailForager =>
           div("Following a nectar trail. Manage workers in Explore.")
+        case AntTask.RefuseCarrier => div(s"Clears ${Midden.ClearPerSecond / u} refuse/s")
         case AntTask.RoyalNurse =>
           div("Tends royal brood. Feeding costs and progress are shown in Nest.")
         case AntTask.CarcassCarrier =>
