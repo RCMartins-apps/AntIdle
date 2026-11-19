@@ -2151,6 +2151,34 @@ object MainForm {
         ).amend(className := "col-12"),
       )
     }
+    def surveyOrderControls(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      child.maybe <-- snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) =>
+        val e = data.exploration
+        val completed = ExplorationMap.studies(e, id)
+        e.surveyOrder match {
+          case Some(order) if order.site == id =>
+            val status = if (ExplorationMap.busy(e, id, "study")) "Studying"
+              else "Waiting for scouts, supplies or a mission slot"
+            Some((s"$status · $completed/${order.target} studies", true, false))
+          case None =>
+            SurveyOrders.nextDiscovery(e, id).filter(_.trips - completed >= 2).map { discovery =>
+              val trips = discovery.trips - completed
+              val cost = ExplorationMap.scoutCost(count, ExplorationMap.supportedStudy(data, id, count))
+              val water = if (cost.water > 0L) s" · ${prettyNumberStr(cost.water * trips)} water" else ""
+              (s"${discovery.title} · $completed/${discovery.trips} studies · ${prettyNumberStr(cost.sugar * trips)} sugar$water",
+                false, ExplorationMap.canScout(data, id, count))
+            }
+          case _ => None
+        }
+      }.distinct.map(_.map { case (summary, active, canStart) =>
+        div(className := "small mb-2",
+          div(summary),
+          if (active) button(typ := "button", className := "btn btn-outline-secondary", minHeight.px := 44,
+            "Stop survey order", onClick --> (_ => Actions.cancelSurveys()))
+          else button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
+            "Study until discovery", disabled := !canStart, onClick --> (_ => Actions.orderSurveys(id, scoutCrew.now()))))
+      }),
+    )
     def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
       child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
         Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
@@ -2264,6 +2292,7 @@ object MainForm {
           if (ExplorationMap.outerSites.exists(_.id == id)) div(className := "site-unlock small mb-2", unlockLabel) else emptyNode,
           p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
           child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
+          surveyOrderControls(id),
           child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
             site.routes.flatMap(id => ExplorationDestination.all.find(_.id == id)).exists(route =>
               route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L)
