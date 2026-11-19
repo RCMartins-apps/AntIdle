@@ -1027,3 +1027,6 @@ The disclosure references summary data only while that summary is displayed.
 Changing the active mobile tab or sub-tab automatically collapses Resources
 and saves the closed state. Reselecting the same view does not close it. Initial
 page setup, live ticks and desktop navigation do not trigger this collapse.
+
+The expanded mobile resource panel is one continuous header-shaded block, with
+the same background throughout and no divider between its heading and details.
