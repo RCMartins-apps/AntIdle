@@ -67,7 +67,9 @@ def check_prestige(page, width, url):
     expand_resources(page)
     assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     first = save_game(page)
-    assert first['ants']['lineage'] == {'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False}
+    assert first['ants']['lineage'] == {
+        'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False, 'satelliteNests': False,
+    }
     assert first['ants']['workers'] == 0 and first['ants']['daughterQueens'] == 0
     assert first['basicResources']['sugar']['amount'] == 0
     assert first['statistics']['sugarU'] == {'thisRun': 0, 'total': 300 * UNIT}
@@ -98,6 +100,7 @@ def check_prestige(page, width, url):
     assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
     founded = save_game(page)
     assert founded['ants']['lineage']['beyondWoodland']
+    assert not founded['ants']['lineage']['satelliteNests']
     assert founded['ants']['lineage']['dna'] == 0 and founded['ants']['lineage']['foundings'] == 2
     later = progressed_game(founded)
     later['ants'].update(workers=40 * UNIT, scouts=3 * UNIT, tasks=[[{'SugarCollector': {}}, 40 * UNIT]])

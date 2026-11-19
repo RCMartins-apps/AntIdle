@@ -13,3 +13,6 @@
   passed at 320, 390 and 1280px. Mobile screenshots captured.
 - Station tuning still needs a full playthrough. Preserve unrelated scratch
   files and Python caches.
+- PR #102's first CI run failed in the prestige browser test because its
+  exact save comparison predated the Satellite Nests field. The corrected
+  test checks the field stays false at both earlier foundings.
