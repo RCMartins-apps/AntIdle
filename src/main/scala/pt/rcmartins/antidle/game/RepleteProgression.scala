@@ -9,7 +9,11 @@ object RepleteProgression {
   val WaterPerReplete: Long = 100L * u
   val cost: ActionCost = ActionCost(sugar = 100 * u, protein = 5 * u, idleWorkers = u)
 
-  def capacity(data: AllData): Long = BasicResources.initial.water.maxAmount + data.ants.repletes / u * WaterPerReplete
+  def waterPerReplete(lineage: Lineage): Long =
+    WaterPerReplete + (if (lineage.drySeasonCompleted) DrySeasonChallenge.WaterBonus else 0L)
+
+  def capacity(data: AllData): Long =
+    BasicResources.initial.water.maxAmount + data.ants.repletes / u * waterPerReplete(data.ants.lineage)
   def slots(data: AllData): Long = Math.max(0L, data.nestAttributes.chambers.repleteChamber.level.toLong - data.ants.repletes / u)
 
   def reconcile(data: AllData): AllData = data.modify(_.basicResources.water.maxAmount).setTo(capacity(data))

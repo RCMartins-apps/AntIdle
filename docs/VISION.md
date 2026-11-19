@@ -109,7 +109,8 @@ The owner wants two forms of prestige:
   bonuses are valid rewards; Understandings need not all introduce new mechanics.
 - **Challenge progression:** the daughter colony is founded in a less suitable,
   more challenging location. Completing that challenge unlocks something new.
-  The specific locations, objectives and rewards are still undecided.
+  Dry Season is the first challenge. It asks players to secure water storage
+  and establish Dry Clearing with reduced dew production.
 
 Raising a daughter queen is an approved direction for connecting generations.
 The owner likes the opportunities this creates for new chambers and worker
@@ -136,9 +137,9 @@ apply atomically. Manual and automatic collection draw from the same finite depo
 +10% sugar production per completed prestige, stacked additively; DNA buys
 Understandings separately. The new colony starts with the normal initial queen
 and no workers. The reset preview lists what is lost and inherited. The founding
-action is called Found daughter colony. How challenge rewards interact with Understandings,
-whether normal and challenge foundings can be combined, and how completion or
-abandonment works also need design before implementation.
+action is called Found daughter colony. Dry Season uses the same
+founding flow and grants a separate permanent water capacity reward. See
+[Prestige](PRESTIGE.md#dry-season-challenge-founding) for the entry and exit rules.
 
 ## Possibilities, not commitments
 

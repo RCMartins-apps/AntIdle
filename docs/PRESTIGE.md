@@ -99,3 +99,19 @@ Station leaves one-scout studies and map reveals at their ordinary costs
 and times. Study duration bonuses stack multiplicatively with Scout Wayfinding.
 Stations leave finite Knowledge rewards unchanged. The permanent Understanding
 survives founding, while the outpost and station choice reset.
+
+## Dry Season challenge founding
+
+Starting with the fourth founding, a lineage that already owns Satellite Nests
+can choose Dry Season in the founding confirmation. The daughter colony follows
+ordinary progression, with Dew Gatherer output reduced from 0.15 to 0.075 water/s
+per worker. Site deposits and water expedition costs retain their normal values.
+
+To complete it, found again with Dry Clearing Outpost established and at least
+two living repletes. The usual ready daughter queen requirement applies. Founding
+before meeting both targets exits Dry Season without the reward and allows a
+future retry. Successful completion ends the challenge and permanently raises
+water capacity per replete from 100 to 125. The reward applies to all future
+colonies, and successful lineages retire the challenge. Standard DNA and sugar
+bonuses apply to both challenge and ordinary foundings. Existing saves default
+to an inactive, incomplete challenge.

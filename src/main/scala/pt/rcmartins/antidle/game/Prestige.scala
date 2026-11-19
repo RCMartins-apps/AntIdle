@@ -28,11 +28,13 @@ object Prestige {
   def sugarBonus(lineage: Lineage): Long = Math.max(0, lineage.foundings).toLong * 10L
   def canFound(data: AllData): Boolean = data.ants.daughterQueens >= u &&
     data.ants.lineage.foundings < Int.MaxValue && data.ants.lineage.dna <= Long.MaxValue - DnaReward
-  def plan(data: AllData, selected: Seq[String]): Option[Lineage] = {
+  def plan(data: AllData, selected: Seq[String], drySeason: Boolean = false): Option[Lineage] = {
     val old = data.ants.lineage
-    if (old.foundings == Int.MaxValue || old.dna > Long.MaxValue - DnaReward ||
+    if ((drySeason && !DrySeasonChallenge.canEnter(old)) || old.foundings == Int.MaxValue || old.dna > Long.MaxValue - DnaReward ||
         selected.distinct.size != selected.size || selected.exists(id => !understandings.exists(_.id == id))) None
-    else understandings.filter(u => selected.contains(u.id)).foldLeft(Option(old.copy(foundings = old.foundings + 1, dna = old.dna + DnaReward))) {
+    else understandings.filter(u => selected.contains(u.id)).foldLeft(Option(old.copy(
+      foundings = old.foundings + 1, dna = old.dna + DnaReward,
+      drySeasonActive = drySeason, drySeasonCompleted = old.drySeasonCompleted || DrySeasonChallenge.earnsReward(data)))) {
       case (current, understanding) => current.filter(l => !understanding.owned(l) && understanding.available(l) && l.dna >= understanding.cost).map(understanding.learn)
     }
   }
@@ -41,15 +43,18 @@ object Prestige {
     understandings.find(_.id == id).filter(u => !u.owned(lineage) && u.available(lineage) && lineage.dna >= u.cost)
       .map(u => data.copy(ants = data.ants.copy(lineage = u.learn(lineage)))).getOrElse(data)
   }
-  def found(data: AllData, selected: Seq[String] = Nil): AllData = {
-    if (!canFound(data) || plan(data, selected).isEmpty) data
+  def found(data: AllData, selected: Seq[String] = Nil, drySeason: Boolean = false): AllData = {
+    if (!canFound(data) || plan(data, selected, drySeason).isEmpty) data
     else {
-      val lineage = plan(data, selected).get
+      val lineage = plan(data, selected, drySeason).get
       AllData.initial.copy(world = data.world.copy(saveSeed = data.world.saveSeed + 1L),
         ants = AntsData.initial.copy(lineage = lineage),
         statistics = StatisticsData.newColony(data.statistics),
         exploration = ExplorationData.initial,
-        messages = Seq("A daughter queen founds a new colony. Your lineage endures."))
+        messages = Seq(
+          if (DrySeasonChallenge.earnsReward(data)) "Dry Season completed! Future repletes hold more water."
+          else if (drySeason) "A daughter queen founds a colony in the Dry Season."
+          else "A daughter queen founds a new colony. Your lineage endures."))
     }
   }
   def purchase(data: AllData): AllData = purchase(data, SharedPaths.id)

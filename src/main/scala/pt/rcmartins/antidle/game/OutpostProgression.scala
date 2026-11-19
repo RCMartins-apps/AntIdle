@@ -7,7 +7,11 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.{CoveredTrails, SeedP
 
 object OutpostProgression {
   val DewPerWorkerSecond: Long = 1500L
-  def dewPerTick(ants: AntsData): Long = ants.taskWorkers(AntTask.WaterCollector) / u * DewPerWorkerSecond / TicksPerSecond
+  def dewPerWorkerSecond(lineage: Lineage): Long =
+    if (lineage.drySeasonActive) DewPerWorkerSecond / 2L else DewPerWorkerSecond
+
+  def dewPerTick(ants: AntsData): Long =
+    ants.taskWorkers(AntTask.WaterCollector) / u * dewPerWorkerSecond(ants.lineage) / TicksPerSecond
   val Housing: Long = 50L * u
   val ForagerSlots: Long = 5L * u
   val MaxExtensions: Int = 2
