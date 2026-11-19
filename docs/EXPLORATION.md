@@ -110,3 +110,7 @@ explicit accessible names and visible indicators. Full site names, finite reward
 costs and missions remain in the selected-site card. All seven hexagons remain
 native keyboard-accessible buttons. This presentation changes no deposits,
 Knowledge, unlock requirements, scout roles or save data.
+
+Safe collection cards offer **Fit crew**. It selects the smallest crew capable
+of carrying the most available cargo, accounting for in-flight reservations and
+remaining storage. Selection never sends a mission.
