@@ -28,6 +28,8 @@
     function apply() {
       panel.classList.toggle('resources-expanded', expanded);
       toggle.setAttribute('aria-expanded', String(expanded));
+      if (expanded) toggle.removeAttribute('aria-describedby');
+      else toggle.setAttribute('aria-describedby', summary.id);
       toggle.setAttribute('aria-label', expanded ? 'Collapse resource details' : 'Expand resource details');
       arrow.textContent = expanded ? '▴' : '▾';
       // Prevent hidden controls remaining focused across a viewport change/collapse.
@@ -37,6 +39,15 @@
       expanded = !expanded; apply();
       try { localStorage.setItem(key, String(expanded)); } catch (_) { /* UI still works. */ }
     });
+    let previousView = app.dataset.mobileView;
+    new MutationObserver(() => {
+      const view = app.dataset.mobileView;
+      if (previousView && view !== previousView && media.matches && expanded) {
+        expanded = false; apply();
+        try { localStorage.setItem(key, 'false'); } catch (_) { /* UI still works. */ }
+      }
+      previousView = view;
+    }).observe(app, {attributes: true, attributeFilter: ['data-mobile-view']});
     const chips = new Map();
     const names = new Set(['Sugar', 'Protein', 'Water', 'Resin', 'Knowledge', 'Tunneling Space', 'Ants']);
     function update() {

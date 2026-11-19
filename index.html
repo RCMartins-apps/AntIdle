@@ -228,6 +228,10 @@
  .mobile-resource-toggle {display:block;width:100%;min-height:44px;border:0;padding:0;background:transparent;color:inherit;text-align:left}
  .resource-summary-heading {display:flex;justify-content:space-between;align-items:center;font-size:.8rem;font-weight:600;color:var(--bs-secondary-color);margin-bottom:.3rem}
  .compact-resources {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem .65rem}
+ .resources-column .game-panel.resources-expanded {background:var(--bs-card-cap-bg)}
+ .resources-column .game-panel.resources-expanded > .card-header {background:transparent;border-bottom:0}
+ .resources-expanded .compact-resources {display:none}
+ .resources-expanded .resource-summary-heading {margin-bottom:0}
  .compact-resource {display:grid;grid-template-columns:18px minmax(0,1fr);grid-template-rows:auto minmax(1.82rem,auto);align-items:center;gap:0 .25rem;min-width:0;font-size:.9rem;font-variant-numeric:tabular-nums}
  .compact-resource .resource-icon {width:18px;height:18px;margin:0}
  .compact-resource-value {white-space:nowrap;font-size:clamp(.75rem,3.5vw,.9rem)}
