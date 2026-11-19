@@ -16,7 +16,15 @@ case class ExplorationData(
     sugarTrail: SugarTrail = SugarTrail(), // Legacy reserved nectar, returned on load.
     collectionTrails: List[CollectionTrail] = Nil,
     territory: Territory = Territory(),
+    surveyOrder: Option[SurveyOrder] = None,
 )
+
+case class SurveyOrder(site: String, scouts: Int, target: Int)
+
+object SurveyOrder {
+  implicit val decoder: JsonDecoder[SurveyOrder] = DeriveJsonDecoder.gen[SurveyOrder]
+  implicit val encoder: JsonEncoder[SurveyOrder] = DeriveJsonEncoder.gen[SurveyOrder]
+}
 
 object ExplorationData {
 

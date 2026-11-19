@@ -58,6 +58,7 @@ object TickUpdater {
             ExplorationHelper.exploreBonus(current, party)
           }
         },
+        SurveyOrders.tick,
         CarcassProgression.returnCarcasses,
         // Charge adult upkeep first, then royal care, before automatic worker eggs.
         beforeUpkeep => {
