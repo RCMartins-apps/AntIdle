@@ -2222,6 +2222,14 @@ object MainForm {
         },
         onClickAction = _ => useSignalValue[Long](workers, Actions.explore(_, route)),
       ).amend(className := "col-12"),
+      if (RaidProgression.isRaid(route)) emptyNode else {
+        val fitted = snapshotSignal.map(data => ExplorationHelper.fitCrew(data, route)).distinct
+        button(typ := "button", className := "btn btn-sm btn-outline-secondary mt-2", minHeight.px := 44,
+          display <-- fitted.map(_.fold("none")(_ => "")),
+          disabled <-- fitted.combineWith(workers).map { case (crew, current) => crew.forall(_ == current) },
+          child.text <-- fitted.map(_.fold("Fit crew")(n => s"Fit crew: ${n / u}")),
+          onClick --> (_ => useSignalValue[Option[Long]](fitted, _.foreach(requestedWorkers.set))))
+      },
       trailControls(route),
     )
     def relocateAphids: ReactiveHtmlElement[HTMLDivElement] = div(className := "aphid-relocation",
