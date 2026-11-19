@@ -1030,3 +1030,13 @@ page setup, live ticks and desktop navigation do not trigger this collapse.
 
 The expanded mobile resource panel is one continuous header-shaded block, with
 the same background throughout and no divider between its heading and details.
+
+## D64: Purchased sub-tab shows its list directly
+
+The mobile Purchased sub-tab needs no repeated Purchased upgrades title or
+collapse control. Open its shared list directly with no extra border/spacing.
+Keep per-upgrade info buttons. Desktop history retains its disclosure because
+it is part of the combined Upgrades screen there, not a separate sub-tab.
+
+Expanded purchased-upgrade help spans the full row below the title and info
+button, preserving both controls' size and position when toggled.

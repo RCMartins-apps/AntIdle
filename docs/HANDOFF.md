@@ -1,19 +1,14 @@
 # Handoff
 
-## 2026-11-19 — continuous expanded resource panel
+## 2026-11-19 — full-width purchased-upgrade descriptions
 
-- `fix/mobile-resource-expansion`, PR #100, is open with auto-merge off for
-  manual preview. The owner requested the expanded panel use its header color
-  throughout, appearing as one block. Mobile CSS applies the existing card-cap
-  color to the panel and removes the transparent header's bottom divider.
-- Expanded view still replaces compact chips; real tab/sub-tab changes collapse
-  and remember the panel. Same-view clicks and desktop behavior are preserved.
-  Catch-up controls stay independent. No gameplay/save changes.
-- Resource browser checks passed 320/390/1280px, verifying the matching header
-  background, transparent inner surfaces, no divider, timing stability, saved
-  expansion, navigation collapse, catch-up and resize. Updated screenshot shown
-  in chat. Python syntax/diff checks passed; CSS-only, no rebuild needed.
-- Previous prestige-test repair explicitly expands details before checking reset
-  visibility; prestige/outer-map, offline and preview isolation checks passed.
-- Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-100/ — update
-  pending push/CI. Preserve unrelated work/ and Python caches.
+- `polish/purchased-upgrades-view`, PR #101: manual preview, auto-merge off.
+  Already incorporates main dc89fb7 (#100).
+- Purchased upgrade help now expands below its title/button at full row width,
+  preserving their position and size. CSS grid includes native details-content
+  wrapper handling. Mobile direct list and desktop history disclosure retained.
+- Navigation regression passed 320/390px; focused full-width description and
+  stable-control geometry checks passed 320/390/1280px. Python syntax and diff
+  checks passed. Actual mobile screenshot shown in chat. CSS-only presentation;
+  no engine/save changes or rebuild needed.
+- Preserve unrelated work/ and Python caches.
