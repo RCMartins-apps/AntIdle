@@ -8,6 +8,7 @@ case class Lineage(
     satelliteNests: Boolean = false,
     drySeasonActive: Boolean = false,
     drySeasonCompleted: Boolean = false,
+    foundingProvisions: Boolean = false,
 )
 object Lineage {
   implicit val encoder: JsonEncoder[Lineage] = DeriveJsonEncoder.gen[Lineage]

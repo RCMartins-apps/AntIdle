@@ -69,7 +69,7 @@ def check_prestige(page, width, url):
     first = save_game(page)
     assert first['ants']['lineage'] == {
         'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False, 'satelliteNests': False,
-        'drySeasonActive': False, 'drySeasonCompleted': False,
+        'drySeasonActive': False, 'drySeasonCompleted': False, 'foundingProvisions': False,
     }
     assert first['ants']['workers'] == 0 and first['ants']['daughterQueens'] == 0
     assert first['basicResources']['sugar']['amount'] == 0
