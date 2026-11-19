@@ -1145,7 +1145,7 @@ object MainForm {
                 ants.availableWorkersCount >= u && ants.repletes / u < nest.chambers.repleteChamber.level && resources.hasResources(RepleteProgression.cost)
               },
               costSignal = Val(RepleteProgression.cost),
-              bonusSignal = Val(ActionBonus(maxWater = RepleteProgression.WaterPerReplete)),
+              bonusSignal = antsSignal.map(a => ActionBonus(maxWater = RepleteProgression.waterPerReplete(a.lineage))).distinct,
               requirementsSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
                 List(ActionRequirement("replete slots", Math.max(0L, nest.chambers.repleteChamber.level.toLong * u - ants.repletes)))
               },
@@ -1375,7 +1375,11 @@ object MainForm {
     val step = Var(0)
     val selected = Var(Set.empty[String])
     val acknowledged = Var(false)
-    val planned = snapshotSignal.combineWith(selected.signal).map { case (data, choices) => Prestige.plan(data, choices.toSeq) }
+    val drySeason = Var(false)
+    val planned = snapshotSignal.combineWith(selected.signal, drySeason.signal).map {
+      case (data, choices, challenge) => Prestige.plan(data, choices.toSeq, challenge)
+    }
+    val challengeAvailable = antsSignal.map(a => DrySeasonChallenge.canEnter(a.lineage)).distinct
     def buttonFor(label: String)(action: => Unit) = button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
       label, onClick --> (_ => action))
     def advance(next: Int): Unit = { acknowledged.set(false); step.set(next) }
@@ -1420,6 +1424,31 @@ object MainForm {
           div(className := "small mt-2", s"Research reset (${data.upgrades.upgrades.count(_._2.unlocked)}): ",
             data.upgrades.upgrades.toSeq.filter(_._2.unlocked).sortBy(_._1.title).map(_._1.title).mkString(", "))
       })
+    def challengeChoice = div(
+      child.maybe <-- challengeAvailable.map(available => Option.when(available)(
+        div(className := "dry-season-choice border rounded p-2 my-2",
+          label(className := "d-flex align-items-center gap-2", minHeight.px := 44,
+            input(typ := "checkbox", className := "form-check-input", checked <-- drySeason.signal,
+              onChange.mapToChecked --> (enabled => { drySeason.set(enabled); acknowledged.set(false) })),
+            b("Found in the Dry Season")),
+          div(className := "small", DrySeasonChallenge.description)))),
+    )
+    def challengeStatus = div(
+      child.maybe <-- snapshotSignal.map { data =>
+        Option.when(data.ants.lineage.drySeasonActive)((data.nestAttributes.dryClearingOutpost,
+          data.ants.repletes / u, data.ants.daughterQueens >= u, DrySeasonChallenge.earnsReward(data)))
+      }.distinct.map(_.map { case (outpost, repletes, queen, reward) =>
+        div(className := "dry-season-status border rounded p-2 my-2",
+          b("Dry Season"),
+          div(className := "small", "Dew gathered: −50%"),
+          div(className := "small", if (outpost) "Dry Clearing Outpost established" else "Establish Dry Clearing Outpost"),
+          div(className := "small", s"$repletes/${DrySeasonChallenge.RequiredRepletes} living repletes"),
+          div(className := "small", if (reward && queen) s"On founding: +${DrySeasonChallenge.WaterBonus / u} water capacity per replete"
+            else if (!queen) "Raise a daughter queen to finish."
+            else "Founding now ends the challenge without its reward.")) }),
+      child.maybe <-- antsSignal.map(_.lineage.drySeasonCompleted).distinct.map(done => Option.when(done)(
+        div(className := "small", s"Dry Season completed · +${DrySeasonChallenge.WaterBonus / u} water capacity per replete"))),
+    )
     def newResearch = detailsTag(rememberDetails("lineage.research"), className := "understanding-research my-2", summaryTag(minHeight.px := 44, "New colony research"),
       div(className := "small text-body-secondary my-2", "Each needs 3 studies at its outer site. Colony research resets on founding."),
       Seq(UpgradeType.AphidShelters, UpgradeType.TrailLogistics, UpgradeType.CoordinatedExpeditions).map { upgrade =>
@@ -1461,6 +1490,7 @@ object MainForm {
         val known = Prestige.understandings.filter(_.owned(a.lineage)).map(_.title)
         if (known.isEmpty) "Understandings: none yet" else "Inherited: " + known.mkString(", ")
       }.distinct),
+      challengeStatus,
       child <-- step.signal.distinct.map {
         case 0 => div(className := "founding-step", dataAttr("step") := "rewards",
           h5(className := "mt-3", "1. Founding rewards"), rewardRows,
@@ -1483,7 +1513,7 @@ object MainForm {
             button(typ := "button", className := "btn btn-primary", minHeight.px := 44, "Review founding",
               disabled <-- planned.map(_.isEmpty), onClick --> (_ => advance(2)))))
         case _ => div(className := "founding-step", dataAttr("step") := "confirmation",
-          h5(className := "mt-3", "3. Confirm daughter colony"), rewardRows,
+          h5(className := "mt-3", "3. Confirm daughter colony"), rewardRows, challengeChoice,
           div(className := "selected-understandings", child.text <-- planned.map(_.map(l =>
             "Inherited Understandings: " + Prestige.understandings.filter(_.owned(l)).map(_.title).mkString(", ")).getOrElse("Invalid selection"))),
           resetRows,
@@ -1496,7 +1526,7 @@ object MainForm {
             button(className := "btn btn-primary", typ := "button", minHeight.px := 44, "Found daughter colony",
               disabled <-- snapshotSignal.combineWith(planned, acknowledged.signal).map { case (data, plan, yes) => !yes || plan.isEmpty || !Prestige.canFound(data) },
               onClick --> (_ => {
-                if (acknowledged.now()) { Actions.foundDaughterColony(selected.now().toSeq); selected.set(Set.empty); advance(0) }
+                if (acknowledged.now()) { Actions.foundDaughterColony(selected.now().toSeq, drySeason.now()); selected.set(Set.empty); drySeason.set(false); advance(0) }
               }))),
           div(className := "text-danger small mt-2", child.text <-- antsSignal.map(a => if (a.daughterQueens < u) "Requires 1 ready daughter queen." else "")))
       })
@@ -1905,7 +1935,7 @@ object MainForm {
               s"+${preciseRateStr(ColonyDevelopment.tunnelingPerWorkerTick(upgrades) * TicksPerSecond)} tunneling space per second / ant"
             }
           )
-        case AntTask.WaterCollector => div("+0.15 water/s per worker · 5 places")
+        case AntTask.WaterCollector => div(child.text <-- antsSignal.map(a => s"+${preciseRateStr(OutpostProgression.dewPerWorkerSecond(a.lineage))} water/s per worker · 5 places").distinct)
         case AntTask.SeedForager =>
           div(child.text <-- seedForagerRates.map(_ + " per forager"))
         case AntTask.Scavenger =>
@@ -1982,7 +2012,7 @@ object MainForm {
           div(className := "aphid-stock", child.text <-- nestSignal.map(n => s"${n.aphids}/${AphidHusbandry.housing(n)} aphids")),
           child.text <-- antsSignal.combineWith(statisticsData.signal).map { case (a, stats) => s"+${resourceRateStr(ColonyMilestones.sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, a.lineage), stats))} sugar/s · −0.01 protein/s each" },
           child.maybe <-- proteinSignal.combineWith(amountSignal).map { case (protein, amount) => Option.when(protein.amount == 0L && amount > 0L)(div(className := "text-danger", "Needs protein")) })
-        case AntTask.WaterCollector => div("+0.15 water/s each")
+        case AntTask.WaterCollector => div(child.text <-- antsSignal.map(a => s"+${preciseRateStr(OutpostProgression.dewPerWorkerSecond(a.lineage))} water/s each").distinct)
         case AntTask.SeedForager => div(child.text <-- seedForagerRates.map(_ + " each"),
           child.maybe <-- antsSignal.combineWith(resourcesSignal).map { case (ants, resources) =>
             if (ants.taskWorkers(antTask) == 0L) None

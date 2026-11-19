@@ -1046,3 +1046,10 @@ button, preserving both controls' size and position when toggled.
 The third introductory Understanding gives a shorter route back to Dry Clearing
 and unlocks an exclusive current-colony choice between food production and faster
 scout studies. Both options use water and existing castes. See [Prestige](PRESTIGE.md#satellite-nests).
+
+## D66: Dry Season is the first optional challenge founding
+
+After Satellite Nests, players can choose a daughter colony with weaker dew
+production. Dry Clearing and two living repletes at the next founding earn a
+permanent water capacity bonus. Players can leave by founding normally and retry
+later. See [Dry Season](PRESTIGE.md#dry-season-challenge-founding).

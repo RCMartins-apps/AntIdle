@@ -53,8 +53,8 @@ object Actions {
 
   def purchaseUnderstanding(id: String): Unit = actionUpdater.writer.onNext(Prestige.purchase(_, id))
 
-  def foundDaughterColony(selected: Seq[String] = Nil): Unit = actionUpdater.writer.onNext { data =>
-    val next = Prestige.found(data, selected)
+  def foundDaughterColony(selected: Seq[String] = Nil, drySeason: Boolean = false): Unit = actionUpdater.writer.onNext { data =>
+    val next = Prestige.found(data, selected, drySeason)
     if (next != data) {
       Utils.pause = true
       scala.scalajs.js.timers.setTimeout(0) {
