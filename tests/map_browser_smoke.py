@@ -117,6 +117,7 @@ def check_map(page, width, url):
     expect(purchased).not_to_have_attribute('open', '')
     if width <= 767:
         select_tab(page, 'Purchased')
+        expect(purchased.locator(':scope > summary')).not_to_be_visible()
     else:
         purchased.locator('summary').first.click()
     expect(purchased).to_contain_text('Expedition Supplies 1')

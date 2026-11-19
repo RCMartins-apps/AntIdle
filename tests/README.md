@@ -172,3 +172,7 @@ after Standard Worker Development, without changing control names or layout.
 Nest navigation checks cover Brood/Jobs/Chambers icons, no standalone Jobs
 primary button, remembered Jobs return, arrow keys within visible sub-tabs,
 phone fit/desktop resize and live idle-worker counts after assignment.
+
+Purchased mobile navigation checks require the list to open directly with no
+visible disclosure heading; map purchase-history checks retain persistence and
+verify desktop disclosure behavior.

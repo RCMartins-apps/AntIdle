@@ -1016,3 +1016,10 @@ retain the strip when Milestones needs it. Escape returns to the prior view.
 
 The worker-assignment sub-tab is named Jobs (Brood · Jobs · Chambers). Internal
 tasks identifiers remain unchanged; the visible label also changes on desktop.
+
+## D64: Purchased sub-tab shows its list directly
+
+The mobile Purchased sub-tab needs no repeated Purchased upgrades title or
+collapse control. Open its shared list directly with no extra border/spacing.
+Keep per-upgrade info buttons. Desktop history retains its disclosure because
+it is part of the combined Upgrades screen there, not a separate sub-tab.

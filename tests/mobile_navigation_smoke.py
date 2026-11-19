@@ -84,6 +84,8 @@ def check(page, width, url):
     assert page.locator('.card-tabs').evaluate("el => [...el.querySelectorAll('a')].filter(a => a.getClientRects().length).every(a => a.scrollWidth <= a.clientWidth + 1)")
     select_tab(page, 'Purchased')
     expect(page.locator('.purchased-upgrades')).to_be_visible()
+    expect(page.locator('.purchased-upgrades > summary')).not_to_be_visible()
+    expect(page.locator('.purchased-upgrades')).to_have_attribute('open','')
     expect(page.locator('.milestone-panel')).not_to_be_visible()
     select_tab(page, 'Lineage')
     select_tab(page, 'Milestones')
