@@ -1,14 +1,14 @@
 # Handoff
 
-## 2026-11-19 — Dry Season challenge founding
+## 2026-11-19 — five approved colony improvements
 
-- `feature/dry-season-challenge` starts from main 0825899 after Satellite Nests.
-  Dry Season is an optional founding with half dew output. Founding again with
-  Dry Clearing Outpost and two living repletes permanently increases water
-  capacity per replete from 100 to 125. See [Prestige](PRESTIGE.md#dry-season-challenge-founding).
-- Passed 315 existing engine tests, 2 new challenge tests, and fastOptJS.
-  Challenge entry and completion passed in Chromium at 320, 390 and 1280px.
-  Captured the mobile entry and progress cards. The regular prestige smoke
-  passed at the same widths after bypassing the proxy for the local server.
-- Challenge pacing still needs a full playthrough. Preserve unrelated scratch
-  files and Python caches.
+- Royal care feedback (#104), safe crew sizing (#105), finite site survey
+  orders (#106), Founding Provisions (#107), and Refuse Midden (#108) have
+  separate PRs. Check GitHub for current merge state.
+- The combined development bundle passed 317 existing engine tests and four
+  targeted mechanic tests. The five player flows passed at 390 and 1280 px.
+  Mobile screenshots were captured.
+- Founding Provisions ends the introductory Understanding sequence. The midden
+  gives ordinary brood up to 20% faster care with active Refuse Carriers and a
+  clean nursery. Its staffing and pacing still need a full playthrough.
+- Preserve unrelated scratch files and Python caches.
