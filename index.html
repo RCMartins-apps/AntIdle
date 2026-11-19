@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="7e83527e782c3ef09adebe71">
+    <meta name="antidle-build" content="9b80697cf63d89d8be82d303">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -218,8 +218,18 @@
  [data-mobile-view=chambers] #nestContent > .row > .action-cell,
  [data-mobile-view=upgrades] .purchased-upgrades,
  [data-mobile-view=purchased] .upgrades-grid > :not(.purchased-upgrades) {display:none !important}
- [data-mobile-view=purchased] .purchased-upgrades {border:0 !important;margin-top:0 !important}
+ [data-mobile-view=purchased] .purchased-upgrades {border:0 !important;margin-top:0 !important;padding-top:0 !important}
+ [data-mobile-view=purchased] .purchased-upgrades > summary {display:none}
 }
+
+/* Purchased descriptions span the row without resizing its title/help controls. */
+.antidle-app .purchased-upgrade {display:grid !important;grid-template-columns:minmax(0,1fr) 44px}
+.antidle-app .purchased-upgrade > span {grid-column:1;grid-row:1}
+.antidle-app .purchased-upgrade > .info-details,
+.antidle-app .purchased-upgrade > .info-details::details-content {display:contents}
+.antidle-app .purchased-upgrade > .info-details > .info-summary {grid-column:2;grid-row:1;align-self:center}
+.antidle-app .purchased-upgrade > .info-details > .info-content {grid-column:1 / -1;margin-top:0;min-width:0}
+.antidle-app .purchased-upgrade > .info-details:not([open]) > .info-content {display:none}
 
 .mobile-resource-toggle {display:none}
 @media (max-width:767px) {
@@ -309,7 +319,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.07a7ba784591fef1.js"></script>
+<script type="text/javascript" src="game.4283e8f725155e87.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
