@@ -1412,15 +1412,16 @@ object MainForm {
       row("DNA carried forward", planned.map(_.map(_.dna.toString).getOrElse("Invalid selection"))),
     )
     def resetRows = detailsTag(rememberDetails("lineage.reset"), className := "founding-reset my-2", summaryTag(minHeight.px := 44, "Colony reset: exact values"),
-      children <-- snapshotSignal.map { data =>
+      children <-- snapshotSignal.combineWith(planned).map { case (data, plan) =>
         val fresh = AllData.initial
+        val starting = Prestige.startingResources(plan.getOrElse(data.ants.lineage))
         def resource(label: String, before: BasicResource, after: BasicResource) = {
           def stock(r: BasicResource) = prettyNumberStr(r.amount) + (if (r.maxAmount == Long.MaxValue) "" else s"/${prettyNumberStr(r.maxAmount)}")
           label -> s"${stock(before)} → ${stock(after)}"
         }
         val a = data.ants
         val values = Seq(
-          resource("Sugar", data.basicResources.sugar, fresh.basicResources.sugar),
+          resource("Sugar", data.basicResources.sugar, starting.sugar),
           resource("Protein", data.basicResources.protein, fresh.basicResources.protein),
           resource("Water", data.basicResources.water, fresh.basicResources.water),
           resource("Resin", data.basicResources.resin, fresh.basicResources.resin),
@@ -1608,14 +1609,14 @@ object MainForm {
           ),
           activityStatus(statusSignal, "royal-care-status small"),
           div(className := "small text-body-secondary my-1",
-            child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
-              brood.map { b =>
-                val ticks = RoyalBroodProgression.remainingTicks(b, count)
-                if (ticks < 0L) ""
-                else s"~${prettyTimeFromTicks(ticks)} remaining"
-              }.getOrElse("")
+            child.text <-- broodSignal.combineWith(nursesSignal, statusSignal).map { case (brood, count, status) =>
+              val ticks = brood.filter(_ => status.startsWith("Tending ")).map(RoyalBroodProgression.remainingTicks(_, count)).getOrElse(-1L)
+              if (ticks < 0L) "" else s"~${prettyTimeFromTicks(ticks)} remaining at current staffing"
             },
           ),
+          child.maybe <-- statusSignal.map(status => Option.when(status == "Needs Royal Nurses")(
+            button(className := "btn btn-outline-primary me-2 mt-1", minHeight.px := 44, typ := "button", "Assign Royal Nurses",
+              onClick --> (_ => Option(dom.document.getElementById("tasks-tab")).foreach(_.asInstanceOf[dom.html.Element].click()))))),
           button(className := "btn btn-outline-primary royal-care-toggle mt-1", minHeight.px := 44,
             `type` := "button",
             child.text <-- broodSignal.map(b => if (b.exists(_.paused)) "Resume care" else "Pause care"),
@@ -2168,6 +2169,34 @@ object MainForm {
         ).amend(className := "col-12"),
       )
     }
+    def surveyOrderControls(id: String): ReactiveHtmlElement[HTMLDivElement] = div(
+      child.maybe <-- snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) =>
+        val e = data.exploration
+        val completed = ExplorationMap.studies(e, id)
+        e.surveyOrder match {
+          case Some(order) if order.site == id =>
+            val status = if (ExplorationMap.busy(e, id, "study")) "Studying"
+              else "Waiting for scouts, supplies or a mission slot"
+            Some((s"$status · $completed/${order.target} studies", true, false))
+          case None =>
+            SurveyOrders.nextDiscovery(e, id).filter(_.trips - completed >= 2).map { discovery =>
+              val trips = discovery.trips - completed
+              val cost = ExplorationMap.scoutCost(count, ExplorationMap.supportedStudy(data, id, count))
+              val water = if (cost.water > 0L) s" · ${prettyNumberStr(cost.water * trips)} water" else ""
+              (s"${discovery.title} · $completed/${discovery.trips} studies · ${prettyNumberStr(cost.sugar * trips)} sugar$water",
+                false, ExplorationMap.canScout(data, id, count))
+            }
+          case _ => None
+        }
+      }.distinct.map(_.map { case (summary, active, canStart) =>
+        div(className := "small mb-2",
+          div(summary),
+          if (active) button(typ := "button", className := "btn btn-outline-secondary", minHeight.px := 44,
+            "Stop survey order", onClick --> (_ => Actions.cancelSurveys()))
+          else button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44,
+            "Study until discovery", disabled := !canStart, onClick --> (_ => Actions.orderSurveys(id, scoutCrew.now()))))
+      }),
+    )
     def trailControls(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(
       child.maybe <-- antsSignal.map(_.lineage.sharedPaths).distinct.map(known =>
         Option.when(known && !RaidProgression.isRaid(route))(div(className := "collection-trail border rounded p-2 mt-2", dataAttr("route") := route.id,
@@ -2239,6 +2268,14 @@ object MainForm {
         },
         onClickAction = _ => useSignalValue[Long](workers, Actions.explore(_, route)),
       ).amend(className := "col-12"),
+      if (RaidProgression.isRaid(route)) emptyNode else {
+        val fitted = snapshotSignal.map(data => ExplorationHelper.fitCrew(data, route)).distinct
+        button(typ := "button", className := "btn btn-sm btn-outline-secondary mt-2", minHeight.px := 44,
+          display <-- fitted.map(_.fold("none")(_ => "")),
+          disabled <-- fitted.combineWith(workers).map { case (crew, current) => crew.forall(_ == current) },
+          child.text <-- fitted.map(_.fold("Fit crew")(n => s"Fit crew: ${n / u}")),
+          onClick --> (_ => useSignalValue[Option[Long]](fitted, _.foreach(requestedWorkers.set))))
+      },
       trailControls(route),
     )
     def relocateAphids: ReactiveHtmlElement[HTMLDivElement] = div(className := "aphid-relocation",
@@ -2273,6 +2310,7 @@ object MainForm {
           if (ExplorationMap.outerSites.exists(_.id == id)) div(className := "site-unlock small mb-2", unlockLabel) else emptyNode,
           p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
           child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
+          surveyOrderControls(id),
           child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
             site.routes.flatMap(id => ExplorationDestination.all.find(_.id == id)).exists(route =>
               route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L)

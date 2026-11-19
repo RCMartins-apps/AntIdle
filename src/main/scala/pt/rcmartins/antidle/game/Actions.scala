@@ -130,6 +130,9 @@ object Actions {
 
   def relocateAphids(): Unit = actionUpdater.writer.onNext(AphidRelocation.start)
 
+  def orderSurveys(site: String, count: Int): Unit = actionUpdater.writer.onNext(SurveyOrders.start(_, site, count))
+  def cancelSurveys(): Unit = actionUpdater.writer.onNext(SurveyOrders.cancel)
+
   def scoutMap(site: String, count: Int): Unit = actionUpdater.writer.onNext(ExplorationMap.scout(_, site, count))
 
 

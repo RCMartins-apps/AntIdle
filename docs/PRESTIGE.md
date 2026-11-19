@@ -115,3 +115,10 @@ water capacity per replete from 100 to 125. The reward applies to all future
 colonies, and successful lineages retire the challenge. Standard DNA and sugar
 bonuses apply to both challenge and ordinary foundings. Existing saves default
 to an inactive, incomplete challenge.
+
+## Founding Provisions
+
+The fourth and final introductory Understanding costs 1 DNA after Satellite
+Nests. A new colony begins with enough sugar for three small-worker eggs.
+Buying it with banked DNA affects future foundings. Provisions are starting
+stock, so they do not count toward sugar gathered or carry across resets.
