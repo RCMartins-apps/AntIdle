@@ -1037,3 +1037,6 @@ The mobile Purchased sub-tab needs no repeated Purchased upgrades title or
 collapse control. Open its shared list directly with no extra border/spacing.
 Keep per-upgrade info buttons. Desktop history retains its disclosure because
 it is part of the combined Upgrades screen there, not a separate sub-tab.
+
+Expanded purchased-upgrade help spans the full row below the title and info
+button, preserving both controls' size and position when toggled.

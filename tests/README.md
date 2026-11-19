@@ -184,3 +184,6 @@ visibility. UI flows explicitly expand resources before inspecting detailed rows
 Purchased mobile navigation checks require the list to open directly with no
 visible disclosure heading; map purchase-history checks retain persistence and
 verify desktop disclosure behavior.
+
+Purchased help checks assert full-row description width and unchanged title/info
+button geometry when toggled, including long upgrade names on narrow phones.

@@ -26,6 +26,8 @@ def check(page, width, url):
     base = save_game(page)
     game = progressed_game(base)
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
+    for upgrade in game['upgrades']['upgrades']:
+        if upgrade['name']=='StandardWorkers':upgrade['unlocked']=True
     game['exploration'].update(revealedSites=6, surveys={'woodland-edge':1,'rival-food-cache':1})
     load_game(page, game)
     for name in ['Jobs', 'Explore', 'Upgrades', 'Lineage', 'Settings', 'Nest']:
@@ -86,6 +88,21 @@ def check(page, width, url):
     expect(page.locator('.purchased-upgrades')).to_be_visible()
     expect(page.locator('.purchased-upgrades > summary')).not_to_be_visible()
     expect(page.locator('.purchased-upgrades')).to_have_attribute('open','')
+    purchased=page.locator('.purchased-upgrade').filter(has=page.get_by_text('Standard Worker Development',exact=True))
+    label=purchased.locator(':scope > span')
+    info=purchased.locator('.info-summary')
+    before=[label.bounding_box(),info.bounding_box()]
+    expect(purchased.locator('.info-content')).not_to_be_visible()
+    info.click()
+    expect(purchased.locator('.info-content')).to_be_visible()
+    after=[label.bounding_box(),info.bounding_box()]
+    assert all(abs(a[k]-b[k])<=1 for a,b in zip(before,after) for k in ['x','y','width','height']), (before,after)
+    row_box=purchased.bounding_box();description=purchased.locator('.info-content').bounding_box()
+    assert abs(description['x']-row_box['x'])<=1 and abs(description['width']-row_box['width'])<=1,(row_box,description)
+    assert description['y']>=max(b['y']+b['height'] for b in after)
+    info.click()
+    expect(purchased.locator('.info-content')).not_to_be_visible()
+
     expect(page.locator('.milestone-panel')).not_to_be_visible()
     select_tab(page, 'Lineage')
     select_tab(page, 'Milestones')

@@ -221,6 +221,15 @@
  [data-mobile-view=purchased] .purchased-upgrades > summary {display:none}
 }
 
+/* Purchased descriptions span the row without resizing its title/help controls. */
+.antidle-app .purchased-upgrade {display:grid !important;grid-template-columns:minmax(0,1fr) 44px}
+.antidle-app .purchased-upgrade > span {grid-column:1;grid-row:1}
+.antidle-app .purchased-upgrade > .info-details,
+.antidle-app .purchased-upgrade > .info-details::details-content {display:contents}
+.antidle-app .purchased-upgrade > .info-details > .info-summary {grid-column:2;grid-row:1;align-self:center}
+.antidle-app .purchased-upgrade > .info-details > .info-content {grid-column:1 / -1;margin-top:0;min-width:0}
+.antidle-app .purchased-upgrade > .info-details:not([open]) > .info-content {display:none}
+
 .mobile-resource-toggle {display:none}
 @media (max-width:767px) {
  .desktop-resource-heading {display:none}
