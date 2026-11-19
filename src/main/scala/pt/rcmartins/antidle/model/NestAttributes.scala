@@ -13,6 +13,8 @@ case class NestAttributes(
     maxAnts: Long = NestUpgradeBonusMaxAnts,
     maxBuildQueue: Int = 1,
     dryClearingOutpost: Boolean = false,
+    middenBuilt: Boolean = false,
+    nurseryRefuse: Long = 0L,
     dryClearingExtensions: Int = 0,
     dryClearingSpecialization: String = "",
     aphidPlacesPerLevel: Int = 10, // Derived from current-colony research on reconciliation.

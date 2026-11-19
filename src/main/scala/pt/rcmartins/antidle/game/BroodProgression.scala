@@ -117,9 +117,10 @@ object BroodProgression {
     2L * u * (if (upgrades(UpgradeType.NurseTraining).unlocked) MilestoneResearch.NurseCarePercent else 100L) / 100L
   def nursePower(ants: AntsData, upgrades: UpgradesData = UpgradesData.initial): Long =
     ants.taskWorkers(AntTask.BroodNurse) / u * carePerNurse(upgrades) + ants.smallNurses / u * carePerNurse(upgrades) / 2L
-  private def tend(a: AntsData, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
+  private def tend(a: AntsData, nest: NestAttributes, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
     val count = a.eggsAndLarvae.size
-    val boost = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L
+    val broodCare = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L
+    val boost = if (Midden.clean(a, nest)) broodCare * (100L + Midden.CareBonusPercent) / 100L else broodCare
     var budget = (3L * u + nursePower(a, upgrades)) * boost / 100L
     val perBrood = (if (nursePower(a, upgrades) > 0L) 2L * u else u) * boost / 100L
     var resources = initialResources
@@ -153,14 +154,14 @@ object BroodProgression {
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val afterRoyal = projected.spendResources(royal.cost)
     val available = afterRoyal
-    val after = tend(ants, upgrades, available)._2
+    val after = tend(ants, nest, upgrades, available)._2
     ActionCost(sugar = available.sugar.amount - after.sugar.amount, protein = available.protein.amount - after.protein.amount)
   }
   def tick(initial: AllData): AllData = {
     val data = reconcile(initial)
     val a = data.ants
     val count = a.eggsAndLarvae.size
-    val (broods, resources) = tend(a, data.upgrades, data.basicResources)
+    val (broods, resources) = tend(a, data.nestAttributes, data.upgrades, data.basicResources)
     val (adults, growing) = broods.partition {
       case b: AntBrood.Developing => b.care >= b.totalCare
       case _ => false
@@ -172,6 +173,7 @@ object BroodProgression {
       scouts = a.scouts + scouts * u, eggsAndLarvae = growing, layingCooldown = Math.max(0L, a.layingCooldown - 1L),
       broodCursor = if (count == 0) 0 else (a.broodCursor + 1) % count)
     DefaultWorkerAssignment.normalize(PopulationAging.reconcile(data.copy(ants = ants, basicResources = resources,
+      nestAttributes = data.nestAttributes.copy(nurseryRefuse = Midden.nextRefuse(a, data.nestAttributes)),
       statistics = data.statistics.copy(workersMatured = data.statistics.workersMatured.addValue(small + workers),
         smallWorkersMatured = data.statistics.smallWorkersMatured.addValue(small), scoutsMatured = data.statistics.scoutsMatured.addValue(scouts),
         maxAliveWorkers = data.statistics.maxAliveWorkers.max(ants.totalWorkersCount)))))
