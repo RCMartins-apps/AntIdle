@@ -1,28 +1,18 @@
 # Handoff
 
-## 2026-11-18 — expanded mobile resources without duplication
+## 2026-11-19 — repair resource preview PR #100
 
-- `fix/mobile-resource-expansion` starts at main 0c5561a, merged #99. The owner
-  requested detailed rows replace compact chips when the resources panel opens
-  (D63). Authoritative follow-up is this branch. Owner requested a PR for preview;
-  leave auto-merge off.
-- Expanded mobile view hides compact chips but retains Resources/collapse and
-  catch-up controls. Collapsing restores the live compact view and saved state.
-  Expanded toggle no longer references hidden summary data in aria-describedby.
-- Resource/catch-up/timing browser checks passed 320/390/1280px, including reload,
-  resize and stable timing. Expanded/collapsed screenshots shown in chat. Syntax
-  and diff checks passed. CSS/JS only; no game rebuild or engine changes needed.
-- After discovering #99 had merged, cherry-picked the tested patch to current
-  main and verified UI/test files are identical to the tested version. #99's
-  description restored to merged scope and preview marked removed. No merges
-  performed. Preserve unrelated work/ and Python caches.
-
-- Navigation follow-up: observe actual data-mobile-view changes and collapse
-  Resources on mobile, saving false. Ignore same-view clicks, initialization,
-  live ticks and desktop navigation. Tests cover primary/sub-tab changes and
-  persistence; production UI assertions explicitly open resource details when
-  inspecting them. Updated screenshot shown in chat. Resource/navigation checks
-  passed 320/390px and resource timing/catch-up at 1280px. Refreshed production
-  build passed with zero Closure warnings/errors; production UI gate passed
-  390/1280px. JavaScript/Python syntax and diff checks passed. Ready for manual
-  preview PR; no auto-merge authorized.
+- `fix/mobile-resource-expansion`, PR #100, stays open for manual preview with
+  auto-merge off. Base is main 0c5561a (#99). Feature: expanded mobile Resources
+  replaces compact chips; actual tab/sub-tab changes collapse and remember it.
+  Same-view clicks, initialization, live ticks and desktop navigation do not.
+- CI passed earlier game/browser checks, but prestige_smoke.py expected visible
+  resource rows after founding had changed views and collapsed Resources.
+  Both post-founding assertions now explicitly expand the panel first, keeping
+  the reset-visibility checks intact. No gameplay or UI code changed in repair.
+- Production prestige suite passed 320/390/1280px; offline play/update checks
+  passed 390/1280px and packaged preview save/worker isolation passed. Python
+  syntax/diff checks passed. Push reruns CI; auto-merge remains off.
+- Preview: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-100/ — pending
+  successful CI/deployment. No new screenshots needed for test-only repair.
+  Preserve unrelated work/ and Python caches.
