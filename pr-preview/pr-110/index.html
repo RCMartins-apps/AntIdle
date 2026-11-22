@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="25694c33735b27e83078fea8">
+    <meta name="antidle-build" content="04ded53e0a3d929ab7a4fac2">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -300,14 +300,10 @@
 .antidle-app .task-controls {display:flex;flex:0 0 auto;justify-content:flex-end;width:auto;padding-left:0;margin-left:auto}
 .antidle-app .task-controls .btn {min-width:44px;min-height:44px}
 .antidle-app .small-worker-job {padding-right:0;margin-left:0;margin-right:0}
-.small-workers-summary {font-weight:600;line-height:44px;cursor:pointer}
-/* Keep worker totals visible and aligned in both disclosure states. */
-.standard-workers-summary {display:flex;align-items:center;gap:.35rem;min-height:44px;list-style:none;font-weight:600;cursor:pointer}
-.standard-workers-summary::-webkit-details-marker {display:none}
-.standard-workers-summary::before {content:"";width:0;height:0;border-block:.24em solid transparent;border-inline-start:.34em solid currentColor}
-.standard-worker-tasks[open] > .standard-workers-summary::before {transform:rotate(90deg)}
+/* Both worker cards use the same native marker as Brood and other disclosures. */
+.small-workers-summary, .standard-workers-summary {display:list-item;font-weight:600;line-height:44px;cursor:pointer}
 .worker-summary-title, .idle-worker-summary {white-space:nowrap}
-.idle-worker-summary {margin-inline-start:auto;font-weight:400}
+.idle-worker-summary {float:inline-end;font-weight:400}
 .standard-worker-jobs > .task-row {margin-inline:0}
 .jobs-panel .job-label {padding-inline:0 .25rem}
 .jobs-panel .job-rate {display:inline-flex;align-items:center;gap:.15rem;white-space:nowrap;margin-inline-end:.4rem}
@@ -330,7 +326,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.d58df71763c5bf92.js"></script>
+<script type="text/javascript" src="game.53bff4b65d88f21c.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
