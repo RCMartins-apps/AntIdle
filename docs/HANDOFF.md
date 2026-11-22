@@ -3,7 +3,8 @@
 ## 2026-11-22 — compact Jobs cards
 
 - `polish/mobile-worker-cards` from main c6bab7f (#109). Small and standard
-  workers have independent disclosures. The standard card keeps the worker
+  workers have independent disclosures with matching native arrows. The standard
+  card keeps the worker
   total and a positive idle count visible in its header.
 - Jobs show compact resource icon rates and no description panels. Disabled
   assign buttons retain their reasons in titles, without an extra row.

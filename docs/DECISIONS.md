@@ -1068,7 +1068,8 @@ remaining legacy timer expires normally.
 
 ## D68: Compact Jobs cards
 
-Standard and small workers use separate collapsible cards. Standard Workers
+Standard and small workers use separate collapsible cards with the same
+native disclosure arrow as other sections. Standard Workers
 shows its total in the header and shows an idle count only when positive.
 Jobs rows show counts and resource icon rates directly. Assignment blockers
 are button descriptions and do not reserve visible rows. Phones use compact

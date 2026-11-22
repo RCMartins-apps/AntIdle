@@ -299,14 +299,10 @@
 .antidle-app .task-controls {display:flex;flex:0 0 auto;justify-content:flex-end;width:auto;padding-left:0;margin-left:auto}
 .antidle-app .task-controls .btn {min-width:44px;min-height:44px}
 .antidle-app .small-worker-job {padding-right:0;margin-left:0;margin-right:0}
-.small-workers-summary {font-weight:600;line-height:44px;cursor:pointer}
-/* Keep worker totals visible and aligned in both disclosure states. */
-.standard-workers-summary {display:flex;align-items:center;gap:.35rem;min-height:44px;list-style:none;font-weight:600;cursor:pointer}
-.standard-workers-summary::-webkit-details-marker {display:none}
-.standard-workers-summary::before {content:"";width:0;height:0;border-block:.24em solid transparent;border-inline-start:.34em solid currentColor}
-.standard-worker-tasks[open] > .standard-workers-summary::before {transform:rotate(90deg)}
+/* Both worker cards use the same native marker as Brood and other disclosures. */
+.small-workers-summary, .standard-workers-summary {display:list-item;font-weight:600;line-height:44px;cursor:pointer}
 .worker-summary-title, .idle-worker-summary {white-space:nowrap}
-.idle-worker-summary {margin-inline-start:auto;font-weight:400}
+.idle-worker-summary {float:inline-end;font-weight:400}
 .standard-worker-jobs > .task-row {margin-inline:0}
 .jobs-panel .job-label {padding-inline:0 .25rem}
 .jobs-panel .job-rate {display:inline-flex;align-items:center;gap:.15rem;white-space:nowrap;margin-inline-end:.4rem}
