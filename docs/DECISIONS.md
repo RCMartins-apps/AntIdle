@@ -1074,3 +1074,9 @@ shows its total in the header and shows an idle count only when positive.
 Jobs rows show counts and resource icon rates directly. Assignment blockers
 are button descriptions and do not reserve visible rows. Phones use compact
 text and spacing with full-size assignment controls.
+
+## D69: Reuse established UI patterns across the game
+
+Use the same controls, icons and formatting for the same job across screens.
+Compare new or changed elements against their existing counterparts on a phone
+before handoff. The repository UI instructions define the checks.
