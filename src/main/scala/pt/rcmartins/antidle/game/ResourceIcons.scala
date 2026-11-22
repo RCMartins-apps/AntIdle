@@ -61,7 +61,7 @@ object ResourceIcons {
   }
 
   def forBrood(brood: AntBrood): ResourceIcon =
-    if (brood.isEgg) Eggs else if (brood.isLarvae) Larva else Pupa
+    if (brood.isLarvae) Larva else if (brood.isPupae) Pupa else Eggs
 
   def icon(resource: ResourceIcon): ReactiveHtmlElement[HTMLSpanElement] =
     span(

@@ -32,10 +32,12 @@ object EmergencyRecovery {
 
   // One exceptional brood place prevents full, unfed ordinary brood from blocking recovery.
   // The usual population/space limits continue to apply to every ordinary egg.
-  private def lay(data: AllData): AllData = data.copy(
-    ants = data.ants.copy(eggsAndLarvae = data.ants.eggsAndLarvae :+ AntBrood.Developing(data.currentTick, Kind),
-      layingCooldown = 5L * TicksPerSecond, emergencyForagingTicks = 0L),
-    statistics = data.statistics.copy(eggsCount = data.statistics.eggsCount.addValue(1L)))
+  def layingTime(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData): Long =
+    BroodProgression.interval(ants.copy(standardWorkersUnlocked = false), nest, upgrades)
+
+  private def lay(data: AllData): AllData = BroodProgression.beginLaying(
+    data.copy(ants = data.ants.copy(emergencyForagingTicks = 0L)), Kind,
+    layingTime(data.ants, data.nestAttributes, data.upgrades))
     .addMessage("The queen is rearing one small worker to restart sugar collection.")
 
   def raise(data: AllData): AllData =

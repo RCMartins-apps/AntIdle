@@ -20,7 +20,16 @@ class BroodPipelineSuite extends FunSuite {
     val laid = BroodProgression.lay(fresh)
     assertEquals(laid.basicResources.sugar.amount, fresh.basicResources.sugar.amount - 5 * u)
     assertEquals(laid.ants.eggsAndLarvae.head.asInstanceOf[AntBrood.Developing].kind, "small")
-    val adult = (1 to 76).foldLeft(laid)((d, _) => advance(d))
+    val restored = load(laid)
+    assertEquals(restored.ants.layingBrood, laid.ants.layingBrood)
+    val time = restored.ants.layingCooldown.toInt
+    val almostLaid = (1 until time).foldLeft(restored)((d, _) => advance(d))
+    assert(almostLaid.ants.layingBrood.exists(_.care == 0L))
+    assertEquals(almostLaid.statistics.eggsCount.thisRun, 0)
+    val egg = advance(almostLaid)
+    assert(egg.ants.eggsAndLarvae.head.isEgg)
+    assertEquals(egg.statistics.eggsCount.thisRun, 1)
+    val adult = (1 to 76).foldLeft(egg)((d, _) => advance(d))
     assertEquals(adult.ants.smallWorkers, u)
     assertEquals(adult.ants.workers, 0L)
     assert(adult.ants.eggsAndLarvae.isEmpty)
@@ -42,7 +51,7 @@ class BroodPipelineSuite extends FunSuite {
       BroodProgression.nursePower(AntsData(workers = 3 * u, tasks = Seq(AntTask.BroodNurse -> (3 * u)))))
   }
   test("small lifespans are finite from first adulthood, shorter than standard and never reroll") {
-    val adult = (1 to 76).foldLeft(BroodProgression.lay(fresh))((d, _) => advance(d))
+    val adult = (1 to 101).foldLeft(BroodProgression.lay(fresh))((d, _) => advance(d))
     val ages = adult.ants.ages.smallWorkers
     assertEquals(ages.map(_.count).sum, 1L)
     assert(ages.forall(c => c.expiresAt >= adult.currentTick + 30L * 60L * TicksPerSecond && c.expiresAt < adult.currentTick + 40L * 60L * TicksPerSecond))
@@ -56,7 +65,7 @@ class BroodPipelineSuite extends FunSuite {
     val researched = BroodProgression.reconcile(laid.copy(upgrades = laid.upgrades.unlock(StandardWorkers)))
     assert(researched.ants.standardWorkersUnlocked)
     assertEquals(researched.ants.eggsAndLarvae, laid.ants.eggsAndLarvae)
-    val second = BroodProgression.lay(researched.copy(ants = researched.ants.copy(layingCooldown = 0L)))
+    val second = BroodProgression.lay(advance(researched.copy(ants = researched.ants.copy(layingCooldown = 1L))))
     assertEquals(second.ants.eggsAndLarvae.collect { case b: AntBrood.Developing => b.kind }, Seq("small", "worker"))
     assertEquals(BroodProgression.eggCost(second.ants), 10 * u)
     val reset = Prestige.found(second.copy(ants = second.ants.copy(daughterQueens = u)))
@@ -119,7 +128,7 @@ class BroodPipelineSuite extends FunSuite {
     val nursed = normal.copy(ants = AntsData(workers = u, tasks = Seq(AntTask.BroodNurse -> u)),
       nestAttributes = normal.nestAttributes.copy(chambers = normal.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
       upgrades = normal.upgrades.unlock(BroodCare))
-    val grown = (1 to 240).foldLeft(BroodProgression.lay(nursed))((d, _) => advance(d))
+    val grown = (1 to 340).foldLeft(BroodProgression.lay(nursed))((d, _) => advance(d))
     assert(grown.ants.eggsAndLarvae.isEmpty)
     assertEquals(grown.ants.workers, 2 * u)
     assertEquals(nursed.basicResources.sugar.amount - grown.basicResources.sugar.amount, 30 * u)
@@ -214,7 +223,7 @@ class BroodPipelineSuite extends FunSuite {
     val raised = ScoutProgression.raise(d)
     assert(!ScoutProgression.canLay(raised.ants, raised.nestAttributes, raised.basicResources))
     assertEquals(raised.ants.eggsAndLarvae.head.asInstanceOf[AntBrood.Developing].kind, "scout")
-    val adult = (1 to 450).foldLeft(raised)((state, _) => advance(state))
+    val adult = (1 to 550).foldLeft(raised)((state, _) => advance(state))
     assertEquals(adult.ants.scouts, u)
     assertEquals(adult.ants.workers, 0L)
     assertEquals(d.basicResources.sugar.amount - adult.basicResources.sugar.amount, 70 * u)

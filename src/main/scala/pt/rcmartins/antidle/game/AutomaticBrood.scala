@@ -23,7 +23,7 @@ object AutomaticBrood {
     else if (ants.populationCount >= nest.maxAntsCount) "Population limit reached"
     else if (ants.eggsAndLarvae.size >= BroodProgression.capacity(nest)) "Brood places full"
     else if (sugar - routine.sugarReserve < BroodProgression.eggCost(ants)) "Keeping sugar reserve"
-    else if (ants.layingCooldown > 0L) "Queen laying cooldown"
+    else if (ants.layingCooldown > 0L) "Queen is laying"
     else "Raising worker eggs"
   }
 

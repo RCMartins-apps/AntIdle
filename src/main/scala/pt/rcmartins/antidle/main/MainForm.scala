@@ -718,6 +718,7 @@ object MainForm {
                           b(antBlood.name + ": "),
                           child <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
                             antBlood match {
+                              case b: AntBrood.Developing if b.laying => "Laying"
                               case b: AntBrood.Developing => s"${b.care * 100L / b.totalCare}% developed"
                               case _ => prettyTimeFromTicks(Math.max(0L, antBlood.initialTick + ColonyDevelopment.growthTicks(antBlood, upgrades) - currentTick))
                             }
@@ -1036,12 +1037,12 @@ object MainForm {
             b(child.text <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
               s"${prettyNumberStr((ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)).toLong * u)}/${prettyNumberStr(BroodProgression.capacity(nest).toLong * u)}"
             }.distinct)),
-          button(className := "btn btn-outline-danger brood-cancel-orders", typ := "button",
-            aria.label := "Cancel egg orders", title := "Cancel egg orders",
-            span(className := "brood-cancel-icon", aria.hidden := true, "×"),
-            span(className := "brood-cancel-label", "Cancel egg orders"),
-            disabled <-- antsSignal.map(_.queuedEggs == 0).distinct,
-            onClick --> (_ => Actions.cancelEggOrders())),
+          child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map(hasOrders => Option.when(hasOrders)(
+            button(className := "btn btn-outline-danger brood-cancel-orders", typ := "button",
+              aria.label := "Cancel egg orders", title := "Cancel egg orders",
+              span(className := "brood-cancel-icon", aria.hidden := true, "×"),
+              span(className := "brood-cancel-label", "Cancel egg orders"),
+              onClick --> (_ => Actions.cancelEggOrders())))),
         ),
         div(className := "brood-pipeline small mb-2",
           {
@@ -1050,7 +1051,15 @@ object MainForm {
                 BroodProgression.layingStatus(ants, nest, resources, upgrades, exploration, stats)
             }.distinct
             span(className := "activity-status", dataAttr("state") <-- status.map(ActivityStatus.kind).distinct,
-              child <-- status.combineWith(antsSignal.map(a => (a.scoutEggOrders.headOption.contains(0), a.standardWorkersUnlocked)).distinct).map {
+              child <-- status.combineWith(antsSignal.map { a =>
+                a.layingBrood.map(b => (b.kind == "scout", !b.small))
+                  .getOrElse((a.scoutEggOrders.headOption.contains(0), a.standardWorkersUnlocked))
+              }.distinct).map {
+                case (label, scout, standard) if label.startsWith("Laying egg · ") =>
+                  span(className := "brood-next-egg", "Laying ",
+                    ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.forWorker(standard)),
+                    span(className := "visually-hidden", if (scout) "scout" else if (standard) "worker" else "small worker"),
+                    label.stripPrefix("Laying"))
                 case (label, scout, standard) if label.startsWith("Next egg in ") =>
                   span(className := "brood-next-egg", "Next ",
                     ResourceIcons.icon(if (scout) ResourceIcons.Scouts else ResourceIcons.forWorker(standard)),
@@ -1779,8 +1788,13 @@ object MainForm {
     val brood = AntBrood.Developing(0L, kind)
     div(className := "egg-description text-start",
       actionFact("Queue",
-        if (kind == EmergencyRecovery.Kind) "Immediate; bypasses brood limit."
-        else "Shared laying queue; costs paid when laid."),
+        if (kind == EmergencyRecovery.Kind) "Bypasses brood limit."
+        else "Shared laying queue; costs paid when laying starts."),
+      div(className := "action-detail-row", b("Laying time: "),
+        child.text <-- antsSignal.combineWith(nestSignal, upgradesSignal).map { case (ants, nest, upgrades) =>
+          prettyTimeFromTicks(if (kind == EmergencyRecovery.Kind) EmergencyRecovery.layingTime(ants, nest, upgrades)
+            else BroodProgression.interval(ants, nest, upgrades))
+        }.distinct),
       actionFact("Development",
         s"${prettyTimeFromTicks(brood.totalCare / u)} base; varies with care."),
       actionFact("Larval care",
@@ -1833,7 +1847,7 @@ object MainForm {
           ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " water capacity")),
           ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete ${if (value == 1) "slot" else "slots"}"),
           ifGreater0(bonus.broodNurseSlots.toLong)(value => s"+$value Brood Nurse ${if (value == 1) "slot" else "slots"}"),
-          ifGreater0(bonus.layingIntervalReduction)(ticks => s"−${prettyTimeFromTicks(ticks)} laying interval"),
+          ifGreater0(bonus.layingIntervalReduction)(ticks => s"−${prettyTimeFromTicks(ticks)} laying time"),
           ifGreater0(bonus.maxEggs)(prettyNumberSimple("+", _, " brood places")),
           ifGreater0(bonus.maxAnts)(prettyNumberSimple("+", _, " colony slots")),
           ifGreater0(bonus.maxCarcasses.toLong)(value => s"+$value carcass ${if (value == 1) "slot" else "slots"}"),

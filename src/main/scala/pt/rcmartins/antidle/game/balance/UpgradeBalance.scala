@@ -62,7 +62,7 @@ object UpgradeBalance {
       s"+${MilestoneResearch.NurseCarePercent - 100}% Brood Nurse care."),
     QueensRhythm -> UpgradeDefinition("Queen's Rhythm", ActionCost(sugar = 2000L * u, protein = 50L * u, knowledge = 150L * u),
       UpgradeRequirements(upgrades = List(QueensRoutine), explorationTab = true, matureWorkers = 50),
-      s"−${100 - MilestoneResearch.LayingIntervalPercent}% egg-laying interval for workers and scouts. Applies after the next egg."),
+      s"−${100 - MilestoneResearch.LayingIntervalPercent}% laying time for new worker and scout eggs."),
 
     AphidShelters -> UpgradeDefinition("Aphid Shelters", ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
       UpgradeRequirements(upgrades = List(AphidTending), discovery = Some("aphid-shelters"), beyondWoodland = true),

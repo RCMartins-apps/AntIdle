@@ -178,7 +178,9 @@ class ColonyLifecycleSuite extends FunSuite {
     val full = AutomaticBrood.tick(targeted)
     assertEquals(full.ants.eggsAndLarvae.size, 1)
     assertEquals(AutomaticBrood.tick(full), full)
-    assertEquals(full.statistics.eggsCount, initial.statistics.eggsCount.addValue(1))
+    assertEquals(full.statistics.eggsCount, initial.statistics.eggsCount)
+    val finished = (1L to full.ants.layingCooldown).foldLeft(full)((d, _) => BroodProgression.tick(d))
+    assertEquals(finished.statistics.eggsCount, initial.statistics.eggsCount.addValue(1))
   }
 
   test("automatic brood shares egg and population slots with scout eggs") {
@@ -199,7 +201,7 @@ class ColonyLifecycleSuite extends FunSuite {
     val first = TickUpdater.updateAllData(configured.copy(world = configured.world.copy(currentTick = Minute - 1L)), None)
     assertEquals(first.ants.workers, 2L * u)
     assertEquals(first.ants.eggsAndLarvae.size, 1)
-    val grown = (1 to 600).foldLeft(first)((data, _) => TickUpdater.updateAllData(data, None))
+    val grown = (1L to (600L + first.ants.layingCooldown)).foldLeft(first)((data, _) => TickUpdater.updateAllData(data, None))
     assertEquals(grown.ants.workers, 3L * u)
     assertEquals(grown.ants.taskWorkers(AntTask.SugarCollector), 3L * u)
     assert(grown.ants.eggsAndLarvae.isEmpty)

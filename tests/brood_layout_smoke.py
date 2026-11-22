@@ -82,15 +82,18 @@ def check(page, width, url):
             info_box=info.bounding_box()
             assert abs(button_box['y']+button_box['height']/2-info_box['y']-info_box['height']/2)<=1
             assert info_box['x']>=button_box['x']+button_box['width']+8
-        cancel_box=cancel.bounding_box()
-        counts_box=panel.locator('.brood-counts').bounding_box()
-        assert cancel_box['width']>=44 and cancel_box['height']>=44
-        assert cancel_box['y']>=counts_box['y'] and cancel_box['y']+cancel_box['height']<=counts_box['y']+counts_box['height']+1
-        if width<=767:
-            expect(cancel.locator('.brood-cancel-icon')).to_be_visible()
-            expect(cancel.locator('.brood-cancel-label')).not_to_be_visible()
+        if state['ants']['eggOrders'] or state['ants']['scoutEggOrders']:
+            cancel_box=cancel.bounding_box()
+            counts_box=panel.locator('.brood-counts').bounding_box()
+            assert cancel_box['width']>=44 and cancel_box['height']>=44
+            assert cancel_box['y']>=counts_box['y'] and cancel_box['y']+cancel_box['height']<=counts_box['y']+counts_box['height']+1
+            if width<=767:
+                expect(cancel.locator('.brood-cancel-icon')).to_be_visible()
+                expect(cancel.locator('.brood-cancel-label')).not_to_be_visible()
+            else:
+                expect(cancel.locator('.brood-cancel-label')).to_be_visible()
         else:
-            expect(cancel.locator('.brood-cancel-label')).to_be_visible()
+            expect(cancel).to_have_count(0)
         assert_fits(page,width)
     assert max(tops)-min(tops) <= 1, tops
     worker_info=worker.locator('..').locator('.action-details > summary')
@@ -106,7 +109,7 @@ def check(page, width, url):
     page.get_by_role('button',name='Raise Scout Egg',exact=True).click()
     expect(page.get_by_role('button',name='Raise Scout Egg',exact=True).locator('.egg-count-ordered')).to_have_text('Ordered: 2')
     cancel.click()
-    expect(cancel).to_be_disabled()
+    expect(cancel).to_have_count(0)
     expect(panel.locator('.brood-worker-orders b')).to_have_text('0')
     expect(panel.locator('.brood-scout-orders b')).to_have_text('0')
     after=worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")

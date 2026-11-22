@@ -18,7 +18,11 @@ class ScoutQueueSuite extends FunSuite {
         chambers = d.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
       unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true)))
   }
-  def ready(d: AllData): AllData = BroodProgression.layOrdered(d.copy(ants = d.ants.copy(layingCooldown = 0L)))
+  def finishLaying(d: AllData): AllData = {
+    val remaining = if (d.ants.layingBrood.nonEmpty) 1L else 0L
+    BroodProgression.tick(d.copy(ants = d.ants.copy(layingCooldown = remaining)))
+  }
+  def ready(d: AllData): AllData = BroodProgression.layOrdered(finishLaying(d))
   def kind(d: AllData): String = d.ants.eggsAndLarvae.last.asInstanceOf[AntBrood.Developing].kind
   def load(d: AllData): AllData = AllDataForSave.fromAllData(d).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
@@ -39,7 +43,8 @@ class ScoutQueueSuite extends FunSuite {
     assert(laid.ants.scoutEggOrders.isEmpty)
     assertEquals(queued.basicResources.sugar.amount - laid.basicResources.sugar.amount, 50L * u)
     assertEquals(queued.basicResources.protein.amount - laid.basicResources.protein.amount, 2L * u)
-    assertEquals(laid.statistics.eggsCount.thisRun, 2)
+    assertEquals(laid.statistics.eggsCount.thisRun, 1)
+    assertEquals(finishLaying(laid).statistics.eggsCount.thisRun, 2)
     assertEquals(BroodProgression.layOrdered(laid), laid)
   }
 
@@ -55,10 +60,10 @@ class ScoutQueueSuite extends FunSuite {
     assertEquals(d.ants.queuedEggs, 0)
     assertEquals(d.basicResources.sugar.amount, 870L * u)
     assertEquals(d.basicResources.protein.amount, 96L * u)
-    assertEquals(d.statistics.eggsCount.thisRun, 5)
+    assertEquals(finishLaying(d).statistics.eggsCount.thisRun, 5)
   }
 
-  test("consecutive scouts share cooldown instead of being laid as a batch") {
+  test("consecutive scouts each need their own laying time") {
     val busy = colony.copy(ants = colony.ants.copy(layingCooldown = 1L))
     val queued = ScoutProgression.raise(ScoutProgression.raise(busy))
     assertEquals(queued.ants.scoutEggOrders, Seq(0, 0))
@@ -131,7 +136,7 @@ class ScoutQueueSuite extends FunSuite {
       upgrades = scout.upgrades.unlock(QueensRoutine))
     assertEquals(AutomaticBrood.status(automated.ants, automated.nestAttributes, automated.basicResources.sugar.amount), "Waiting for manual egg orders")
     val laid = ready(automated)
-    val next = AutomaticBrood.tick(laid.copy(ants = laid.ants.copy(layingCooldown = 0L)))
+    val next = AutomaticBrood.tick(finishLaying(laid))
     assertEquals(kind(next), "worker")
   }
 }

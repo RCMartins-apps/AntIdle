@@ -385,6 +385,8 @@ name/estimate column, to avoid an extra full-width line.
 
 ## D20: Scout eggs must queue while the queen is busy — approved
 
+D67 replaces instant laying and its subsequent cooldown with a laying stage.
+
 The owner reported scout raising being rejected during the queen's laying
 cooldown instead of accepting an order. Scout orders now share manual FIFO
 ordering with worker batches, including while brood places are full. Keep
@@ -1053,3 +1055,13 @@ After Satellite Nests, players can choose a daughter colony with weaker dew
 production. Dry Clearing and two living repletes at the next founding earn a
 permanent water capacity bonus. Players can leave by founding normally and retry
 later. See [Dry Season](PRESTIGE.md#dry-season-challenge-founding).
+
+## D67: Egg orders use a laying stage
+
+The queen spends the egg's resources and reserves its brood and colony place
+when laying begins. The timer runs before normal egg development and counts
+toward eggs raised only on completion. Worker and scout orders share the same
+queen and FIFO queue; Queen Chamber and Queen's Rhythm shorten newly started
+eggs. The cancel button appears only for pending orders and leaves the egg now
+being laid alone. Existing developing brood remains at its saved stage and any
+remaining legacy timer expires normally.
