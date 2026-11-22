@@ -19,11 +19,6 @@ def geometry(page):
 
 
 def check(page, width, url):
-    page.add_init_script("""addEventListener('DOMContentLoaded', () => {
-        const style=document.createElement('style');
-        style.textContent='.task-blocked-reason {font-family:"DejaVu Sans",sans-serif}';
-        document.head.append(style);
-    });""")
     now=datetime(2026,11,17,tzinfo=timezone.utc)
     page.clock.install(time=now); page.clock.pause_at(now+timedelta(seconds=1))
     errors=[]; page.on('pageerror',lambda e:errors.append(str(e)))
@@ -43,10 +38,28 @@ def check(page, width, url):
     expect(heading).to_have_text('Small workers · 12')
     expect(heading.locator('.resource-icon-small-workers svg path')).to_have_count(2)
     assert heading.locator('.small-worker-mark').evaluate('el => getComputedStyle(el).stroke') != heading.locator('.resource-icon-small-workers path').first.evaluate('el => getComputedStyle(el).stroke')
-    expect(page.locator('.idle-worker-summary .resource-icon-workers')).to_have_count(1)
+    standard=page.locator('.standard-worker-tasks')
+    standard_heading=standard.locator(':scope > summary')
+    idle=standard_heading.locator('.idle-worker-summary')
+    expect(standard_heading.locator('.worker-summary-title')).to_have_text('Workers · 2')
+    expect(standard_heading.locator('.resource-icon-workers')).to_have_count(1)
+    expect(idle).to_have_text('Idle 2')
+    assert idle.evaluate('el => Math.abs(el.getBoundingClientRect().right - el.parentElement.getBoundingClientRect().right) <= 1')
+    standard_heading.click()
+    expect(page.get_by_role('button',name='Assign Tunneler',exact=True)).not_to_be_visible()
+    expect(idle).to_have_text('Idle 2')
+    page.clock.run_for(600)
+    expect(standard).not_to_have_attribute('open','')
+    page.reload(wait_until='networkidle');select_tab(page,'Tasks')
+    expect(standard).not_to_have_attribute('open','')
+    if os.environ.get('ANTIDLE_ARTIFACTS') and width==390:
+        site = page.locator('.jobs-panel')
+        site.evaluate("el => el.scrollIntoView({block:'center'})")
+        site.screenshot(path=os.path.join(os.environ['ANTIDLE_ARTIFACTS'],'worker-cards-collapsed.png'))
+    standard_heading.click()
     ants_icon=page.locator('.resource-row').filter(has=page.get_by_text('Ants',exact=True)).locator('.resource-icon-colony path')
     assert page.locator('.mobile-bottom-nav [data-destination=nest] svg path').get_attribute('d') == ants_icon.get_attribute('d')
-    expect(page.locator('.idle-worker-summary')).to_have_text('Idle workers: 2')
+    expect(idle).to_have_text('Idle 2')
     assert page.locator('.idle-worker-summary').evaluate("el => !!(el.compareDocumentPosition(document.querySelector('.small-worker-tasks')) & Node.DOCUMENT_POSITION_PRECEDING)")
     heading.click()
     expect(page.get_by_role('button',name='Assign small Tunneler',exact=True)).not_to_be_visible()
@@ -55,10 +68,9 @@ def check(page, width, url):
     page.reload(wait_until='networkidle');select_tab(page,'Tasks')
     expect(small).not_to_have_attribute('open','')
     heading.click()
-    page.get_by_label('About Small workers',exact=True).click()
-    expect(small).to_have_attribute('open','')
-    expect(small.locator('.info-content')).to_contain_text('50% task output')
-    page.get_by_label('About Small workers',exact=True).click()
+    expect(page.locator('.jobs-panel .info-details')).to_have_count(0)
+    expect(page.locator('#task-sugarcollector .job-rate .resource-icon-sugar')).to_have_count(1)
+    expect(page.locator('#task-tunneler .job-rate .resource-icon-tunneling')).to_have_count(1)
     small_plus=page.get_by_role('button',name='Assign small Tunneler',exact=True)
     normal_plus=page.get_by_role('button',name='Assign Tunneler',exact=True)
     for prop in ['backgroundColor','borderRadius','fontSize']:
@@ -77,26 +89,29 @@ def check(page, width, url):
     before=geometry(page)
     normal_plus.click();normal_plus.click()
     expect(page.locator('#tasks-tab')).to_have_text('Jobs')
-    expect(page.locator('.idle-worker-summary')).to_have_text('Idle workers: 0')
-    expect(page.locator('#task-scavenger .task-blocked-reason')).to_have_text('Needs idle workers')
+    expect(idle).to_have_count(0)
+    expect(page.locator('#task-scavenger .task-controls button').last).to_have_attribute('title','Needs idle workers')
     assert geometry(page)==before,(width,before,geometry(page))
     page.get_by_role('button',name='Remove Tunneler',exact=True).click()
-    expect(page.locator('#task-scavenger .task-blocked-reason')).to_be_empty()
+    expect(page.locator('#task-scavenger .task-controls button').last).to_be_enabled()
     assert geometry(page)==before,(width,before,geometry(page))
     page.locator('#default-worker-task').select_option('SugarCollector')
-    expect(page.locator('.idle-worker-summary')).to_have_text('Idle workers: 0')
-    expect(page.locator('#task-sugarcollector .task-blocked-reason')).to_have_text('Assigned automatically')
+    expect(idle).to_have_count(0)
+    expect(page.locator('#task-sugarcollector .task-controls button').last).to_have_attribute('title','Assigned automatically')
     # The default pool remains assignable, despite having zero actually idle ants.
     expect(normal_plus).to_be_enabled()
     pooled=geometry(page)
     normal_plus.click()
-    expect(page.locator('#task-scavenger .task-blocked-reason')).to_have_text('Needs Sugar Collector workers')
+    expect(page.locator('#task-scavenger .task-controls button').last).to_have_attribute('title','Needs Sugar Collector workers')
     assert geometry(page)==pooled,(width,pooled,geometry(page))
     assert_fits(page,width)
     gone=copy.deepcopy(game);gone['ants']['smallWorkers']=0
     load_game(page,gone);select_tab(page,'Tasks')
     expect(small).to_have_count(0)
-    expect(page.locator('.idle-worker-summary')).to_have_text('Idle workers: 2')
+    expect(idle).to_have_text('Idle 2')
+    if os.environ.get('ANTIDLE_ARTIFACTS') and width==390:
+        standard.evaluate("el => el.scrollIntoView({block:'center'})")
+        standard.screenshot(path=os.path.join(os.environ['ANTIDLE_ARTIFACTS'],'worker-card-expanded.png'))
     assert not errors,errors
     print(f'PASS task controls {width}px: persistent collapse/count, matching aligned buttons, batch assignment, idle/default distinction and stable blocker geometry',flush=True)
 

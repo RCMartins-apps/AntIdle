@@ -258,13 +258,10 @@ def check_game(page, width, url):
     manual = page.locator('.task-row:visible').evaluate_all(
         '(rows) => rows.map(row => !!row.querySelector(".task-controls button"))')
     assert True in manual and False in manual and manual == sorted(manual, reverse=True), manual
-    for row in page.locator('.task-row:visible').all():
-        # Read together: navigation can restore scroll between separate protocol calls.
-        bounds, info = row.evaluate("""row => [row, row.querySelector('.info-summary')].map(el => {
-            const rect = el.getBoundingClientRect(); return {y: rect.y, height: rect.height};
-        })""")
-        assert info['height'] >= 44
-        assert info['y'] >= bounds['y'] and info['y'] + info['height'] <= bounds['y'] + bounds['height'] + 1
+    expect(page.locator('.jobs-panel .info-details')).to_have_count(0)
+    for control in page.locator('.jobs-panel .task-controls button:visible').all():
+        bounds = control.bounding_box()
+        assert bounds['height'] >= 44 and bounds['width'] >= 44, bounds
     expect(page.locator('.small-worker-tasks')).to_have_count(0)
     expect(page.locator('.resource-row').filter(has=page.get_by_text('Small workers', exact=True))).to_have_count(0)
     if width <= 767:

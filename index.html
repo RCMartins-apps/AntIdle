@@ -52,13 +52,7 @@
         .antidle-app .info-content p:last-child { margin-bottom: 0; }
         .antidle-app .info-heading > .info-details > .info-summary { position: absolute; top: 0; right: 0; }
         .antidle-app .info-heading > .info-details > .info-content { margin-right: -48px; }
-        .antidle-app .task-row { position: relative; min-height: 52px; padding-right: 48px; align-items: center; }
-        .antidle-app .task-rate { flex: 0 0 100%; width: 100%; }
-        .antidle-app .task-rate:empty { display: none; }
-        .antidle-app .task-info { flex: 0 0 0; width: 0; height: 0; padding: 0; }
-        .antidle-app .task-info:has(.info-details[open]) { flex: 0 0 100%; width: 100%; height: auto; padding: 0 .75rem; }
-        .antidle-app .task-info .info-summary { position: absolute; top: 4px; right: 0; }
-        .antidle-app .task-info .info-content { margin-right: -48px; }
+        .antidle-app .task-row { min-height: 44px; align-items: center; }
         .antidle-app .action-cell { position: relative; }
         .antidle-app .action-cell:has(> .action-details) > button { margin-right: 3.5rem; }
         .antidle-app .action-details { margin: 0; }
@@ -158,7 +152,6 @@
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
 .antidle-app .game-main .btn, .antidle-app .game-panel .btn {min-height:44px;min-width:44px;font-size:1rem !important;touch-action:manipulation}
 .antidle-app .game-main input:not([type="checkbox"]), .antidle-app .game-main select {min-height:44px}
-.antidle-app .resource-amount, .antidle-app .task-rate, .antidle-app .mission-preview, .antidle-app .numeric-value {font-variant-numeric:tabular-nums}
 .antidle-app .game-main .progress, .antidle-app .game-panel .progress {height:8px !important;border-radius:1rem;background:#e7ebef;overflow:hidden}
 .antidle-app .progress-bar {border-radius:inherit;max-width:100%}
 .antidle-app .btn:focus-visible, .antidle-app summary:focus-visible, .antidle-app input:focus-visible, .antidle-app select:focus-visible {outline:3px solid var(--bs-primary);outline-offset:2px}
@@ -301,15 +294,33 @@
 .brood-counts .small {font-size:.75rem;white-space:nowrap}
 .brood-pipeline .activity-status {display:block;line-height:1.5;min-height:calc(3em + .3rem)}
 
-/* Reserve a status line and share task button geometry across worker castes. */
-.antidle-app .task-blocked-reason {min-height:1.5em;line-height:1.5;font-size:.75rem}
+/* Share task button geometry across worker castes. */
 .antidle-app .task-row > .col-6 {flex:1;min-width:0}
 .antidle-app .task-controls {display:flex;flex:0 0 auto;justify-content:flex-end;width:auto;padding-left:0;margin-left:auto}
 .antidle-app .task-controls .btn {min-width:44px;min-height:44px}
 .antidle-app .small-worker-job {padding-right:0;margin-left:0;margin-right:0}
-.antidle-app .small-worker-tasks {position:relative}
-.small-workers-summary {padding-right:52px;font-weight:600}
-.small-worker-tasks > .info-details > .info-summary {position:absolute;top:.5rem;right:.5rem}
+.small-workers-summary {font-weight:600;line-height:44px;cursor:pointer}
+/* Keep worker totals visible and aligned in both disclosure states. */
+.standard-workers-summary {display:flex;align-items:center;gap:.35rem;min-height:44px;list-style:none;font-weight:600;cursor:pointer}
+.standard-workers-summary::-webkit-details-marker {display:none}
+.standard-workers-summary::before {content:"";width:0;height:0;border-block:.24em solid transparent;border-inline-start:.34em solid currentColor}
+.standard-worker-tasks[open] > .standard-workers-summary::before {transform:rotate(90deg)}
+.worker-summary-title, .idle-worker-summary {white-space:nowrap}
+.idle-worker-summary {margin-inline-start:auto;font-weight:400}
+.standard-worker-jobs > .task-row {margin-inline:0}
+.jobs-panel .job-label {padding-inline:0 .25rem}
+.jobs-panel .job-rate {display:inline-flex;align-items:center;gap:.15rem;white-space:nowrap;margin-inline-end:.4rem}
+.jobs-panel .job-rate .resource-icon, .jobs-panel .job-shortage .resource-icon {margin:0}
+@media (max-width:767px) {
+  .jobs-panel {font-size:.9rem}
+  .jobs-panel .form-select {font-size:inherit}
+  .jobs-panel .default-workers {display:flex;align-items:center;gap:.5rem}
+  .jobs-panel .default-workers label {white-space:nowrap}
+  .jobs-panel .default-workers .form-select {flex:1;min-width:0}
+  .antidle-app .jobs-panel .task-row {min-height:44px;row-gap:0}
+  .jobs-panel .task-controls .btn {margin-block:0!important}
+  .jobs-panel .task-row + .task-row {margin-top:.25rem}
+}
 </style>
 </head>
 <body>
