@@ -10,3 +10,6 @@
   The Royal Nurses shortcut opens the standard card.
 - Development build passed. The Jobs and blocked-action browser scenarios
   passed at 320/390/1280 px. Captured mobile open and closed cards.
+- Brood Nurse rows show an egg icon and the assigned caste's total extra care.
+  The same calculation supplies the game engine and the badge, including
+  Nurse Training and small workers' half contribution.

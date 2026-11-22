@@ -69,6 +69,9 @@ def check(page, width, url):
     expect(small).not_to_have_attribute('open','')
     heading.click()
     expect(page.locator('.jobs-panel .info-details')).to_have_count(0)
+    page.get_by_role('button',name='Assign small Brood Nurse',exact=True).click()
+    expect(small.locator('.brood-care-badge')).to_contain_text('+1 care')
+    page.get_by_role('button',name='Remove small Brood Nurse',exact=True).click()
     expect(page.locator('#task-sugarcollector .job-rate .resource-icon-sugar')).to_have_count(1)
     expect(page.locator('#task-tunneler .job-rate .resource-icon-tunneling')).to_have_count(1)
     small_plus=page.get_by_role('button',name='Assign small Tunneler',exact=True)
@@ -112,6 +115,16 @@ def check(page, width, url):
     if os.environ.get('ANTIDLE_ARTIFACTS') and width==390:
         standard.evaluate("el => el.scrollIntoView({block:'center'})")
         standard.screenshot(path=os.path.join(os.environ['ANTIDLE_ARTIFACTS'],'worker-card-expanded.png'))
+    nurse = page.locator('#task-broodnurse')
+    expect(nurse.locator('.brood-care-badge .job-rate')).to_have_count(0)
+    assign = nurse.get_by_role('button',name='Assign Brood Nurse',exact=True)
+    assign.click()
+    assign.click()
+    expect(nurse.locator('.brood-care-badge')).to_contain_text('+4 care')
+    expect(nurse.locator('.brood-care-badge .resource-icon-eggs')).to_have_count(1)
+    if os.environ.get('ANTIDLE_ARTIFACTS') and width==390:
+        nurse.evaluate("el => el.scrollIntoView({block:'center'})")
+        nurse.screenshot(path=os.path.join(os.environ['ANTIDLE_ARTIFACTS'],'brood-nurse-care.png'))
     assert not errors,errors
     print(f'PASS task controls {width}px: persistent collapse/count, matching aligned buttons, batch assignment, idle/default distinction and stable blocker geometry',flush=True)
 

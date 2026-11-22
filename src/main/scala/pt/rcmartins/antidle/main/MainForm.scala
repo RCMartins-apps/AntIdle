@@ -1919,6 +1919,7 @@ object MainForm {
               case AntTask.Tunneler => jobRate(ResourceIcons.Tunneling, "space",
                 upgradesSignal.map(ColonyDevelopment.tunnelingPerWorkerTick(_) * TicksPerSecond / 2L))
               case AntTask.Scavenger => jobRate(ResourceIcons.Protein, "protein", Val(250L))
+              case AntTask.BroodNurse => broodCareBadge(antsSignal.map(_.smallNurses), small = true)
               case _ => emptyNode
             }),
             div(className := "task-controls",
@@ -1947,6 +1948,16 @@ object MainForm {
       ResourceIcons.icon(icon),
       child.text <-- rate.map(n => s"${if (n < 0L) "−" else "+"}${preciseRateStr(Math.abs(n))}/s").distinct)
 
+  private def broodCareBadge(workers: Signal[Long], small: Boolean): ReactiveHtmlElement[HTMLSpanElement] =
+    span(className := "brood-care-badge",
+      child.maybe <-- workers.combineWith(upgradesSignal).map { case (count, upgrades) =>
+        BroodProgression.nurseContribution(count, upgrades, small)
+      }.distinct.map(care => Option.when(care > 0L)(
+        span(className := "job-rate small text-body-secondary", role := "img",
+          aria.label := s"${prettyNumberStr(care)} extra brood care units",
+          title := "Extra brood care shared across developing brood",
+          ResourceIcons.icon(ResourceIcons.Eggs), s"+${prettyNumberStr(care)} care"))))
+
   private def taskMultiplier(event: MouseEvent): Int =
     if (window.innerWidth <= 767) tasksMultiplier.now() else getMouseEventMultiplier(event)
 
@@ -1973,6 +1984,7 @@ object MainForm {
       case AntTask.Tunneler => jobRate(ResourceIcons.Tunneling, "space",
         upgradesSignal.map(ColonyDevelopment.tunnelingPerWorkerTick(_) * TicksPerSecond))
       case AntTask.Scavenger => jobRate(ResourceIcons.Protein, "protein", Val(500L))
+      case AntTask.BroodNurse => broodCareBadge(amountSignal, small = false)
       case AntTask.WaterCollector => jobRate(ResourceIcons.Water, "water",
         antsSignal.map(a => OutpostProgression.dewPerWorkerSecond(a.lineage)))
       case AntTask.AphidTender => span(
