@@ -47,7 +47,7 @@ def check_recovery(page, width, url):
     assert laid["basicResources"]["sugar"]["amount"] == 0
     assert laid["ants"]["standardWorkersUnlocked"]
     assert laid["ants"]["eggsAndLarvae"][0]["Developing"]["kind"] == "emergency-small"
-    page.clock.run_for(16200)
+    page.clock.run_for(21200)
     recovered = save_game(page)
     assert recovered["ants"]["smallWorkers"] == UNIT
     assert recovered["basicResources"]["sugar"]["amount"] > 0
@@ -77,7 +77,7 @@ def check_recovery(page, width, url):
     nest()
     expect(page.locator(".queen-routine-status")).to_contain_text("Rearing one emergency small worker")
     assert_fits(page, width)
-    page.clock.run_for(18000)
+    page.clock.run_for(23000)
     restored = save_game(page)
     assert restored["ants"]["smallWorkers"] == UNIT
     assert restored["ants"]["emergencyForagingTicks"] == 0

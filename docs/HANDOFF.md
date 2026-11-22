@@ -1,14 +1,14 @@
 # Handoff
 
-## 2026-11-19 — five approved colony improvements
+## 2026-11-22 — timed egg laying
 
-- Royal care feedback (#104), safe crew sizing (#105), finite site survey
-  orders (#106), Founding Provisions (#107), and Refuse Midden (#108) have
-  separate PRs. Check GitHub for current merge state.
-- The combined development bundle passed 317 existing engine tests and four
-  targeted mechanic tests. The five player flows passed at 390 and 1280 px.
-  Mobile screenshots were captured.
-- Founding Provisions ends the introductory Understanding sequence. The midden
-  gives ordinary brood up to 20% faster care with active Refuse Carriers and a
-  clean nursery. Its staffing and pacing still need a full playthrough.
-- Preserve unrelated scratch files and Python caches.
+- `feature/timed-egg-laying` starts from main 0bd0d41 (#108). Eggs reserve
+  a brood and colony place and pay their costs when laying starts. Development
+  and the eggs-raised counter start when the saved laying timer finishes.
+  Queen Chamber and Queen's Rhythm affect newly started eggs.
+- The cancel button appears only for waiting orders. Canceling preserves the
+  current egg. Worker/scout FIFO, automatic brood, and emergency recovery
+  share the same queen. Existing brood keeps its saved development.
+- Passed 321 engine tests, the development build, and brood layout at
+  320/390/1280px. Timed laying and cancellation passed a focused browser flow
+  at 390/1280px and mobile screenshots were captured.

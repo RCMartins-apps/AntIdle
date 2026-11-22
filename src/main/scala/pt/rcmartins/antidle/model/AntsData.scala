@@ -24,7 +24,7 @@ case class AntsData(
     eggOrders: Int = 0,
     // Pending worker orders ahead of each scout: FIFO without expanding worker batches.
     scoutEggOrders: Seq[Int] = Seq.empty,
-    layingCooldown: Long = 0L,
+    layingCooldown: Long = 0L, // Saved field name; ticks remaining on the egg being laid.
     broodCursor: Int = 0,
     emergencyForagingTicks: Long = 0L,
     agingJobVacancies: Seq[(AntTask, Long)] = Seq.empty,
@@ -36,6 +36,9 @@ case class AntsData(
   lazy val smallCollectors: Long = Math.max(0L, smallWorkers - smallTunnelers - smallScavengers - smallNurses)
   lazy val totalWorkers: Long = workers + smallWorkers
   lazy val totalWorkersCount: Int = (totalWorkers / u).toInt
+
+  lazy val layingBrood: Option[AntBrood.Developing] =
+    eggsAndLarvae.collectFirst { case b: AntBrood.Developing if b.laying => b }
 
   lazy val queuedEggs: Int = eggOrders + scoutEggOrders.size
 

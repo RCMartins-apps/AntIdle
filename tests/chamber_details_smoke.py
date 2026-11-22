@@ -24,7 +24,7 @@ def check_chambers(page, width, url):
     load_game(page, game)
     expected = {
         "Expand Nest": ["+10 colony slots", "+500 tunneling space capacity"],
-        "Queen's Chamber": ["+2 brood places", "−4.0s laying interval"],
+        "Queen's Chamber": ["+2 brood places", "−4.0s laying time"],
         "Food Storage Chamber": ["+1000 sugar capacity", "+100 protein capacity"],
         "Nursery Chamber": ["+3 brood places", "+5 Brood Nurse slots", "+1 carcass slot"],
         "Replete Chamber": ["+1 replete slot"],

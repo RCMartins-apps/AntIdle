@@ -44,18 +44,15 @@ object ScoutProgression {
     if (amount == 0) allData
     else {
       val ordered = allData.modify(_.ants.scoutEggOrders).using(_ ++ Seq.fill(amount)(allData.ants.eggOrders))
-      // Preserve immediate laying when the queen is ready and no earlier orders exist.
+      // Start the timer immediately if the queen is ready and no earlier orders exist.
       if (allData.ants.queuedEggs == 0) BroodProgression.layOrdered(ordered) else ordered
     }
   }
 
   def lay(allData: AllData): AllData =
     if (!canLay(allData.ants, allData.nestAttributes, allData.basicResources)) allData
-    else allData.spendResources(eggCost)
-      .modify(_.ants.eggsAndLarvae)
-      .using(_ :+ AntBrood.Developing(allData.currentTick, "scout"))
-      .modify(_.ants.layingCooldown).setTo(BroodProgression.interval(allData.ants, allData.nestAttributes, allData.upgrades))
-      .modify(_.statistics.eggsCount).using(_.addValue(1))
+    else BroodProgression.beginLaying(allData.spendResources(eggCost), "scout",
+      BroodProgression.interval(allData.ants, allData.nestAttributes, allData.upgrades))
 
   def growBrood(allData: AllData): AllData = {
     val (grown, growing) = allData.ants.eggsAndLarvae.partition {

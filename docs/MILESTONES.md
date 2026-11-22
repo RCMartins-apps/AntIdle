@@ -8,7 +8,7 @@ remain the inherited system; these upgrades and their goals reset on founding.
 | --- | --- | --- | --- | --- |
 | Scout Wayfinding | 20 expeditions completed | Exploration research | 500 sugar, 50 Knowledge | −20% scout reveal/study duration on new departures |
 | Nurse Training | 25 standard workers raised | Brood Care | 1,000 sugar, 30 protein, 100 Knowledge | +50% Brood Nurse care |
-| Queen's Rhythm | 50 standard workers raised | Queen's Routine | 2,000 sugar, 50 protein, 150 Knowledge | −20% worker/scout laying interval after the next egg |
+| Queen's Rhythm | 50 standard workers raised | Queen's Routine | 2,000 sugar, 50 protein, 150 Knowledge | −20% worker/scout laying time for new eggs |
 
 Completed expeditions count actual returns, not launches or attempted actions.
 Standard workers raised are workersMatured minus smallWorkersMatured: the existing
@@ -38,10 +38,10 @@ increases throughput when several brood share care. Brood Care's existing bonus
 continues to apply to the combined budget; forecasts use the same tending logic.
 Faster care can spend feeding resources faster, not create brood without food.
 
-Queen's Rhythm changes the level-one queen's standard/scout laying interval from
+Queen's Rhythm changes the level-one queen's standard/scout laying time from
 20 to 16 seconds. It combines with existing Queen Chamber improvements using the
-same rounded tick calculation. Stored current cooldowns stay unchanged; newly
-laid worker/scout eggs use the new interval. Development, costs and brood-space
+same rounded tick calculation. An egg already being laid keeps its remaining time.
+New worker and scout eggs use the shorter laying time. Development, costs and brood-space
 limits remain. Queen Chamber previews account for the active rhythm upgrade.
 
 ## Editing
