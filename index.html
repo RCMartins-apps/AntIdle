@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="b75b54a6efa144a69c5db974">
+    <meta name="antidle-build" content="18e9e3db41b460ba17d600ca">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -53,13 +53,7 @@
         .antidle-app .info-content p:last-child { margin-bottom: 0; }
         .antidle-app .info-heading > .info-details > .info-summary { position: absolute; top: 0; right: 0; }
         .antidle-app .info-heading > .info-details > .info-content { margin-right: -48px; }
-        .antidle-app .task-row { position: relative; min-height: 52px; padding-right: 48px; align-items: center; }
-        .antidle-app .task-rate { flex: 0 0 100%; width: 100%; }
-        .antidle-app .task-rate:empty { display: none; }
-        .antidle-app .task-info { flex: 0 0 0; width: 0; height: 0; padding: 0; }
-        .antidle-app .task-info:has(.info-details[open]) { flex: 0 0 100%; width: 100%; height: auto; padding: 0 .75rem; }
-        .antidle-app .task-info .info-summary { position: absolute; top: 4px; right: 0; }
-        .antidle-app .task-info .info-content { margin-right: -48px; }
+        .antidle-app .task-row { min-height: 44px; align-items: center; }
         .antidle-app .action-cell { position: relative; }
         .antidle-app .action-cell:has(> .action-details) > button { margin-right: 3.5rem; }
         .antidle-app .action-details { margin: 0; }
@@ -159,7 +153,6 @@
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
 .antidle-app .game-main .btn, .antidle-app .game-panel .btn {min-height:44px;min-width:44px;font-size:1rem !important;touch-action:manipulation}
 .antidle-app .game-main input:not([type="checkbox"]), .antidle-app .game-main select {min-height:44px}
-.antidle-app .resource-amount, .antidle-app .task-rate, .antidle-app .mission-preview, .antidle-app .numeric-value {font-variant-numeric:tabular-nums}
 .antidle-app .game-main .progress, .antidle-app .game-panel .progress {height:8px !important;border-radius:1rem;background:#e7ebef;overflow:hidden}
 .antidle-app .progress-bar {border-radius:inherit;max-width:100%}
 .antidle-app .btn:focus-visible, .antidle-app summary:focus-visible, .antidle-app input:focus-visible, .antidle-app select:focus-visible {outline:3px solid var(--bs-primary);outline-offset:2px}
@@ -302,15 +295,29 @@
 .brood-counts .small {font-size:.75rem;white-space:nowrap}
 .brood-pipeline .activity-status {display:block;line-height:1.5;min-height:calc(3em + .3rem)}
 
-/* Reserve a status line and share task button geometry across worker castes. */
-.antidle-app .task-blocked-reason {min-height:1.5em;line-height:1.5;font-size:.75rem}
+/* Share task button geometry across worker castes. */
 .antidle-app .task-row > .col-6 {flex:1;min-width:0}
 .antidle-app .task-controls {display:flex;flex:0 0 auto;justify-content:flex-end;width:auto;padding-left:0;margin-left:auto}
 .antidle-app .task-controls .btn {min-width:44px;min-height:44px}
 .antidle-app .small-worker-job {padding-right:0;margin-left:0;margin-right:0}
-.antidle-app .small-worker-tasks {position:relative}
-.small-workers-summary {padding-right:52px;font-weight:600}
-.small-worker-tasks > .info-details > .info-summary {position:absolute;top:.5rem;right:.5rem}
+/* Both worker cards use the same native marker as Brood and other disclosures. */
+.small-workers-summary, .standard-workers-summary {display:list-item;font-weight:600;line-height:44px;cursor:pointer}
+.worker-summary-title, .idle-worker-summary {white-space:nowrap}
+.idle-worker-summary {float:inline-end;font-weight:400}
+.standard-worker-jobs > .task-row {margin-inline:0}
+.jobs-panel .job-label {padding-inline:0 .25rem}
+.jobs-panel .job-rate {display:inline-flex;align-items:center;gap:.15rem;white-space:nowrap;margin-inline-end:.4rem}
+.jobs-panel .job-rate .resource-icon, .jobs-panel .job-shortage .resource-icon {margin:0}
+@media (max-width:767px) {
+  .jobs-panel {font-size:.9rem}
+  .jobs-panel .form-select {font-size:inherit}
+  .jobs-panel .default-workers {display:flex;align-items:center;gap:.5rem}
+  .jobs-panel .default-workers label {white-space:nowrap}
+  .jobs-panel .default-workers .form-select {flex:1;min-width:0}
+  .antidle-app .jobs-panel .task-row {min-height:44px;row-gap:0}
+  .jobs-panel .task-controls .btn {margin-block:0!important}
+  .jobs-panel .task-row + .task-row {margin-top:.25rem}
+}
 </style>
 </head>
 <body>
@@ -319,7 +326,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.cb7e9ffc0e418133.js"></script>
+<script type="text/javascript" src="game.f9ad9d707aae3c42.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
