@@ -1177,7 +1177,7 @@ object MainForm {
                 val state = if (ants.taskWorkers(AntTask.SeedForager) == 0L) "0 Seed Foragers"
                   else if (resources.protein.atCapacity && harvest.protein == 0L) "Protein full · water use paused"
                   else if (resources.water.amount == 0L) "Needs water · foraging paused"
-                  else s"+${preciseRateStr(harvest.protein * TicksPerSecond)} protein/s · −${preciseRateStr(harvest.water * TicksPerSecond)} water/s"
+                  else s"${signedRateStr(harvest.protein * TicksPerSecond, compact = false)} protein/s · ${signedRateStr(-harvest.water * TicksPerSecond, compact = false)} water/s"
                 state
               }),
               child.maybe <-- antsSignal.map(_.lineage.satelliteNests).distinct.combineWith(
@@ -1605,7 +1605,7 @@ object MainForm {
             child.text <-- broodSignal.combineWith(nursesSignal).map { case (brood, count) =>
               val cost = brood.map(b => RoyalBroodProgression.scaledCost(RoyalBroodProgression.unitCost(b), count * TicksPerSecond)).getOrElse(ActionCost.empty)
               val rates = List("sugar" -> cost.sugar, "protein" -> cost.protein, "water" -> cost.water)
-                .collect { case (name, amount) if amount > 0L => s"−${resourceRateStr(amount)} $name/s" }
+                .collect { case (name, amount) if amount > 0L => s"${signedRateStr(-amount)} $name/s" }
               if (rates.isEmpty) "" else rates.mkString(" · ")
             },
           ),
@@ -1946,7 +1946,7 @@ object MainForm {
       title <-- rate.map(n => s"${preciseRateStr(n)} $resource/s per worker").distinct,
       aria.label <-- rate.map(n => s"${preciseRateStr(n)} $resource/s per worker").distinct,
       ResourceIcons.icon(icon),
-      child.text <-- rate.map(n => s"${if (n < 0L) "−" else "+"}${preciseRateStr(Math.abs(n))}/s").distinct)
+      child.text <-- rate.map(n => s"${signedRateStr(n, compact = false)}/s").distinct)
 
   private def broodCareBadge(workers: Signal[Long], small: Boolean): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := "brood-care-badge",
@@ -2219,7 +2219,7 @@ object MainForm {
             val count = Math.max(PheromoneTrails.Step, PheromoneTrails.target(data.exploration, route.id))
             val (baseRate, cost) = PheromoneTrails.nominal(route, count, data.upgrades)
             val rate = if (route.sugarReward > 0L) ColonyMilestones.sugar(baseRate, data.statistics) else baseRate
-            s"+${resourceRateStr(rate * TicksPerSecond)} ${ExplorationHelper.resource(route)}/s · −${resourceRateStr(cost * TicksPerSecond)} sugar/s supplies"
+            s"${signedRateStr(rate * TicksPerSecond)} ${ExplorationHelper.resource(route)}/s · ${signedRateStr(-cost * TicksPerSecond)} sugar/s supplies"
           }),
           div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
             button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44, "−5",

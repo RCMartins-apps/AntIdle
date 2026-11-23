@@ -96,7 +96,8 @@ markup, shared styles and icons. Match disclosure markers, spacing, type,
 alignment, touch targets, labels, icon order and number formatting for the same
 kind of control. Keep native disclosure arrows on ordinary collapsible sections,
 including when their headings need custom alignment. Reuse `ResourceIcons` and
-the existing number formatters. If a repeated pattern needs to change, update its
+the existing number formatters. Display at most two decimal places and keep
+exact arithmetic in the engine. If a repeated pattern needs to change, update its
 shared implementation and check the other places that use it.
 
 Before handing off a visual change, compare it with its closest counterpart in

@@ -203,7 +203,7 @@ object UpgradeBalance {
       title = "Covered Trails",
       cost = ActionCost(sugar = 3000 * u, protein = 60 * u, knowledge = 300 * u, water = 100 * u),
       requirements = UpgradeRequirements(outpost = true, minimumRevealedSites = 5),
-      description = "−25% Seed Forager water use (0.015 water/s each).",
+      description = "−25% Seed Forager water use.",
     ),
     SeedProcessing -> UpgradeDefinition(
       title = "Seed Processing",

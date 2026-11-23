@@ -34,7 +34,8 @@ to reports, not summed yields. Successful paid research records one completion.
 The visual pass standardizes 44px controls, tabular resource digits, focus rings,
 progress tracks and the empty construction queue. Resource numbers share one
 K/M/B/T formatter; exact requirement values remain in titles/accessibility labels.
-Tiny values and negative rates retain meaningful precision and signs. Royal brood
+Game numbers display at most two decimal places. Values closer to zero than
+one hundredth use a signed bound such as <0.01 or >−0.01. Royal brood
 progress has an accessible label/value and is clamped to 0–100%.
 
 Expanded map hexes show compact percentages with study/cargo/scouting symbols

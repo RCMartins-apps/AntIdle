@@ -36,6 +36,7 @@ def check(page, width, url):
     heading=small.locator(':scope > summary')
     expect(page.locator('#tasks-tab')).to_have_text('Jobs (2)')
     expect(heading).to_have_text('Small workers · 12')
+    expect(small.locator('.small-collector-summary .job-rate')).to_have_text('+0.19/s')
     expect(heading.locator('.resource-icon-small-workers svg path')).to_have_count(2)
     assert heading.locator('.small-worker-mark').evaluate('el => getComputedStyle(el).stroke') != heading.locator('.resource-icon-small-workers path').first.evaluate('el => getComputedStyle(el).stroke')
     standard=page.locator('.standard-worker-tasks')

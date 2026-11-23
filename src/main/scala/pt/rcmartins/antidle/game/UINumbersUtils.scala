@@ -10,32 +10,45 @@ object UINumbersUtils {
 
   private val Suffixes: IndexedSeq[String] = IndexedSeq("", "K", "M", "B", "T", "Q")
 
+  private def hundredths(magnitude: BigInt, units: BigInt): BigInt =
+    (magnitude * 100 + units / 2) / units
+
+  def decimalRatio(numerator: BigInt, units: BigInt): String = {
+    val magnitude = numerator.abs
+    val negative = numerator.signum < 0
+    if (magnitude > 0 && magnitude * 100 < units) {
+      if (negative) ">−0.01" else "<0.01"
+    } else {
+      val rounded = hundredths(magnitude, units)
+      val fraction = (rounded % 100).toInt
+      val decimals = if (fraction == 0) ""
+        else if (fraction % 10 == 0) s".${fraction / 10}" else f".$fraction%02d"
+      (if (negative) "-" else "") + (rounded / 100).toString + decimals
+    }
+  }
+
   private def compact(num: Long, initialSuffix: Int = 0): String = {
-    var magnitude = BigInt(num).abs
+    val magnitude = BigInt(num).abs
+    var units = BigInt(u)
     var suffix = Math.max(0, Math.min(initialSuffix, Suffixes.size - 1))
-    while (magnitude >= BigInt(1000L * u) && suffix < Suffixes.size - 1) {
-      magnitude /= 1000
+    while (suffix < Suffixes.size - 1 && hundredths(magnitude, units) >= 100000) {
+      units *= 1000
       suffix += 1
     }
-    val whole = magnitude / u
-    val fraction = magnitude % u
-    val decimals = if (fraction == 0) ""
-      else if (magnitude < 100L && suffix == 0) "." + f"${fraction.toInt}%04d".reverse.dropWhile(_ == '0').reverse
-      else "." + f"${(fraction / 100).toInt}%02d"
-    (if (num < 0L) "-" else "") + whole.toString + decimals + Suffixes(suffix)
+    decimalRatio(BigInt(num), units) + Suffixes(suffix)
   }
 
   def prettyNumberFixedSize(num: Long): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := "numeric-value", compact(num))
 
-  def preciseRateStr(amount: Long): String = {
-    val magnitude = BigInt(amount).abs
-    val fraction = f"${(magnitude % u).toInt}%04d".reverse.dropWhile(_ == '0').reverse
-    (if (amount < 0L) "-" else "") + (magnitude / u).toString + (if (fraction.isEmpty) "" else "." + fraction)
-  }
+  def preciseRateStr(amount: Long): String = decimalRatio(BigInt(amount), BigInt(u))
 
-  def resourceRateStr(amount: Long): String =
-    if (BigInt(amount).abs < u && amount % 100L != 0L) preciseRateStr(amount) else prettyNumberStr(amount)
+  def resourceRateStr(amount: Long): String = prettyNumberStr(amount)
+
+  def signedRateStr(amount: Long, compact: Boolean = true): String = {
+    val value = if (compact) resourceRateStr(amount) else preciseRateStr(amount)
+    if (amount >= 100L) "+" + value else value
+  }
 
   def prettyNumberStr(num: Long): String = compact(num)
   def prettyNumberStr(prefix: String, num: Long, suffix: Int): String = prefix + compact(num, suffix)

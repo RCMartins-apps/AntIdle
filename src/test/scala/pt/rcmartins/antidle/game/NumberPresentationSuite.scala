@@ -8,13 +8,15 @@ class NumberPresentationSuite extends FunSuite {
     assertEquals(UINumbersUtils.prettyNumberStr(1000000 * u), "1M")
     assertEquals(UINumbersUtils.prettyNumberStr(1250000 * u), "1.25M")
     assertEquals(UINumbersUtils.prettyNumberStr(-1250000 * u), "-1.25M")
-    assertEquals(UINumbersUtils.prettyNumberStr(Long.MinValue), "-922.33T")
-    assertEquals(UINumbersUtils.prettyNumberStr(Long.MaxValue), "922.33T")
+    assertEquals(UINumbersUtils.prettyNumberStr(Long.MinValue), "-922.34T")
+    assertEquals(UINumbersUtils.prettyNumberStr(Long.MaxValue), "922.34T")
   }
   test("small values and negative rates never lose their sign or become a misleading zero") {
-    assertEquals(UINumbersUtils.prettyNumberStr(1), "0.0001")
-    assertEquals(UINumbersUtils.preciseRateStr(-1), "-0.0001")
-    assertEquals(UINumbersUtils.resourceRateStr(-50), "-0.005")
-    assertEquals(UINumbersUtils.resourceRateStr(4000), "0.40")
+    assertEquals(UINumbersUtils.prettyNumberStr(1), "<0.01")
+    assertEquals(UINumbersUtils.prettyNumberStr(150L), "0.02")
+    assertEquals(UINumbersUtils.prettyNumberStr(1000L * u - 1L), "1K")
+    assertEquals(UINumbersUtils.preciseRateStr(-1), ">−0.01")
+    assertEquals(UINumbersUtils.resourceRateStr(-50), ">−0.01")
+    assertEquals(UINumbersUtils.resourceRateStr(4000), "0.4")
   }
 }

@@ -14,3 +14,6 @@
 - Brood Nurse rows show an egg icon and the assigned caste's total extra care.
   The same calculation supplies the game engine and the badge, including
   Nurse Training and small workers' half contribution.
+- Visible game numbers use at most two decimal places, including amounts,
+  costs, rates and the milestone multiplier. Tiny values retain a signed bound.
+  Engine arithmetic, costs and save precision are unaffected.

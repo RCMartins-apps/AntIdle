@@ -99,11 +99,11 @@ def check_permanent_milestones(page, width, base):
     game['basicResources']['sugar']['maxAmount'] = 1000 * UNIT
     load_game(page, game)
     select_tab(page, 'Milestones')
-    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0000')
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1')
     sugar = page.locator('.achievement-goal').filter(has=page.get_by_text('Sugar gathered', exact=True))
     sugar.locator('summary').click()
     page.clock.run_for(4000)
-    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.01')
     expect(sugar.get_by_text('✓ ×1.01', exact=True)).to_have_count(1)
     assert sugar.evaluate('(el) => el.open'), 'live ticks must preserve disclosure'
     expect(sugar.locator('summary')).to_contain_text('peak')
@@ -114,7 +114,7 @@ def check_permanent_milestones(page, width, base):
     saved['statistics']['sugarU']['thisRun'] = 0
     load_game(page, saved)
     select_tab(page, 'Milestones')
-    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.01')
     assert save_game(page)['statistics']['maxSugarU']['total'] == peak
     select_tab(page, 'Milestones')
     assert_fits(page, width)
