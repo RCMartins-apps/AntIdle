@@ -70,7 +70,7 @@ object ColonyMilestones {
     Vector.tabulate(goals.map(_.targets.size).sum + 1)(n => BigInt(101).pow(n) -> BigInt(100).pow(n))
   def multiplier(stats: StatisticsData): String = {
     val (n, d) = ratios(bonus(stats))
-    (BigDecimal(n) / BigDecimal(d)).setScale(4, BigDecimal.RoundingMode.HALF_UP).toString
+    UINumbersUtils.decimalRatio(n, d)
   }
   def sugar(amount: Long, stats: StatisticsData): Long = {
     val (n, d) = ratios(bonus(stats))

@@ -99,11 +99,11 @@ def check_permanent_milestones(page, width, base):
     game['basicResources']['sugar']['maxAmount'] = 1000 * UNIT
     load_game(page, game)
     select_tab(page, 'Milestones')
-    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0000')
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1')
     sugar = page.locator('.achievement-goal').filter(has=page.get_by_text('Sugar gathered', exact=True))
     sugar.locator('summary').click()
     page.clock.run_for(4000)
-    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.01')
     expect(sugar.get_by_text('✓ ×1.01', exact=True)).to_have_count(1)
     assert sugar.evaluate('(el) => el.open'), 'live ticks must preserve disclosure'
     expect(sugar.locator('summary')).to_contain_text('peak')
@@ -114,7 +114,7 @@ def check_permanent_milestones(page, width, base):
     saved['statistics']['sugarU']['thisRun'] = 0
     load_game(page, saved)
     select_tab(page, 'Milestones')
-    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.0100')
+    expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.01')
     assert save_game(page)['statistics']['maxSugarU']['total'] == peak
     select_tab(page, 'Milestones')
     assert_fits(page, width)
@@ -258,13 +258,10 @@ def check_game(page, width, url):
     manual = page.locator('.task-row:visible').evaluate_all(
         '(rows) => rows.map(row => !!row.querySelector(".task-controls button"))')
     assert True in manual and False in manual and manual == sorted(manual, reverse=True), manual
-    for row in page.locator('.task-row:visible').all():
-        # Read together: navigation can restore scroll between separate protocol calls.
-        bounds, info = row.evaluate("""row => [row, row.querySelector('.info-summary')].map(el => {
-            const rect = el.getBoundingClientRect(); return {y: rect.y, height: rect.height};
-        })""")
-        assert info['height'] >= 44
-        assert info['y'] >= bounds['y'] and info['y'] + info['height'] <= bounds['y'] + bounds['height'] + 1
+    expect(page.locator('.jobs-panel .info-details')).to_have_count(0)
+    for control in page.locator('.jobs-panel .task-controls button:visible').all():
+        bounds = control.bounding_box()
+        assert bounds['height'] >= 44 and bounds['width'] >= 44, bounds
     expect(page.locator('.small-worker-tasks')).to_have_count(0)
     expect(page.locator('.resource-row').filter(has=page.get_by_text('Small workers', exact=True))).to_have_count(0)
     if width <= 767:

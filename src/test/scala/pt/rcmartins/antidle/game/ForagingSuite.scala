@@ -42,7 +42,7 @@ class ForagingSuite extends FunSuite {
     assertEquals(Foraging.nextPerSecond(Long.MaxValue, plain), 0L)
     assertEquals(Foraging.averagePerSecond(80L, plain), 2025L)
     assertEquals(Foraging.averagePerSecond(1L, improved), 4600L)
-    assertEquals(UINumbersUtils.preciseRateStr(50L), "0.005")
+    assertEquals(UINumbersUtils.preciseRateStr(50L), "<0.01")
     assertEquals(UINumbersUtils.preciseRateStr(4000L), "0.4")
   }
 

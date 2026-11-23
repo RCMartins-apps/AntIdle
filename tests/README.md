@@ -134,9 +134,9 @@ line and fits its cell without clipping. The mobile-resource launcher honors
 CHROMIUM_PATH; GitHub Actions uses the pinned Playwright browser by default.
 
 `python3 tests/task_controls_smoke.py` checks the production task UI at
-320/390/1280px: persistent small-worker folding and total count, matching right
-aligned primary controls, mobile batch assignment, actual idle/default-pool
-semantics, hiding the exhausted small-worker section and stable blocker geometry.
+320/390/1280px: persistent worker card folding and totals, a right-aligned
+nonzero idle count, inline resource rates, aligned controls, mobile batch
+assignment, and stable row geometry as buttons become blocked.
 
 Brood disclosure tests block native toggle events and keep the browser clock
 paused while asserting saved closed/open preferences and reload behavior. The

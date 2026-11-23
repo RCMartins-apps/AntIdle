@@ -89,7 +89,21 @@ UI prose or introducing a generic framework without a concrete need. Automated
 pacing results support human playtests; they do not measure the 80% enjoyment
 aspiration. See D33–D34 and tools/balance/README.md.
 
-## UI copy and information
+## UI consistency, copy and information
+
+Before editing UI, find the closest existing screen or control and reuse its
+markup, shared styles and icons. Match disclosure markers, spacing, type,
+alignment, touch targets, labels, icon order and number formatting for the same
+kind of control. Keep native disclosure arrows on ordinary collapsible sections,
+including when their headings need custom alignment. Reuse `ResourceIcons` and
+the existing number formatters. Display at most two decimal places and keep
+exact arithmetic in the engine. If a repeated pattern needs to change, update its
+shared implementation and check the other places that use it.
+
+Before handing off a visual change, compare it with its closest counterpart in
+the rendered game at phone width. Check the relevant states together, such as
+open and closed, enabled and disabled, or with and without a count. Fix visible
+mismatches in the same change.
 
 Proactively apply small, related UI consistency and clarity improvements within
 the requested area, using existing patterns and icons. Do not require repeated

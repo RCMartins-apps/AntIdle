@@ -163,9 +163,9 @@ class OutpostProgressionSuite extends FunSuite {
   }
 
   test("small resource rates remain legible and keep the correct sign") {
-    assertEquals(UINumbersUtils.resourceRateStr(150L), "0.015")
-    assertEquals(UINumbersUtils.resourceRateStr(-750L), "-0.075")
-    assertEquals(UINumbersUtils.resourceRateStr(1000L), "0.10")
+    assertEquals(UINumbersUtils.resourceRateStr(150L), "0.02")
+    assertEquals(UINumbersUtils.resourceRateStr(-750L), "-0.08")
+    assertEquals(UINumbersUtils.resourceRateStr(1000L), "0.1")
     assertEquals(UINumbersUtils.resourceRateStr(-100L), "-0.01")
   }
 }

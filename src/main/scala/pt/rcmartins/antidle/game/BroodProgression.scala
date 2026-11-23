@@ -117,8 +117,12 @@ object BroodProgression {
   }
   def carePerNurse(upgrades: UpgradesData): Long =
     2L * u * (if (upgrades(UpgradeType.NurseTraining).unlocked) MilestoneResearch.NurseCarePercent else 100L) / 100L
+  def nurseContribution(workers: Long, upgrades: UpgradesData, small: Boolean): Long =
+    workers / u * carePerNurse(upgrades) / (if (small) 2L else 1L)
+
   def nursePower(ants: AntsData, upgrades: UpgradesData = UpgradesData.initial): Long =
-    ants.taskWorkers(AntTask.BroodNurse) / u * carePerNurse(upgrades) + ants.smallNurses / u * carePerNurse(upgrades) / 2L
+    nurseContribution(ants.taskWorkers(AntTask.BroodNurse), upgrades, small = false) +
+      nurseContribution(ants.smallNurses, upgrades, small = true)
   private def tend(a: AntsData, nest: NestAttributes, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
     val count = a.eggsAndLarvae.size
     val broodCare = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L

@@ -82,7 +82,7 @@ optional choices, not a promise that buying everything immediately is optimal.
 The **Milestones** tab tracks lifetime achievements separately from the paid
 current-colony research above. Each reached tier automatically multiplies all
 sugar gains by ×1.01. N completed tiers gives 1.01^N, rather than 1 + N/100.
-Ten tiers give ×1.1046 (rounded only for display). Resource arithmetic uses an
+Ten tiers display as ×1.1. Resource arithmetic uses an
 exact integer ratio and floors the final fixed-point gain; it does not repeatedly
 round at each milestone. Negative amounts, supplies, upkeep and purchase costs
 are never multiplied. The multiplier stacks with the existing inherited bonus.

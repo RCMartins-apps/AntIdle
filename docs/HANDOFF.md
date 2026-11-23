@@ -1,14 +1,19 @@
 # Handoff
 
-## 2026-11-22 — timed egg laying
+## 2026-11-22 — compact Jobs cards
 
-- `feature/timed-egg-laying` starts from main 0bd0d41 (#108). Eggs reserve
-  a brood and colony place and pay their costs when laying starts. Development
-  and the eggs-raised counter start when the saved laying timer finishes.
-  Queen Chamber and Queen's Rhythm affect newly started eggs.
-- The cancel button appears only for waiting orders. Canceling preserves the
-  current egg. Worker/scout FIFO, automatic brood, and emergency recovery
-  share the same queen. Existing brood keeps its saved development.
-- Passed 321 engine tests, the development build, and brood layout at
-  320/390/1280px. Timed laying and cancellation passed a focused browser flow
-  at 390/1280px and mobile screenshots were captured.
+- `polish/mobile-worker-cards` from main c6bab7f (#109). Small and standard
+  workers have independent disclosures with matching native arrows. The standard
+  card keeps the worker
+  total and a positive idle count visible in its header.
+- Jobs show compact resource icon rates and no description panels. Disabled
+  assign buttons retain their reasons in titles, without an extra row.
+  The Royal Nurses shortcut opens the standard card.
+- Development build passed. The Jobs and blocked-action browser scenarios
+  passed at 320/390/1280 px. Captured mobile open and closed cards.
+- Brood Nurse rows show an egg icon and the assigned caste's total extra care.
+  The same calculation supplies the game engine and the badge, including
+  Nurse Training and small workers' half contribution.
+- Visible game numbers use at most two decimal places, including amounts,
+  costs, rates and the milestone multiplier. Tiny values retain a signed bound.
+  Engine arithmetic, costs and save precision are unaffected.

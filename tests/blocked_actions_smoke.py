@@ -88,14 +88,14 @@ def check(page, width, url):
     load_game(page,jobs)
     select_tab(page,'Tasks')
     collector=page.locator('#task-sugarcollector')
-    expect(collector.locator('.task-blocked-reason')).to_have_text('Needs idle workers')
+    expect(collector.locator('.task-controls button').last).to_have_attribute('title','Needs idle workers')
     page.get_by_role('button',name='Remove Tunneler',exact=True).click()
     expect(collector.get_by_role('button',name='Assign Sugar Collector',exact=True)).to_be_enabled()
-    expect(collector.locator('.task-blocked-reason')).to_be_empty()
+    expect(collector.locator('.task-controls button').last).to_be_enabled()
     page.get_by_role('button',name='Remove Tunneler',exact=True).click()
     for _ in range(2):
         page.get_by_role('button',name='Assign Scraps Gatherer',exact=True).click()
-    expect(page.locator('#task-scavenger .task-blocked-reason')).to_have_text('No free task places')
+    expect(page.locator('#task-scavenger .task-controls button').last).to_have_attribute('title','No free task places')
     assert_fits(page,width)
     assert not errors,errors
     print(f'PASS blocked actions {width}px: queued eggs/builds, housing, busy scouts, capacity, affordability and accessible reasons',flush=True)

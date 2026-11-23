@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
 import os
+import re
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
@@ -83,7 +84,7 @@ def check_compact(page, width, url):
     for redundant in ("Small nurses provide half the care", "half a standard nurse", "New and returning workers join", "Unassigned small workers", "two shared scraps-gathering places"):
         assert redundant not in visible, redundant
     expect(page.locator("#task-broodnurse .task-description")).not_to_be_visible()
-    expect(page.locator("#task-sugarcollector .task-rate")).to_contain_text("sugar/s each")
+    expect(page.locator("#task-sugarcollector .job-rate")).to_have_attribute("aria-label", re.compile(r"sugar/s per worker"))
     check_help("Brood Nurse", "Food shortages")
     check_help("Default task", "New and returning")
     check_help("Small workers · 50%", "share scraps and nurse places")
@@ -132,8 +133,8 @@ def check_compact(page, width, url):
     hungry["basicResources"]["water"]["amount"] = 0
     load_game(page, hungry)
     tab("Tasks")
-    expect(page.locator("#task-aphidtender .task-rate")).to_contain_text("Needs protein")
-    expect(page.locator("#task-seedforager .task-rate")).to_contain_text("Needs water")
+    expect(page.locator("#task-aphidtender .job-shortage")).to_have_attribute("aria-label", "Needs protein")
+    expect(page.locator("#task-seedforager .job-shortage")).to_have_attribute("aria-label", "Needs water")
     assert_fits(page, width)
     assert not errors, errors
     print(f"PASS {width}px: descriptions collapsed, live rates/costs/warnings visible, task/section/action [i], keyboard, discoveries, risk and layout", flush=True)
