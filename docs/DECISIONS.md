@@ -1079,6 +1079,15 @@ Use the same controls, icons and formatting for the same job across screens.
 Compare new or changed elements against their existing counterparts on a phone
 before handoff. The repository UI instructions define the checks.
 
+## D70: Brood Priority shifts care between castes
+
+After building the first Nursery, choose Balanced, Workers first or Scouts
+first in Brood. Balanced keeps the existing rotating care order. With both
+castes developing, a brood of the preferred caste has twice the weight when
+splitting available care. Each caste can use the other's surplus. Food costs,
+development limits, the queen's laying queue, and priority for emergency
+recovery are unchanged. Royal Nurses still care for royal brood separately.
+The preference lives in the colony save and resets to Balanced on founding.
 
 ## D72: The opening uses sugar provisions and worker production
 

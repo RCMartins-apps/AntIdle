@@ -9,10 +9,12 @@
   five-sugar emergency action.
 - The simulator uses the same opening as the browser. Retained compatible saves
   keep their stock; an older empty opening can recover from the queen.
-- Verified 321 engine tests, three balance tests, the production browser gate at
-  390/1280 px and the opening/recovery flow at 320/390/1280 px. Rendered mobile
-  screenshots were shared for the new opening and empty-colony fallback. See
-  D17 and D72 for behavior.
-- Related work is separate. [Brood Priority PR #111](https://github.com/RCMartins-apps/AntIdle/pull/111)
-  has auto-merge enabled. `design/nest-refuse-pressure` contains the playable
-  refuse prototype; full-run tuning remains open.
+- Before integrating Brood Priority, engine, balance, production browser and
+  packaged offline checks passed. Two balanced simulations (seeds 42 and 137)
+  unlocked exploration at 30.3 simulated minutes and reached the first
+  founding at 94.2 and 93.3 minutes, with zero starvation deaths.
+- The branch includes Brood Priority from merged PR #111 and passed all 327
+  game tests after integration. Rendered mobile screenshots were shared for the
+  opening and empty-colony fallback.
+  The separate `design/nest-refuse-pressure` prototype still needs a pacing
+  playtest. See D17 and D72 for the opening rules.

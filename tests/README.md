@@ -121,7 +121,8 @@ collapse, accelerated simulated ticks, and disappearance when stored time is emp
 `ANTIDLE_PRODUCTION=1 python3 tests/brood_layout_smoke.py` checks a single brood
 heading, scoped feeding details, independent disclosures, and stable egg-button
 positions through empty/large worker-and-scout queues, full brood, food pauses,
-cancellation and live ticks at 320/390/1280px.
+cancellation and live ticks at 320/390/1280px. It also checks that the
+post-Nursery priority control fits, shifts live care and persists with the save.
 
 The resource regression repeatedly switches source timing between absent, full,
 full-countdown and depletion states, including changing number widths. It verifies

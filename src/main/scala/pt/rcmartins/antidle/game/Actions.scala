@@ -85,6 +85,7 @@ object Actions {
 
   def assignSmallWorker(task: AntTask, delta: Long): Unit = actionUpdater.writer.onNext(BroodProgression.assignSmall(_, task, delta))
   def cancelEggOrders(): Unit = actionUpdater.writer.onNext(BroodProgression.cancel)
+  def setBroodPriority(priority: BroodPriority): Unit = actionUpdater.writer.onNext(BroodProgression.setPriority(_, priority))
   val layEggActionEnabled: Signal[Boolean] = antsSignal.combineWith(nestSignal).map {
     case (ants, nest) => BroodProgression.orderAmount(ants, nest, 1) > 0
   }
