@@ -3,11 +3,12 @@ import copy
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
+from pathlib import Path
 from threading import Thread
 import os
 import shutil
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, progressed_game, save_game, select_tab
 from ci_browser_smoke import ProductionHandler
 
 
@@ -135,6 +136,7 @@ def check(page, width, url):
     load_game(page,founding)
     expect(panel).to_have_attribute('open','')
     expect(panel.locator('.brood-scout-orders')).to_have_count(0)
+    expect(page.get_by_label('Brood priority',exact=True)).to_have_count(0)
     expect(panel.locator('.brood-order-count')).to_contain_text('Egg orders')
     small=page.get_by_role('button',name='Raise Small Worker Egg',exact=True)
     expect(small).to_be_visible()
@@ -150,8 +152,33 @@ def check(page, width, url):
     load_game(page,founding)
     expect(panel.locator('.brood-worker-orders .resource-icon-workers')).to_have_count(1)
     expect(panel.locator('.brood-next-egg .resource-icon-workers')).to_have_count(1)
+    mixed=copy.deepcopy(game)
+    mixed['ants']['eggsAndLarvae']=[
+        {'Developing':{'initialTick':tick,'kind':kind,'care':0}}
+        for kind in ('worker','scout','worker','scout')
+    ]
+    mixed['ants'].pop('broodPriority',None)  # Existing saves start balanced.
+    load_game(page,mixed)
+    priority=page.get_by_label('Brood priority',exact=True)
+    expect(priority).to_have_value('Balanced')
+    assert priority.bounding_box()['height']>=44
+    priority.select_option(label='Scouts first')
+    page.clock.run_for(1000)
+    saved=save_game(page)
+    broods=[entry['Developing'] for entry in saved['ants']['eggsAndLarvae']]
+    worker_care=sum(b['care'] for b in broods if b['kind']=='worker')
+    scout_care=sum(b['care'] for b in broods if b['kind']=='scout')
+    assert scout_care>worker_care>0,(scout_care,worker_care)
+    load_game(page,saved);select_tab(page,'Nest')
+    expect(priority).to_have_value('ScoutsFirst')
+    assert_fits(page,width)
+    if width==390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        path=Path(os.environ['ANTIDLE_ARTIFACTS'])
+        path.mkdir(parents=True,exist_ok=True)
+        priority.evaluate("el => el.scrollIntoView({block:'center'})")
+        priority.locator('..').screenshot(path=str(path/'brood-priority.png'))
     assert not errors,errors
-    print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help and independent disclosures',flush=True)
+    print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help, independent disclosures and saved brood priority',flush=True)
 
 
 if __name__=='__main__':
