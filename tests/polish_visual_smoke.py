@@ -16,7 +16,7 @@ def check(page, width, url):
     expect(sugar.locator('.resource-amount')).to_contain_text('1.25M')
     expect(sugar).to_contain_text('2M')
     expect(page.locator('.queue-empty')).to_have_text('No construction queued.')
-    button = page.get_by_role('button', name='Gather Sugar', exact=True)
+    button = page.get_by_role('button', name='Raise Worker Egg', exact=True)
     assert button.bounding_box()['height'] >= 44
     expect(button).to_have_css('font-size', '16px')
     expect(sugar.locator('.resource-amount')).to_have_css('font-variant-numeric', 'tabular-nums')

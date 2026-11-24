@@ -119,6 +119,6 @@ to an inactive, incomplete challenge.
 ## Founding Provisions
 
 The fourth and final introductory Understanding costs 1 DNA after Satellite
-Nests. A new colony begins with enough sugar for three small-worker eggs.
+Nests. It adds 15 starting sugar, enough for three extra small-worker eggs.
 Buying it with banked DNA affects future foundings. Provisions are starting
 stock, so they do not count toward sugar gathered or carry across resets.

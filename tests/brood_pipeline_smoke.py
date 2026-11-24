@@ -21,8 +21,6 @@ def check_brood(page, width, url):
     initial = save_game(page)
     assert not initial["ants"]["standardWorkersUnlocked"]
     page.get_by_role("tab", name="Nest", exact=True).click()
-    for _ in range(5):
-        page.get_by_role("button", name="Gather Sugar", exact=True).click()
     raise_egg = page.get_by_role("button", name=re.compile(r"^Raise (?:Small )?Worker Egg"))
     expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
     expect(page.locator(".brood-feeding")).to_contain_text("5 sugar")

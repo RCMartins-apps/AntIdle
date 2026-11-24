@@ -88,9 +88,8 @@ Before adding another maintenance burden, time representative runs: new game to
 standard workers, exploration, outpost, royal nursery, first founding and then a
 second run. Track waits, worker allocation, stockpiles, losses and what causes
 inactivity. Existing run/lifetime statistics help, but do not yet constitute a
-complete pacing trace. The opening still depends on manual Gather Sugar; decide
-whether that short clicking phase is intentional or should become queen
-provisioning. Later emergency recovery does not replace the fresh-colony opening.
+complete pacing trace. Compare the opening with queen provisions against the
+old manual sugar opening as part of the next pacing review.
 Tune demonstrated bottlenecks and surpluses instead of
 assuming every resource needs another sink.
 

@@ -122,7 +122,6 @@ object Utils {
     val owner = new OneTimeOwner(() => ())
     initializeTicksUpdater(owner)
     initializeActionUpdater(owner)
-    addMessage("We should collect some sugar to feed our queen.")
     pause = true
     setInterval(200)(updateState())
     actionUpdater.writer.onNext(
@@ -238,11 +237,6 @@ object Utils {
             )
           GameTransition.afterAction(actionFunc(allData)).updateVars()
       }
-
-  def giveResources(sugar: Long): Unit =
-    actionUpdater.writer.onNext { allData =>
-      allData.giveResources(sugar = sugar)
-    }
 
   def ifUnlockedOpt[A](unlocks: Unlocks => Boolean)(value: => A): Signal[Option[A]] =
     unlocksSignal.map(unlocks).distinct.map {

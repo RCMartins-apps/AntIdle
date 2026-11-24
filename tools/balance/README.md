@@ -46,9 +46,8 @@ considers the first visible unfinished priority; this is intentionally inspectab
 
 Each policy makes at most one strategic decision every five simulated seconds.
 A decision can batch orders/assignments, so the count is **not literal UI clicks**.
-Manual sugar gathering is an explicit opening allowance: 50 one-sugar clicks per
-colony, paced at up to two clicks/second (rounded to the next tick). It is
-recorded separately. There are no other injected resources. Current policies
+The runner uses the same starting provisions, worker production and emergency
+recovery as the browser. Current policies
 pursue safe exploration/discoveries, the outpost and royal brood; they don't
 model voluntary raids/territory or every possible upgrade/expansion. Targets
 and these rules are policy assumptions, not changes to game rules.

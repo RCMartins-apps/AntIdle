@@ -22,13 +22,13 @@ object EmergencyRecovery {
   }
 
   def needed(ants: AntsData): Boolean =
-    ants.standardWorkersUnlocked && ants.totalWorkers == 0L && !hasRecoveryBrood(ants)
+    ants.totalWorkers == 0L && !hasRecoveryBrood(ants)
 
   def automatic(data: AllData): Boolean = data.upgrades(QueensRoutine).unlocked &&
     data.ants.queenRoutine.enabled && data.ants.queenRoutine.targetWorkers > 0 && data.unlocks.actions.canLayEggs
 
   def canRaise(ants: AntsData, sugar: Long): Boolean =
-    needed(ants) && ants.layingCooldown <= 0L && sugar >= EggCost
+    ants.standardWorkersUnlocked && needed(ants) && ants.layingCooldown <= 0L && sugar >= EggCost
 
   // One exceptional brood place prevents full, unfed ordinary brood from blocking recovery.
   // The usual population/space limits continue to apply to every ordinary egg.
@@ -45,10 +45,12 @@ object EmergencyRecovery {
     else lay(data.spendResources(ActionCost(sugar = EggCost)))
 
   def tick(data: AllData): AllData = {
-    if (!needed(data.ants) || !automatic(data)) {
+    val sugar = data.basicResources.sugar.amount
+    val routine = automatic(data) && data.ants.standardWorkersUnlocked
+    if (!needed(data.ants) || (sugar >= EggCost && !routine)) {
       if (data.ants.emergencyForagingTicks == 0L) data
       else data.copy(ants = data.ants.copy(emergencyForagingTicks = 0L))
-    } else if (canRaise(data.ants, data.basicResources.sugar.amount - data.ants.queenRoutine.sugarReserve)) {
+    } else if (routine && canRaise(data.ants, sugar - data.ants.queenRoutine.sugarReserve)) {
       lay(data.spendResources(ActionCost(sugar = EggCost)))
     } else {
       val progress = Math.min(ForagingTicks, Math.max(0L, data.ants.emergencyForagingTicks) + 1L)
@@ -62,5 +64,5 @@ object EmergencyRecovery {
   }
 
   def status(ants: AntsData): String =
-    s"Queen gathering emergency supplies · ${UINumbersUtils.prettyTimeFromTicks(Math.max(0L, ForagingTicks - ants.emergencyForagingTicks))} · 5 sugar for one small-worker egg"
+    s"Queen foraging · ${UINumbersUtils.prettyTimeFromTicks(Math.max(0L, ForagingTicks - ants.emergencyForagingTicks))}"
 }

@@ -29,7 +29,7 @@ object ResourceVisibility {
       .modify(_.unlocks.resources.showResin).setTo(known.showResin || data.basicResources.resin.amount > 0L ||
         DiscoveryProgression.ResinSeep.found(data.exploration) || data.upgrades(UpgradesData.UpgradeType.RoyalNurseryPlanning).unlocked ||
         data.nestAttributes.chambers.royalNurseryChamber.level > 0)
-      .modify(_.unlocks.resources.showEggs).setTo(known.showEggs || data.unlocks.actions.canLayEggs || data.ants.eggsAndLarvae.nonEmpty)
+      .modify(_.unlocks.resources.showEggs).setTo(known.showEggs || data.ants.eggsAndLarvae.nonEmpty)
       .modify(_.statistics.maxAliveWorkers).using(_.max(data.ants.totalWorkersCount))
       .modify(_.unlocks.resources.showWorkers).setTo(known.showWorkers || data.ants.totalWorkers > 0L)
       .modify(_.unlocks.resources.showRepletes).setTo(known.showRepletes || data.ants.repletes > 0L || data.upgrades(UpgradesData.UpgradeType.RepleteStorage).unlocked)

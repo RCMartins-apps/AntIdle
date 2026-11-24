@@ -7,7 +7,8 @@ import os
 import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save_game, progressed_game
+from ci_browser_smoke import ProductionHandler
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save_game, progressed_game, select_tab
 
 
 def check_recovery(page, width, url):
@@ -30,19 +31,29 @@ def check_recovery(page, width, url):
         upgrade.update(show=False, unlocked=upgrade["name"] in ("QueensRoutine", "StandardWorkers"))
 
     def nest():
-        page.get_by_role("tab", name="Nest", exact=True).click()
+        select_tab(page, "Nest")
 
     load_game(page, game)
     nest()
     emergency = page.get_by_role("button", name="Raise Emergency Worker", exact=True)
-    expect(emergency).to_be_visible()
-    expect(emergency).to_be_disabled()
+    expect(emergency).to_have_count(0)
+    expect(page.locator(".brood-pipeline")).to_contain_text("Queen foraging")
+    page.clock.run_for(25000)
+    free_egg = save_game(page)
+    assert free_egg["basicResources"]["sugar"]["amount"] == 0
+    assert free_egg["ants"]["eggsAndLarvae"][0]["Developing"]["kind"] == "emergency-small"
+    page.clock.run_for(21200)
+    assert save_game(page)["ants"]["smallWorkers"] == UNIT
+
+    funded = copy.deepcopy(game)
+    funded["basicResources"]["sugar"]["amount"] = 5 * UNIT
+    load_game(page, funded)
+    nest()
+    expect(emergency).to_be_enabled()
     expect(page.locator(".emergency-recovery .action-costs")).to_contain_text("/5 sugar")
-    for _ in range(5):
-        page.get_by_role("button", name="Gather Sugar", exact=True).click()
     emergency.click()
     expect(emergency).to_have_count(0)
-    expect(page.locator(".brood-pipeline")).to_contain_text("queen-tended recovery brood")
+    expect(page.locator(".brood-pipeline")).to_contain_text("Laying")
     laid = save_game(page)
     assert laid["basicResources"]["sugar"]["amount"] == 0
     assert laid["ants"]["standardWorkersUnlocked"]
@@ -58,11 +69,11 @@ def check_recovery(page, width, url):
     # No stock/protein, hungry larvae fill every brood/housing place, reserve kept.
     auto = copy.deepcopy(game)
     auto["ants"]["queenRoutine"]["enabled"] = True
-    auto["ants"]["eggsAndLarvae"] = [{"Developing": {"initialTick": 100, "kind": "worker", "care": 100 * UNIT}}]
+    auto["ants"]["eggsAndLarvae"] = [{"Developing": {"initialTick": 100, "kind": "worker", "care": 100 * UNIT, "laying": False}}]
     auto["nestAttributes"]["maxAnts"] = UNIT
     load_game(page, auto)
     nest()
-    expect(page.locator(".queen-routine-status")).to_contain_text("Queen gathering emergency supplies")
+    expect(page.locator(".queen-routine-status")).to_contain_text("Queen foraging")
     expect(page.locator(".brood-pipeline")).to_contain_text("Needs protein")
     page.clock.run_for(10000)
     partial = save_game(page)
@@ -85,14 +96,14 @@ def check_recovery(page, width, url):
     assert restored["ants"]["eggsAndLarvae"] == auto["ants"]["eggsAndLarvae"]
     assert restored["statistics"]["eggsCount"]["thisRun"] == 1
 
-    # The player can turn off recovery; zero-target automation also stays idle.
+    # Pausing routine spending leaves the queen’s zero-stock fallback active.
     load_game(page, auto)
     nest()
     page.locator("#queen-routine-enabled").uncheck()
     page.clock.run_for(30000)
     paused = save_game(page)
     assert paused["ants"]["emergencyForagingTicks"] == 0
-    assert len(paused["ants"]["eggsAndLarvae"]) == 1
+    assert len(paused["ants"]["eggsAndLarvae"]) == 2
     starving = copy.deepcopy(game)
     starving["ants"].update(workers=UNIT, tasks=[[{"Tunneler": {}}, UNIT]])
     load_game(page, starving)
@@ -102,11 +113,11 @@ def check_recovery(page, width, url):
     expect(emergency).to_have_count(0)
     assert_fits(page, width)
     assert not errors, errors
-    print(f"PASS {width}px: manual costs/recovery, protected automatic provisions, hungry/full brood, save/reload, reserve, opt-out, starvation warning and layout", flush=True)
+    print(f"PASS {width}px: manual costs/recovery, protected automatic provisions, hungry/full brood, save/reload, reserve, paused routine, starvation warning and layout", flush=True)
 
 
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT)))
+    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(ProductionHandler if os.environ.get("ANTIDLE_PRODUCTION") else QuietHandler, directory=str(ROOT)))
     Thread(target=server.serve_forever, daemon=True).start()
     try:
         with sync_playwright() as p:

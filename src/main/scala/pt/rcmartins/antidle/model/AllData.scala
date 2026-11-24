@@ -88,9 +88,9 @@ object AllData {
     AllData(
       world = WorldData.initial(System.currentTimeMillis()),
       ants = AntsData.initial,
-      basicResources = BasicResources.initial,
+      basicResources = pt.rcmartins.antidle.game.Prestige.startingResources(Lineage()),
       nestAttributes = NestAttributes.initial,
-      unlocks = Unlocks.initial,
+      unlocks = Unlocks(actions = Unlocks.ActionUnlocks(canLayEggs = true)),
       upgrades = UpgradesData.initial,
       exploration = ExplorationData.initial,
       statistics = StatisticsData.initial,

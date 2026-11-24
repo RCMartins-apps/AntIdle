@@ -248,6 +248,9 @@ object BroodProgression {
     val nextScout = ants.scoutEggOrders.headOption.contains(0)
     val nextCost = if (nextScout) ScoutProgression.eggCost else ActionCost(sugar = eggCost(ants))
     val waiting = if (ants.layingBrood.nonEmpty) s"Laying egg · ${UINumbersUtils.prettyTimeFromTicks(ants.layingCooldown)}"
+      else if (EmergencyRecovery.broodCount(ants) > 0) "Rearing a recovery worker"
+      else if (EmergencyRecovery.needed(ants) && resources.sugar.amount < EmergencyRecovery.EggCost)
+        EmergencyRecovery.status(ants)
       else if (ants.queuedEggs > 0 && resources.sugar.amount < nextCost.sugar) "Needs sugar"
       else if (nextScout && resources.protein.amount < nextCost.protein) "Needs protein for scout egg"
       else if (ants.queuedEggs > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"

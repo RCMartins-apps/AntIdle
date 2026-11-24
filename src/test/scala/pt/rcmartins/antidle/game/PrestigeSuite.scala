@@ -22,7 +22,7 @@ class PrestigeSuite extends FunSuite {
     assertEquals(next.ants.daughterQueens, 0L)
     assertEquals(next.nestAttributes, NestAttributes.initial)
     assertEquals(next.upgrades, UpgradesData.initial)
-    assertEquals(next.basicResources, BasicResources.initial)
+    assertEquals(next.basicResources, AllData.initial.basicResources)
     assertEquals(next.statistics.sugarU, StatisticsData.StatLong(0L, 80L))
     assertEquals(next.statistics.maxAliveWorkers, StatisticsData.StatInt(0, 50))
     assertEquals(next.world.targetTick - next.currentTick, data.world.targetTick - data.currentTick)

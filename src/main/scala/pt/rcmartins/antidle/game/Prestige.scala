@@ -18,16 +18,17 @@ object Prestige {
   val SatelliteNests = Understanding("satellite-nests", "Satellite Nests", 1L, 3,
     "Dry Clearing: half the sugar and Knowledge to establish. Choose Seed Station (+50% protein, +25% water use) or Scout Station (40% shorter studies with 2–3 scouts, 5 water per study).",
     _.satelliteNests, _.copy(satelliteNests = true), _.beyondWoodland)
+  private val StartingSugar: Long = 2L * BroodProgression.eggCost(AntsData.initial)
   val ProvisionSugar: Long = 3L * BroodProgression.eggCost(AntsData.initial)
   val FoundingProvisions = Understanding("founding-provisions", "Founding Provisions", 1L, 4,
-    s"Start future colonies with ${ProvisionSugar / u} sugar, enough to lay three small-worker eggs.",
+    s"+${ProvisionSugar / u} starting sugar (three small-worker eggs).",
     _.foundingProvisions, _.copy(foundingProvisions = true), _.satelliteNests)
   val understandings: List[Understanding] = List(SharedPaths, BeyondWoodland, SatelliteNests, FoundingProvisions)
 
   def startingResources(lineage: Lineage): BasicResources = {
     val initial = BasicResources.initial
-    if (lineage.foundingProvisions) initial.copy(sugar = initial.sugar.copy(amount = ProvisionSugar))
-    else initial
+    val bonus = if (lineage.foundingProvisions) ProvisionSugar else 0L
+    initial.copy(sugar = initial.sugar + (StartingSugar + bonus))
   }
 
   def projectedPrerequisites(lineage: Lineage, selected: Set[String]): Lineage =

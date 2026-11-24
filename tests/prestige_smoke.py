@@ -72,7 +72,7 @@ def check_prestige(page, width, url):
         'drySeasonActive': False, 'drySeasonCompleted': False, 'foundingProvisions': False,
     }
     assert first['ants']['workers'] == 0 and first['ants']['daughterQueens'] == 0
-    assert first['basicResources']['sugar']['amount'] == 0
+    assert first['basicResources']['sugar']['amount'] == 10 * UNIT
     assert first['statistics']['sugarU'] == {'thisRun': 0, 'total': 300 * UNIT}
     second = copy.deepcopy(game)
     second['ants']['lineage'] = first['ants']['lineage']

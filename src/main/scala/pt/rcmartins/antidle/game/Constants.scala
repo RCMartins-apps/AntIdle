@@ -41,7 +41,6 @@ object Constants {
 
   val LayEggSugarCost: Long = 10 * u
 
-  val PlayerGatherSugarClickAmount: Long = 1 * u
   val (defaultTaskCollectSugarTick: Long, defaultTaskCollectSugarSecond: Long) =
     tickAndSeconds(perSecondValue = (0.4 * u).toLong)
 
@@ -62,7 +61,6 @@ object Constants {
 
   val AntDeathRiskThreshold: Long = 10 * u
 
-  val GatherSugarAction = "Gather Sugar"
   val LayEggAction = "Raise Worker Egg"
 
   def getChamberTunnelingSpaceNeeded(chamberType: ChamberType, level: Int): Long = {
