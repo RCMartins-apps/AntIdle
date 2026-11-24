@@ -177,8 +177,43 @@ def check(page, width, url):
         path.mkdir(parents=True,exist_ok=True)
         priority.evaluate("el => el.scrollIntoView({block:'center'})")
         priority.locator('..').screenshot(path=str(path/'brood-priority.png'))
+
+    crowded=copy.deepcopy(game)
+    crowded['basicResources']['sugar'].update(amount=1500*UNIT,maxAmount=2000*UNIT)
+    crowded['basicResources']['tunnelingSpace'].update(amount=1000*UNIT,maxAmount=1500*UNIT)
+    crowded['nestAttributes'].update(nurseryRefuse=100*UNIT)
+    crowded['nestAttributes']['chambers']['nurseryChamber']['level']=2
+    crowded['ants'].update(eggOrders=1,eggsAndLarvae=[
+        {'Developing': {'initialTick': tick, 'kind': 'worker'}} for _ in range(6)
+    ])
+    load_game(page,crowded)
+    select_tab(page,'Nest')
+    meter=panel.locator('.refuse-meter')
+    expect(meter).to_contain_text('Refuse 100/100')
+    expect(meter).to_contain_text('2 places blocked')
+    expect(panel.locator('.brood-place-count b')).to_have_text('6/6')
+    expect(panel.locator('.brood-pipeline')).to_contain_text('Needs clean brood places')
+    expect(meter).to_have_class('refuse-meter small mb-2 text-danger')
+    assert_fits(page,width)
+    if width==390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        artifacts=Path(os.environ['ANTIDLE_ARTIFACTS'])
+        artifacts.mkdir(parents=True,exist_ok=True)
+        panel.screenshot(path=str(artifacts/'refuse-full.png'))
+    select_tab(page,'Jobs')
+    expect(page.get_by_role('button',name='Assign Refuse Carrier',exact=True)).to_be_visible()
+    select_tab(page,'Chambers')
+    chamber=page.get_by_role('button',name='Build Sealed Refuse Chamber',exact=True)
+    page.get_by_label('Details for Build Sealed Refuse Chamber',exact=True).click()
+    expect(chamber.locator('..').locator('.action-details')).to_contain_text('+150 refuse capacity')
+    chamber.click()
+    select_tab(page,'Nest')
+    expect(meter).to_contain_text('Refuse 100/250')
+    expect(meter).not_to_contain_text('blocked')
+    expect(panel.locator('.brood-place-count b')).to_have_text('6/8')
+    page.clock.run_for(400)
+    expect(panel.locator('.brood-worker-orders b')).to_have_text('0')
     assert not errors,errors
-    print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help, independent disclosures and saved brood priority',flush=True)
+    print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help, independent disclosures, saved brood priority and refuse capacity',flush=True)
 
 
 if __name__=='__main__':

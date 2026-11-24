@@ -12,6 +12,7 @@ object AutomaticBrood {
 
   def status(ants: AntsData, nest: NestAttributes, sugar: Long): String = {
     val routine = ants.queenRoutine
+    val spaceBlocker = BroodProgression.placeBlocker(ants, nest)
     if (!routine.enabled) "Paused"
     else if (EmergencyRecovery.broodCount(ants) > 0) "Rearing one emergency small worker"
     else if (routine.targetWorkers > 0 && EmergencyRecovery.needed(ants)) {
@@ -21,7 +22,7 @@ object AutomaticBrood {
     else if (ants.totalWorkers / u + BroodProgression.incoming(ants) + ants.eggOrders >= routine.targetWorkers) "Target covered"
     else if (ants.queuedEggs > 0) "Waiting for manual egg orders"
     else if (ants.populationCount >= nest.maxAntsCount) "Population limit reached"
-    else if (ants.eggsAndLarvae.size >= BroodProgression.capacity(nest)) "Brood places full"
+    else if (spaceBlocker.nonEmpty) spaceBlocker.get
     else if (sugar - routine.sugarReserve < BroodProgression.eggCost(ants)) "Keeping sugar reserve"
     else if (ants.layingCooldown > 0L) "Queen is laying"
     else "Raising worker eggs"

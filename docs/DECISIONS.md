@@ -1089,6 +1089,14 @@ development limits, the queen's laying queue, and priority for emergency
 recovery are unchanged. Royal Nurses still care for royal brood separately.
 The preference lives in the colony save and resets to Balanced on founding.
 
+## D71: Nest refuse can temporarily close brood places
+
+Nursery level 2 opens refuse storage and carrier staffing. Actual larval feeding
+creates the backlog. Carriers provide sustained clearing, and a sealed chamber
+provides room for bursts. High refuse closes some ordinary brood places to new
+eggs. Orders stay queued, active brood keeps developing, and royal and recovery
+care remain separate. Existing midden purchases carry over as sealed chambers.
+
 ## D72: The opening uses sugar provisions and worker production
 
 Every new colony starts with enough sugar for two small-worker eggs. Founding

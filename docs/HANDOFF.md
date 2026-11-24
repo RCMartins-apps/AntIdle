@@ -1,20 +1,18 @@
 # Handoff
 
-## 2026-11-24 — colony opening without sugar clicks
+## 2026-11-24 — founding provisions and nest refuse
 
-- `feature/remove-manual-sugar` replaces Gather Sugar with 10 founding sugar
-  for two small-worker eggs. Founding Provisions adds 15 more. The queen can
-  forage for one recovery egg when a colony has no workers or viable founding
-  brood and cannot pay for an egg. Stocked post-research colonies retain their
-  five-sugar emergency action.
-- The simulator uses the same opening as the browser. Retained compatible saves
-  keep their stock; an older empty opening can recover from the queen.
-- Before integrating Brood Priority, engine, balance, production browser and
-  packaged offline checks passed. Two balanced simulations (seeds 42 and 137)
-  unlocked exploration at 30.3 simulated minutes and reached the first
-  founding at 94.2 and 93.3 minutes, with zero starvation deaths.
-- The branch includes Brood Priority from merged PR #111 and passed all 327
-  game tests after integration. Rendered mobile screenshots were shared for the
-  opening and empty-colony fallback.
-  The separate `design/nest-refuse-pressure` prototype still needs a pacing
-  playtest. See D17 and D72 for the opening rules.
+- New colonies start with 10 sugar for two small-worker eggs. Founding
+  Provisions adds 15. Workers collect sugar after they mature. When a colony
+  loses all workers and cannot pay for an egg, the queen can forage for one
+  recovery worker. See D17 and D72 in [Decisions](DECISIONS.md).
+- Nursery level 2 opens refuse storage and Refuse Carrier staffing. Larval
+  feeding creates refuse and crowding reduces room for new eggs. Carriers clear
+  the backlog and a Sealed Refuse Chamber adds 150 capacity. Existing midden
+  purchases carry over. See [Nest refuse](MIDDEN.md).
+- The combined changes passed 332 engine tests. A phone-width browser check
+  confirmed that the queen can rear a recovery worker with zero sugar and
+  every clean brood place occupied, while retaining existing larvae and orders.
+- The opening passed packaged offline checks. Two balanced simulations
+  reached the first founding in 93–94 simulated minutes without starvation
+  deaths. Longer-run refuse tuning still needs a playtest.

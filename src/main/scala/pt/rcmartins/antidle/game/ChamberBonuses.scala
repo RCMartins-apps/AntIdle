@@ -37,7 +37,9 @@ object ChamberBonuses {
   def forDisplay(chamberType: ChamberType, ants: AntsData, nest: NestAttributes, upgrades: UpgradesData): ActionBonus = {
     val bonus = forChamber(chamberType, upgrades)
     chamberType match {
-      case ChamberType.Nursery => bonus.copy(maxEggs = 3L * Constants.u, broodNurseSlots = 5)
+      case ChamberType.Nursery =>
+        val opensRefuse = nest.chambers.nurseryChamber.level == Midden.RequiredNurseryLevel - 1
+        bonus.copy(maxEggs = 3L * Constants.u, broodNurseSlots = 5, maxRefuse = if (opensRefuse) Midden.BaseCapacity else 0L)
       case ChamberType.Queen =>
         val next = nest.copy(chambers = nest.chambers.copy(
           queenChamber = nest.chambers.queenChamber.copy(level = nest.chambers.queenChamber.level + 1)))

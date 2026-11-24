@@ -31,7 +31,7 @@ object ScoutProgression {
 
   def canLay(ants: AntsData, nest: NestAttributes, resources: BasicResources): Boolean =
     nest.chambers.nurseryChamber.level > 0 && ants.standardWorkersUnlocked &&
-      ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < BroodProgression.capacity(nest) &&
+      ants.layingCooldown <= 0L && BroodProgression.openPlaces(ants, nest) > 0 &&
       ants.populationCount < nest.maxAntsCount && resources.hasResources(eggCost)
 
   def orderAmount(ants: AntsData, nest: NestAttributes, requested: Int): Int =

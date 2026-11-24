@@ -978,6 +978,8 @@ object MainForm {
           p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
           child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
             p("When care is limited, the chosen brood gets a larger share. Other brood still gets care. Egg orders keep their place."))),
+          child.maybe <-- nestSignal.map(Midden.visible).distinct.map(show => Option.when(show)(
+            p("Larval feeding creates refuse. High refuse closes brood places to new eggs. Refuse Carriers clear it."))),
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
           detailsTag(
             className := "colony-aging mb-2", rememberDetails("nest.aging"),
@@ -1023,7 +1025,7 @@ object MainForm {
           div(className := "brood-place-count",
             span(className := "small text-body-secondary", "Brood places"),
             b(child.text <-- antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
-              s"${prettyNumberStr((ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)).toLong * u)}/${prettyNumberStr(BroodProgression.capacity(nest).toLong * u)}"
+              s"${prettyNumberStr(BroodProgression.occupiedPlaces(ants).toLong * u)}/${prettyNumberStr(BroodProgression.usablePlaces(nest).toLong * u)}"
             }.distinct)),
           child.maybe <-- antsSignal.map(_.queuedEggs > 0).distinct.map(hasOrders => Option.when(hasOrders)(
             button(className := "btn btn-outline-danger brood-cancel-orders", typ := "button",
@@ -1032,6 +1034,21 @@ object MainForm {
               span(className := "brood-cancel-label", "Cancel egg orders"),
               onClick --> (_ => Actions.cancelEggOrders())))),
         ),
+        child.maybe <-- nestSignal.map(Midden.visible).distinct.map(show => Option.when(show) {
+          val blocked = nestSignal.map(nest => Midden.blockedBroodPlaces(nest, BroodProgression.capacity(nest))).distinct
+          val flow = nestSignal.combineWith(antsSignal, TickCalculator.larvalFeedingCost).map {
+            case (nest, ants, cost) =>
+              val current = Midden.stored(nest)
+              (current, Midden.capacity(nest), (Midden.nextRefuse(ants, nest, cost.sugar) - current) * TicksPerSecond)
+          }.distinct
+          div(className := "refuse-meter small mb-2",
+            className("text-danger") <-- blocked.map(_ > 0),
+            child.text <-- flow.combineWith(blocked).map { case (stored, capacity, rate, closed) =>
+              val places = if (closed == 1) "place" else "places"
+              val crowded = if (closed > 0) s" · $closed $places blocked" else ""
+              s"Refuse ${prettyNumberStr(stored)}/${prettyNumberStr(capacity)} · ${signedRateStr(rate)}/s$crowded"
+            })
+        }),
         div(className := "brood-pipeline small mb-2",
           {
             val status = antsSignal.combineWith(nestSignal, resourcesSignal, upgradesSignal, explorationSignal, statisticsData.signal).map {
@@ -1233,17 +1250,12 @@ object MainForm {
         h5(className := "mt-3", "Chambers"),
         child.maybe <-- nestSignal.map(n => (Midden.visible(n), n.middenBuilt)).distinct.map {
           case (_, true) => Some(div(className := "midden-status border rounded p-2 my-2",
-            infoHeading("Refuse Midden", div("Larvae leave refuse. Carriers take it out of the nursery. A staffed, clean midden speeds ordinary brood care.")),
-            div(className := "small", child.text <-- nestSignal.combineWith(antsSignal).map { case (nest, ants) =>
-              val bonus = if (Midden.clean(ants, nest)) s"+${Midden.CareBonusPercent}% brood care"
-                else if (Midden.carriers(ants) == 0L) "Assign Refuse Carriers in Jobs"
-                else s"Clear refuse to ${Midden.CleanLimit / u} for faster care"
-              s"${prettyNumberStr(nest.nurseryRefuse)}/${Midden.Capacity / u} refuse · $bonus"
-            }.distinct)))
+            b("Sealed Refuse Chamber"), div(className := "small",
+              prettyNumberSimple("+", Midden.AddedCapacity, " refuse capacity"))))
           case (true, false) => Some(div(className := "row",
-            actionButton(name = "Build Refuse Midden", enabledSignal = snapshotSignal.map(Midden.canBuild),
-              costSignal = Val(Midden.Cost), bonusSignal = Val(ActionBonus.empty),
-              descriptionSignal = Val(Some(div(s"${Midden.Places} Refuse Carrier places · +${Midden.CareBonusPercent}% care when clean"))),
+            actionButton(name = "Build Sealed Refuse Chamber", enabledSignal = snapshotSignal.map(Midden.canBuild),
+              costSignal = Val(Midden.Cost), bonusSignal = Val(ActionBonus(maxRefuse = Midden.AddedCapacity)),
+              descriptionSignal = Val(None),
               onClickAction = _ => Actions.buildMidden())))
           case _ => None
         },
@@ -1670,7 +1682,7 @@ object MainForm {
   private val broodRequirementsSignal: Signal[List[ActionRequirement]] =
     antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       List(
-        ActionRequirement("brood places", Math.max(0L, BroodProgression.capacity(nest).toLong * u - ants.eggsAndLarvae.size * u)),
+        ActionRequirement("brood places", BroodProgression.openPlaces(ants, nest).toLong * u),
         ActionRequirement("colony slots", BroodProgression.availableColonySlots(ants, nest)),
       )
     }.distinct
@@ -1848,6 +1860,7 @@ object MainForm {
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " sugar capacity")),
           ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " protein capacity")),
           ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " water capacity")),
+          ifGreater0(bonus.maxRefuse)(prettyNumberSimple("+", _, " refuse capacity")),
           ifGreater0(bonus.repleteSlots.toLong)(value => s"+$value replete ${if (value == 1) "slot" else "slots"}"),
           ifGreater0(bonus.broodNurseSlots.toLong)(value => s"+$value Brood Nurse ${if (value == 1) "slot" else "slots"}"),
           ifGreater0(bonus.layingIntervalReduction)(ticks => s"−${prettyTimeFromTicks(ticks)} laying time"),
