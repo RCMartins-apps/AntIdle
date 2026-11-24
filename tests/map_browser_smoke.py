@@ -299,8 +299,11 @@ def check_territory_guards(page, width, base):
         defaultTask={'SugarCollector': {}}, eggOrders=0, scoutEggOrders=[], eggsAndLarvae=[])
     game['exploration'].update(surveys={'rival-food-cache': 1}, territory={}, explorationParties=[], collectionTrails=[])
     game['basicResources']['sugar'].update(amount=2200 * UNIT, maxAmount=3000 * UNIT)
-    game['basicResources']['protein']['amount'] = 80 * UNIT
+    game['basicResources']['protein'].update(amount=80 * UNIT, maxAmount=200 * UNIT)
     game['basicResources']['knowledge']['amount'] = 125 * UNIT
+    for upgrade in game['upgrades']['upgrades']:
+        if upgrade['name'] in ('DefaultWorkers', 'ProteinStorage'):
+            upgrade['unlocked'] = True
     game['statistics']['territoryContests'] = {'thisRun': 1, 'total': 1}
     load_game(page, game)
     select_tab(page, 'Territory')

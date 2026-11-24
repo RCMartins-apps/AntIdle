@@ -8,8 +8,9 @@
   changes start at the next round. See D73 and
   [Optional territorial contests](../README.md#optional-territorial-contests).
 - Both guard assignments are saved. Older territories load with zero guards.
-  Territory engine scenarios passed and the map browser gate passed at 320 px.
-  The production build, complete suites and other viewport checks are in progress.
+  The production build, 335 game tests and three balance tests passed. The
+  map browser suite and focused production guard checks passed at 320, 390
+  and 1280 px. Mobile screenshots cover the claim and next-round controls.
 - Initial costs and guard strength are playtest values. Ten holders with two
   guards gather 144 protein per round before storage caps and risk 1–2 combat
   losses. Later economy pacing depends on crew size and replacement capacity.
