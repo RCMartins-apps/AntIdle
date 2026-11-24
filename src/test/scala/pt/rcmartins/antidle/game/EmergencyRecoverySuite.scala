@@ -11,7 +11,7 @@ class EmergencyRecoverySuite extends FunSuite {
   def collapsed: AllData = {
     val d = AllData.initial
     d.copy(world = d.world.copy(currentTick = 100L, targetTick = 100L, saveSeed = 42L),
-      ants = AntsData(), unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true)))
+      ants = AntsData(), basicResources = BasicResources.initial, unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true)))
   }
   def automated: AllData = collapsed.copy(upgrades = collapsed.upgrades.unlock(QueensRoutine),
     ants = collapsed.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 10, sugarReserve = 1000L * u)))
@@ -79,17 +79,26 @@ class EmergencyRecoverySuite extends FunSuite {
     assertEquals(reserved.basicResources.sugar.amount, 24L * u)
   }
 
-  test("opt-out, zero target and locked automation never gather; configuration is not a simulation tick") {
+  test("emergency foraging is available regardless of the routine when stores are empty") {
     val partial = automated.copy(ants = automated.ants.copy(emergencyForagingTicks = 50L))
     val paused = AutomaticBrood.configure(partial, enabled = false, target = 10, reserve = 20L * u)
     assert(!paused.ants.queenRoutine.enabled)
     assertEquals(paused.ants.emergencyForagingTicks, 50L)
-    for (d <- Seq(paused, automated.copy(ants = automated.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 0))), collapsed)) {
-      val next = tick(d)
-      assertEquals(next.ants.emergencyForagingTicks, 0L)
-      assert(next.ants.eggsAndLarvae.isEmpty)
-      assertEquals(next.statistics.sugarU.thisRun, 0L)
+    for (d <- Seq(paused, automated.copy(ants = automated.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 0))),
+      collapsed, collapsed.copy(ants = AntsData.initial, unlocks = Unlocks()))) {
+      val prepared = GameTransition.afterAction(load(d))
+      assert(prepared.unlocks.actions.canLayEggs)
+      val laid = (1 to (EmergencyRecovery.ForagingTicks - prepared.ants.emergencyForagingTicks).toInt)
+        .foldLeft(prepared)((state, _) => tick(state))
+      assertEquals(EmergencyRecovery.broodCount(laid.ants), 1)
+      assertEquals(laid.basicResources.sugar.amount, 0L)
+      assertEquals(laid.statistics.sugarU.thisRun, EmergencyRecovery.EggCost)
     }
+    val stocked = paused.giveResources(sugar = EmergencyRecovery.EggCost)
+    val settled = tick(stocked)
+    assertEquals(settled.ants.emergencyForagingTicks, 0L)
+    assert(settled.ants.eggsAndLarvae.isEmpty)
+    assertEquals(settled.basicResources.sugar.amount, EmergencyRecovery.EggCost)
     val returned = partial.copy(ants = partial.ants.copy(workers = u))
     assertEquals(AutomaticBrood.tick(returned).ants.emergencyForagingTicks, 0L)
   }

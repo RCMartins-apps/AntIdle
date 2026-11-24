@@ -54,7 +54,8 @@ class UpgradeVisibilitySuite extends FunSuite {
   }
 
   test("loading stale visibility and missing new upgrade entries repairs eligibility without changing progress") {
-    val savedGame = initial.copy(upgrades = initial.upgrades.unlock(UnlockExplorerTask), messages = Seq("Existing message"))
+    val savedGame = ColonyMilestones.recordPeaks(
+      initial.copy(upgrades = initial.upgrades.unlock(UnlockExplorerTask), messages = Seq("Existing message")))
     val saved = AllDataForSave.fromAllData(savedGame)
     val old = saved.copy(upgrades = saved.upgrades.copy(upgrades = saved.upgrades.upgrades.filterNot(_.name == "DefaultWorkers")))
     val loaded = old.toAllData

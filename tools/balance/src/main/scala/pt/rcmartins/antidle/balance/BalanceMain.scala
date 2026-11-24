@@ -14,8 +14,8 @@ object BalanceMain {
     val fs = js.Dynamic.global.require("fs")
     val config = fs.readFileSync(args(0), "utf8").asInstanceOf[String].fromJson[Config].fold(e => throw new IllegalArgumentException(e), identity)
     require(config.seeds.nonEmpty && config.policies.nonEmpty && config.maxTicks > 0L && config.maxTicks <= 50000000L)
-    require(config.decisionTicks > 0 && config.sampleTicks > 0 && config.openingClicks >= 0 && config.openingClicks <= 1000)
-    require(config.clicksPerSecond > 0 && config.clicksPerSecond <= Constants.TicksPerSecond && config.foundings > 0)
+    require(config.decisionTicks > 0 && config.sampleTicks > 0)
+    require(config.foundings > 0)
     require(config.policies.map(_.name).distinct.size == config.policies.size && config.seeds.distinct.size == config.seeds.size)
     config.policies.foreach { p =>
       require(p.name.matches("[a-zA-Z0-9_-]+") && p.earlyPopulation >= 5 && p.population >= 5 && p.royalPopulation >= 5)

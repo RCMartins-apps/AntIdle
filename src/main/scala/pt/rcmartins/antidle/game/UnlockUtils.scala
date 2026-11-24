@@ -15,7 +15,7 @@ object UnlockUtils {
     val exploring = initial.upgrades(UnlockExplorerTask).unlocked
     val next = old.copy(
       actions = old.actions.copy(
-        canLayEggs = old.actions.canLayEggs || initial.basicResources.sugar.amount >= 5L * u,
+        canLayEggs = old.actions.canLayEggs || initial.basicResources.sugar.amount >= EmergencyRecovery.EggCost || EmergencyRecovery.needed(initial.ants),
         canBuildNestUpgrade = old.actions.canBuildNestUpgrade || canExpand,
         canBuildQueenChamber = old.actions.canBuildQueenChamber || initial.upgrades(UnlockQueensChamber).unlocked,
         canBuildFoodStorageChamber = old.actions.canBuildFoodStorageChamber || initial.upgrades(UnlockFoodStorageChamber).unlocked),

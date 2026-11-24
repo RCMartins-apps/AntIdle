@@ -964,14 +964,6 @@ object MainForm {
 
     div(
       className := "row",
-      actionButton(
-        name = GatherSugarAction,
-        enabledSignal = Val(true),
-        descriptionSignal = Val(None),
-        costSignal = Val(ActionCost.empty),
-        bonusSignal = Val(ActionBonus(sugar = 1 * u)),
-        onClickAction = _ => giveResources(sugar = PlayerGatherSugarClickAmount),
-      ),
       detailsTag(
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
         rememberDetails("nest.brood", defaultOpen = true),
@@ -1061,7 +1053,9 @@ object MainForm {
                 case (label, _, _) => span(label)
               })
           }),
-        child.maybe <-- antsSignal.map(EmergencyRecovery.needed).distinct.map { needed => Option.when(needed) {
+        child.maybe <-- antsSignal.combineWith(sugarSignal).map { case (ants, sugar) =>
+          ants.standardWorkersUnlocked && EmergencyRecovery.needed(ants) && sugar.amount >= EmergencyRecovery.EggCost
+        }.distinct.map { needed => Option.when(needed) {
           div(className := "emergency-recovery row mb-2",
             actionButton(
               name = "Raise Emergency Worker",

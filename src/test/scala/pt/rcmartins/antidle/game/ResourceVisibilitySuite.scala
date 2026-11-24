@@ -54,7 +54,7 @@ class ResourceVisibilitySuite extends FunSuite {
       statistics = StatisticsData(sugarU = StatisticsData.StatLong(1000 * u, 1000 * u))))
     assert(rich.unlocks.resources.productIterator.forall(_ == true))
     val next = Prestige.found(rich)
-    assertEquals(next.unlocks, Unlocks.initial)
+    assertEquals(next.unlocks, AllData.initial.unlocks)
     assertEquals(next.exploration, ExplorationData.initial)
     assertEquals(ColonyMilestones.bonus(next.statistics), ColonyMilestones.bonus(rich.statistics))
     val loaded = AllDataForSave.fromAllData(next).toAllData
@@ -73,7 +73,7 @@ class ResourceVisibilitySuite extends FunSuite {
   }
   test("old untouched founding saves lose inherited flags, active colony history stays intact") {
     val fresh = Prestige.found(AllData.initial.copy(ants = AntsData.initial.copy(daughterQueens = u)))
-    val stale = fresh.copy(unlocks = fresh.unlocks.copy(resources = Unlocks.ResourceUnlocks(
+    val stale = fresh.copy(basicResources = BasicResources.initial, unlocks = Unlocks(resources = Unlocks.ResourceUnlocks(
       showKnowledge = true, showWater = true, showResin = true, showWorkers = true)),
       exploration = fresh.exploration.copy(proteinDiscovered = true))
     val repaired = AllDataForSave.fromAllData(stale).toAllData

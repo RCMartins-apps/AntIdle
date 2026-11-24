@@ -16,7 +16,7 @@ object BalanceSimulator {
     val waits = mutable.ArrayBuffer.empty[Wait]
     val seen = mutable.Set.empty[(Int, String)]
     val occupancy = mutable.Map.empty[String, (Long, Long)]
-    var actions = 0L; var clicks = 0; var colonyClicks = 0; var colonyStart = 0L
+    var actions = 0L; var colonyStart = 0L
     var activeWait: Option[Wait] = None
     val sampleEvery = Math.max(config.sampleTicks.toLong, (config.maxTicks + 4999L) / 5000L)
     def closeWait(): Unit = { activeWait.foreach(w => waits += w.copy(end = data.currentTick)); activeWait = None }
@@ -58,9 +58,6 @@ object BalanceSimulator {
     }
     sample()
     while (data.currentTick < config.maxTicks && data.ants.lineage.foundings < config.foundings) {
-      if (colonyClicks < config.openingClicks && (data.currentTick - colonyStart) * config.clicksPerSecond >= colonyClicks.toLong * TicksPerSecond) {
-        data = GameTransition.afterAction(data.giveResources(sugar = u)); clicks += 1; colonyClicks += 1
-      }
       if (data.currentTick % config.decisionTicks == 0L) {
         val decision = Strategy.decide(data, policy)
         decision.choice match {
@@ -71,7 +68,7 @@ object BalanceSimulator {
             closeWait(); actions += 1
             if (events.size < 20000) events += Event(data.currentTick, before.ants.lineage.foundings, choice.name, choice.category)
             if (data.ants.lineage.foundings != before.ants.lineage.foundings) {
-              colonyStart = data.currentTick; colonyClicks = 0
+              colonyStart = data.currentTick
               milestone("founded", true)
             }
           case None =>
@@ -98,7 +95,7 @@ object BalanceSimulator {
     checkpoint(s"${policy.name}-$seed/final.json", data)
     val stats = data.statistics
     Run(policy, seed, if (data.ants.lineage.foundings >= config.foundings) "goal_reached" else "budget_exhausted",
-      data.currentTick, data.ants.lineage.foundings, actions, clicks, actions > events.size,
+      data.currentTick, data.ants.lineage.foundings, actions, actions > events.size,
       events.toVector, milestones.toVector, waits.toVector, samples.toVector,
       occupancy.toList.sortBy(_._1).map { case (name, (empty, full)) => ResourceTime(name, empty, full) },
       stats.starvationDeaths.total, stats.workersLostToAging.total + stats.scoutsLostToAging.total + stats.repletesLostToAging.total)

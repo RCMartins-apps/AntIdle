@@ -1,19 +1,18 @@
 # Handoff
 
-## 2026-11-22 — compact Jobs cards
+## 2026-11-24 — colony opening without sugar clicks
 
-- `polish/mobile-worker-cards` from main c6bab7f (#109). Small and standard
-  workers have independent disclosures with matching native arrows. The standard
-  card keeps the worker
-  total and a positive idle count visible in its header.
-- Jobs show compact resource icon rates and no description panels. Disabled
-  assign buttons retain their reasons in titles, without an extra row.
-  The Royal Nurses shortcut opens the standard card.
-- Development build passed. The Jobs and blocked-action browser scenarios
-  passed at 320/390/1280 px. Captured mobile open and closed cards.
-- Brood Nurse rows show an egg icon and the assigned caste's total extra care.
-  The same calculation supplies the game engine and the badge, including
-  Nurse Training and small workers' half contribution.
-- Visible game numbers use at most two decimal places, including amounts,
-  costs, rates and the milestone multiplier. Tiny values retain a signed bound.
-  Engine arithmetic, costs and save precision are unaffected.
+- `feature/remove-manual-sugar` replaces Gather Sugar with 10 founding sugar
+  for two small-worker eggs. Founding Provisions adds 15 more. The queen can
+  forage for one recovery egg when a colony has no workers or viable founding
+  brood and cannot pay for an egg. Stocked post-research colonies retain their
+  five-sugar emergency action.
+- The simulator uses the same opening as the browser. Retained compatible saves
+  keep their stock; an older empty opening can recover from the queen.
+- Verified 321 engine tests, three balance tests, the production browser gate at
+  390/1280 px and the opening/recovery flow at 320/390/1280 px. Rendered mobile
+  screenshots were shared for the new opening and empty-colony fallback. See
+  D17 and D72 for behavior.
+- Related work is separate. [Brood Priority PR #111](https://github.com/RCMartins-apps/AntIdle/pull/111)
+  has auto-merge enabled. `design/nest-refuse-pressure` contains the playable
+  refuse prototype; full-run tuning remains open.

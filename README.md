@@ -495,7 +495,7 @@ with a ready daughter queen:
   and stored simulation time. Resource and population rows unlock again in the new colony. The new colony begins with
   its queen and no workers, using the normal initial economy.
 - Each founding awards **1 DNA** and automatically adds **+10% sugar production**,
-  stacked additively (+10%, +20%, etc.). Sugar Collectors and Aphid Tenders receive this bonus. Sugar gathering clicks, expedition rewards, costs, upkeep,
+  stacked additively (+10%, +20%, etc.). Sugar Collectors and Aphid Tenders receive this bonus. Expedition rewards, costs, upkeep,
   aging and consumption are unchanged. Per-colony statistics restart at zero.
 
 The first Understanding, **Shared Paths**, costs **1 DNA** once. Ownership is
@@ -754,12 +754,16 @@ raid/territory replacement and batch UI tests now expect the paced pipeline.
 
 ### Emergency colony recovery
 
-The founding queen survives starvation, and **Gather Sugar** is always available.
-If standard workers are unlocked but no workers remain, **Raise Emergency Worker**
-costs **5 sugar** and rears one small worker without protein. It automatically
-collects sugar on maturity. Existing research, brood and egg orders are kept.
-Workers away from the nest still count as surviving workers; no emergency egg
-is available while they, another worker, small brood or a legacy worker egg exist.
+Each colony starts with **10 sugar**, enough for two small-worker eggs.
+Small workers collect sugar as soon as they mature. Founding Provisions adds 15
+sugar to later starts.
+
+The founding queen survives starvation. After standard-worker research,
+**Raise Emergency Worker** spends **5 sugar** on one small worker without protein.
+When a colony has neither workers nor enough sugar for an egg, the queen
+forages for **25 simulated seconds** and rears one recovery worker automatically.
+Workers away from the nest still count. Existing small brood or a legacy worker
+egg develops into a collector without a second recovery brood.
 
 The queen can tend this one emergency brood even if unfed larvae fill normal
 brood places or housing. It receives priority care, counts toward population,
@@ -767,13 +771,10 @@ and may temporarily put population above capacity; ordinary eggs still obey
 normal limits. The Resources brood limit includes its temporary queen-tended
 place while it is developing. Normal half output/upkeep and aging apply.
 
-When **Queen's Routine** is unlocked and enabled with a positive target, it also
-handles recovery. It spends 5 stored sugar above the player's reserve if possible;
-otherwise the queen gathers protected supplies over **25 simulated seconds**, then
-rears the emergency egg. These supplies are consumed directly by that egg and
-never enter ordinary storage. The usual roughly 15-second development follows.
-Saved progress resumes on reload; turning automation off or recovering a worker
-clears unfinished foraging. Recovery stops once a worker survives. A red
+With **Queen's Routine** enabled and a positive target, the queen spends
+5 stored sugar above the reserve if available. Otherwise she forages, preserving
+the reserve. Foraged provisions go straight to the recovery egg. Recovery
+progress survives reload and stops once a worker or viable small brood exists. A red
 **Colony is starving** warning in Brood shows the current sugar deficit.
 
 `python3 tests/recovery_smoke.py` checks manual and unattended recovery, visible
@@ -867,7 +868,7 @@ Laying costs stay beside the button; larval costs are identified separately.
 on phone and desktop after `sbt fastOptJS`.
 
 Egg action details omit redundant result counts; the action name and batch badge
-identify the order. Manual Gather Sugar remains necessary for the zero-worker opening.
+identify the order.
 
 Nest and Tasks have independent mobile action amounts, initially ×1, retained
 while switching tabs. Desktop Ctrl/Shift shortcuts are unchanged.

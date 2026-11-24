@@ -121,7 +121,8 @@ class WaterStatisticsSuite extends FunSuite {
     assertEquals(expired.statistics.workersLostToAging.thisRun, 1)
     assertEquals(expired.statistics.scoutsLostToAging.thisRun, 1)
     assertEquals(PopulationAging.tick(expired).statistics, expired.statistics)
-    val starving = AllData.initial.copy(ants = AntsData(workers = u, sugarCumulativeDebt = AntDeathRiskThreshold * 100L))
+    val starving = AllData.initial.copy(basicResources = BasicResources.initial,
+      ants = AntsData(workers = u, sugarCumulativeDebt = AntDeathRiskThreshold * 100L))
     val lost = TickUpdater.updateAllData(starving, None)
     assertEquals(lost.statistics.starvationDeaths.thisRun, 1)
     assertEquals(lost.statistics.workersLostToAging.thisRun, 0)

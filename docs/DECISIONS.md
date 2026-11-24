@@ -323,7 +323,7 @@ soldiers remain deferred. Prior example opening timings were not binding rules.
 
 ## D17: A collapsed colony must remain recoverable — approved
 
-The founding queen survives starvation and Gather Sugar stays available. After
+The founding queen survives starvation. After
 standard-worker research, losing all workers opens a manual emergency small
 worker egg for 5 sugar, with no protein care cost. One surviving worker (including
 workers away on expeditions or territory duty), existing small brood or a legacy
@@ -339,11 +339,11 @@ normal small sugar collector, with the usual half output/upkeep and lifespan.
 With Queen's Routine unlocked, enabled and a positive worker target, recovery
 uses 5 stored sugar only above the configured reserve. Otherwise the queen
 spends 25 simulated seconds gathering protected provisions for that one egg.
-These cannot fund ordinary storage, upgrades, adult upkeep or repeated eggs
-while a worker survives. Progress is saved; disabling automation or a worker
-returning clears unfinished emergency foraging. Existing brood/orders do not
-prevent this safety net. This is opt-in automatic recovery, not free colony-wide
-production. A compact red starvation warning shows the current sugar deficit.
+At less than 5 sugar with no workers or self-sufficient brood, the same
+25-second fallback runs even before standard-worker development or with
+Queen's Routine paused. The provisions are consumed by one recovery egg. The
+queen stops foraging once there is a worker or self-sufficient brood. Progress
+is saved. A compact red warning shows the current sugar deficit.
 
 
 ## D18: Aging should preserve job staffing after Queen's Routine — approved
@@ -465,10 +465,8 @@ actions must follow their family's structure. No gameplay or save changes.
 ### D24 follow-up: redundant egg results and manual sugar
 
 Remove the extra +1 egg result from worker/scout/emergency actions; action
-names and batch badges identify the order. Keep Gather Sugar for now: fresh
-colonies start with no sugar or workers, and emergency recovery requires standard
-workers. Replacing clicking with slow queen foraging is a suggestion only, not
-an approved or implemented opening change.
+names and batch badges identify the order. The opening no longer uses a
+Gather Sugar action. See D72 for its replacement.
 
 
 ### D24 follow-up: action amounts belong to their screen
@@ -1080,3 +1078,12 @@ text and spacing with full-size assignment controls.
 Use the same controls, icons and formatting for the same job across screens.
 Compare new or changed elements against their existing counterparts on a phone
 before handoff. The repository UI instructions define the checks.
+
+
+## D72: The opening uses sugar provisions and worker production
+
+Every new colony starts with enough sugar for two small-worker eggs. Founding
+Provisions adds enough sugar for three further eggs. Starting stock does not
+count as gathered income. A colony without workers, viable founding brood or
+enough sugar can recover through the queen's protected foraging (D17). The
+balance tool uses the same opening as the game.

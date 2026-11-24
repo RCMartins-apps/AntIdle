@@ -10,14 +10,13 @@ import zio.json._
 class BalanceSuite extends FunSuite {
   val policy = Policy("test", 16, 28, 40, 5, 0, 3, 3, 2,
     List("StandardWorkers", "UnlockQueensChamber", "ImproveSugarCollectorTask1", "UnlockFoodStorageChamber", "UnlockExplorerTask"))
-  def config(ticks: Long, clicks: Int = 50): Config = Config(List(42L), List(policy), ticks, 25, clicks, 2, 1, 50)
+  def config(ticks: Long): Config = Config(List(42L), List(policy), ticks, 25, 1, 50)
   test("seeded simulations reproduce events, resource curves and valid checkpoints") {
     var checkpoints = Vector.empty[AllData]
     val a = BalanceSimulator.run(config(1500), policy, 42L, (_, d) => checkpoints :+= d)
     val b = BalanceSimulator.run(config(1500), policy, 42L)
     assertEquals(a, b)
     assert(a.milestones.exists(_.name == "first-small-worker"))
-    assertEquals(a.manualClicks, 50)
     assert(checkpoints.nonEmpty)
     checkpoints.foreach { data =>
       val loaded = AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
@@ -26,19 +25,12 @@ class BalanceSuite extends FunSuite {
       assert(data.basicResources.sugar.amount >= 0L)
     }
   }
-  test("no clicks or production means no free resources or workers") {
-    val run = BalanceSimulator.run(config(100, 0), policy, 42L)
-    assertEquals(run.status, "budget_exhausted")
-    assertEquals(run.manualClicks, 0)
-    assertEquals(run.actions, 0L)
-    assertEquals(run.samples.last.sugar, 0.0)
-    assertEquals(run.samples.last.smallWorkers, 0)
-    assertEquals(run.waits.map(w => w.end - w.start).sum, 100L)
-  }
-  test("opening clicks respect the configured rate on the five-tick grid") {
-    val run = BalanceSimulator.run(config(10), policy, 42L)
-    assertEquals(run.manualClicks, 4)
-    assertEquals(run.samples.last.sugar, 4.0)
+  test("opening starts with the in-game provisions and grows without gathering clicks") {
+    val run = BalanceSimulator.run(config(200), policy, 42L)
+    assertEquals(run.samples.head.sugar, 10.0)
+    assertEquals(run.samples.head.smallWorkers, 0)
+    assert(run.milestones.exists(_.name == "first-small-worker"))
+    assert(run.samples.last.smallWorkers > 0)
   }
   test("strategy research uses actual prices and only visible unlocks") {
     val initial = AllData.initial

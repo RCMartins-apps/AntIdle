@@ -53,9 +53,8 @@ def check_water(page, width, url):
 
     load_game(page, game)
     expect(water_row()).to_have_count(0)
-    page.get_by_role("button", name="Gather Sugar", exact=True).click()
     open_stats()
-    expect(stat("Sugar collected")).to_have_text("1")
+    expect(stat("Sugar collected")).to_have_text("0")
     expect(stat("Expeditions completed")).to_have_text("0")
     expect(page.get_by_text("Water collected", exact=True)).to_have_count(0)
     explore_tab(page)
