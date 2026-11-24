@@ -87,7 +87,9 @@ def check(context, width, server, root):
             }''', size)
         installability = cdp.send('Page.getInstallabilityErrors')
         assert not installability['installabilityErrors'], installability
-        page.get_by_role('button', name='Raise Small Worker Egg', exact=True).click()
+        small = page.get_by_role('button', name='Raise Small Worker Egg', exact=True)
+        small.click()
+        expect(small.locator('.egg-count-brood')).to_have_text('Brood: 1')
         saved = save_game(page)
         assert saved['basicResources']['sugar']['amount'] == 5 * UNIT
         assert len(saved['ants']['eggsAndLarvae']) == 1
