@@ -172,16 +172,20 @@ def check_game(page, width, url):
     expand_resources(page)
     expect(page.locator('.resource-row').first).to_be_visible()
     fresh_resources = page.locator('.resource-row:visible .resource-label').all_text_contents()
-    gather = page.get_by_role('button', name='Gather Sugar', exact=True)
-    expect(gather).to_have_css('background-color', 'rgb(13, 110, 253)')
-    for _ in range(5):
-        gather.click()
-    expect(page.get_by_role('button', name='Raise Small Worker Egg', exact=True)).to_be_enabled()
+    small = page.get_by_role('button', name='Raise Small Worker Egg', exact=True)
+    expect(small).to_have_css('background-color', 'rgb(13, 110, 253)')
+    expect(small).to_be_enabled()
+    expect(page.get_by_role('button', name='Gather Sugar', exact=True)).to_have_count(0)
     page.get_by_label('Details for Raise Small Worker Egg', exact=True).click()
     expect(page.locator('.action-details[open]')).to_contain_text('Shared laying queue')
     page.clock.run_for(400)
     expect(page.locator('.action-details[open]')).to_have_count(1)
     assert_fits(page, width)
+    small.click()
+    page.clock.run_for(22000)
+    first = save_game(page)
+    assert first['ants']['smallWorkers'] == UNIT
+    assert first['basicResources']['sugar']['amount'] > 5 * UNIT
     # Egg orders require housing, not resources; costs are paid at laying.
     unfunded = progressed_game(save_game(page))
     unfunded['ants'].update(workers=0, smallWorkers=0, scouts=0, tasks=[],
@@ -229,8 +233,8 @@ def check_game(page, width, url):
     foraging = page.get_by_role('button', name='Foraging Techniques 1', exact=True)
     expect(foraging).to_be_disabled()
     expect(page.get_by_role('button', name='Foraging Techniques 2', exact=True)).to_have_count(0)
-    select_tab(page, 'Nest')
-    page.get_by_role('button', name='Gather Sugar', exact=True).click()
+    research['basicResources']['sugar']['amount'] = 150 * UNIT
+    load_game(page, research)
     select_tab(page, 'Upgrades')
     expect(foraging).to_be_enabled()
     foraging.click()
@@ -343,6 +347,9 @@ def check_game(page, width, url):
     # Repair old untouched daughter colonies that saved inherited visibility.
     legacy_founding = save_game(page)
     lifetime_sugar = legacy_founding['statistics']['sugarU']['total']
+    legacy_founding['basicResources']['sugar']['amount'] = 0
+    legacy_founding['statistics']['maxSugarU']['thisRun'] = 0
+    legacy_founding['unlocks']['actions']['canLayEggs'] = False
     legacy_founding['unlocks']['resources'] = {key: True for key in legacy_founding['unlocks']['resources']}
     legacy_founding['exploration']['proteinDiscovered'] = True
     load_game(page, legacy_founding)

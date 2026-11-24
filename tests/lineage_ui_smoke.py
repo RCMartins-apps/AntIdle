@@ -18,8 +18,6 @@ def check_lineage(page, width, url):
     initial = save_game(page)
     page.get_by_role("tab", name="Nest", exact=True).click()
     expect(page.get_by_role("tab", name="Lineage", exact=True)).to_have_count(0)
-    for _ in range(5):
-        page.get_by_role("button", name="Gather Sugar", exact=True).click()
     expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
     page.get_by_label("Details for Raise Small Worker Egg", exact=True).click()
     expect(page.locator(".egg-description:visible")).to_contain_text("15.0s base")

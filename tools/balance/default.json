@@ -109,8 +109,6 @@
   ],
   "maxTicks": 72000,
   "decisionTicks": 25,
-  "openingClicks": 50,
-  "clicksPerSecond": 2,
   "foundings": 2,
   "sampleTicks": 50
 }

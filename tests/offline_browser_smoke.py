@@ -9,7 +9,7 @@ import tempfile
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, save_game
+from browser_smoke import ROOT, UNIT, save_game, select_tab
 
 spec = importlib.util.spec_from_file_location('package_site', ROOT / 'scripts/package_site.py')
 site = importlib.util.module_from_spec(spec)
@@ -43,6 +43,11 @@ def make_release(root, output, label):
     html = (fixture / 'index.html').read_text().replace('<title>Ant Idle</title>', f'<title>Ant Idle {label}</title>')
     (fixture / 'index.html').write_text(html)
     return site.package(output, fixture)
+
+
+def founding_workers(page):
+    ants = save_game(page)['ants']
+    return ants['smallWorkers'] // UNIT + ants['eggOrders'] + len(ants['eggsAndLarvae'])
 
 
 def check(context, width, server, root):
@@ -82,23 +87,25 @@ def check(context, width, server, root):
             }''', size)
         installability = cdp.send('Page.getInstallabilityErrors')
         assert not installability['installabilityErrors'], installability
-        for _ in range(17):
-            page.get_by_role('button', name='Gather Sugar', exact=True).click()
+        page.get_by_role('button', name='Raise Small Worker Egg', exact=True).click()
         saved = save_game(page)
-        assert saved['basicResources']['sugar']['amount'] == 170000
+        assert saved['basicResources']['sugar']['amount'] == 5 * UNIT
+        assert len(saved['ants']['eggsAndLarvae']) == 1
         saved_raw = page.evaluate("localStorage.getItem('save')")
         context.set_offline(True)
         page.close()
         page = context.new_page()
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(url, wait_until='networkidle')
-        expect(page.get_by_role('button', name='Gather Sugar', exact=True)).to_be_visible()
-        expect(page.locator('#offline-status')).to_have_text('Available offline')
+        select_tab(page, 'Nest')
+        small = page.get_by_role('button', name='Raise Small Worker Egg', exact=True)
+        expect(small).to_be_visible()
+        expect(page.locator('#offline-status')).to_have_text('Available offline', timeout=30000)
         expect(page.locator('.game-build-footer .build-version')).to_have_text(running_build)
         assert page.evaluate("localStorage.getItem('save')") == saved_raw
-        assert page.get_by_role('button', name='Gather Sugar', exact=True).evaluate("el => getComputedStyle(el).backgroundColor") == 'rgb(13, 110, 253)'
-        page.get_by_role('button', name='Gather Sugar', exact=True).click()
-        assert save_game(page)['basicResources']['sugar']['amount'] == 180000
+        expect(small).to_have_css('background-color', 'rgb(13, 110, 253)')
+        small.click()
+        assert founding_workers(page) == 2
         # Updating must not reload an open game or mix its HTML and JS releases.
         context.set_offline(False)
         server.release = b
@@ -131,7 +138,7 @@ def check(context, width, server, root):
         page.goto(url, wait_until='networkidle')
         assert page.title() == f'Ant Idle second-{width}'
         assert page.locator(f'script[src="{second["bundle"]}"]').count() == 1
-        assert save_game(page)['basicResources']['sugar']['amount'] == 180000
+        assert founding_workers(page) == 2
         # An incomplete update must fail installation and preserve the working release offline.
         context.set_offline(False)
         server.release = broken
@@ -152,7 +159,7 @@ def check(context, width, server, root):
         context.set_offline(True)
         page.reload(wait_until='networkidle')
         assert page.title() == f'Ant Idle second-{width}'
-        assert save_game(page)['basicResources']['sugar']['amount'] == 180000
+        assert founding_workers(page) == 2
         assert not errors, errors
         assert not external, external
         print(f'PASS offline {width}px: installable manifest/icons, no CDNs, offline reopen/save/play, deferred coherent update, failed-update recovery', flush=True)

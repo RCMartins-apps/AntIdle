@@ -61,7 +61,7 @@ def save_game(page):
 def load_game(page, game):
     page.evaluate("save => localStorage.setItem('save', save)", json.dumps(game))
     page.reload(wait_until="networkidle")
-    expect(page.get_by_role("button", name="Gather Sugar", exact=True)).to_be_visible()
+    expect(page.locator(".antidle-app")).to_be_visible()
     expand_resources(page)
 
 
@@ -295,16 +295,13 @@ def run_checks(browser, url):
         page.clock.install(time=now)
         page.clock.pause_at(now + timedelta(milliseconds=100))
         page.goto(url, wait_until="networkidle")
-        # Ensure Bootstrap actually loaded; otherwise layout assertions are meaningless.
-        expect(page.get_by_role("button", name="Gather Sugar", exact=True)).to_have_css(
-            "background-color", "rgb(13, 110, 253)"
-        )
-        page.get_by_role("button", name="Gather Sugar", exact=True).click()
-        if width <= 767:
-            page.get_by_label("Details for Gather Sugar", exact=True).click()
-            expect(page.locator("details[open]")).to_contain_text("+1 sugar")
+        # Ensure Bootstrap loaded and the queen can start the first egg.
+        small = page.get_by_role("button", name="Raise Small Worker Egg", exact=True)
+        expect(small).to_have_css("background-color", "rgb(13, 110, 253)")
+        expect(small).to_be_enabled()
+        expect(page.get_by_role("button", name="Gather Sugar", exact=True)).to_have_count(0)
         initial = save_game(page)
-        assert initial["basicResources"]["sugar"]["amount"] == UNIT
+        assert initial["basicResources"]["sugar"]["amount"] == 10 * UNIT
         page.reload(wait_until="networkidle")
         assert save_game(page)["basicResources"] == initial["basicResources"]
         assert_fits(page, width)
