@@ -145,6 +145,7 @@ def check_map(page, width, url):
     expect(page.locator('.expedition-supplies')).not_to_be_visible()
     check_trails(page, width, ring)
     check_aphids(page, width, ring)
+    check_territory_guards(page, width, ring)
     assert not errors, errors
     print(f'PASS map {width}px: hex geometry, scout reveal/study, finite knowledge, selected-site controls, capacity block, depleted site and save reload', flush=True)
 
@@ -290,6 +291,55 @@ def check_aphids(page, width, base):
     assert finished['exploration']['depleted'] == game['exploration']['depleted']
     assert finished['basicResources']['knowledge']['amount'] == game['basicResources']['knowledge']['amount']
     print(f'PASS aphids {width}px: visible costs, reserved housing, reload, timed return and full-capacity block', flush=True)
+
+
+def check_territory_guards(page, width, base):
+    game = copy.deepcopy(base)
+    game['ants'].update(workers=40 * UNIT, smallWorkers=0, tasks=[[{'SugarCollector': {}}, 40 * UNIT]],
+        defaultTask={'SugarCollector': {}}, eggOrders=0, scoutEggOrders=[], eggsAndLarvae=[])
+    game['exploration'].update(surveys={'rival-food-cache': 1}, territory={}, explorationParties=[], collectionTrails=[])
+    game['basicResources']['sugar'].update(amount=2200 * UNIT, maxAmount=3000 * UNIT)
+    game['basicResources']['protein']['amount'] = 80 * UNIT
+    game['basicResources']['knowledge']['amount'] = 125 * UNIT
+    game['statistics']['territoryContests'] = {'thisRun': 1, 'total': 1}
+    load_game(page, game)
+    select_tab(page, 'Territory')
+    expect(page.get_by_role('group', name='Guards', exact=True)).to_have_count(0)
+    select_tab(page, 'Upgrades')
+    page.get_by_role('button', name='Territory Guards', exact=True).click()
+    select_tab(page, 'Territory')
+    entry = page.get_by_role('group', name='Guards', exact=True)
+    expect(entry.get_by_role('button', name='Remove guard')).to_be_disabled()
+    for _ in range(2):
+        entry.get_by_role('button', name='Add guard').click()
+    expect(entry.locator('.territory-guard-count')).to_have_text('2')
+    expect(page.locator('.territory-risk')).to_contain_text('1–2 of 10 workers')
+    expect(page.locator('.territory-rate')).to_have_text('+2.4 protein/s')
+    assert_fits(page, width)
+    if width == 390:
+        artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
+        artifacts.mkdir(parents=True, exist_ok=True)
+        page.locator('.territory-card').screenshot(path=str(artifacts / 'territory-guard-claim.png'))
+    page.get_by_role('button', name='Hold Foraging Ground', exact=True).click()
+    plan = page.get_by_role('group', name='Guards next round', exact=True)
+    plan.get_by_role('button', name='Remove guard').click()
+    expect(plan.locator('.territory-guard-count')).to_have_text('1')
+    expect(page.locator('.territory-active-guards')).to_have_text('2 guarding this round')
+    expect(page.locator('.territory-rate')).to_have_text('+2.4 protein/s')
+    assert_fits(page, width)
+    if width == 390:
+        page.locator('.territory-card').screenshot(path=str(artifacts / 'territory-guard-rotation.png'))
+    saved = save_game(page)
+    assert saved['exploration']['territory']['guards'] == 2
+    assert saved['exploration']['territory']['nextGuards'] == 1
+    saved['exploration']['territory']['nextContestTick'] = saved['world']['currentTick'] + 1
+    load_game(page, saved)
+    select_tab(page, 'Territory')
+    expect(page.locator('.territory-active-guards')).to_have_text('2 guarding this round')
+    expect(plan.locator('.territory-guard-count')).to_have_text('1')
+    page.clock.run_for(200)
+    expect(page.locator('.territory-active-guards')).to_have_text('1 guarding this round')
+    print(f'PASS territory guards {width}px: research, claim preview, committed protection and saved next-round plan', flush=True)
 
 
 def main():
