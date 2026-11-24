@@ -11,7 +11,7 @@ object DefaultWorkerAssignment {
     case AntTask.SeedForager => OutpostProgression.capacity(nest)
     case AntTask.Scavenger => 2L * pt.rcmartins.antidle.game.Constants.u
     case AntTask.BroodNurse => nest.chambers.nurseryChamber.level.toLong * 5L * pt.rcmartins.antidle.game.Constants.u
-    case AntTask.RefuseCarrier => if (nest.middenBuilt) Midden.Places.toLong * pt.rcmartins.antidle.game.Constants.u else 0L
+    case AntTask.RefuseCarrier => if (Midden.visible(nest)) Midden.Places.toLong * pt.rcmartins.antidle.game.Constants.u else 0L
     case AntTask.RoyalNurse => RoyalBroodProgression.capacity(nest)
     case _ => Long.MaxValue
   }
@@ -40,7 +40,7 @@ object DefaultWorkerAssignment {
           val small = if (task == AntTask.Scavenger) data.ants.smallScavengers else data.ants.smallNurses
           Math.min(amount, Math.max(0L, capacity(task, data.nestAttributes) - small))
         }
-        else if (task == AntTask.WaterCollector || task == AntTask.SeedForager || task == AntTask.RoyalNurse) Math.min(amount, capacity(task, data.nestAttributes)) else amount)
+        else if (task == AntTask.WaterCollector || task == AntTask.SeedForager || task == AntTask.RoyalNurse || task == AntTask.RefuseCarrier) Math.min(amount, capacity(task, data.nestAttributes)) else amount)
     })
   }
 

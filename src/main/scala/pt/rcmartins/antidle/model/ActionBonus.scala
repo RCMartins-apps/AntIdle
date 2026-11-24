@@ -6,6 +6,7 @@ case class ActionBonus(
     maxSugar: Long = 0L,
     maxProtein: Long = 0L,
     maxWater: Long = 0L,
+    maxRefuse: Long = 0L,
     repleteSlots: Int = 0,
     maxTunnelingSpace: Long = 0L,
     maxEggs: Long = 0L,

@@ -1,12 +1,14 @@
 # Handoff
 
-## 2026-11-24 — nest refuse pressure design
+## 2026-11-24 — playable nest refuse prototype
 
-- `design/nest-refuse-pressure` branches from main a73e408. The design in
-  [Recorded ideas](IDEAS.md#nest-refuse-pressure-proposal--2026-11-24) proposes
-  a choice between sealed refuse capacity, carrier staffing, and slower brood
-  expansion. Crowding would temporarily reduce places for new eggs.
-- The branch records a proposal. Gameplay remains as described in
-  [Refuse Midden](MIDDEN.md). Implementation and tuning are open.
-- Brood Priority is separate on `feature/brood-priority` and passed 327 engine
-  tests plus the mobile and desktop Brood browser checks.
+- `design/nest-refuse-pressure` makes larval feeding fill a refuse buffer after
+  Nursery level 2. Clean brood places become a limit on new eggs. Carriers clear
+  backlog and a Sealed Refuse Chamber adds 150 capacity. Existing midden
+  purchases keep their backlog and staffing. See [Nest refuse](MIDDEN.md).
+- Verified 325 engine tests and the Brood browser checks at 320, 390 and 1280 px.
+  Browser coverage includes live capacity, carrier availability before purchase,
+  and queued eggs resuming after the chamber opens a place.
+- Open tuning work is a longer playtest of ordinary and heavily staffed
+  nurseries. Refuse is a separate branch from
+  [Brood Priority PR #111](https://github.com/RCMartins-apps/AntIdle/pull/111).

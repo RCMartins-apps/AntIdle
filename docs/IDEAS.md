@@ -44,6 +44,10 @@ revise or defer it.
 
 ### Nest refuse pressure proposal — 2026-11-24
 
+The prototype on `design/nest-refuse-pressure` implements this loop. See
+[Nest refuse](MIDDEN.md) for actual rules and costs. The pacing cases below are
+still useful playtests.
+
 A busy nursery fills with refuse and gradually loses room to start new eggs.
 **Dig a buffer to absorb bursts, assign carriers to keep up, or grow in smaller
 waves.** Food can be plentiful while the nest has too little clean space to

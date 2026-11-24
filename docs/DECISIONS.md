@@ -1080,3 +1080,11 @@ text and spacing with full-size assignment controls.
 Use the same controls, icons and formatting for the same job across screens.
 Compare new or changed elements against their existing counterparts on a phone
 before handoff. The repository UI instructions define the checks.
+
+## D71: Nest refuse can temporarily close brood places
+
+Nursery level 2 opens refuse storage and carrier staffing. Actual larval feeding
+creates the backlog. Carriers provide sustained clearing, and a sealed chamber
+provides room for bursts. High refuse closes some ordinary brood places to new
+eggs. Orders stay queued, active brood keeps developing, and royal and recovery
+care remain separate. Existing midden purchases carry over as sealed chambers.

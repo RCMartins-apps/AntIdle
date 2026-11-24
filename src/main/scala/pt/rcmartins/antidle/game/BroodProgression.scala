@@ -6,6 +6,16 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 
 object BroodProgression {
   def capacity(nest: NestAttributes): Int = nest.maxEggsCount + Math.max(0, nest.chambers.nurseryChamber.level) * 3
+  def occupiedPlaces(ants: AntsData): Int = ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)
+  def usablePlaces(nest: NestAttributes): Int = capacity(nest) - Midden.blockedBroodPlaces(nest, capacity(nest))
+  def openPlaces(ants: AntsData, nest: NestAttributes): Int = Math.max(0, usablePlaces(nest) - occupiedPlaces(ants))
+
+  def placeBlocker(ants: AntsData, nest: NestAttributes): Option[String] = {
+    val occupied = occupiedPlaces(ants)
+    if (occupied >= capacity(nest)) Some("Brood places full")
+    else Option.when(occupied >= usablePlaces(nest))("Needs clean brood places")
+  }
+
   // Remembering protein across foundings must not bypass current-colony progression.
   def nurseryAvailable(ants: AntsData, nest: NestAttributes, exploration: ExplorationData): Boolean =
     nest.chambers.nurseryChamber.level > 0 || (ants.standardWorkersUnlocked && exploration.proteinDiscovered)
@@ -34,7 +44,7 @@ object BroodProgression {
   }
   def cancel(data: AllData): AllData = data.copy(ants = data.ants.copy(eggOrders = 0, scoutEggOrders = Seq.empty))
   def canLay(ants: AntsData, nest: NestAttributes, sugar: Long, reserve: Long = 0L): Boolean =
-    ants.layingCooldown <= 0L && ants.eggsAndLarvae.size < capacity(nest) &&
+    ants.layingCooldown <= 0L && openPlaces(ants, nest) > 0 &&
       ants.populationCount < nest.maxAntsCount && sugar - reserve >= eggCost(ants)
   def beginLaying(data: AllData, kind: String, ticks: Long): AllData =
     data.copy(ants = data.ants.copy(layingCooldown = ticks,
@@ -103,8 +113,10 @@ object BroodProgression {
       scoutEggOrders = a.scoutEggOrders.map(ahead => Math.max(0, Math.min(ahead, Math.max(0, a.eggOrders)))).sorted)
     val unlocked = if (standard) ants.unlockTask(AntTask.Scavenger) else ants
     val nursed = if (initial.nestAttributes.chambers.nurseryChamber.level > 0) unlocked.unlockTask(AntTask.BroodNurse) else unlocked
-    val working = if (a.totalWorkers > 0L) nursed.unlockTask(AntTask.SugarCollector) else nursed
-    DefaultWorkerAssignment.normalize(initial.copy(ants = working, exploration = initial.exploration.copy(proteinDiscovered = initial.exploration.proteinDiscovered || standard),
+    val withCarriers = if (Midden.visible(initial.nestAttributes)) nursed.unlockTask(AntTask.RefuseCarrier) else nursed
+    val working = if (a.totalWorkers > 0L) withCarriers.unlockTask(AntTask.SugarCollector) else withCarriers
+    val nest = initial.nestAttributes.copy(nurseryRefuse = Midden.stored(initial.nestAttributes))
+    DefaultWorkerAssignment.normalize(initial.copy(ants = working, nestAttributes = nest, exploration = initial.exploration.copy(proteinDiscovered = initial.exploration.proteinDiscovered || standard),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(antTasksUnlocked = initial.unlocks.tabs.antTasksUnlocked || a.totalWorkers > 0L, upgradesTabUnlocked = initial.unlocks.tabs.upgradesTabUnlocked || a.smallWorkers >= 5L * u))))
   }
   private def feeding(brood: AntBrood.Developing, progress: Long): ActionCost = {
@@ -123,10 +135,9 @@ object BroodProgression {
   def nursePower(ants: AntsData, upgrades: UpgradesData = UpgradesData.initial): Long =
     nurseContribution(ants.taskWorkers(AntTask.BroodNurse), upgrades, small = false) +
       nurseContribution(ants.smallNurses, upgrades, small = true)
-  private def tend(a: AntsData, nest: NestAttributes, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
+  private def tend(a: AntsData, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
     val count = a.eggsAndLarvae.size
-    val broodCare = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L
-    val boost = if (Midden.clean(a, nest)) broodCare * (100L + Midden.CareBonusPercent) / 100L else broodCare
+    val boost = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L
     var budget = (3L * u + nursePower(a, upgrades)) * boost / 100L
     val perBrood = (if (nursePower(a, upgrades) > 0L) 2L * u else u) * boost / 100L
     var resources = initialResources
@@ -160,14 +171,15 @@ object BroodProgression {
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val afterRoyal = projected.spendResources(royal.cost)
     val available = afterRoyal
-    val after = tend(ants, nest, upgrades, available)._2
+    val after = tend(ants, upgrades, available)._2
     ActionCost(sugar = available.sugar.amount - after.sugar.amount, protein = available.protein.amount - after.protein.amount)
   }
   def tick(initial: AllData): AllData = {
     val data = reconcile(initial)
     val a = data.ants
     val count = a.eggsAndLarvae.size
-    val (broods, resources) = tend(a, data.nestAttributes, data.upgrades, data.basicResources)
+    val (broods, resources) = tend(a, data.upgrades, data.basicResources)
+    val larvalSugar = data.basicResources.sugar.amount - resources.sugar.amount
     val remaining = Math.max(0L, a.layingCooldown - 1L)
     val laid = if (remaining == 0L) broods.count {
       case b: AntBrood.Developing => b.laying
@@ -188,7 +200,7 @@ object BroodProgression {
       scouts = a.scouts + scouts * u, eggsAndLarvae = growing, layingCooldown = remaining,
       broodCursor = if (count == 0) 0 else (a.broodCursor + 1) % count)
     DefaultWorkerAssignment.normalize(PopulationAging.reconcile(data.copy(ants = ants, basicResources = resources,
-      nestAttributes = data.nestAttributes.copy(nurseryRefuse = Midden.nextRefuse(a, data.nestAttributes)),
+      nestAttributes = data.nestAttributes.copy(nurseryRefuse = Midden.nextRefuse(a, data.nestAttributes, larvalSugar)),
       statistics = data.statistics.copy(eggsCount = data.statistics.eggsCount.addValue(laid), workersMatured = data.statistics.workersMatured.addValue(small + workers),
         smallWorkersMatured = data.statistics.smallWorkersMatured.addValue(small), scoutsMatured = data.statistics.scoutsMatured.addValue(scouts),
         maxAliveWorkers = data.statistics.maxAliveWorkers.max(ants.totalWorkersCount)))))
@@ -199,11 +211,12 @@ object BroodProgression {
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val feedingResources = projected.spendResources(royal.cost)
     val nextScout = ants.scoutEggOrders.headOption.contains(0)
+    val spaceBlocker = if (ants.queuedEggs > 0) placeBlocker(ants, nest) else None
     val nextCost = if (nextScout) ScoutProgression.eggCost else ActionCost(sugar = eggCost(ants))
     val waiting = if (ants.layingBrood.nonEmpty) s"Laying egg · ${UINumbersUtils.prettyTimeFromTicks(ants.layingCooldown)}"
       else if (ants.queuedEggs > 0 && resources.sugar.amount < nextCost.sugar) "Needs sugar"
       else if (nextScout && resources.protein.amount < nextCost.protein) "Needs protein for scout egg"
-      else if (ants.queuedEggs > 0 && ants.eggsAndLarvae.size >= capacity(nest)) "Brood places full"
+      else if (spaceBlocker.nonEmpty) spaceBlocker.get
       else if (ants.queuedEggs > 0 && ants.populationCount >= nest.maxAntsCount) "Colony slots full"
       else if (ants.layingCooldown > 0L) {
         val next = if (ants.queuedEggs > 0) "Next egg" else "Queen ready"
@@ -222,6 +235,6 @@ object BroodProgression {
     val extra = if (emergency > 0) " · 1 queen-tended recovery brood" else ""
     val orders = if (ants.scoutEggOrders.isEmpty) s"${ants.eggOrders} eggs ordered"
       else s"${ants.eggOrders} worker · ${ants.scoutEggOrders.size} scout eggs ordered"
-    s"$orders · ${ants.eggsAndLarvae.size - emergency}/${capacity(nest)} brood places$extra · ${layingStatus(ants, nest, resources, upgrades, exploration, stats)}"
+    s"$orders · ${occupiedPlaces(ants)}/${usablePlaces(nest)} brood places$extra · ${layingStatus(ants, nest, resources, upgrades, exploration, stats)}"
   }
 }
