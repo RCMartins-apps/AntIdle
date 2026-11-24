@@ -66,6 +66,12 @@ object TickCalculator {
   private def antTaskCountSignal(antTask: AntTask): Signal[Long] =
     antsSignal.map(_.tasks.find(_._1 == antTask).map(_._2 / u).getOrElse(0L)).distinct
 
+  val larvalFeedingCost: Signal[ActionCost] =
+    antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal, explorationSignal, statisticsData.signal).map {
+      case (ants, nest, upgrades, resources, exploration, stats) =>
+        BroodProgression.forecastCost(ants, nest, upgrades, exploration, resources, stats)
+    }.distinct
+
   val sugarTickGain: BonusOriginGroup =
     BonusOriginGroup(
       antTaskCountSignal(AntTask.SugarCollector)
@@ -76,6 +82,7 @@ object TickCalculator {
           nestSignal,
           resourcesSignal,
           statisticsData.signal,
+          larvalFeedingCost,
         )
         .map {
           case (
@@ -86,6 +93,7 @@ object TickCalculator {
                 nest,
                 resources,
                 stats,
+                larvalCost,
               ) =>
             val afterTrails = PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
             List(
@@ -117,7 +125,7 @@ object TickCalculator {
               ),
               Some(ResourceOrigin("Royal brood", -RoyalBroodProgression.forecast(ants, nest, upgrades, exploration, resources, stats).cost.sugar))
                 .filter(_.tickResourceU < 0),
-              Some(ResourceOrigin("Larval feeding", -BroodProgression.forecastCost(ants, nest, upgrades, exploration, resources, stats).sugar)).filter(_.tickResourceU < 0),
+              Some(ResourceOrigin("Larval feeding", -larvalCost.sugar)).filter(_.tickResourceU < 0),
               Some(ResourceOrigin("Carcass sugar", CarcassProgression.foodOffset(exploration, ants)))
                 .filter(_.tickResourceU > 0),
             ).flatten
@@ -125,14 +133,15 @@ object TickCalculator {
     )
 
   val proteinTickGain: BonusOriginGroup = BonusOriginGroup(
-    antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal, explorationSignal, statisticsData.signal).map { case (ants, nest, upgrades, resources, exploration, stats) =>
-      val afterTrails = PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
-      List(ResourceOrigin("Collection trails", afterTrails.protein.amount - resources.protein.amount),
-        ResourceOrigin("Aphid Tenders", -AphidHusbandry.proteinPerTick(ants, nest, upgrades, afterTrails.protein.amount)),
-        ResourceOrigin("Seed Foragers", OutpostProgression.harvestPerTick(ants, nest, upgrades, afterTrails).protein),
-        ResourceOrigin("Scraps Gatherers", BroodProgression.scavenged(ants, afterTrails.protein.freeSpace - OutpostProgression.harvestPerTick(ants, nest, upgrades, afterTrails).protein + AphidHusbandry.proteinPerTick(ants, nest, upgrades, afterTrails.protein.amount))),
-        ResourceOrigin("Larval feeding", -BroodProgression.forecastCost(ants, nest, upgrades, exploration, resources, stats).protein),
-        ResourceOrigin("Royal brood", -RoyalBroodProgression.forecast(ants, nest, upgrades, exploration, resources, stats).cost.protein))
+    antsSignal.combineWith(nestSignal, upgradesSignal, resourcesSignal, explorationSignal, statisticsData.signal, larvalFeedingCost).map {
+      case (ants, nest, upgrades, resources, exploration, stats, larvalCost) =>
+        val afterTrails = PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
+        List(ResourceOrigin("Collection trails", afterTrails.protein.amount - resources.protein.amount),
+          ResourceOrigin("Aphid Tenders", -AphidHusbandry.proteinPerTick(ants, nest, upgrades, afterTrails.protein.amount)),
+          ResourceOrigin("Seed Foragers", OutpostProgression.harvestPerTick(ants, nest, upgrades, afterTrails).protein),
+          ResourceOrigin("Scraps Gatherers", BroodProgression.scavenged(ants, afterTrails.protein.freeSpace - OutpostProgression.harvestPerTick(ants, nest, upgrades, afterTrails).protein + AphidHusbandry.proteinPerTick(ants, nest, upgrades, afterTrails.protein.amount))),
+          ResourceOrigin("Larval feeding", -larvalCost.protein),
+          ResourceOrigin("Royal brood", -RoyalBroodProgression.forecast(ants, nest, upgrades, exploration, resources, stats).cost.protein))
     }
   )
 

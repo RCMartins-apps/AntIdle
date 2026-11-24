@@ -26,6 +26,7 @@ case class AntsData(
     scoutEggOrders: Seq[Int] = Seq.empty,
     layingCooldown: Long = 0L, // Saved field name; ticks remaining on the egg being laid.
     broodCursor: Int = 0,
+    broodPriority: BroodPriority = BroodPriority.Balanced,
     emergencyForagingTicks: Long = 0L,
     agingJobVacancies: Seq[(AntTask, Long)] = Seq.empty,
 ) {

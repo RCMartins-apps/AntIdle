@@ -38,6 +38,17 @@ class MiddenSuite extends FunSuite {
       30L * u - Midden.ClearPerSecond / TicksPerSecond)
   }
 
+  test("refuse follows actual feeding with a brood priority selected") {
+    val scout = egg.copy(kind = "scout")
+    val ants = AntsData(workers = u, broodPriority = BroodPriority.ScoutsFirst,
+      eggsAndLarvae = Seq(larva, scout.copy(care = scout.eggEnd), larva, scout.copy(care = scout.eggEnd)))
+    val data = fresh.copy(ants = ants, basicResources = stocked, nestAttributes = nursery)
+    val food = BroodProgression.forecastCost(ants, nursery, data.upgrades, data.exploration, stocked)
+    val after = BroodProgression.tick(data)
+    assert(food.sugar > 0L)
+    assertEquals(after.nestAttributes.nurseryRefuse, food.sugar * 2L)
+  }
+
   test("crowding closes places at 80 percent and can close at most one-third") {
     val places = BroodProgression.capacity(nursery)
     assertEquals(Midden.blockedBroodPlaces(nursery.copy(nurseryRefuse = 80L * u - 1L), places), 0)

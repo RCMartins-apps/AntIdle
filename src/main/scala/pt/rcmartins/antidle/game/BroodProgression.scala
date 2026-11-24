@@ -20,6 +20,12 @@ object BroodProgression {
   def nurseryAvailable(ants: AntsData, nest: NestAttributes, exploration: ExplorationData): Boolean =
     nest.chambers.nurseryChamber.level > 0 || (ants.standardWorkersUnlocked && exploration.proteinDiscovered)
 
+  def priorityAvailable(nest: NestAttributes): Boolean = nest.chambers.nurseryChamber.level > 0
+
+  def setPriority(data: AllData, priority: BroodPriority): AllData =
+    if (priorityAvailable(data.nestAttributes)) data.copy(ants = data.ants.copy(broodPriority = priority))
+    else data
+
   def eggCost(ants: AntsData): Long = if (ants.standardWorkersUnlocked) LayEggSugarCost else LayEggSugarCost / 2L
   def interval(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData = UpgradesData.initial): Long = {
     val base = (if (ants.standardWorkersUnlocked) 20L else 5L) * TicksPerSecond
@@ -135,33 +141,74 @@ object BroodProgression {
   def nursePower(ants: AntsData, upgrades: UpgradesData = UpgradesData.initial): Long =
     nurseContribution(ants.taskWorkers(AntTask.BroodNurse), upgrades, small = false) +
       nurseContribution(ants.smallNurses, upgrades, small = true)
-  private def tend(a: AntsData, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
-    val count = a.eggsAndLarvae.size
+  private def tend(a: AntsData, nest: NestAttributes, upgrades: UpgradesData, initialResources: BasicResources): (Vector[AntBrood], BasicResources) = {
+    val original = a.eggsAndLarvae.toVector
+    val count = original.size
+    if (count == 0) return original -> initialResources
+
     val boost = if (upgrades(UpgradeType.BroodCare).unlocked) 125L else 100L
-    var budget = (3L * u + nursePower(a, upgrades)) * boost / 100L
-    val perBrood = (if (nursePower(a, upgrades) > 0L) 2L * u else u) * boost / 100L
+    val nurses = nursePower(a, upgrades)
+    var budget = (3L * u + nurses) * boost / 100L
+    val perBrood = (if (nurses > 0L) 2L * u else u) * boost / 100L
     var resources = initialResources
-    var broods = a.eggsAndLarvae.toVector
-    val order = if (count == 0) Seq.empty else (0 until count).map(offset => (Math.max(0, a.broodCursor) % count + offset) % count)
-    // Keep the one emergency brood fed by the queen even in an overloaded nursery.
-    order.sortBy(index => broods(index) match {
-      case b: AntBrood.Developing if b.kind == EmergencyRecovery.Kind => 0
-      case _ => 1
-    }).foreach { index =>
-      broods(index) match {
-        case b: AntBrood.Developing if !b.laying =>
-          val end = if (b.isEgg) b.eggEnd else if (b.isLarvae) b.larvaEnd else b.totalCare
-          val care = Math.max(0L, Math.min(budget, Math.min(perBrood, end - b.care)))
-          val before = feeding(b, b.care)
-          val after = feeding(b, b.care + care)
-          val cost = ActionCost(sugar = after.sugar - before.sugar, protein = after.protein - before.protein)
-          if (care > 0L && resources.hasResources(cost)) {
-            resources = resources.spendResources(cost)
-            broods = broods.updated(index, b.copy(care = b.care + care))
-            budget -= care
-          }
-        case _ =>
+    var broods = original
+    val order = (0 until count).map(offset => (Math.max(0, a.broodCursor) % count + offset) % count)
+
+    def tendGroup(indices: Seq[Int], allowance: Long): Unit = {
+      var remaining = Math.min(budget, allowance)
+      indices.iterator.takeWhile(_ => remaining > 0L).foreach { index =>
+        (original(index), broods(index)) match {
+          case (b: AntBrood.Developing, current: AntBrood.Developing) if !b.laying =>
+            val stageEnd = if (b.isEgg) b.eggEnd else if (b.isLarvae) b.larvaEnd else b.totalCare
+            // A second pass can fill the unused share, within the original stage and per-tick cap.
+            val end = Math.min(stageEnd, b.care + perBrood)
+            val care = Math.max(0L, Math.min(remaining, end - current.care))
+            if (care > 0L) {
+              val before = feeding(b, current.care)
+              val after = feeding(b, current.care + care)
+              val cost = ActionCost(sugar = after.sugar - before.sugar, protein = after.protein - before.protein)
+              if (resources.hasResources(cost)) {
+                resources = resources.spendResources(cost)
+                broods = broods.updated(index, current.copy(care = current.care + care))
+                remaining -= care
+                budget -= care
+              }
+            }
+          case _ =>
+        }
       }
+    }
+
+    val (recovery, ordinary) = order.partition { index =>
+      original(index) match {
+        case b: AntBrood.Developing => b.kind == EmergencyRecovery.Kind
+        case _ => false
+      }
+    }
+    tendGroup(recovery, budget)
+
+    val priority = if (priorityAvailable(nest)) a.broodPriority else BroodPriority.Balanced
+    if (priority == BroodPriority.Balanced) tendGroup(ordinary, budget)
+    else {
+      val (preferred, others) = ordinary.filter { index =>
+        original(index) match {
+          case b: AntBrood.Developing => !b.laying
+          case _ => false
+        }
+      }.partition { index =>
+        original(index) match {
+          case b: AntBrood.Developing => priority.prefers(b)
+          case _ => false
+        }
+      }
+      if (preferred.nonEmpty && others.nonEmpty) {
+        // A preferred brood has twice the weight of another brood when care is scarce.
+        val preferredWeight = preferred.size.toLong * 2L
+        val totalWeight = preferredWeight + others.size
+        tendGroup(preferred, (BigInt(budget) * preferredWeight / totalWeight).toLong)
+        tendGroup(others, budget)
+        tendGroup(preferred, budget)
+      } else tendGroup(ordinary, budget)
     }
     broods -> resources
   }
@@ -171,14 +218,14 @@ object BroodProgression {
     val royal = RoyalBroodProgression.care(ants, nest, projected)
     val afterRoyal = projected.spendResources(royal.cost)
     val available = afterRoyal
-    val after = tend(ants, upgrades, available)._2
+    val after = tend(ants, nest, upgrades, available)._2
     ActionCost(sugar = available.sugar.amount - after.sugar.amount, protein = available.protein.amount - after.protein.amount)
   }
   def tick(initial: AllData): AllData = {
     val data = reconcile(initial)
     val a = data.ants
     val count = a.eggsAndLarvae.size
-    val (broods, resources) = tend(a, data.upgrades, data.basicResources)
+    val (broods, resources) = tend(a, data.nestAttributes, data.upgrades, data.basicResources)
     val larvalSugar = data.basicResources.sugar.amount - resources.sugar.amount
     val remaining = Math.max(0L, a.layingCooldown - 1L)
     val laid = if (remaining == 0L) broods.count {

@@ -961,6 +961,7 @@ object MainForm {
     val scoutOrdersVisible = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
       ants.standardWorkersUnlocked && nest.chambers.nurseryChamber.level > 0
     }.distinct
+    val broodPriorityVisible = nestSignal.map(BroodProgression.priorityAvailable).distinct
 
     div(
       className := "row",
@@ -983,6 +984,8 @@ object MainForm {
             else "Worker eggs: 10 sugar · about 2m at full care. Worker and scout larvae each need 20 sugar + 2 protein."
           }),
           p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
+          child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
+            p("When care is limited, the chosen brood gets a larger share. Other brood still gets care. Egg orders keep their place."))),
           child.maybe <-- nestSignal.map(Midden.visible).distinct.map(show => Option.when(show)(
             p("Larval feeding creates refuse. High refuse closes brood places to new eggs. Refuse Carriers clear it."))),
         child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
@@ -1041,12 +1044,10 @@ object MainForm {
         ),
         child.maybe <-- nestSignal.map(Midden.visible).distinct.map(show => Option.when(show) {
           val blocked = nestSignal.map(nest => Midden.blockedBroodPlaces(nest, BroodProgression.capacity(nest))).distinct
-          val flow = snapshotSignal.map { data =>
-            val nest = data.nestAttributes
-            val fed = BroodProgression.forecastCost(data.ants, nest, data.upgrades, data.exploration,
-              data.basicResources, data.statistics).sugar
-            val current = Midden.stored(nest)
-            (current, Midden.capacity(nest), (Midden.nextRefuse(data.ants, nest, fed) - current) * TicksPerSecond)
+          val flow = nestSignal.combineWith(antsSignal, TickCalculator.larvalFeedingCost).map {
+            case (nest, ants, cost) =>
+              val current = Midden.stored(nest)
+              (current, Midden.capacity(nest), (Midden.nextRefuse(ants, nest, cost.sugar) - current) * TicksPerSecond)
           }.distinct
           div(className := "refuse-meter small mb-2",
             className("text-danger") <-- blocked.map(_ > 0),
@@ -1093,6 +1094,16 @@ object MainForm {
             ),
           )
         } },
+        child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
+          div(className := "d-flex align-items-center justify-content-between gap-2 mb-2",
+            label(forId := "brood-priority", "Brood priority"),
+            select(idAttr := "brood-priority", className := "form-select w-auto", minHeight.px := 44,
+              BroodPriority.choices.map(priority => option(value := priority.toString, priority.label)),
+              value <-- antsSignal.map(_.broodPriority.toString).distinct,
+              onChange.mapToValue --> (selected =>
+                BroodPriority.choices.find(_.toString == selected).foreach(Actions.setBroodPriority)),
+            ),
+          ))),
         actionAmountControl("brood-action-amount", broodMultiplier),
         div(
           className := "row",
