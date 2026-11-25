@@ -5,5 +5,6 @@
 - The Brood tab keeps egg orders, status, and Raise controls visible. A closed
   Brood options disclosure below them holds action amount, brood priority,
   and the Queen’s Routine when available. Its info button opens independently.
-- All 332 engine tests passed. Browser layout checks passed at 320, 390, and
+- The branch is merged with main through 342fb27. All 335 engine tests passed.
+  Browser layout checks passed at 320, 390, and
   1280 px, including stable Raise positions and saved options visibility.
