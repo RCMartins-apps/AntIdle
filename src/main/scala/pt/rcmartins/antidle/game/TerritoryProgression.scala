@@ -2,11 +2,21 @@ package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.TerritoryGuards
 import scala.util.Random
 
 object TerritoryProgression {
   val ContestTicks: Long = 60L * TicksPerSecond
   val ProteinPerWorkerSecond: Long = 3000L
+  val MaxGuards = 5
+  val GuardResearchContests = 1
+  val WorkersPerGuard = 3
+
+  def guardsUnlocked(upgrades: UpgradesData): Boolean = upgrades(TerritoryGuards).unlocked
+
+  def maxGuards(workers: Long): Int = Math.min(MaxGuards.toLong, Math.max(0L, workers) / WorkersPerGuard).toInt
+
+  def guardCount(workers: Long, requested: Int): Int = Math.max(0, Math.min(requested, maxGuards(workers)))
   def target(requested: Int): Int = Math.max(10, Math.min(37, requested))
   def visible(exploration: ExplorationData): Boolean =
     DiscoveryProgression.ContestedGround.found(exploration) || exploration.territory.held
@@ -33,13 +43,15 @@ object TerritoryProgression {
         exploration = ready.exploration.copy(territory = site.copy(ages = grouped(site.ages ++ ages.workers))))
     }
   }
-  def claim(data: AllData, requested: Int): AllData = {
+  def claim(data: AllData, requested: Int, firstGuards: Int = 0): AllData = {
     val ready = PopulationAging.tick(data)
     if (!canClaim(ready, requested)) ready
     else {
       val size = target(requested)
+      val guards = if (guardsUnlocked(ready.upgrades)) guardCount(size.toLong, firstGuards) else 0
       val site = Territory(held = true, targetWorkers = size, nextContestTick = ready.currentTick + ContestTicks,
-        seed = ready.world.saveSeed + ready.currentTick * 31L + ready.statistics.territoriesClaimed.total.toLong * 997L)
+        seed = ready.world.saveSeed + ready.currentTick * 31L + ready.statistics.territoriesClaimed.total.toLong * 997L,
+        guards = guards, nextGuards = guards)
       val started = ready.spendResources(cost(size)).copy(exploration = ready.exploration.copy(territory = site),
         statistics = ready.statistics.copy(territoriesClaimed = ready.statistics.territoriesClaimed.addValue(1L)))
       DefaultWorkerAssignment.normalize(addWorkers(started, size.toLong))
@@ -50,6 +62,13 @@ object TerritoryProgression {
   def setMaintain(data: AllData, enabled: Boolean): AllData =
     if (!data.exploration.territory.held) data else data.copy(exploration = data.exploration.copy(
       territory = data.exploration.territory.copy(maintain = enabled)))
+
+  def planGuards(data: AllData, requested: Int): AllData = {
+    val site = data.exploration.territory
+    if (!site.held || !guardsUnlocked(data.upgrades)) data
+    else data.copy(exploration = data.exploration.copy(
+      territory = site.copy(nextGuards = guardCount(site.targetWorkers.toLong, requested))))
+  }
 
   def withdraw(data: AllData): AllData = {
     val site = data.exploration.territory
@@ -65,33 +84,44 @@ object TerritoryProgression {
     else initial
     val site = data.exploration.territory
     val count = workers(data.ants)
-    if (!site.held && count == 0L) data
+    if (!site.held && count == 0L) {
+      if (site.guards == 0 && site.nextGuards == 0) data
+      else data.copy(exploration = data.exploration.copy(territory = site.copy(guards = 0, nextGuards = 0)))
+    }
     else {
       val listed = site.ages.map(_.count).sum
       val fitted = if (listed > count) dropOldest(site.ages, listed - count)
         else if (listed < count && data.ants.ages.active) grouped(site.ages ++ PopulationAging.freshWorkerCohorts(data, count - listed))
         else grouped(site.ages)
-      val ready = data.copy(exploration = data.exploration.copy(territory = site.copy(ages = fitted, targetWorkers = target(site.targetWorkers))))
+      val size = target(site.targetWorkers)
+      val guardLimit = if (guardsUnlocked(data.upgrades)) size.toLong else 0L
+      val ready = data.copy(exploration = data.exploration.copy(territory = site.copy(ages = fitted, targetWorkers = size,
+        guards = guardCount(guardLimit, site.guards), nextGuards = guardCount(guardLimit, site.nextGuards))))
       if (site.held && count == 0L) withdraw(ready).addMessage("Contested ground abandoned: no workers remain. The unfinished haul was left behind.")
       else if (!site.held || count > 37L) withdraw(ready)
       else ready
     }
   }
-  def lossRange(count: Long): (Int, Int) = {
+  def lossRange(count: Long, committedGuards: Int = 0): (Int, Int) = {
     if (count <= 0L) (0, 0)
-    else if (count < 10L) (((count + 4L) / 5L).toInt, ((count * 2L + 4L) / 5L).toInt)
-    else RaidProgression.lossRange(Math.min(37L, count) * u)
+    else {
+      val (low, high) = if (count < 10L) (((count + 4L) / 5L).toInt, ((count * 2L + 4L) / 5L).toInt)
+        else RaidProgression.lossRange(Math.min(37L, count) * u)
+      val guards = guardCount(count, committedGuards)
+      (Math.max(1, low - guards), Math.max(1, high - guards))
+    }
   }
-  def risk(count: Long): String = {
-    val (low, high) = lossRange(count)
-    s"Every 60s: $low–$high of $count workers lost (certain)."
+  def risk(count: Long, committedGuards: Int = 0): String = {
+    val (low, high) = lossRange(count, committedGuards)
+    val losses = if (low == high) low.toString else s"$low–$high"
+    s"Every ${ContestTicks / TicksPerSecond}s: $losses of $count workers lost (certain)."
   }
-  def rate(ants: AntsData): Long = workers(ants) * ProteinPerWorkerSecond
+  def rate(count: Long, committedGuards: Int): Long = (count - guardCount(count, committedGuards)) * ProteinPerWorkerSecond
 
   private def contest(data: AllData): AllData = {
     val site = data.exploration.territory
     val count = workers(data.ants)
-    val (low, high) = lossRange(count)
+    val (low, high) = lossRange(count, site.guards)
     val seed = site.seed + site.round * 104729L
     val lost = low + new Random(seed).nextInt(high - low + 1)
     val survivors = RaidProgression.survivorAges(site.ages, lost, seed + 17L)
@@ -102,7 +132,8 @@ object TerritoryProgression {
     val ants = data.ants.copy(workers = data.ants.workers - total * u,
       tasks = data.ants.tasks.map { case (task, amount) => task -> (if (task == AntTask.TerritoryForager) Math.max(0L, amount - total * u) else amount) })
     val resolved = data.copy(ants = ants, exploration = data.exploration.copy(territory = site.copy(
-      ages = living, pendingProtein = 0L, round = site.round + 1L, nextContestTick = data.currentTick + ContestTicks)),
+      ages = living, pendingProtein = 0L, round = site.round + 1L, nextContestTick = data.currentTick + ContestTicks,
+      guards = site.nextGuards)),
       statistics = data.statistics.copy(territoryDeaths = data.statistics.territoryDeaths.addValue(lost),
         workersLostToAging = data.statistics.workersLostToAging.addValue(aging), territoryContests = data.statistics.territoryContests.addValue(1L)))
     val paid = if (remaining > 0L) resolved.giveResources(protein = site.pendingProtein) else resolved
@@ -119,7 +150,7 @@ object TerritoryProgression {
       val staffed = if (ready.exploration.territory.maintain) reinforce(ready) else ready
       val site = staffed.exploration.territory
       val harvesting = staffed.copy(exploration = staffed.exploration.copy(territory = site.copy(
-        pendingProtein = site.pendingProtein + rate(staffed.ants) / TicksPerSecond)))
+        pendingProtein = site.pendingProtein + rate(workers(staffed.ants), site.guards) / TicksPerSecond)))
       if (staffed.currentTick >= site.nextContestTick) contest(harvesting) else harvesting
     }
   }

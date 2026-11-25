@@ -117,13 +117,19 @@ def check(page, width, url):
     select_tab(page, 'Settings')
     expect(page.get_by_role('button', name='Manual Save', exact=True)).to_be_visible()
     select_tab(page, 'Nest')
-    page.evaluate("window.scrollTo({top:160,behavior:'instant'})")
-    page.wait_for_timeout(100)
-    previous = page.evaluate('window.scrollY')
+    previous, reselected, restored = page.evaluate("""() => {
+        window.scrollTo({top: 160, behavior: 'instant'});
+        const before = window.scrollY;
+        document.querySelector('.mobile-bottom-nav [data-destination="nest"]').click();
+        const sameView = window.scrollY;
+        document.querySelector('#tasks-tab').click();
+        document.querySelector('#nest-tab').click();
+        return [before, sameView, window.scrollY];
+    }""")
+    assert previous > 0 and restored == reselected == previous, (previous, reselected, restored)
     select_tab(page, 'Jobs')
     select_tab(page, 'Nest')
-    page.wait_for_timeout(100)
-    assert abs(page.evaluate('window.scrollY') - previous) <= 2, (previous, page.evaluate('window.scrollY'), page.locator('.antidle-app').get_attribute('data-mobile-view'))
+    page.wait_for_function('expected => Math.abs(window.scrollY - expected) <= 2', arg=previous)
     page.set_viewport_size({'width': 1920, 'height': 844})
     expect(nav).not_to_be_visible()
     expect(page.locator('.game-main > .card-header')).to_have_css('position', 'static')

@@ -67,7 +67,9 @@ object Actions {
     next
   }
 
-  def claimTerritory(workers: Int): Unit = actionUpdater.writer.onNext(TerritoryProgression.claim(_, workers))
+  def claimTerritory(workers: Int, guards: Int): Unit =
+    actionUpdater.writer.onNext(TerritoryProgression.claim(_, workers, guards))
+  def planTerritoryGuards(guards: Int): Unit = actionUpdater.writer.onNext(TerritoryProgression.planGuards(_, guards))
   def reinforceTerritory(): Unit = actionUpdater.writer.onNext(TerritoryProgression.reinforce)
   def maintainTerritory(enabled: Boolean): Unit = actionUpdater.writer.onNext(TerritoryProgression.setMaintain(_, enabled))
   def withdrawTerritory(): Unit = actionUpdater.writer.onNext(TerritoryProgression.withdraw)

@@ -95,6 +95,7 @@ object UpgradesData {
     case object ScoutWayfinding extends UpgradeType { val name = "ScoutWayfinding" }
     case object NurseTraining extends UpgradeType { val name = "NurseTraining" }
     case object QueensRhythm extends UpgradeType { val name = "QueensRhythm" }
+    case object TerritoryGuards extends UpgradeType { val name = "TerritoryGuards" }
 
     implicit val decoder: JsonDecoder[UpgradeType] = DeriveJsonDecoder.gen[UpgradeType]
     implicit val encoder: JsonEncoder[UpgradeType] = DeriveJsonEncoder.gen[UpgradeType]
@@ -125,7 +126,7 @@ object UpgradesData {
       SeedProcessing,
       RoyalNurseryPlanning,
       AphidShelters, TrailLogistics, CoordinatedExpeditions,
-      ScoutWayfinding, NurseTraining, QueensRhythm,
+      ScoutWayfinding, NurseTraining, QueensRhythm, TerritoryGuards,
     )
 
   }
