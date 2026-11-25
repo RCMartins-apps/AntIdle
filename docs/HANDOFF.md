@@ -14,3 +14,7 @@
 - Initial costs and guard strength are playtest values. Ten holders with two
   guards gather 144 protein per round before storage caps and risk 1–2 combat
   losses. Later economy pacing depends on crew size and replacement capacity.
+- PR #114 exposed a mobile scroll restoration race. The outgoing offset is now
+  saved before Bootstrap hides its panel and restored in the view switch.
+  The production-bundle navigation checks pass at 320 and 390 px, including
+  immediate reselection and return to a scrolled view.
