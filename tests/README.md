@@ -188,3 +188,11 @@ verify desktop disclosure behavior.
 
 Purchased help checks assert full-row description width and unchanged title/info
 button geometry when toggled, including long upgrade names on narrow phones.
+
+## Offline upgrade editor
+
+Run `sbt balance/fastOptJS` and `python3 tests/upgrade_editor_browser_smoke.py`.
+The browser test runs against a temporary balance file. It checks the top-down
+tree, resource icons, edits to prices and prerequisite fields, dependency cycle
+feedback, save/reload, conflicting saves and phone layout. Pass an output
+directory to capture screenshots.
