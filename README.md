@@ -919,6 +919,10 @@ access; already-built Nurseries remain visible within a colony.
 
 ## Balance experiments
 
+Run `python3 scripts/upgrade_editor.py` for the offline dependency tree and
+upgrade editor. It saves prices and prerequisites for both the game and the
+simulator. See [Changing balance](docs/BALANCING.md#offline-upgrade-editor).
+
 Run `python3 scripts/balance.py --out /tmp/antidle-balance` for seeded real-engine
 strategy comparisons, a portable interactive report and importable milestone saves.
 See [Balance lab](tools/balance/README.md) for setup, assumptions and how to combine

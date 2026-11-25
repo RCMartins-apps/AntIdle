@@ -1104,3 +1104,13 @@ Provisions adds enough sugar for three further eggs. Starting stock does not
 count as gathered income. A colony without workers, viable founding brood or
 enough sugar can recover through the queen's protected foraging (D17). The
 balance tool uses the same opening as the game.
+
+
+## D74: Edit upgrade balance locally against the real game catalog
+
+The developer editor shows upgrade purchases in a top-down dependency graph
+and exposes price, reveal gates, title and help. It reads the compiled engine
+definitions and writes a sparse JSON override file shared by game and
+simulation builds. Stable save IDs and untouched default values carry over.
+An empty override file retains the current balance. The editor runs on
+loopback with local dependencies and checks references and cycles before saving.

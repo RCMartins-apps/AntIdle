@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Upgrade balance · Ant Idle</title>
+  <link rel="stylesheet" href="/editor.css">
+  <script src="/editor.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">↟</span>
+      <div><p>Ant Idle</p><h1>Upgrade balance</h1></div>
+    </div>
+    <div class="header-actions">
+      <button id="revert" type="button" disabled>Revert edits</button>
+      <button id="save" class="primary" type="button" disabled>Save changes</button>
+    </div>
+  </header>
+  <p id="status" role="status" aria-live="polite">Loading upgrade definitions…</p>
+  <main>
+    <section class="workspace" aria-labelledby="tree-title">
+      <div class="toolbar">
+        <div class="tree-title"><h2 id="tree-title">Upgrade tree</h2><span id="matches"></span></div>
+        <input id="search" type="search" placeholder="Find an upgrade…" aria-label="Find an upgrade">
+        <div class="zoom" aria-label="Tree zoom" role="group">
+          <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+          <button type="button" id="fit" title="Fit tree width">Fit</button>
+          <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        </div>
+      </div>
+      <div id="viewport" tabindex="0" aria-label="Upgrade dependency tree">
+        <div id="sheet">
+          <div id="board">
+            <canvas id="links" aria-hidden="true"></canvas>
+            <div id="nodes"></div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i></i> Required upgrade</span>
+        <span><i></i> Exploration gate</span>
+      </div>
+    </section>
+    <aside class="inspector" aria-label="Upgrade settings">
+      <form id="upgrade" hidden></form>
+    </aside>
+  </main>
+</body>
+</html>

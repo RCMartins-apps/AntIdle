@@ -1,18 +1,14 @@
 # Handoff
 
-## 2026-11-24 — founding provisions and nest refuse
+## 2026-11-25 — offline upgrade balance editor
 
-- New colonies start with 10 sugar for two small-worker eggs. Founding
-  Provisions adds 15. Workers collect sugar after they mature. When a colony
-  loses all workers and cannot pay for an egg, the queen can forage for one
-  recovery worker. See D17 and D72 in [Decisions](DECISIONS.md).
-- Nursery level 2 opens refuse storage and Refuse Carrier staffing. Larval
-  feeding creates refuse and crowding reduces room for new eggs. Carriers clear
-  the backlog and a Sealed Refuse Chamber adds 150 capacity. Existing midden
-  purchases carry over. See [Nest refuse](MIDDEN.md).
-- The combined changes passed 332 engine tests. A phone-width browser check
-  confirmed that the queen can rear a recovery worker with zero sugar and
-  every clean brood place occupied, while retaining existing larvae and orders.
-- The opening passed packaged offline checks. Two balanced simulations
-  reached the first founding in 93–94 simulated minutes without starvation
-  deaths. Longer-run refuse tuning still needs a playtest.
+- `tools/upgrade-balance-editor` starts from main 4dc346a. Run
+  `python3 scripts/upgrade_editor.py` and open the loopback URL it prints.
+  The top-down graph links purchased prerequisites and Local Exploration gates.
+- The editor changes costs, reveal gates, title and help in
+  `src/main/balance/upgrades.json`. The engine and simulator embed those
+  sparse overrides during compilation. The file ships empty and keeps current
+  prices and gates. See [Changing balance](BALANCING.md#offline-upgrade-editor).
+- The editor uses the game's resource icons. Engine checks passed before the
+  icon pass. The final icon, editing and real-build write-through checks are
+  in progress.

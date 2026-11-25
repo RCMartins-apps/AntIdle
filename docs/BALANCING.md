@@ -1,8 +1,52 @@
 # Changing balance and unlock timing
 
-This guide covers the current upgrade and exploration definitions. They are
-Scala values checked at build time; there is no separate configuration service.
-Save version 7 uses a handcrafted finite map; older XP pacing baselines are historical.
+The game and the balance runner share upgrade and exploration definitions.
+Save version 7 uses a handcrafted finite map. Older XP pacing baselines are historical.
+
+## Offline upgrade editor
+
+From the repository root:
+
+```sh
+python3 scripts/upgrade_editor.py
+```
+
+Open `http://127.0.0.1:8765`. The editor uses Python 3, Node.js and the
+project's existing sbt installation and dependency cache. Run the normal
+project setup once to populate that cache. The editor build uses cached
+dependencies and the page calls only the local server. Use `--sbt /path/to/sbt`
+if needed or `--skip-build` to reopen using the last engine build.
+
+Read the tree top to bottom. Solid lines link required purchases. Dashed lines
+show where the game needs Local Exploration for map progress, discoveries or
+Knowledge costs. The tree and cost inputs use the game's resource icons.
+Select an upgrade to edit its prices, required purchases, discovery and
+other reveal gates. Add or remove links in **Prerequisites**.
+Search by title or stable ID and press Enter to jump to the matching node.
+**Title and help** edits player-facing copy. The code for effects such as
+production multipliers is listed below under Numbers and effects.
+
+**Save changes** writes the edited fields to
+[`src/main/balance/upgrades.json`](../src/main/balance/upgrades.json).
+The game and simulator read this file at build time. Rebuild with
+`sbt fastOptJS` to play locally, or run the balance lab for a new pacing report.
+The editor checks for unknown references and dependency cycles before saving.
+**Restore defaults** resets the current upgrade to its Scala values.
+**Revert edits** resets unsaved changes to the last loaded or saved values.
+
+The JSON file can also be edited by hand. Cost values in the file use the
+engine's fixed-point units. The editor shows and accepts ordinary units.
+For example, changing Standard Worker Development to 80 sugar and six
+small workers produces this patch:
+
+```json
+{
+  "StandardWorkers": {
+    "cost": {"sugar": 800000},
+    "requirements": {"minimumSmallWorkers": 6}
+  }
+}
+```
 
 ## Where to edit
 
@@ -11,11 +55,11 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 | Change | Definition |
 | --- | --- |
 | Map coordinates, reveal order, finite Knowledge/deposits and scout durations | `game/ExplorationMap.scala` |
-| Upgrade price, title/help or reveal prerequisites | `game/balance/UpgradeBalance.scala`, the named upgrade's row |
+| Upgrade price, title/help or reveal prerequisites | Offline upgrade editor, with defaults in `game/balance/UpgradeBalance.scala` |
 | Stable upgrade/save identity and display order | `model/UpgradesData.scala`; preserve existing `name` values |
 | Collection discovery, duration, crew, costs or rewards | `game/ExplorationDestination.scala`, the destination's named arguments |
 | Scout studies needed to find a discovery | `game/DiscoveryProgression.scala`, the discovery's `trips` |
-| Expedition Supplies tiers/prices/reveal requirements | `game/balance/UpgradeBalance.scala`, `ExpeditionSupplies1`–`3` |
+| Expedition Supplies tiers/prices/reveal requirements | Offline upgrade editor, `ExpeditionSupplies1`–`3` |
 | Natural second expedition slot | `ExplorationProgression.maxParties` (four revealed sites) |
 | Linear haul scaling, 5–50-worker bounds and step | `game/ExplorationProgression.scala` |
 | Automatic trail efficiency and guide ratio | `game/PheromoneTrails.scala`; see [rate analysis](COLLECTION-TRAILS.md) |

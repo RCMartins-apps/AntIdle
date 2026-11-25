@@ -5,10 +5,12 @@ import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
+import zio.json._
 
 /** Conditions for earning visibility. Once earned, visibility normally persists.
   * These are progression prerequisites, not affordability checks.
   */
+@jsonExplicitNull
 case class UpgradeRequirements(
     upgrades: List[UpgradeType] = Nil,
     minimumRevealedSites: Int = 0,
@@ -42,7 +44,25 @@ case class UpgradeRequirements(
         data.unlocks.resources.showKnowledge || data.basicResources.knowledge.amount > 0L)
 }
 
+object UpgradeRequirements {
+  private implicit val upgradeIdListEncoder: JsonEncoder[List[UpgradeType]] =
+    implicitly[JsonEncoder[List[String]]].contramap(_.map(_.name))
+  private implicit val upgradeIdListDecoder: JsonDecoder[List[UpgradeType]] =
+    implicitly[JsonDecoder[List[String]]].mapOrFail { ids =>
+      val registry = UpgradeType.all.iterator.map(upgrade => upgrade.name -> upgrade).toMap
+      ids.find(id => !registry.contains(id)) match {
+        case Some(id) => Left(s"Unknown upgrade: $id")
+        case None => Right(ids.map(registry))
+      }
+    }
+  implicit val jsonCodec: JsonCodec[UpgradeRequirements] = DeriveJsonCodec.gen[UpgradeRequirements]
+}
+
 case class UpgradeDefinition(title: String, cost: ActionCost, requirements: UpgradeRequirements, description: String)
+
+object UpgradeDefinition {
+  implicit val jsonCodec: JsonCodec[UpgradeDefinition] = DeriveJsonCodec.gen[UpgradeDefinition]
+}
 
 /** Edit upgrade prices and reveal prerequisites here. Keep saved UpgradeType names stable.
   * Effect implementations remain in their mechanic modules; see docs/BALANCING.md.
@@ -53,7 +73,11 @@ object UpgradeBalance {
 
   def apply(upgrade: UpgradeType): UpgradeDefinition = definitions(upgrade)
 
-  lazy val definitions: Map[UpgradeType, UpgradeDefinition] = Map(
+  lazy val definitions: Map[UpgradeType, UpgradeDefinition] =
+    UpgradeTuning.resolve(defaults, UpgradeOverrides.json).fold(
+      error => throw new IllegalArgumentException(s"src/main/balance/upgrades.json: $error"), identity)
+
+  private[balance] lazy val defaults: Map[UpgradeType, UpgradeDefinition] = Map(
     ScoutWayfinding -> UpgradeDefinition("Scout Wayfinding", ActionCost(sugar = 500L * u, knowledge = 50L * u),
       UpgradeRequirements(upgrades = List(UnlockExplorerTask), explorationTab = true, completedMissions = 20),
       s"−${100 - MilestoneResearch.ScoutDurationPercent}% scout reveal/study time. Applies to new departures."),

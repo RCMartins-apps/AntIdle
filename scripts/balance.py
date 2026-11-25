@@ -60,6 +60,14 @@ def source_hash():
     return digest.hexdigest()
 
 
+def balance_bundle():
+    bundles = [path for path in (ROOT / 'tools/balance/target/scala-2.13').glob('*-fastopt/main.js')
+               if not path.parent.name.endswith('-test-fastopt')]
+    if len(bundles) != 1:
+        raise ValueError('Build balance/fastOptJS first')
+    return bundles[0]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, default=ROOT / 'tools/balance/default.json')
@@ -93,14 +101,14 @@ def main():
         json.loads(baseline.read_text())
     if not args.skip_build:
         subprocess.run([args.sbt, 'balance/fastOptJS'], cwd=ROOT, check=True)
-    bundles = [path for path in (ROOT / 'tools/balance/target/scala-2.13').glob('*-fastopt/main.js')
-               if not path.parent.name.endswith('-test-fastopt')]
-    if len(bundles) != 1:
-        parser.error('Build balance/fastOptJS first')
+    try:
+        bundle = balance_bundle()
+    except ValueError as error:
+        parser.error(str(error))
     output.mkdir(parents=True)
     (output / 'config.json').write_text(json.dumps(config, indent=2))
     started = time.monotonic()
-    subprocess.run(['node', str(bundles[0]), str(output / 'config.json'), str(output)], cwd=ROOT, check=True)
+    subprocess.run(['node', str(bundle), str(output / 'config.json'), str(output)], cwd=ROOT, check=True)
     report = json.loads((output / 'report.json').read_text())
     report['provenance'] = dict(commit=command('git', 'rev-parse', 'HEAD'),
         sourceHash=source_hash(),
