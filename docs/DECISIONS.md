@@ -1106,15 +1106,6 @@ enough sugar can recover through the queen's protected foraging (D17). The
 balance tool uses the same opening as the game.
 
 
-## D74: Edit upgrade balance locally against the real game catalog
-
-The developer editor shows upgrade purchases in a top-down dependency graph
-and exposes price, reveal gates, title and help. It reads the compiled engine
-definitions and writes a sparse JSON override file shared by game and
-simulation builds. Stable save IDs and untouched default values carry over.
-An empty override file retains the current balance. The editor runs on
-loopback with local dependencies and checks references and cycles before saving.
-
 ## D73: Guard rotations trade territory harvest for protection
 
 The first completed territory contest in a colony reveals Territory Guards
@@ -1124,3 +1115,12 @@ worker's protein haul and reduces both ends of the combat loss range by one.
 At least one combat loss remains, and guards have the same aging and upkeep as
 other holders. Changes during a hold start at the next contest round so a
 crew commits before gathering. The active and next assignments save separately.
+
+## D74: Edit upgrade balance locally against the real game catalog
+
+The developer editor shows upgrade purchases in a top-down dependency graph
+and exposes price, reveal gates, title and help. It reads the compiled engine
+definitions and writes a sparse JSON override file shared by game and
+simulation builds. Stable save IDs and untouched default values carry over.
+An empty override file retains the current balance. The editor runs on
+loopback with local dependencies and checks references and cycles before saving.

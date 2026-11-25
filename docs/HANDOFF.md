@@ -12,5 +12,5 @@
 - Resource icons come from the game catalog. Chromium checks passed at desktop
   and phone widths, including edits, dependency validation, reload and conflicting
   tabs. An example rebuild charged the edited price and applied the edited reveal
-  threshold. The default file was restored and the release build, 337 engine
+  threshold. The default file was restored and the release build, 340 engine
   tests, three balance tests and a short simulation report all passed.
