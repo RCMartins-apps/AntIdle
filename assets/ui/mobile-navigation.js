@@ -84,7 +84,7 @@
       }
     }
     function select(id) {
-      if (!id || !available(id)) return;
+      if (!id || !available(id) || id === current) return;
       if (media.matches) scroll[current] = window.scrollY;
       if (groupFor(id) === 'settings' && group !== 'settings') returnView = current;
       current = id; group = groupFor(id); last[group] = id;
@@ -93,15 +93,19 @@
       changing = true;
       bootstrap.Tab.getOrCreateInstance(tab(base)).show();
       changing = false; refresh();
-      if (media.matches) requestAnimationFrame(() => window.scrollTo({top: scroll[id] || 0, behavior: 'instant'}));
+      if (media.matches) window.scrollTo({top: scroll[id] || 0, behavior: 'instant'});
     }
+    tabs.addEventListener('show.bs.tab', () => {
+      // Bootstrap can handle an anchor before our click listener runs.
+      // Record the outgoing position before Bootstrap hides its panel.
+      if (!changing && media.matches) scroll[current] = window.scrollY;
+    });
     tabs.addEventListener('shown.bs.tab', event => {
       if (!changing) {
         const id = event.target.id.replace(/-tab$/, '');
-        if (media.matches) scroll[current] = window.scrollY;
         if (groupFor(id) === 'settings' && group !== 'settings') returnView = current;
         current = id; group = groupFor(id); last[group] = id; refresh();
-        if (media.matches) requestAnimationFrame(() => window.scrollTo({top: scroll[id] || 0, behavior: 'instant'}));
+        if (media.matches) window.scrollTo({top: scroll[id] || 0, behavior: 'instant'});
       }
     });
     // Bootstrap ignores a click on an already-active base anchor; handle secondary→base too.

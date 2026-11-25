@@ -1111,3 +1111,13 @@ Keep brood status, egg orders, and Raise actions visible on the Brood tab.
 Put action amount, brood priority, and the Queen’s Routine in Brood options
 below the actions so toggling options keeps the Raise buttons in place. The
 disclosure starts closed and remembers its state under `nest.brood.options`.
+
+## D73: Guard rotations trade territory harvest for protection
+
+The first completed territory contest in a colony reveals Territory Guards
+research. Workers already holding the ground may guard. The crew can commit up
+to five guards with one guard per three holders. Each guard gives up that
+worker's protein haul and reduces both ends of the combat loss range by one.
+At least one combat loss remains, and guards have the same aging and upkeep as
+other holders. Changes during a hold start at the next contest round so a
+crew commits before gathering. The active and next assignments save separately.
