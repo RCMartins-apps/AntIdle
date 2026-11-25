@@ -14,3 +14,6 @@
   tabs. An example rebuild charged the edited price and applied the edited reveal
   threshold. The default file was restored and the release build, 340 engine
   tests, three balance tests and a short simulation report all passed.
+- Windows resolves sbt batch launchers through `cmd.exe`; missing launchers now
+  produce an actionable `PATH` or `--sbt` error. Launcher unit tests and the
+  editor browser regression pass after this fix.

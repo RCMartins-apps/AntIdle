@@ -16,6 +16,9 @@ project's existing sbt installation and dependency cache. Run the normal
 project setup once to populate that cache. The editor build uses cached
 dependencies and the page calls only the local server. Use `--sbt /path/to/sbt`
 if needed or `--skip-build` to reopen using the last engine build.
+On Windows, the launcher automatically resolves `sbt.bat` or `sbt.cmd`
+through `cmd.exe`. If sbt is not on `PATH`, pass its full path, for example
+`python scripts/upgrade_editor.py --sbt C:\\tools\\sbt\\bin\\sbt.bat`.
 
 Read the tree top to bottom. Solid lines link required purchases. Dashed lines
 show where the game needs Local Exploration for map progress, discoveries or

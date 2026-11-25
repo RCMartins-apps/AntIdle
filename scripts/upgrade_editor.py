@@ -10,7 +10,7 @@ import subprocess
 from tempfile import NamedTemporaryFile
 from threading import Lock
 
-from balance import ROOT, balance_bundle
+from balance import ROOT, balance_bundle, executable_command
 
 ASSETS = ROOT / 'tools/balance/editor'
 TUNING = ROOT / 'src/main/balance/upgrades.json'
@@ -129,7 +129,13 @@ def main():
     parser.add_argument('--skip-build', action='store_true', help='Use an existing balance runner build')
     args = parser.parse_args()
     if not args.skip_build:
-        subprocess.run([args.sbt, 'set ThisBuild / offline := true', 'balance/fastOptJS'], cwd=ROOT, check=True)
+        try:
+            command = executable_command(
+                args.sbt, 'set ThisBuild / offline := true', 'balance/fastOptJS'
+            )
+            subprocess.run(command, cwd=ROOT, check=True)
+        except FileNotFoundError as error:
+            parser.error(str(error))
     try:
         bundle = balance_bundle()
         with EditorServer(args.port, bundle) as server:

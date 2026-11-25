@@ -5,11 +5,31 @@ import base64
 import csv
 import hashlib
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def executable_command(executable, *arguments, platform=None, finder=shutil.which, command_processor=None):
+    """Resolve executables consistently, including Windows batch launchers."""
+    resolved = finder(executable)
+    if resolved is None and Path(executable).is_file():
+        resolved = str(Path(executable).resolve())
+    if resolved is None:
+        raise FileNotFoundError(
+            f"Could not find '{executable}'. Install it and add it to PATH, "
+            "or pass its path with --sbt."
+        )
+    if (platform or os.name) == 'nt' and Path(resolved).suffix.lower() in {'.bat', '.cmd'}:
+        processor = command_processor or os.environ.get('COMSPEC') or finder('cmd.exe')
+        if not processor:
+            raise FileNotFoundError('Could not find the Windows command processor (cmd.exe).')
+        return [processor, '/d', '/c', resolved, *arguments]
+    return [resolved, *arguments]
 
 
 def command(*args):
@@ -100,7 +120,10 @@ def main():
     if baseline:
         json.loads(baseline.read_text())
     if not args.skip_build:
-        subprocess.run([args.sbt, 'balance/fastOptJS'], cwd=ROOT, check=True)
+        try:
+            subprocess.run(executable_command(args.sbt, 'balance/fastOptJS'), cwd=ROOT, check=True)
+        except FileNotFoundError as error:
+            parser.error(str(error))
     try:
         bundle = balance_bundle()
     except ValueError as error:
