@@ -24,3 +24,7 @@
 - Exploration access is represented only by the normal Local Exploration
   upgrade dependency. The editor no longer exposes separate Explore-tab or
   exploration-available switches, implicit dashed edges, or special cycle rules.
+- Important future work is recorded in
+  [Changing balance](BALANCING.md#important-todo).
+  Replace the temporary Scala-default plus sparse-JSON override layer with one
+  complete JSON catalog for all editor-owned upgrade data.

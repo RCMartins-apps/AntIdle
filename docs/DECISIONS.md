@@ -1125,6 +1125,9 @@ An empty override file retains the current balance. The editor runs on
 loopback with local dependencies and checks references and cycles before saving.
 Exploration research uses Local Exploration as a normal upgrade prerequisite;
 the editor does not expose separate internal exploration-state switches.
+The sparse JSON override layer is temporary. An important future migration will
+make the complete JSON catalog the single source of truth for editor-owned
+upgrade data. Scala will retain stable identities and gameplay effect code.
 
 ## D75: Brood options collapse below the Raise actions
 

@@ -37,6 +37,19 @@ The editor checks for unknown references and dependency cycles before saving.
 **Restore defaults** resets the current upgrade to its Scala values.
 **Revert edits** resets unsaved changes to the last loaded or saved values.
 
+### Important TODO
+
+Move every editor-owned field out of Scala defaults and into the complete
+`src/main/balance/upgrades.json` catalog. This includes prices, titles, help,
+purchase dependencies and reveal thresholds. Scala should retain stable upgrade
+identities and the code that implements gameplay effects.
+
+The current sparse JSON override layer is an intermediate implementation. Do
+not expand it into additional parallel sources. The future migration must leave
+one obvious file to inspect and edit for upgrade balance, remove fallback values
+for editor-owned fields, validate the complete catalog during compilation, and
+keep save IDs stable.
+
 The JSON file can also be edited by hand. Cost values in the file use the
 engine's fixed-point units. The editor shows and accepts ordinary units.
 For example, changing Standard Worker Development to 80 sugar and six
