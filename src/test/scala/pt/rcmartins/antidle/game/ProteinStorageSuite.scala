@@ -40,7 +40,7 @@ class ProteinStorageSuite extends FunSuite {
 
   test("research is hidden until exploration, protein discovery and food storage unlock") {
     val initial = colony(1)
-    val ready = initial.copy(upgrades = initial.upgrades.unlock(UnlockFoodStorageChamber),
+    val ready = initial.copy(upgrades = initial.upgrades.unlock(UnlockFoodStorageChamber, UnlockExplorerTask),
       exploration = initial.exploration.copy(proteinDiscovered = true),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
     assert(ProteinStorage.shouldShow(ready))
@@ -50,6 +50,6 @@ class ProteinStorageSuite extends FunSuite {
     assert(!ProteinStorage.shouldShow(initial))
     assert(!ProteinStorage.shouldShow(ready.copy(exploration = ExplorationData())))
     assert(!ProteinStorage.shouldShow(ready.copy(upgrades = UpgradesData.initial)))
-    assert(!ProteinStorage.shouldShow(ready.copy(unlocks = Unlocks.initial)))
+    assert(ProteinStorage.shouldShow(ready.copy(unlocks = Unlocks.initial)))
   }
 }

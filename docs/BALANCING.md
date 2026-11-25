@@ -20,9 +20,9 @@ On Windows, the launcher automatically resolves `sbt.bat` or `sbt.cmd`
 through `cmd.exe`. If sbt is not on `PATH`, pass its full path, for example
 `python scripts/upgrade_editor.py --sbt C:\\tools\\sbt\\bin\\sbt.bat`.
 
-Read the tree top to bottom. Solid lines link required purchases. Dashed lines
-show where the game needs Local Exploration for map progress, discoveries or
-Knowledge costs. The tree and cost inputs use the game's resource icons.
+Read the tree top to bottom. Lines link required upgrade purchases. Exploration
+research uses Local Exploration as an ordinary prerequisite. The tree and cost
+inputs use the game's resource icons.
 Select an upgrade to edit its prices, required purchases, discovery and
 other reveal gates. Add or remove links in **Prerequisites**.
 Search by title or stable ID and press Enter to jump to the matching node.
@@ -70,7 +70,8 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 
 For example, to reveal Brood Care later, change its
 `minimumRevealedSites` in `UpgradeBalance`, retaining `nursery = true` and
-`explorationTab = true`. To change Collect Resin's access, edit its site studies or `requiredDiscovery` in the destination catalog. Its UI and departure validation
+the Local Exploration prerequisite. To change Collect Resin's access, edit its
+site studies or `requiredDiscovery` in the destination catalog. Its UI and departure validation
 share `progressionUnlocked`; no second copy of that discovery check needs editing.
 These are examples of tuning points, not recommended balance changes.
 
@@ -83,17 +84,12 @@ A discovery requires its survey count; revealing the hex alone does not find it.
 Most visibility is earned history: `status.show` persists even if a prerequisite
 later falls below its threshold. For example, losing a small worker doesn't hide
 Standard Worker Development again. Purchased research remains visible in state.
-One existing exception is retained: unpurchased Knowledge-priced upgrades are
-hidden until exploration is available, including stale saved `show` flags.
 Resource visibility is current-colony history: it latches through spending/losses
 and resets on founding. Lifetime statistics and milestone bonuses persist.
 
-There are two exploration flags in the upgrade requirements, retained for save and
-transition compatibility: `explorationTab` requires the unlocked tab flag;
-`explorationAvailable` also accepts the purchased Unlock Explorer Task research
-before the next reconciliation updates that flag. `earlyResearch` retains the
-existing Nest/Upgrades-tab/known-Knowledge alternative checks. Most future
-exploration research can follow the `explorationTab` pattern.
+`earlyResearch` retains the existing Nest/Upgrades-tab/known-Knowledge
+alternative checks. Exploration research declares Local Exploration in its
+ordinary `upgrades` prerequisites.
 
 `UpgradeResearch.isVisible` owns those history and Knowledge rules.
 `canPurchase` additionally checks that the upgrade isn't bought and that its

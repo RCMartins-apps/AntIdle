@@ -1123,6 +1123,8 @@ definitions and writes a sparse JSON override file shared by game and
 simulation builds. Stable save IDs and untouched default values carry over.
 An empty override file retains the current balance. The editor runs on
 loopback with local dependencies and checks references and cycles before saving.
+Exploration research uses Local Exploration as a normal upgrade prerequisite;
+the editor does not expose separate internal exploration-state switches.
 
 ## D75: Brood options collapse below the Raise actions
 

@@ -25,7 +25,7 @@ class RoyalNurserySuite extends FunSuite {
         chambers = initial.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1),
           repleteChamber = Chamber.RepleteChamber(3))),
       exploration = MapFixture.explored.copy(revealedSites = 5, surveys = Map("fallen-pine" -> 0)),
-      upgrades = initial.upgrades.unlock(DefaultWorkers, ConstructionPlanning, RepleteStorage),
+      upgrades = initial.upgrades.unlock(UnlockExplorerTask, DefaultWorkers, ConstructionPlanning, RepleteStorage),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }
 

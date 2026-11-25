@@ -34,6 +34,12 @@ class UnlockDefinitionsSuite extends FunSuite {
       assert(definition.requirements.minimumRevealedSites >= 0)
       assert(definition.requirements.minimumRevealedSites <= ExplorationMap.sites.size)
     }
+    def dependsOnExploration(upgrade: UpgradeType, visited: Set[UpgradeType] = Set.empty): Boolean =
+      upgrade == UnlockExplorerTask || (!visited(upgrade) &&
+        upgrade.definition.requirements.upgrades.exists(dependsOnExploration(_, visited + upgrade)))
+    UpgradeType.all.filter(_.cost.knowledge > 0L).foreach { upgrade =>
+      assert(dependsOnExploration(upgrade), s"${upgrade.name} must depend on Local Exploration")
+    }
     val saved = AllDataForSave.fromAllData(ready).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assert(UpgradeType.all.forall(saved.upgrades(_).unlocked))
   }
@@ -87,9 +93,8 @@ class UnlockDefinitionsSuite extends FunSuite {
     val poor = eligible.copy(basicResources = eligible.basicResources.copy(sugar = eligible.basicResources.sugar.copy(amount = UnlockQueensChamber.cost.sugar - 1L)))
     assert(!UpgradeResearch.canPurchase(poor, UnlockQueensChamber))
     assertEquals(UpgradeResearch.purchase(poor, UnlockQueensChamber), poor)
-    val stale = rich.copy(upgrades = rich.upgrades.show(DefaultWorkers))
-    assert(!UpgradeResearch.isVisible(stale, DefaultWorkers))
-    assertEquals(UpgradeResearch.purchase(stale, DefaultWorkers), stale)
+    assert(!UpgradeResearch.isVisible(rich, DefaultWorkers))
+    assertEquals(UpgradeResearch.purchase(rich, DefaultWorkers), rich)
   }
 
   test("earned visibility survives a transient prerequisite loss and save/load") {
@@ -126,7 +131,7 @@ class UnlockDefinitionsSuite extends FunSuite {
       val sites = List(1, 3, 5)(rank)
       val d = fresh.copy(exploration = fresh.exploration.copy(revealedSites = sites),
         unlocks = fresh.unlocks.copy(tabs = fresh.unlocks.tabs.copy(exploreTabUnlocked = true)),
-        upgrades = fresh.upgrades.unlock(UpgradeType.expeditionSupplies.take(rank): _*),
+        upgrades = fresh.upgrades.unlock((UnlockExplorerTask +: UpgradeType.expeditionSupplies.take(rank)): _*),
         basicResources = fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = tier.cost.sugar),
           knowledge = fresh.basicResources.knowledge.copy(amount = tier.cost.knowledge)))
       val before = d.copy(exploration = d.exploration.copy(revealedSites = sites - 1))

@@ -78,7 +78,8 @@ class ForagingSuite extends FunSuite {
     assertEquals(Foraging.nextPerSecond(100L, trails), 0L)
     assertEquals(Foraging.productionPerTick(Long.MaxValue, trails), Foraging.productionPerTick(100L, trails))
     assertEquals((1L to 200L).filter(n => Foraging.productionPerTick(n, trails) >= n * antsSugarUpkeepTick).last, 101L)
-    val colony = AllData.initial.copy(unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
+    val colony = AllData.initial.copy(upgrades = plain.unlock(UnlockExplorerTask),
+      unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
     assert(!EstablishedTrails.shouldShow(colony.copy(exploration = MapFixture.explored.copy(revealedSites = 0))))
     assert(EstablishedTrails.shouldShow(colony.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
     assertEquals(EstablishedTrails.cost, ActionCost(sugar = 600 * u, knowledge = 60 * u))
@@ -86,7 +87,8 @@ class ForagingSuite extends FunSuite {
   }
 
   test("paid mission slot requires two revealed sites and stacks with the fourth-reveal slot") {
-    val initial = AllData.initial.copy(unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
+    val initial = AllData.initial.copy(upgrades = plain.unlock(UnlockExplorerTask),
+      unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
     assert(!AdditionalExpeditionSlot.shouldShow(initial.copy(exploration = MapFixture.explored.copy(revealedSites = 1))))
     assert(AdditionalExpeditionSlot.shouldShow(initial.copy(exploration = MapFixture.explored.copy(revealedSites = 6))))
     val purchased = plain.unlock(AdditionalExpeditionSlot)
@@ -100,7 +102,7 @@ class ForagingSuite extends FunSuite {
   test("the engine enforces the purchased slot limit and releases slots on return") {
     val initial = AllData.initial.copy(
       ants = AntsData(workers = 20 * u, tasks = Seq(AntTask.Explorer -> 0L)),
-      upgrades = plain.unlock(AdditionalExpeditionSlot),
+      upgrades = plain.unlock(UnlockExplorerTask, AdditionalExpeditionSlot),
       exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = AllData.initial.basicResources.copy(sugar = BasicResource(1000 * u, 1000 * u)),
       unlocks = AllData.initial.unlocks.copy(tabs = AllData.initial.unlocks.tabs.copy(exploreTabUnlocked = true)),

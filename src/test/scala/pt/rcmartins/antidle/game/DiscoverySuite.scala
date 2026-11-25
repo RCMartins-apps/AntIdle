@@ -17,6 +17,7 @@ class DiscoverySuite extends FunSuite {
       ants = AntsData(workers = 40 * u, scouts = 2 * u, tasks = Seq(AntTask.Explorer -> 0L)),
       exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = initial.basicResources.copy(sugar = BasicResource(5000 * u, 10000 * u)),
+      upgrades = initial.upgrades.unlock(UnlockExplorerTask),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
   }

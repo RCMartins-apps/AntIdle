@@ -109,7 +109,6 @@ main {
 .legend { flex-wrap: wrap; padding: 9px 13px; color: var(--muted); font-size: .79rem; }
 .legend span { display: flex; align-items: center; gap: 7px; }
 .legend i { width: 22px; border-top: 2px solid var(--green); }
-.legend span + span i { border-top: 2px dashed var(--accent); }
 
 .inspector { height: max(510px, calc(100vh - 128px)); overflow: auto; }
 #upgrade { padding: 15px; }
@@ -129,8 +128,6 @@ main {
 .tags button { min-height: 34px; font-size: .76rem; padding: 3px 7px; background: #263126; }
 .connections { margin-top: 7px; }
 .connections .field { margin-bottom: 5px; }
-.gate-note { color: var(--muted); font-size: .77rem; }
-
 @media (max-width: 860px) {
   main { grid-template-columns: minmax(0, 1fr); }
   #viewport { height: min(490px, 58vh); min-height: 240px; }

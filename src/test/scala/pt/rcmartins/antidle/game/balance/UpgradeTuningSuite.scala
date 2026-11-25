@@ -46,10 +46,10 @@ class UpgradeTuningSuite extends FunSuite {
     ).foreach(candidate => assert(tune(candidate).isLeft, candidate))
   }
 
-  test("purchase and exploration-gated dependency cycles are rejected") {
+  test("purchase dependency cycles are rejected") {
     assert(tune("""{"UnlockQueensChamber":{"requirements":{"upgrades":["UnlockFoodStorageChamber"]}}}""")
       .left.toOption.exists(_.contains("Dependency cycle")))
-    assert(tune("""{"UnlockExplorerTask":{"cost":{"knowledge":10000}}}""")
+    assert(tune("""{"UnlockExplorerTask":{"requirements":{"upgrades":["ExpeditionSupplies1"]}}}""")
       .left.toOption.exists(_.contains("Dependency cycle")))
   }
 }

@@ -11,8 +11,6 @@ const labels = {
   minimumSmallWorkers: 'Small workers',
   completedMissions: 'Completed expeditions',
   matureWorkers: 'Standard workers raised',
-  explorationTab: 'Explore tab unlocked',
-  explorationAvailable: 'Local Exploration available',
   nursery: 'Nursery built',
   outpost: 'Dry Clearing Outpost built',
   aging: 'Aging active',
@@ -29,7 +27,7 @@ const columnGap = 23;
 const sidePadding = 28;
 const rowCapacity = 4;
 const paperWidth = rowCapacity * nodeWidth + (rowCapacity - 1) * columnGap + 2 * sidePadding;
-let unit, discoveries, icons, explorationUpgrade, explorationGates, savedRevision, ids, defaults, saved, draft, selected;
+let unit, discoveries, icons, savedRevision, ids, defaults, saved, draft, selected;
 let scale = 1;
 let layout, saving = false;
 
@@ -86,13 +84,7 @@ function updateButtons(message) {
 }
 
 function parentEdges(id) {
-  const row = draft[id];
-  const edges = row.requirements.upgrades.map(parent => ({parent, implicit: false}));
-  const requiresExplore = explorationGates.some(path => path.split('.').reduce((value, key) => value[key], row));
-  if (requiresExplore && !edges.some(edge => edge.parent === explorationUpgrade)) {
-    edges.push({parent: explorationUpgrade, implicit: true});
-  }
-  return edges;
+  return draft[id].requirements.upgrades.map(parent => ({parent}));
 }
 
 function makeLayout() {
@@ -148,7 +140,7 @@ function paintLinks() {
   ctx.scale(ratio, ratio);
   const draw = focused => {
     for (const [id, edges] of layout.parents) {
-      for (const {parent, implicit} of edges) {
+      for (const {parent} of edges) {
         const highlighted = parent === selected || id === selected;
         if (highlighted !== focused) continue;
         const from = layout.positions.get(parent);
@@ -159,9 +151,8 @@ function paintLinks() {
         const y2 = to.y;
         const bend = Math.min(58, (y2 - y1) / 2);
         ctx.beginPath();
-        ctx.setLineDash(implicit ? [5, 5] : []);
         ctx.lineWidth = highlighted ? 2.3 : 1.2;
-        ctx.strokeStyle = implicit ? (highlighted ? '#e9bc70' : '#887548') : (highlighted ? '#bdd7ab' : '#637f65');
+        ctx.strokeStyle = highlighted ? '#bdd7ab' : '#637f65';
         ctx.moveTo(x1, y1);
         ctx.bezierCurveTo(x1, y1 + bend, x2, y2 - bend, x2, y2);
         ctx.stroke();
@@ -412,9 +403,6 @@ function renderForm() {
       requirements.append(field(labelFor(key), control));
     }
   }
-  const gateNote = element('p', 'Knowledge prices require access to Local Exploration.', 'gate-note wide');
-  requirements.append(gateNote);
-
   const copy = element('div', undefined, 'fields');
   const name = input('text', row.title);
   name.required = true;
@@ -455,8 +443,6 @@ function loadCatalog(catalog) {
   unit = catalog.unit;
   discoveries = catalog.discoveries;
   icons = catalog.icons;
-  explorationUpgrade = catalog.explorationUpgrade;
-  explorationGates = catalog.explorationGates;
   savedRevision = catalog.revision;
   ids = catalog.upgrades.map(entry => entry.id);
   defaults = Object.fromEntries(catalog.upgrades.map(entry => [entry.id, entry.base]));

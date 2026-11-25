@@ -4,7 +4,7 @@
 
 - `tools/upgrade-balance-editor` includes main through 3018708. Run
   `python3 scripts/upgrade_editor.py` and open the loopback URL it prints.
-  The top-down graph links purchased prerequisites and Local Exploration gates.
+  The top-down graph links purchased prerequisites.
 - The editor changes costs, reveal gates, title and help in
   `src/main/balance/upgrades.json`. The engine and simulator embed those
   sparse overrides during compilation. The file ships empty and keeps current
@@ -21,3 +21,6 @@
   `Option` candidates. Its previous non-local `return` control flow and compiler
   warnings are gone while retaining the existing decision priority. All three
   balance tests and the optimized balance build pass.
+- Exploration access is represented only by the normal Local Exploration
+  upgrade dependency. The editor no longer exposes separate Explore-tab or
+  exploration-available switches, implicit dashed edges, or special cycle rules.

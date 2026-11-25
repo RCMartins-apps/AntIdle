@@ -2,7 +2,6 @@ package pt.rcmartins.antidle.game.balance
 
 import pt.rcmartins.antidle.game.{Constants, DiscoveryProgression, ResourceIcons}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
-import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.UnlockExplorerTask
 import scala.annotation.tailrec
 import zio.Chunk
 import zio.json._
@@ -14,16 +13,6 @@ object UpgradeTuning {
   object Entry {
     implicit val encoder: JsonEncoder[Entry] = DeriveJsonEncoder.gen[Entry]
   }
-
-  private val explorationGates: List[(String, UpgradeDefinition => Boolean)] = List(
-    "requirements.explorationTab" -> (_.requirements.explorationTab),
-    "requirements.explorationAvailable" -> (_.requirements.explorationAvailable),
-    "requirements.discovery" -> (_.requirements.discovery.nonEmpty),
-    "requirements.minimumRevealedSites" -> (_.requirements.minimumRevealedSites > 0),
-    "requirements.completedMissions" -> (_.requirements.completedMissions > 0),
-    "requirements.outpost" -> (_.requirements.outpost),
-    "cost.knowledge" -> (_.cost.knowledge > 0L),
-  )
 
   case class CostIcon(id: String, path: String)
   object CostIcon {
@@ -40,8 +29,8 @@ object UpgradeTuning {
     "resin" -> ResourceIcons.Resin,
   ).map { case (field, icon) => field -> CostIcon(icon.id, icon.path) }
 
-  case class Catalog(unit: Long, explorationUpgrade: String, explorationGates: List[String],
-      discoveries: Map[String, String], icons: Map[String, CostIcon], upgrades: Seq[Entry])
+  case class Catalog(unit: Long, discoveries: Map[String, String],
+      icons: Map[String, CostIcon], upgrades: Seq[Entry])
   object Catalog {
     implicit val encoder: JsonEncoder[Catalog] = DeriveJsonEncoder.gen[Catalog]
   }
@@ -49,8 +38,7 @@ object UpgradeTuning {
   def catalog(candidate: String): Either[String, Catalog] = {
     val defaults = UpgradeBalance.defaults
     resolve(defaults, candidate).map(effective =>
-      Catalog(Constants.u, UnlockExplorerTask.name, explorationGates.map(_._1),
-        DiscoveryProgression.all.map(d => d.id -> d.title).toMap, costIcons,
+      Catalog(Constants.u, DiscoveryProgression.all.map(d => d.id -> d.title).toMap, costIcons,
         UpgradeType.all.map(id => Entry(id.name, defaults(id), effective(id)))))
   }
 
@@ -124,8 +112,7 @@ object UpgradeTuning {
 
   private def checkCycles(definitions: Map[UpgradeType, UpgradeDefinition]): Either[String, Unit] = {
     val dependencies = definitions.map { case (id, definition) =>
-      val explore = explorationGates.exists { case (_, requires) => requires(definition) }
-      id -> (definition.requirements.upgrades.toSet ++ Option.when(explore)(UnlockExplorerTask))
+      id -> definition.requirements.upgrades.toSet
     }
 
     @tailrec def dropReady(remaining: Set[UpgradeType]): Either[String, Unit] =

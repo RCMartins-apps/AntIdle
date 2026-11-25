@@ -116,7 +116,8 @@ class RepleteSuite extends FunSuite {
   test("replete research, chamber and age state survive load and stay hidden before dry-area discovery") {
     val initial = AllData.initial
     assert(!RepleteStorage.shouldShow(initial))
-    val found = initial.copy(exploration = ExplorationData(surveys = Map("dry-clearing" -> 3)),
+    val found = initial.copy(upgrades = initial.upgrades.unlock(UnlockExplorerTask),
+      exploration = ExplorationData(surveys = Map("dry-clearing" -> 3)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
     assert(RepleteStorage.shouldShow(found))
     val promoted = ResourceVisibility.reconcile(RepleteProgression.promote(colony))
