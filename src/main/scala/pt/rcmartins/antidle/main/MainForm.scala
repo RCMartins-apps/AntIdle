@@ -844,7 +844,7 @@ object MainForm {
       select(
         idAttr := controlId,
         className := "form-select",
-        Seq(1, 10, 25, 250).map { amount =>
+        Seq(1, 10, 25, 100).map { amount =>
           option(value := amount.toString, s"×$amount")
         },
         value <-- amountVar.signal.map(_.toString),
