@@ -17,3 +17,7 @@
 - Windows resolves sbt batch launchers through `cmd.exe`; missing launchers now
   produce an actionable `PATH` or `--sbt` error. Launcher unit tests and the
   editor browser regression pass after this fix.
+- The balance strategy now selects the first available decision from lazy
+  `Option` candidates. Its previous non-local `return` control flow and compiler
+  warnings are gone while retaining the existing decision priority. All three
+  balance tests and the optimized balance build pass.
