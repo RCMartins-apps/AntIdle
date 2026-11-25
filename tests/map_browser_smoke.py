@@ -33,7 +33,7 @@ def check_map(page, width, url):
     game['nestAttributes']['chambers']['nurseryChamber']['level'] = 1
     game['exploration'].update(revealedSites=0, surveys={}, depleted={}, explorationParties=[])
     for upgrade in game['upgrades']['upgrades']:
-        upgrade.update(show=False, unlocked=upgrade['name'] == 'DefaultWorkers')
+        upgrade.update(show=False, unlocked=upgrade['name'] in ('UnlockExplorerTask', 'DefaultWorkers'))
     load_game(page, game)
     select_tab(page, 'Explore')
     expect(page.locator('.hex-map .map-hex')).to_have_count(7)

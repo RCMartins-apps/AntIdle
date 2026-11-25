@@ -28,3 +28,6 @@
   [Changing balance](BALANCING.md#important-todo).
   Replace the temporary Scala-default plus sparse-JSON override layer with one
   complete JSON catalog for all editor-owned upgrade data.
+- The production map regression fixture now purchases Local Exploration instead
+  of relying on the removed tab-only visibility rule. The complete production
+  map, trails, aphid and territory browser suite passes at 320, 390 and 1280 px.
