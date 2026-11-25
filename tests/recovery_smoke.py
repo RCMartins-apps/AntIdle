@@ -8,7 +8,7 @@ import shutil
 from threading import Thread
 from playwright.sync_api import expect, sync_playwright
 from ci_browser_smoke import ProductionHandler
-from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save_game, progressed_game, select_tab
+from browser_smoke import ROOT, UNIT, QuietHandler, assert_fits, load_game, save_game, progressed_game, select_tab, open_brood_options
 
 
 def check_recovery(page, width, url):
@@ -32,6 +32,7 @@ def check_recovery(page, width, url):
 
     def nest():
         select_tab(page, "Nest")
+        open_brood_options(page)
 
     load_game(page, game)
     nest()

@@ -947,7 +947,9 @@ section at the end of Upgrades lists current-colony purchases with effects in [i
 
 ### Compact Nest controls
 
-The Brood section collapses as a whole. Starter-worker resource/task controls hide
+Brood keeps laying actions and status visible. Brood options holds the action
+amount, brood priority and Queen’s Routine, and remembers its disclosure state.
+Starter-worker resource/task controls hide
 when no small adults remain. On mobile the build queue appears only while Nest is
 selected; desktop retains access beside other tabs. Royal egg laying needs its
 normal resources and housing, while development waits for assigned Royal Nurses.

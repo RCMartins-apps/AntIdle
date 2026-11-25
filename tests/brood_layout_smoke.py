@@ -31,6 +31,8 @@ def check(page, width, url):
     for upgrade in game['upgrades']['upgrades']:
         upgrade.update(unlocked=False,show=True)
     panel=page.locator('.nest-brood')
+    options=panel.locator('.brood-options-details')
+    summary=options.locator(':scope > summary')
     cancel=page.get_by_role('button',name='Cancel egg orders',exact=True)
     worker=page.get_by_role('button',name='Raise Worker Egg',exact=True)
     cases=[]
@@ -49,7 +51,7 @@ def check(page, width, url):
     tops=[]
     for state,text in cases:
         load_game(page,state)
-        expect(panel.get_by_text('Brood',exact=True)).to_have_count(1)
+        expect(summary).to_have_text('Brood options')
         expect(panel.locator('.brood-care-cost')).to_have_count(0)
         expect(panel.locator('.brood-feeding')).not_to_be_visible()
         expect(panel.locator('.brood-pipeline')).to_contain_text(text)
@@ -115,26 +117,38 @@ def check(page, width, url):
     expect(panel.locator('.brood-scout-orders b')).to_have_text('0')
     after=worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")
     assert abs(before-after)<=1,(before,after)
+    expect(options).not_to_have_attribute('open','')
     page.get_by_label('About Brood',exact=True).click()
-    expect(panel).to_have_attribute('open','')
+    expect(options).not_to_have_attribute('open','')
     expect(panel.locator('.brood-feeding')).to_contain_text('Worker and scout larvae')
     page.get_by_label('About Brood',exact=True).click()
-    page.clock.run_for(1200)
-    expect(panel).to_have_attribute('open','')
-    assert abs(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")-before)<=1
-    panel.locator(':scope > .brood-summary').click()
-    expect(worker).not_to_be_visible()
-    # Attribute observation persists state even with native toggle events blocked,
-    # without advancing the paused clock or allowing a timed retry.
-    assert page.evaluate("localStorage.getItem('antidle.ui.details.nest.brood')") == 'closed'
-    panel.locator(':scope > .brood-summary').click()
+    summary.click()
+    expect(options).to_have_attribute('open','')
+    expect(page.get_by_label('Brood priority',exact=True)).to_be_visible()
+    if width <= 767:
+        expect(options.get_by_label('Action amount')).to_be_visible()
+        options.get_by_label('Action amount').select_option('10')
+        expect(worker.locator('.badge')).to_have_text('x10')
     expect(worker).to_be_visible()
-    assert page.evaluate("localStorage.getItem('antidle.ui.details.nest.brood')") == 'open'
+    page.clock.run_for(1200)
+    expect(options).to_have_attribute('open','')
+    assert abs(worker.evaluate("el => el.getBoundingClientRect().top - el.closest('.nest-brood').getBoundingClientRect().top")-before)<=1
+    summary.click()
+    expect(worker).to_be_visible()
+    expect(page.get_by_label('Brood priority',exact=True)).not_to_be_visible()
+    if width <= 767:
+        expect(worker.locator('.badge')).to_have_text('x10')
+    # Attribute observation persists state even with native toggle events blocked.
+    key='antidle.ui.details.nest.brood.options'
+    assert page.evaluate("key => localStorage.getItem(key)",key) == 'closed'
+    summary.click()
+    expect(worker).to_be_visible()
+    assert page.evaluate("key => localStorage.getItem(key)",key) == 'open'
     founding=copy.deepcopy(game)
     founding['ants'].update(standardWorkersUnlocked=False,workers=0,smallWorkers=2*UNIT,tasks=[])
     founding['nestAttributes']['chambers']['nurseryChamber']['level']=0
     load_game(page,founding)
-    expect(panel).to_have_attribute('open','')
+    expect(options).to_have_attribute('open','')
     expect(panel.locator('.brood-scout-orders')).to_have_count(0)
     expect(page.get_by_label('Brood priority',exact=True)).to_have_count(0)
     expect(panel.locator('.brood-order-count')).to_contain_text('Egg orders')
@@ -157,6 +171,7 @@ def check(page, width, url):
         {'Developing':{'initialTick':tick,'kind':kind,'care':0}}
         for kind in ('worker','scout','worker','scout')
     ]
+    next(upgrade for upgrade in mixed['upgrades']['upgrades'] if upgrade['name']=='QueensRoutine')['unlocked']=True
     mixed['ants'].pop('broodPriority',None)  # Existing saves start balanced.
     load_game(page,mixed)
     priority=page.get_by_label('Brood priority',exact=True)
@@ -175,8 +190,13 @@ def check(page, width, url):
     if width==390 and os.environ.get('ANTIDLE_ARTIFACTS'):
         path=Path(os.environ['ANTIDLE_ARTIFACTS'])
         path.mkdir(parents=True,exist_ok=True)
-        priority.evaluate("el => el.scrollIntoView({block:'center'})")
-        priority.locator('..').screenshot(path=str(path/'brood-priority.png'))
+        panel.locator('.brood-options').screenshot(path=str(path/'brood-options-open.png'))
+    summary.click()
+    expect(worker).to_be_visible()
+    expect(page.get_by_role('button',name='Raise Scout Egg',exact=True)).to_be_visible()
+    expect(panel.locator('.queen-routine')).not_to_be_visible()
+    if width==390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        panel.screenshot(path=str(path/'brood-options-closed.png'))
 
     crowded=copy.deepcopy(game)
     crowded['basicResources']['sugar'].update(amount=1500*UNIT,maxAmount=2000*UNIT)
@@ -213,7 +233,7 @@ def check(page, width, url):
     page.clock.run_for(400)
     expect(panel.locator('.brood-worker-orders b')).to_have_text('0')
     assert not errors,errors
-    print(f'PASS brood layout {width}px: single heading, stable counters/status/cancel, scoped feeding help, independent disclosures, saved brood priority and refuse capacity',flush=True)
+    print(f'PASS brood layout {width}px: stable counters/status/cancel, visible raise actions, scoped feeding help, independent disclosures, saved brood priority and refuse capacity',flush=True)
 
 
 if __name__=='__main__':

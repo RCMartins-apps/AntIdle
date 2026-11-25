@@ -1,5 +1,13 @@
 # Handoff
 
+## 2026-11-25 — Brood options
+
+- The Brood tab keeps egg orders, status, and Raise controls visible. A closed
+  Brood options disclosure below them holds action amount, brood priority,
+  and the Queen’s Routine when available. Its info button opens independently.
+- All 332 engine tests passed. Browser layout checks passed at 320, 390, and
+  1280 px, including stable Raise positions and saved options visibility.
+
 ## 2026-11-24 — founding provisions and nest refuse
 
 - New colonies start with 10 sugar for two small-worker eggs. Founding

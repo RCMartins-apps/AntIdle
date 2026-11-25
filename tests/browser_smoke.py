@@ -52,6 +52,12 @@ def select_tab(page, name):
         page.get_by_role('tab', name={'Chambers': 'Nest', 'Purchased': 'Upgrades'}.get(name, name), exact=name != 'Jobs').click()
 
 
+def open_brood_options(page):
+    options = page.locator('.brood-options-details')
+    if options.get_attribute('open') is None:
+        options.locator(':scope > summary').click()
+
+
 def save_game(page):
     select_tab(page, "Settings")
     page.get_by_role("button", name="Manual Save", exact=True).click()
@@ -342,6 +348,7 @@ def run_checks(browser, url):
         for multiplier, modifiers in ((1, []), (10, ["Control"]), (25, ["Shift"]), (250, ["Control", "Shift"])):
             load_game(page, game)
             if width <= 767:
+                open_brood_options(page)
                 page.locator(".nest-brood").get_by_label("Action amount").select_option(str(multiplier))
                 modifiers = []
                 page.get_by_label("Details for Raise Worker Egg", exact=True).click()
@@ -369,6 +376,7 @@ def run_checks(browser, url):
         partial["ants"]["workers"] = 0
         load_game(page, partial)
         if width <= 767:
+            open_brood_options(page)
             page.locator(".nest-brood").get_by_label("Action amount").select_option("10")
             batch_modifiers = []
         else:

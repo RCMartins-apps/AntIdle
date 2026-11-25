@@ -210,15 +210,22 @@ def check_game(page, width, url):
     assert queued['ants']['eggsAndLarvae'] == []
     assert queued['basicResources']['sugar']['amount'] == 0
     assert queued['basicResources']['protein']['amount'] == 0
-    # The entire brood panel collapses and stays closed over live ticks.
+    # Brood actions stay visible when secondary settings are collapsed.
     select_tab(page, 'Nest')
-    brood_panel = page.locator('details.nest-brood')
-    brood_panel.locator(':scope > summary').click()
-    expect(worker).not_to_be_visible()
-    page.clock.run_for(600)
-    expect(brood_panel).not_to_have_attribute('open', '')
-    brood_panel.locator(':scope > summary').click()
+    options = page.locator('.brood-options-details')
+    summary = options.locator(':scope > summary')
+    expect(options).not_to_have_attribute('open', '')
     expect(worker).to_be_visible()
+    expect(scout).to_be_visible()
+    summary.click()
+    expect(options).to_have_attribute('open', '')
+    expect(page.get_by_label('Brood priority', exact=True)).to_be_visible()
+    summary.click()
+    page.clock.run_for(600)
+    expect(options).not_to_have_attribute('open', '')
+    expect(page.get_by_label('Brood priority', exact=True)).not_to_be_visible()
+    expect(worker).to_be_visible()
+    expect(scout).to_be_visible()
     # Shared research validation: reveal independently of affordability, then
     # enable at the displayed price and remove the one-time purchase.
     research = progressed_game(save_game(page))
