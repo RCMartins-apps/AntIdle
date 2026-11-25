@@ -1326,10 +1326,40 @@ object MainForm {
 
   private def territoryDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val chosen = Var(10)
+    val firstGuardOrder = Var(0)
+    val guardsUnlocked = upgradesSignal.map(TerritoryProgression.guardsUnlocked).distinct
+    val firstGuardLimit = chosen.signal.map(n => TerritoryProgression.maxGuards(n.toLong)).distinct
+    val firstGuards = chosen.signal.combineWith(firstGuardOrder.signal, guardsUnlocked).map {
+      case (workers, order, unlocked) => if (unlocked) TerritoryProgression.guardCount(workers.toLong, order) else 0
+    }.distinct
+    val claimPlan = chosen.signal.combineWith(firstGuards)
     val siteSignal = explorationSignal.map(_.territory).distinct
     val workerSignal = antsSignal.map(TerritoryProgression.workers).distinct
+    val activeCrew = workerSignal.combineWith(siteSignal.map(_.guards).distinct)
+
+    def guardPicker(label: String, count: Signal[Int], limit: Signal[Int])(change: Int => Unit): ReactiveHtmlElement[HTMLDivElement] =
+      div(className := "territory-guard-controls d-flex align-items-center justify-content-between gap-2 mb-2",
+        role := "group", aria.label := label,
+        span(label),
+        div(className := "d-flex align-items-center gap-2",
+          button(className := "btn btn-outline-secondary", typ := "button", minHeight.px := 44, minWidth.px := 44,
+            aria.label := "Remove guard", "−", disabled <-- count.map(_ == 0),
+            onClick --> (_ => useSignalValue[Int](count, n => change(n - 1)))),
+          b(className := "territory-guard-count text-center", minWidth.px := 24, child.text <-- count.map(_.toString)),
+          button(className := "btn btn-outline-secondary", typ := "button", minHeight.px := 44, minWidth.px := 44,
+            aria.label := "Add guard", "+",
+            disabled <-- count.combineWith(limit).map { case (n, max) => n >= max },
+            onClick --> (_ => useSignalValue[Int](count, n => change(n + 1)))),
+        ),
+      )
+
     div(className := "territory-card",
-      infoHeading("Contested Foraging Ground", div("Hauls arrive after each 60-second contest. Reinforcements use the oldest idle/default workers. Withdrawal returns survivors but abandons the unfinished haul. Full storage does not stop contests or losses.")),
+      infoHeading("Contested Foraging Ground", div(
+        div("Hauls arrive after each 60-second contest. Reinforcements use the oldest idle/default workers. Withdrawal abandons the unfinished haul."),
+        child.maybe <-- guardsUnlocked.map(unlocked => Option.when(unlocked)(
+          div(className := "mt-2",
+            s"One guard per ${TerritoryProgression.WorkersPerGuard} holders. Guards skip gathering and reduce combat losses. Changes start next round."))),
+      )),
       child <-- siteSignal.map(_.held).distinct.map {
         case false => div(
           label(forId := "territory-workers", "Workers to hold"),
@@ -1340,9 +1370,14 @@ object MainForm {
             List(10, 20, 37).map(n => button(className := "btn btn-outline-secondary", typ := "button", minHeight.px := 44,
               n.toString, aria.label := s"Hold with $n workers", onClick --> (_ => chosen.set(n)))),
           ),
-          div(className := "territory-risk text-danger small mb-2", child.text <-- chosen.signal.map(n => TerritoryProgression.risk(n.toLong))),
-          div(className := "small mb-1", child.text <-- chosen.signal.map(n =>
-            s"+${resourceRateStr(n.toLong * TerritoryProgression.ProteinPerWorkerSecond)} protein/s")),
+          child.maybe <-- guardsUnlocked.map(unlocked => Option.when(unlocked)(
+            guardPicker("Guards", firstGuards, firstGuardLimit)(firstGuardOrder.set))),
+          div(className := "territory-risk text-danger small mb-2", child.text <-- claimPlan.map {
+            case (workers, guards) => TerritoryProgression.risk(workers.toLong, guards)
+          }),
+          div(className := "territory-rate small mb-1", child.text <-- claimPlan.map { case (workers, guards) =>
+            s"+${resourceRateStr(TerritoryProgression.rate(workers.toLong, guards))} protein/s"
+          }),
           div(className := "territory-entry-aging text-danger small mb-1", child.text <-- antsSignal.combineWith(currentTickSignal, chosen.signal).map {
             case (ants, tick, amount) =>
               val due = RaidProgression.overdue(ants.ages.workers, amount.toLong, tick + TerritoryProgression.ContestTicks)
@@ -1357,7 +1392,9 @@ object MainForm {
             },
             costSignal = chosen.signal.map(TerritoryProgression.cost), bonusSignal = Val(ActionBonus.empty),
             descriptionSignal = Val(Some(div("Oldest home workers are assigned first. Combat casualties are random within the holders. Workers consume ordinary sugar upkeep. Full protein storage does not stop contests or casualties. Hauls are delivered only if workers survive the contest and aging."))),
-            onClickAction = _ => useSignalValue[Int](chosen.signal, n => Actions.claimTerritory(n)),
+            onClickAction = _ => useSignalValue[(Int, Int)](claimPlan, { case (workers, guards) =>
+              Actions.claimTerritory(workers, guards)
+            }),
           )),
         )
         case true => div(className := "territory-held border rounded p-2",
@@ -1368,14 +1405,21 @@ object MainForm {
               s"Next contest: ${prettyTimeFromTicks(Math.max(0L, site.nextContestTick - tick))}"
             }),
           ),
-          div(className := "territory-risk text-danger small my-2", child.text <-- workerSignal.map(TerritoryProgression.risk)),
+          child.maybe <-- guardsUnlocked.map(unlocked => Option.when(unlocked)(
+            div(className := "territory-active-guards small text-body-secondary", child.text <-- activeCrew.map {
+              case (workers, guards) => s"${TerritoryProgression.guardCount(workers, guards)} guarding this round"
+            }))),
+          div(className := "territory-risk text-danger small my-2", child.text <-- activeCrew.map {
+            case (workers, guards) => TerritoryProgression.risk(workers, guards)
+          }),
           div(className := "territory-pending", child.text <-- siteSignal.map(site => s"Haul: ${prettyNumberStr(site.pendingProtein)} protein")),
-          div(className := "small", child.text <-- workerSignal.map(n =>
-            s"+${resourceRateStr(n * TerritoryProgression.ProteinPerWorkerSecond)} protein/s")),
+          div(className := "territory-rate small", child.text <-- activeCrew.map { case (workers, guards) =>
+            s"+${resourceRateStr(TerritoryProgression.rate(workers, guards))} protein/s"
+          }),
           div(className := "territory-storage small my-1",
             child.text <-- proteinSignal.map(p => if (p.atCapacity) "Full storage · losses continue" else s"Storage room: ${prettyNumberStr(p.freeSpace)} protein"),
             className <-- proteinSignal.combineWith(siteSignal, workerSignal, currentTickSignal).map { case (p, site, count, tick) =>
-              val expected = site.pendingProtein + count * TerritoryProgression.ProteinPerWorkerSecond * Math.max(0L, site.nextContestTick - tick) / TicksPerSecond
+              val expected = site.pendingProtein + TerritoryProgression.rate(count, site.guards) * Math.max(0L, site.nextContestTick - tick) / TicksPerSecond
               if (p.freeSpace < expected) "text-danger" else ""
             },
           ),
@@ -1398,6 +1442,11 @@ object MainForm {
             button(className := "btn btn-outline-danger", typ := "button", minHeight.px := 44, "Withdraw",
               onClick --> (_ => Actions.withdrawTerritory())),
           ),
+          child.maybe <-- guardsUnlocked.map(unlocked => Option.when(unlocked) {
+            val next = siteSignal.map(_.nextGuards).distinct
+            val limit = siteSignal.map(site => TerritoryProgression.maxGuards(site.targetWorkers.toLong)).distinct
+            guardPicker("Guards next round", next, limit)(Actions.planTerritoryGuards)
+          }),
           label(className := "d-flex align-items-center gap-2 my-2", minHeight.px := 44,
             input(typ := "checkbox", className := "form-check-input", checked <-- siteSignal.map(_.maintain).distinct,
               onChange.mapToChecked --> (enabled => Actions.maintainTerritory(enabled))),

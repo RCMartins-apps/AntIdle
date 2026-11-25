@@ -1,6 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.{DiscoveryProgression, AphidHusbandry, PheromoneTrails, MilestoneResearch}
+import pt.rcmartins.antidle.game.{DiscoveryProgression, AphidHusbandry, PheromoneTrails, MilestoneResearch, TerritoryProgression}
 import pt.rcmartins.antidle.game.Constants.{FoodStorageChamberBonusMaxSugar, u}
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
@@ -26,9 +26,11 @@ case class UpgradeRequirements(
     beyondWoodland: Boolean = false,
     completedMissions: Int = 0,
     matureWorkers: Int = 0,
+    territoryContests: Int = 0,
 ) {
   def met(data: AllData): Boolean =
     data.statistics.explorationsCompleted.thisRun >= completedMissions &&
+      data.statistics.territoryContests.thisRun >= territoryContests &&
       MilestoneResearch.standardWorkers(data.statistics) >= matureWorkers &&
     (!beyondWoodland || data.ants.lineage.beyondWoodland) && upgrades.forall(data.upgrades(_).unlocked) &&
       data.exploration.revealedSites >= minimumRevealedSites &&
@@ -87,6 +89,11 @@ object UpgradeBalance {
     QueensRhythm -> UpgradeDefinition("Queen's Rhythm", ActionCost(sugar = 2000L * u, protein = 50L * u, knowledge = 150L * u),
       UpgradeRequirements(upgrades = List(QueensRoutine), explorationTab = true, matureWorkers = 50),
       s"−${100 - MilestoneResearch.LayingIntervalPercent}% laying time for new worker and scout eggs."),
+
+    TerritoryGuards -> UpgradeDefinition("Territory Guards", ActionCost(sugar = 800L * u, protein = 30L * u, knowledge = 75L * u),
+      UpgradeRequirements(explorationTab = true, discovery = Some(DiscoveryProgression.ContestedGround.id),
+        territoryContests = TerritoryProgression.GuardResearchContests),
+      s"Assign up to ${TerritoryProgression.MaxGuards} holders to guard for a full contest. Each guard reduces the combat loss range by 1 and gives up their protein haul. At least 1 combat loss remains."),
 
     AphidShelters -> UpgradeDefinition("Aphid Shelters", ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
       UpgradeRequirements(upgrades = List(AphidTending), discovery = Some("aphid-shelters"), beyondWoodland = true),

@@ -1114,3 +1114,13 @@ definitions and writes a sparse JSON override file shared by game and
 simulation builds. Stable save IDs and untouched default values carry over.
 An empty override file retains the current balance. The editor runs on
 loopback with local dependencies and checks references and cycles before saving.
+
+## D73: Guard rotations trade territory harvest for protection
+
+The first completed territory contest in a colony reveals Territory Guards
+research. Workers already holding the ground may guard. The crew can commit up
+to five guards with one guard per three holders. Each guard gives up that
+worker's protein haul and reduces both ends of the combat loss range by one.
+At least one combat loss remains, and guards have the same aging and upkeep as
+other holders. Changes during a hold start at the next contest round so a
+crew commits before gathering. The active and next assignments save separately.

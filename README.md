@@ -592,7 +592,7 @@ scout or expedition slot is required.
 Choose a fixed target of **10–37 workers** and pay **20 sugar per worker** to
 **Hold Foraging Ground**. Workers are taken oldest-first from the available
 idle/default pool; other assigned jobs remain protected. While holding, each
-worker contributes **0.3 protein per simulated second** to an unfinished haul.
+gatherer contributes **0.3 protein per simulated second** to an unfinished haul.
 Every **60 simulated seconds**, rivals contest the site:
 
 - Combat losses are guaranteed and uniformly drawn from the displayed count
@@ -623,6 +623,15 @@ on simulation ticks. It may draw workers from the selected default task, but
 never other assigned jobs. Newborn replacements from the existing Queen's
 Routine can restore the colony while this setting maintains the holding crew.
 Target changes require withdrawing and making a new claim.
+
+After the first contest in a colony, **Territory Guards** research costs
+**800 sugar, 30 protein and 75 Knowledge**. Assign up to five of the holding
+workers to guard, with one guard per three holders. Each gives up their own
+haul and lowers both ends of the combat loss range by one, down to one loss.
+With ten holders and two guards, the crew earns **144 protein per round**
+and takes **1–2 combat losses**. A claim starts with the selected guards.
+Changes during a hold begin after the current contest and persist until
+changed again. The roster is part of the colony save.
 
 Holders consume ordinary colony sugar upkeep and can starve. Their reserved
 age cohorts remain separate from home workers; normal home aging cannot remove
