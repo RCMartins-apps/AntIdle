@@ -34,10 +34,10 @@ class UpgradeVisibilitySuite extends FunSuite {
     }
   }
 
-  test("food storage requires both prerequisites, and revealing upgrades does not purchase their successors") {
-    List(UnlockQueensChamber, ImproveSugarCollectorTask1).foreach { only =>
-      assert(!UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(only))).upgrades(UnlockFoodStorageChamber).show)
-    }
+  test("food storage follows its configured prerequisite, and revealing upgrades does not purchase their successors") {
+    assert(!UpgradeVisibility.reconcile(initial).upgrades(UnlockFoodStorageChamber).show)
+    assert(UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(UnlockQueensChamber)))
+      .upgrades(UnlockFoodStorageChamber).show)
     val revealed = UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1, UnlockExplorerTask)))
     assert(revealed.upgrades(ImproveSugarCollectorTask2).show)
     assert(!revealed.upgrades(ImproveSugarCollectorTask2).unlocked)
