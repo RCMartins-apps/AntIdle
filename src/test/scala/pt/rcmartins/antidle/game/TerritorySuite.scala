@@ -179,6 +179,64 @@ class TerritorySuite extends FunSuite {
     assertEquals(TerritoryProgression.reconcile(repaired).exploration.territory.ages, repaired.exploration.territory.ages)
   }
 
+  test("the first contest this colony unlocks paid guard research, including on reload") {
+    val upgrade = UpgradesData.UpgradeType.TerritoryGuards
+    val stocked = held.copy(basicResources = held.basicResources.copy(
+      protein = BasicResource(60 * u, 2000 * u), knowledge = BasicResource(100 * u, Long.MaxValue)))
+    val lifetimeOnly = stocked.copy(statistics = stocked.statistics.copy(territoryContests = StatisticsData.StatInt(0, 3)))
+    assert(!UpgradeResearch.isVisible(lifetimeOnly, upgrade))
+    assertEquals(UpgradeResearch.purchase(lifetimeOnly, upgrade), lifetimeOnly)
+    val experienced = roundTrip(battle(lifetimeOnly))
+    assert(UpgradeResearch.canPurchase(experienced, upgrade))
+    val purchased = UpgradeResearch.purchase(experienced, upgrade)
+    assert(TerritoryProgression.guardsUnlocked(purchased.upgrades))
+    assertEquals(purchased.basicResources, experienced.basicResources.spendResources(upgrade.cost))
+    assertEquals(UpgradeResearch.purchase(purchased, upgrade), purchased)
+  }
+
+  test("guards trade a full round's protein for lower combat losses and the next plan waits for the boundary") {
+    val researched = colony.copy(upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.TerritoryGuards))
+    val guarded = TerritoryProgression.claim(researched, 10, 2)
+    assertEquals(guarded.exploration.territory.guards, 2)
+    assertEquals(TerritoryProgression.lossRange(10, 2), (1, 2))
+    val almost = (1L until TerritoryProgression.ContestTicks).foldLeft(guarded)((state, _) => advance(state))
+    val released = roundTrip(TerritoryProgression.planGuards(almost, 0))
+    assertEquals(released.exploration.territory.guards, 2)
+    assertEquals(released.exploration.territory.nextGuards, 0)
+    val after = advance(released)
+    val losses = after.statistics.territoryDeaths.thisRun
+    assert(losses >= 1 && losses <= 2)
+    assertEquals(after.basicResources.protein.amount, 144L * u)
+    assertEquals(after.exploration.territory.guards, 0)
+
+    val staff = TerritoryProgression.reinforce(after)
+    val unguarded = TerritoryProgression.planGuards(staff, 3)
+    assertEquals(unguarded.exploration.territory.guards, 0)
+    val later = (1L to TerritoryProgression.ContestTicks).foldLeft(unguarded)((state, _) => advance(state))
+    val nextLosses = later.statistics.territoryDeaths.thisRun - losses
+    assert(nextLosses >= 2 && nextLosses <= 4)
+    assertEquals(later.basicResources.protein.amount, (144L + 180L) * u)
+    assertEquals(later.exploration.territory.guards, 3)
+  }
+
+  test("guard plans are bounded by staffing and save ownership, and clear on withdrawal") {
+    val upgrade = UpgradesData.UpgradeType.TerritoryGuards
+    val researched = colony.copy(upgrades = colony.upgrades.unlock(upgrade))
+    val large = TerritoryProgression.claim(researched, 37, Int.MaxValue)
+    assertEquals(large.exploration.territory.guards, 5)
+    assertEquals(TerritoryProgression.lossRange(37, 5), (1, 5))
+    assertEquals(TerritoryProgression.lossRange(1, 5), (1, 1))
+    assertEquals(TerritoryProgression.rate(5, 5), 4L * TerritoryProgression.ProteinPerWorkerSecond)
+    assertEquals(TerritoryProgression.planGuards(large, Int.MinValue).exploration.territory.nextGuards, 0)
+    assertEquals(TerritoryProgression.planGuards(held, 2), held)
+    assertEquals(TerritoryProgression.claim(colony, 10, 2).exploration.territory.guards, 0)
+    val stale = roundTrip(large.copy(upgrades = colony.upgrades))
+    assertEquals(stale.exploration.territory.guards, 0)
+    assertEquals(stale.exploration.territory.nextGuards, 0)
+    assertEquals(TerritoryProgression.withdraw(large).exploration.territory, Territory())
+    assertEquals("{}".fromJson[Territory].toOption.get.nextGuards, 0)
+  }
+
   test("older saves with a completed raid recover the earned discovery without carrying it across prestige") {
     val old = colony.copy(exploration = colony.exploration.copy(surveys = Map.empty),
       statistics = colony.statistics.copy(raidDeaths = StatisticsData.StatInt(3, 3)))
