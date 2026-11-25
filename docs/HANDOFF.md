@@ -1,5 +1,13 @@
 # Handoff
 
+## 2026-11-25 — compact Explore layout
+
+- The hex map opens directly above the selected site's actions. Study groups
+  the scout picker, trip time, remaining Knowledge, and launch costs.
+- Collection shows the expected haul on the launch button, with a storage-full
+  label when the destination's resource has no room. Manual and Shared Paths
+  crews have Max shortcuts, and the trail's 0 control recalls its crew.
+
 ## 2026-11-25 — offline upgrade balance editor
 
 - `tools/upgrade-balance-editor` includes main through 3018708. Run

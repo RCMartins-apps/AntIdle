@@ -69,12 +69,15 @@ object ExplorationHelper {
           explorationsWorkersSentU = spent.statistics.explorationsWorkersSentU.addValue(workers))))
     }
   def summary(data: AllData, workers: Long, destination: ExplorationDestination, extraScouts: Int = 0): String = {
+    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · ${haulPreview(data, workers, destination)}"
+  }
+  def haulPreview(data: AllData, workers: Long, destination: ExplorationDestination): String = {
     val cargo = load(data, workers, destination)
     val reward = if (RaidProgression.isRaid(destination)) {
       val high = load(data, workers, destination, Some(RaidProgression.rewardRange(workers)._2))
       s"${UINumbersUtils.prettyNumberStr(cargo.protein)}–${UINumbersUtils.prettyNumberStr(high.protein)}"
     } else UINumbersUtils.prettyNumberStr(if (resource(destination) == "sugar") Math.min(free(data, "sugar"), ColonyMilestones.sugar(cargo.sugar, data.statistics)) else amount(cargo, resource(destination)))
-    s"${UINumbersUtils.prettyTimeFromTicks(ExplorationProgression.duration(destination, extraScouts))} · $reward ${resource(destination)}"
+    s"$reward ${resource(destination)}"
   }
   def outcomePreview(data: ExplorationData, workers: Long, destination: ExplorationDestination): String =
     if (RaidProgression.isRaid(destination)) RaidProgression.risk(workers) else s"${resource(destination).capitalize} guaranteed; no knowledge from collection."
