@@ -1782,7 +1782,7 @@ object MainForm {
       displayNameSignal: Option[Signal[String]] = None,
       progressBadge: Option[ReactiveHtmlElement[HTMLSpanElement]] = None,
       showDetails: Boolean = true,
-      buttonIcon: Option[ResourceIcons.ResourceIcon] = None,
+      buttonContent: Option[ReactiveHtmlElement[HTMLSpanElement]] = None,
       accessibleName: Option[String] = None,
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     nextActionId += 1L
@@ -1798,8 +1798,10 @@ object MainForm {
         className := "fs-4",
         `type` := "button",
         aria.label <-- accessibleName.map(Val(_)).getOrElse(displayNameSignal.getOrElse(Val(name))),
-        buttonIcon.map(icon => span(className := "me-1", ResourceIcons.icon(icon))),
-        child.text <-- displayNameSignal.getOrElse(Val(name)),
+        buttonContent match {
+          case Some(content) => content
+          case None => span(child.text <-- displayNameSignal.getOrElse(Val(name)))
+        },
         progressBadge.map(badge => badge.amend(idAttr := s"$reasonId-counts")),
         disabled <-- enabledSignal.map(!_),
         aria.describedBy <-- blocker.map(reason => (reason.map(_ => reasonId).toList ++ progressBadge.map(_ => s"$reasonId-counts")).mkString(" ")),
@@ -2228,6 +2230,9 @@ object MainForm {
       display <-- feedback(id).map(f => if (f.percent.isDefined) "" else "none"),
       div(className := "map-progress-fill", width.percent <-- feedback(id).map(_.percent.getOrElse(0).toDouble)))
     val scoutCrew = Var(1)
+    def exploreAmount(icon: Option[ResourceIcons.ResourceIcon], amount: Signal[String]): ReactiveHtmlElement[HTMLSpanElement] =
+      span(className := "d-inline-flex align-items-center gap-1 text-nowrap",
+        icon.map(ResourceIcons.icon), span(child.text <-- amount))
     val requestedWorkers = Var(5L * u)
     val workers = requestedWorkers.signal.combineWith(availableWorkersCountSignal).map {
       case (n, available) => ExplorationProgression.selectedWorkers(n, available)
@@ -2256,10 +2261,10 @@ object MainForm {
         actionButton(
           descriptionSignal = Val(None),
           name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
-          displayNameSignal = Option.when(id != "surroundings")(scoutCrew.signal.map(n => s"Send $n ${if (n == 1) "scout" else "scouts"}")),
+          buttonContent = Option.when(id != "surroundings")(span("Send ",
+            exploreAmount(Some(ResourceIcons.Scouts), scoutCrew.signal.map(n => s"$n ${if (n == 1) "scout" else "scouts"}")))),
           accessibleName = Option.when(id != "surroundings")("Study Site"),
           showDetails = false,
-          buttonIcon = Some(ResourceIcons.Scouts),
           enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) => ExplorationMap.canScout(data, id, count) },
           blockedReasonSignal = explorationSignal.map(data =>
             Option.when(ExplorationMap.busy(data, id, if (id == "surroundings") "reveal" else "study"))(
@@ -2383,11 +2388,13 @@ object MainForm {
     )
     def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = {
       val resource = ExplorationHelper.resource(route)
+      val resourceIcon = ResourceIcons.forLabel(resource)
       val noSpace = snapshotSignal.map(data => ExplorationHelper.free(data, resource) == 0L).distinct
       div(className := "site-haul explore-action-card",
-      b(className := "d-flex align-items-center gap-1", ResourceIcons.forLabel(resource).map(ResourceIcons.icon), route.actionName),
-      p(className := "mb-1", child.text <-- explorationSignal.map(data =>
-        s"${prettyNumberStr(ExplorationMap.remaining(data, route.id))} ${ExplorationHelper.resource(route)} remaining")),
+      div(className := "explore-control-row justify-content-between",
+        b(route.actionName),
+        span(className := "explore-remaining", exploreAmount(resourceIcon, explorationSignal.map(data =>
+          s"${prettyNumberStr(ExplorationMap.remaining(data, route.id))} $resource remaining")))),
       workerPicker,
       div(className := "small text-end", prettyTimeFromTicks(ExplorationProgression.duration(route, 0))),
       if (RaidProgression.isRaid(route)) div(className := "text-danger raid-risk", child.text <-- workers.map(RaidProgression.risk)) else emptyNode,
@@ -2398,12 +2405,13 @@ object MainForm {
         name = route.actionName,
         accessibleName = Some(route.actionName),
         showDetails = false,
-        buttonIcon = ResourceIcons.forLabel(resource),
-        displayNameSignal = Some(snapshotSignal.combineWith(workers, noSpace).map { case (data, count, full) =>
-          if (full) s"No space for $resource"
-          else if (RaidProgression.isRaid(route)) s"Raid · ${ExplorationHelper.haulPreview(data, count, route)}"
-          else s"Collect ${ExplorationHelper.haulPreview(data, count, route)}"
-        }.distinct),
+        buttonContent = Some(span(
+          span(display <-- noSpace.map(full => if (full) "" else "none"), s"No space for $resource"),
+          span(display <-- noSpace.map(full => if (full) "none" else ""),
+            if (RaidProgression.isRaid(route)) "Raid · " else "Collect ",
+            exploreAmount(resourceIcon, snapshotSignal.combineWith(workers).map { case (data, count) =>
+              ExplorationHelper.haulPreview(data, count, route)
+            }.distinct)))),
         enabledSignal = snapshotSignal.combineWith(workers).map { case (data, count) => ExplorationHelper.canStart(data, count, route) },
         costSignal = workers.map(ExplorationHelper.cost(_, route)), bonusSignal = Val(ActionBonus.empty),
         requirementsSignal = workers.combineWith(explorationSignal, upgradesSignal, availableScoutsSignal).map { case (count, data, upgrades, scouts) =>
@@ -2455,9 +2463,9 @@ object MainForm {
           if (ExplorationMap.outerSites.exists(_.id == id)) div(className := "site-unlock small mb-2", unlockLabel) else emptyNode,
           div(className := "explore-action-card",
             div(className := "explore-control-row justify-content-between",
-              b("Study"), span(className := "site-knowledge small d-inline-flex align-items-center gap-1",
-                ResourceIcons.icon(ResourceIcons.Knowledge),
-                child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining"))),
+              b("Study"), span(className := "site-knowledge explore-remaining",
+                exploreAmount(Some(ResourceIcons.Knowledge), explorationSignal.map(data =>
+                  s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")))),
             child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
             surveyOrderControls(id)),
           site.routes.flatMap(route => ExplorationDestination.all.find(_.id == route)).map { route =>
