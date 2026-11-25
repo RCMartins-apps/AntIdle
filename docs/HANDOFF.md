@@ -31,3 +31,5 @@
 - The production map regression fixture now purchases Local Exploration instead
   of relying on the removed tab-only visibility rule. The complete production
   map, trails, aphid and territory browser suite passes at 320, 390 and 1280 px.
+- The second-founding browser fixture also owns Local Exploration before
+  checking that outer-ring surveys reveal their research upgrades.

@@ -109,7 +109,7 @@ def check_prestige(page, width, url):
     later['nestAttributes'].update(aphids=10, aphidsInitialized=True)
     later['nestAttributes']['chambers']['aphidChamber']['level'] = 1
     for upgrade in later['upgrades']['upgrades']:
-        upgrade.update(show=False, unlocked=upgrade['name'] in ['DefaultWorkers','AphidTending'])
+        upgrade.update(show=False, unlocked=upgrade['name'] in ('UnlockExplorerTask', 'DefaultWorkers', 'AphidTending'))
     load_game(page, later)
     select_tab(page, 'Explore')
     expect(page.locator('.hex-map .map-hex')).to_have_count(10)
