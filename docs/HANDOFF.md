@@ -2,7 +2,7 @@
 
 ## 2026-11-25 — offline upgrade balance editor
 
-- `tools/upgrade-balance-editor` includes main through 1e0bd37. Run
+- `tools/upgrade-balance-editor` includes main through 3018708. Run
   `python3 scripts/upgrade_editor.py` and open the loopback URL it prints.
   The top-down graph links purchased prerequisites and Local Exploration gates.
 - The editor changes costs, reveal gates, title and help in

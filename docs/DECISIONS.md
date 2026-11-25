@@ -1105,7 +1105,6 @@ count as gathered income. A colony without workers, viable founding brood or
 enough sugar can recover through the queen's protected foraging (D17). The
 balance tool uses the same opening as the game.
 
-
 ## D73: Guard rotations trade territory harvest for protection
 
 The first completed territory contest in a colony reveals Territory Guards
@@ -1124,3 +1123,10 @@ definitions and writes a sparse JSON override file shared by game and
 simulation builds. Stable save IDs and untouched default values carry over.
 An empty override file retains the current balance. The editor runs on
 loopback with local dependencies and checks references and cycles before saving.
+
+## D75: Brood options collapse below the Raise actions
+
+Keep brood status, egg orders, and Raise actions visible on the Brood tab.
+Put action amount, brood priority, and the Queen’s Routine in Brood options
+below the actions so toggling options keeps the Raise buttons in place. The
+disclosure starts closed and remembers its state under `nest.brood.options`.

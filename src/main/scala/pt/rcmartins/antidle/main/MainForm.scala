@@ -965,33 +965,9 @@ object MainForm {
 
     div(
       className := "row",
-      detailsTag(
+      div(
         className := "col-12 nest-brood border-top border-bottom my-3 py-3",
-        rememberDetails("nest.brood", defaultOpen = true),
-        summaryTag(className := "brood-summary mb-2", minHeight.px := 44, "Brood"),
         display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
-        infoDetails("Brood", div(
-          div(className := "brood-feeding", child.text <-- antsSignal.map { ants =>
-            if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein."
-            else "Worker eggs: 10 sugar · about 2m at full care. Worker and scout larvae each need 20 sugar + 2 protein."
-          }),
-          p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
-          child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
-            p("When care is limited, the chosen brood gets a larger share. Other brood still gets care. Egg orders keep their place."))),
-          child.maybe <-- nestSignal.map(Midden.visible).distinct.map(show => Option.when(show)(
-            p("Larval feeding creates refuse. High refuse closes brood places to new eggs. Refuse Carriers clear it."))),
-        child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
-          detailsTag(
-            className := "colony-aging mb-2", rememberDetails("nest.aging"),
-            summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
-              case (ants, tick) => PopulationAging.forecast(ants, tick)
-            }),
-            p(child.text <-- upgradesSignal.map(upgrades =>
-              s"New adults live ${PopulationAging.lifespanText(upgrades)} minutes of simulated time. Aging continues during expeditions and carcass retrievals. Overdue ants die on return. Stored-time multipliers advance aging with the colony.")),
-            p("After Queen's Routine is unlocked, aging draws from idle/default workers first and refills missing jobs as workers become available. Deaths are summarized once per minute."),
-          )
-        }),
-        )),
         child.maybe <-- sugarSignal.combineWith(TickCalculator.sugarTickGain.sum).map { case (sugar, net) =>
           Option.when(net < 0L && sugar.amount < -net) {
             div(className := "starvation-warning text-danger small mb-2",
@@ -1002,9 +978,6 @@ object MainForm {
           val ages = ants.ages
           val soon = (ages.workers ++ ages.smallWorkers ++ ages.scouts ++ ages.repletes).exists(c => c.count > 0L && c.expiresAt <= tick + 5L * PopulationAging.Minute)
           Option.when(ages.active && soon)(div(className := "aging-warning small text-danger mb-2", PopulationAging.forecast(ants, tick)))
-        },
-        child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked)) {
-          queenRoutineControls
         },
         div(className := "brood-counts mb-2",
           div(className := "brood-order-count",
@@ -1088,17 +1061,6 @@ object MainForm {
             ),
           )
         } },
-        child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
-          div(className := "d-flex align-items-center justify-content-between gap-2 mb-2",
-            label(forId := "brood-priority", "Brood priority"),
-            select(idAttr := "brood-priority", className := "form-select w-auto", minHeight.px := 44,
-              BroodPriority.choices.map(priority => option(value := priority.toString, priority.label)),
-              value <-- antsSignal.map(_.broodPriority.toString).distinct,
-              onChange.mapToValue --> (selected =>
-                BroodPriority.choices.find(_.toString == selected).foreach(Actions.setBroodPriority)),
-            ),
-          ))),
-        actionAmountControl("brood-action-amount", broodMultiplier),
         div(
           className := "row",
           child.maybe <-- ifUnlockedOpt(_.actions.canLayEggs) {
@@ -1141,6 +1103,49 @@ object MainForm {
               blockedReasonSignal = antsSignal.map(ants => Option.when(!ants.standardWorkersUnlocked)("Requires Standard Worker Development")),
             )
           },
+        ),
+        div(className := "brood-options position-relative mt-2 border-top pt-1",
+          detailsTag(
+            className := "brood-options-details",
+            rememberDetails("nest.brood.options"),
+            summaryTag(className := "brood-summary", minHeight.px := 44, "Brood options"),
+            actionAmountControl("brood-action-amount", broodMultiplier),
+            child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
+              div(className := "d-flex align-items-center justify-content-between gap-2 mb-2",
+                label(forId := "brood-priority", "Brood priority"),
+                select(idAttr := "brood-priority", className := "form-select w-auto", minHeight.px := 44,
+                  BroodPriority.choices.map(priority => option(value := priority.toString, priority.label)),
+                  value <-- antsSignal.map(_.broodPriority.toString).distinct,
+                  onChange.mapToValue --> (selected =>
+                    BroodPriority.choices.find(_.toString == selected).foreach(Actions.setBroodPriority)),
+                ),
+              ))),
+            child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked)) {
+              queenRoutineControls
+            },
+          ),
+          infoDetails("Brood", div(
+            div(className := "brood-feeding", child.text <-- antsSignal.map { ants =>
+              if (!ants.standardWorkersUnlocked) "Small worker eggs: 5 sugar · about 15s development. Founding care needs no protein."
+              else "Worker eggs: 10 sugar · about 2m at full care. Worker and scout larvae each need 20 sugar + 2 protein."
+            }),
+            p("Egg orders share the queen's laying queue. All development stages occupy brood places. Food shortages pause care without losing progress."),
+            child.maybe <-- broodPriorityVisible.map(available => Option.when(available)(
+              p("When care is limited, the chosen brood gets a larger share. Other brood still gets care. Egg orders keep their place."))),
+            child.maybe <-- nestSignal.map(Midden.visible).distinct.map(show => Option.when(show)(
+              p("Larval feeding creates refuse. High refuse closes brood places to new eggs. Refuse Carriers clear it."))),
+            child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active => Option.when(active) {
+              detailsTag(
+                className := "colony-aging mb-2", rememberDetails("nest.aging"),
+                summaryTag(child.text <-- antsSignal.combineWith(currentTickSignal).map {
+                  case (ants, tick) => PopulationAging.forecast(ants, tick)
+                }),
+                p(child.text <-- upgradesSignal.map(upgrades =>
+                  s"New adults live ${PopulationAging.lifespanText(upgrades)} minutes of simulated time. Aging continues during expeditions and carcass retrievals. Overdue ants die on return. Stored-time multipliers advance aging with the colony.")),
+                p("After Queen's Routine is unlocked, aging draws from idle/default workers first and refills missing jobs as workers become available. Deaths are summarized once per minute."),
+              )
+            }),
+          )),
         ),
       ),
       child.maybe <-- nestSignal.combineWith(upgradesSignal).map { case (nest, upgrades) =>
