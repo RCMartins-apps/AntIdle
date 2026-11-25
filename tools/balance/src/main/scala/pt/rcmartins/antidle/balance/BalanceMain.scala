@@ -3,6 +3,7 @@ package pt.rcmartins.antidle.balance
 import scala.scalajs.js
 import zio.json._
 import pt.rcmartins.antidle.game.Constants
+import pt.rcmartins.antidle.game.balance.UpgradeTuning
 import pt.rcmartins.antidle.game.saves.AllDataForSave
 import pt.rcmartins.antidle.model.AllData
 
@@ -10,8 +11,18 @@ object BalanceMain {
   def main(ignored: Array[String]): Unit = {
     val argv = js.Dynamic.global.process.argv.asInstanceOf[js.Array[String]]
     val args = argv.slice(2, argv.length).toArray
-    require(args.length == 2, "Usage: node main.js config.json output-directory")
     val fs = js.Dynamic.global.require("fs")
+    if (args.sameElements(Array("--upgrade-catalog"))) {
+      val candidate = fs.readFileSync(0, "utf8").asInstanceOf[String]
+      UpgradeTuning.catalog(candidate) match {
+        case Right(catalog) => println(catalog.toJson)
+        case Left(error) =>
+          println(zio.json.ast.Json.Obj("error" -> zio.json.ast.Json.Str(error)).toJson)
+          js.Dynamic.global.process.exitCode = 1
+      }
+      return
+    }
+    require(args.length == 2, "Usage: node main.js config.json output-directory or --upgrade-catalog")
     val config = fs.readFileSync(args(0), "utf8").asInstanceOf[String].fromJson[Config].fold(e => throw new IllegalArgumentException(e), identity)
     require(config.seeds.nonEmpty && config.policies.nonEmpty && config.maxTicks > 0L && config.maxTicks <= 50000000L)
     require(config.decisionTicks > 0 && config.sampleTicks > 0)

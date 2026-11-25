@@ -34,10 +34,10 @@ class UpgradeVisibilitySuite extends FunSuite {
     }
   }
 
-  test("food storage requires both prerequisites, and revealing upgrades does not purchase their successors") {
-    List(UnlockQueensChamber, ImproveSugarCollectorTask1).foreach { only =>
-      assert(!UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(only))).upgrades(UnlockFoodStorageChamber).show)
-    }
+  test("food storage follows its configured prerequisite, and revealing upgrades does not purchase their successors") {
+    assert(!UpgradeVisibility.reconcile(initial).upgrades(UnlockFoodStorageChamber).show)
+    assert(UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(UnlockQueensChamber)))
+      .upgrades(UnlockFoodStorageChamber).show)
     val revealed = UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1, UnlockExplorerTask)))
     assert(revealed.upgrades(ImproveSugarCollectorTask2).show)
     assert(!revealed.upgrades(ImproveSugarCollectorTask2).unlocked)
@@ -68,12 +68,14 @@ class UpgradeVisibilitySuite extends FunSuite {
     assertEquals(loaded.statistics, savedGame.statistics)
   }
 
-  test("Knowledge upgrades stay hidden before exploration, including stale saved visibility") {
-    val before = initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1).show(ImproveSugarCollectorTask2))
+  test("Local Exploration is a normal prerequisite and earned visibility persists") {
+    val before = initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1))
     assert(!ImproveSugarCollectorTask2.shouldShow(before))
     val hidden = UpgradeVisibility.reconcile(before)
     assert(!hidden.upgrades(ImproveSugarCollectorTask2).show)
-    assert(!AllDataForSave.fromAllData(before).toAllData.upgrades(ImproveSugarCollectorTask2).show)
+    val earned = before.copy(upgrades = before.upgrades.show(ImproveSugarCollectorTask2))
+    assert(UpgradeResearch.isVisible(earned, ImproveSugarCollectorTask2))
+    assert(AllDataForSave.fromAllData(earned).toAllData.upgrades(ImproveSugarCollectorTask2).show)
     val exploring = before.copy(upgrades = before.upgrades.unlock(UnlockExplorerTask))
     assert(UpgradeVisibility.reconcile(exploring).upgrades(ImproveSugarCollectorTask2).show)
     assert(UpgradeVisibility.reconcile(before.copy(upgrades = before.upgrades.unlock(ImproveSugarCollectorTask2))).upgrades(ImproveSugarCollectorTask2).unlocked)

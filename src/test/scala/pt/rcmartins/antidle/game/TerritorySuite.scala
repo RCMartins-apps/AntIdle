@@ -17,7 +17,7 @@ class TerritorySuite extends FunSuite {
       basicResources = d.basicResources.copy(sugar = BasicResource(20000 * u, 30000 * u), protein = BasicResource(0L, 2000 * u)),
       nestAttributes = d.nestAttributes.copy(maxAnts = 100 * u, maxEggs = 5 * u,
         chambers = d.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
-      upgrades = d.upgrades.unlock(UpgradesData.UpgradeType.DefaultWorkers),
+      upgrades = d.upgrades.unlock(UpgradesData.UpgradeType.UnlockExplorerTask, UpgradesData.UpgradeType.DefaultWorkers),
       exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map("rival-food-cache" -> 1)),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)))
   }

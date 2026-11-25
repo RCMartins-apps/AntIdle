@@ -15,7 +15,7 @@ class SecondPrestigeSuite extends FunSuite {
       lineage = Lineage(1, 0L, true), tasks = Seq(AntTask.SugarCollector -> (30 * u)), defaultTask = Some(AntTask.SugarCollector)),
       nestAttributes = d.nestAttributes.copy(aphids = 10L, chambers = d.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))),
       exploration = MapFixture.explored,
-      upgrades = d.upgrades.unlock(AphidTending, DefaultWorkers),
+      upgrades = d.upgrades.unlock(UnlockExplorerTask, AphidTending, DefaultWorkers),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)),
       basicResources = d.basicResources.copy(sugar = BasicResource(10000 * u, 100000 * u),
         resin = BasicResource(100 * u, 1000 * u), knowledge = BasicResource(5000 * u, Long.MaxValue)))

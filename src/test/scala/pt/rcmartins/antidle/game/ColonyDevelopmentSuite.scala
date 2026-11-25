@@ -17,6 +17,7 @@ class ColonyDevelopmentSuite extends FunSuite {
       basicResources = initial.basicResources.copy(sugar = BasicResource(3000 * u, 10000 * u)),
       nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
         nurseryChamber = initial.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
+      upgrades = initial.upgrades.unlock(UnlockExplorerTask),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
   }

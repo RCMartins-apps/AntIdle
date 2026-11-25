@@ -1115,6 +1115,20 @@ At least one combat loss remains, and guards have the same aging and upkeep as
 other holders. Changes during a hold start at the next contest round so a
 crew commits before gathering. The active and next assignments save separately.
 
+## D74: Edit upgrade balance locally against the real game catalog
+
+The developer editor shows upgrade purchases in a top-down dependency graph
+and exposes price, reveal gates, title and help. It reads the compiled engine
+definitions and writes a sparse JSON override file shared by game and
+simulation builds. Stable save IDs and untouched default values carry over.
+An empty override file retains the current balance. The editor runs on
+loopback with local dependencies and checks references and cycles before saving.
+Exploration research uses Local Exploration as a normal upgrade prerequisite;
+the editor does not expose separate internal exploration-state switches.
+The sparse JSON override layer is temporary. An important future migration will
+make the complete JSON catalog the single source of truth for editor-owned
+upgrade data. Scala will retain stable identities and gameplay effect code.
+
 ## D75: Brood options collapse below the Raise actions
 
 Keep brood status, egg orders, and Raise actions visible on the Brood tab.

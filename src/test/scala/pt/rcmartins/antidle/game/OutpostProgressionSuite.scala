@@ -19,7 +19,7 @@ class OutpostProgressionSuite extends FunSuite {
         protein = BasicResource(500 * u, 1000 * u), water = BasicResource(1000 * u, 1000 * u),
         tunnelingSpace = BasicResource(4000 * u, 4000 * u), knowledge = BasicResource(3000 * u, Long.MaxValue)),
       exploration = MapFixture.explored.copy(revealedSites = 5, surveys = Map("dry-clearing" -> 3)),
-      upgrades = initial.upgrades.unlock(DefaultWorkers),
+      upgrades = initial.upgrades.unlock(UnlockExplorerTask, DefaultWorkers),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true))))
   }
 

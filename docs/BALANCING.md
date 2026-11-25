@@ -1,8 +1,68 @@
 # Changing balance and unlock timing
 
-This guide covers the current upgrade and exploration definitions. They are
-Scala values checked at build time; there is no separate configuration service.
-Save version 7 uses a handcrafted finite map; older XP pacing baselines are historical.
+The game and the balance runner share upgrade and exploration definitions.
+Save version 7 uses a handcrafted finite map. Older XP pacing baselines are historical.
+
+## Offline upgrade editor
+
+From the repository root:
+
+```sh
+python3 scripts/upgrade_editor.py
+```
+
+Open `http://127.0.0.1:8765`. The editor uses Python 3, Node.js and the
+project's existing sbt installation and dependency cache. Run the normal
+project setup once to populate that cache. The editor build uses cached
+dependencies and the page calls only the local server. Use `--sbt /path/to/sbt`
+if needed or `--skip-build` to reopen using the last engine build.
+On Windows, the launcher automatically resolves `sbt.bat` or `sbt.cmd`
+through `cmd.exe`. If sbt is not on `PATH`, pass its full path, for example
+`python scripts/upgrade_editor.py --sbt C:\\tools\\sbt\\bin\\sbt.bat`.
+
+Read the tree top to bottom. Lines link required upgrade purchases. Exploration
+research uses Local Exploration as an ordinary prerequisite. The tree and cost
+inputs use the game's resource icons.
+Select an upgrade to edit its prices, required purchases, discovery and
+other reveal gates. Add or remove links in **Prerequisites**.
+Search by title or stable ID and press Enter to jump to the matching node.
+**Title and help** edits player-facing copy. The code for effects such as
+production multipliers is listed below under Numbers and effects.
+
+**Save changes** writes the edited fields to
+[`src/main/balance/upgrades.json`](../src/main/balance/upgrades.json).
+The game and simulator read this file at build time. Rebuild with
+`sbt fastOptJS` to play locally, or run the balance lab for a new pacing report.
+The editor checks for unknown references and dependency cycles before saving.
+**Restore defaults** resets the current upgrade to its Scala values.
+**Revert edits** resets unsaved changes to the last loaded or saved values.
+
+### Important TODO
+
+Move every editor-owned field out of Scala defaults and into the complete
+`src/main/balance/upgrades.json` catalog. This includes prices, titles, help,
+purchase dependencies and reveal thresholds. Scala should retain stable upgrade
+identities and the code that implements gameplay effects.
+
+The current sparse JSON override layer is an intermediate implementation. Do
+not expand it into additional parallel sources. The future migration must leave
+one obvious file to inspect and edit for upgrade balance, remove fallback values
+for editor-owned fields, validate the complete catalog during compilation, and
+keep save IDs stable.
+
+The JSON file can also be edited by hand. Cost values in the file use the
+engine's fixed-point units. The editor shows and accepts ordinary units.
+For example, changing Standard Worker Development to 80 sugar and six
+small workers produces this patch:
+
+```json
+{
+  "StandardWorkers": {
+    "cost": {"sugar": 800000},
+    "requirements": {"minimumSmallWorkers": 6}
+  }
+}
+```
 
 ## Where to edit
 
@@ -11,11 +71,11 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 | Change | Definition |
 | --- | --- |
 | Map coordinates, reveal order, finite Knowledge/deposits and scout durations | `game/ExplorationMap.scala` |
-| Upgrade price, title/help or reveal prerequisites | `game/balance/UpgradeBalance.scala`, the named upgrade's row |
+| Upgrade price, title/help or reveal prerequisites | Offline upgrade editor, with defaults in `game/balance/UpgradeBalance.scala` |
 | Stable upgrade/save identity and display order | `model/UpgradesData.scala`; preserve existing `name` values |
 | Collection discovery, duration, crew, costs or rewards | `game/ExplorationDestination.scala`, the destination's named arguments |
 | Scout studies needed to find a discovery | `game/DiscoveryProgression.scala`, the discovery's `trips` |
-| Expedition Supplies tiers/prices/reveal requirements | `game/balance/UpgradeBalance.scala`, `ExpeditionSupplies1`–`3` |
+| Expedition Supplies tiers/prices/reveal requirements | Offline upgrade editor, `ExpeditionSupplies1`–`3` |
 | Natural second expedition slot | `ExplorationProgression.maxParties` (four revealed sites) |
 | Linear haul scaling, 5–50-worker bounds and step | `game/ExplorationProgression.scala` |
 | Automatic trail efficiency and guide ratio | `game/PheromoneTrails.scala`; see [rate analysis](COLLECTION-TRAILS.md) |
@@ -23,7 +83,8 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 
 For example, to reveal Brood Care later, change its
 `minimumRevealedSites` in `UpgradeBalance`, retaining `nursery = true` and
-`explorationTab = true`. To change Collect Resin's access, edit its site studies or `requiredDiscovery` in the destination catalog. Its UI and departure validation
+the Local Exploration prerequisite. To change Collect Resin's access, edit its
+site studies or `requiredDiscovery` in the destination catalog. Its UI and departure validation
 share `progressionUnlocked`; no second copy of that discovery check needs editing.
 These are examples of tuning points, not recommended balance changes.
 
@@ -36,17 +97,12 @@ A discovery requires its survey count; revealing the hex alone does not find it.
 Most visibility is earned history: `status.show` persists even if a prerequisite
 later falls below its threshold. For example, losing a small worker doesn't hide
 Standard Worker Development again. Purchased research remains visible in state.
-One existing exception is retained: unpurchased Knowledge-priced upgrades are
-hidden until exploration is available, including stale saved `show` flags.
 Resource visibility is current-colony history: it latches through spending/losses
 and resets on founding. Lifetime statistics and milestone bonuses persist.
 
-There are two exploration flags in the upgrade requirements, retained for save and
-transition compatibility: `explorationTab` requires the unlocked tab flag;
-`explorationAvailable` also accepts the purchased Unlock Explorer Task research
-before the next reconciliation updates that flag. `earlyResearch` retains the
-existing Nest/Upgrades-tab/known-Knowledge alternative checks. Most future
-exploration research can follow the `explorationTab` pattern.
+`earlyResearch` retains the existing Nest/Upgrades-tab/known-Knowledge
+alternative checks. Exploration research declares Local Exploration in its
+ordinary `upgrades` prerequisites.
 
 `UpgradeResearch.isVisible` owns those history and Knowledge rules.
 `canPurchase` additionally checks that the upgrade isn't bought and that its

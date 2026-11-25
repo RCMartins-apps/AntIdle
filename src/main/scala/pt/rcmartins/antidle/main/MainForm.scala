@@ -1886,7 +1886,6 @@ object MainForm {
             className := "text-start action-description",
             maxWidth.px := 350,
             descriptionDiv,
-            hr(),
           )
         }
       },

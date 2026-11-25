@@ -1,6 +1,5 @@
 package pt.rcmartins.antidle.game
 
-import pt.rcmartins.antidle.game.balance.UpgradeBalance
 import pt.rcmartins.antidle.model.AllData
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 
@@ -9,8 +8,7 @@ object UpgradeResearch {
   def isVisible(data: AllData, upgrade: UpgradeType): Boolean = {
     val status = data.upgrades(upgrade)
     (!upgrade.definition.requirements.beyondWoodland || data.ants.lineage.beyondWoodland) &&
-      (status.unlocked || ((status.show || upgrade.shouldShow(data)) &&
-      (upgrade.cost.knowledge == 0L || UpgradeBalance.explorationAvailable(data))))
+      (status.unlocked || status.show || upgrade.shouldShow(data))
   }
 
   def canPurchase(data: AllData, upgrade: UpgradeType): Boolean =

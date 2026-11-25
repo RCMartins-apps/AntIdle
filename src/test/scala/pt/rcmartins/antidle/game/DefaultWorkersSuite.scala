@@ -15,7 +15,7 @@ class DefaultWorkersSuite extends FunSuite {
     initial.copy(
       ants = AntsData(workers = 20 * u, scouts = 2 * u,
         tasks = Seq(SugarCollector -> 0L, Tunneler -> 0L, Explorer -> 0L)),
-      upgrades = initial.upgrades.unlock(UpgradeType.DefaultWorkers),
+      upgrades = initial.upgrades.unlock(UpgradeType.UnlockExplorerTask, UpgradeType.DefaultWorkers),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
       exploration = MapFixture.explored.copy(revealedSites = 6),
@@ -30,11 +30,10 @@ class DefaultWorkersSuite extends FunSuite {
     assertEquals(ants.tasks.map(_._2).sum + ants.idleWorkersCount, ants.workers)
   }
 
-  test("the upgrade becomes visible once exploration is unlocked, including on old saves") {
-    val hidden = colony.copy(upgrades = UpgradesData.initial,
-      unlocks = colony.unlocks.copy(tabs = colony.unlocks.tabs.copy(exploreTabUnlocked = false)))
+  test("the upgrade becomes visible once Local Exploration is purchased") {
+    val hidden = colony.copy(upgrades = UpgradesData.initial)
     assert(!UpgradeVisibility.reconcile(hidden).upgrades(UpgradeType.DefaultWorkers).show)
-    val exploring = hidden.copy(unlocks = colony.unlocks)
+    val exploring = hidden.copy(upgrades = hidden.upgrades.unlock(UpgradeType.UnlockExplorerTask))
     assert(UpgradeVisibility.reconcile(exploring).upgrades(UpgradeType.DefaultWorkers).show)
   }
 

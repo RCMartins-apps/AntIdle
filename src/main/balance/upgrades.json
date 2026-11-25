@@ -1,0 +1,9 @@
+{
+  "UnlockFoodStorageChamber": {
+    "requirements": {
+      "upgrades": [
+        "UnlockQueensChamber"
+      ]
+    }
+  }
+}
