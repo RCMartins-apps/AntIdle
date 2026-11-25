@@ -9,6 +9,7 @@
   crews have Max shortcuts, and the trail's 0 control recalls its crew.
 - Explore places resource and scout icons beside the corresponding counts.
   Study and Collect use the same remaining-amount layout.
+- Compact phone spacing keeps all four manual crew controls on one row.
 
 ## 2026-11-25 — offline upgrade balance editor
 
