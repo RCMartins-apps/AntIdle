@@ -152,6 +152,10 @@ native toggle delivery; disconnect observers when their elements unmount.
   setup and coverage are documented in README and tests/README.md. Use the maintained map/CI gates; older XP/carousel harnesses are historical. Check phone and desktop layouts.
 - Choose checks for the change. Documentation-only work needs link/path checks
   and `git diff --check`, not a game rebuild. Report checks actually run.
+- Run balance checks when content, progression, or economy changes warrant them.
+  For presentation-only changes, prefer the focused build and browser checks.
+- Inspect narrow-screen screenshots for icon and text baselines, aligned
+  controls, wrapping, and nested padding before handing back UI changes.
 
 For every visual/UI change, capture and show screenshots of the implemented
 result in chat before handing it back for review. Use a representative mobile

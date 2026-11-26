@@ -182,7 +182,14 @@ def check_trails(page, width, base):
     expect(crew).to_have_value('10')
     page.get_by_role('button', name='Decrease collection workers', exact=True).click()
     expect(crew).to_have_value('5')
-    page.locator('.site-worker-controls').get_by_role('button', name='Max', exact=True).click()
+    crew_controls = page.locator('.site-worker-controls')
+    maximum = crew_controls.get_by_role('button', name='Max', exact=True)
+    duration = crew_controls.locator('.explore-duration')
+    max_bounds, time_bounds = maximum.bounding_box(), duration.bounding_box()
+    assert time_bounds['x'] >= max_bounds['x'] + max_bounds['width']
+    assert max_bounds['y'] <= time_bounds['y'] < max_bounds['y'] + max_bounds['height']
+    expect(page.get_by_role('button', name='Fit crew', exact=False)).to_have_count(0)
+    maximum.click()
     expect(crew).to_have_value('50')
     crew.fill('5')
     crew.press('Tab')

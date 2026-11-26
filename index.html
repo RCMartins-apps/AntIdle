@@ -134,7 +134,7 @@
 .map-hex small {font-size:.7rem;font-weight:400}
 .map-terrain-icon {display:block;width:clamp(24px,7vw,38px);height:clamp(24px,7vw,38px);flex-shrink:0}
 .map-terrain-icon svg {display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.map-terrain-name {line-height:1.1}
+.map-terrain-name {line-height:1.1;max-width:90%;overflow-wrap:anywhere}
 .map-hex[data-site="nectar-meadow"].revealed {background:#e9efd0;color:#536327}
 .map-hex[data-site="rotten-log"].revealed {background:#e3d6c2;color:#644928}
 .map-hex[data-site="dry-clearing"].revealed {background:#f3e6be;color:#7b5c25}
@@ -153,21 +153,25 @@
 .map-site-card .action-cell {margin-bottom:.5rem}
 .site-worker-controls .btn {min-width:44px;min-height:44px}
 .site-worker-controls input, #scout-crew {min-height:44px}
-.site-worker-controls input {width:2.75rem;min-width:0;text-align:center;padding-inline:.25rem}
+.site-worker-controls input {width:100%;min-width:0;text-align:center;padding-inline:.25rem}
 .site-worker-controls .explore-control-row {
-  display:grid;grid-template-columns:1rem repeat(4,44px);gap:.25rem;
+  display:grid;grid-template-columns:1rem repeat(4,44px) minmax(0,1fr);gap:.25rem;
 }
-.site-worker-controls input {width:100%}
 .site-worker-controls .btn {padding-inline:0;white-space:nowrap}
+.site-worker-controls .btn:not(:active):not(:disabled):is(:hover,:focus-visible) {
+  color:var(--bs-btn-color);background-color:var(--bs-btn-bg);border-color:var(--bs-btn-border-color);
+}
 .explore-action-card {border:1px solid var(--bs-border-color);border-radius:.5rem;padding:.65rem;margin-top:.5rem}
 .explore-control-row {display:flex;align-items:center;flex-wrap:wrap;gap:.4rem}
 .explore-duration {margin-inline-start:auto;font-size:.875rem;white-space:nowrap}
+.explore-launch-label {display:inline-flex;align-items:center;gap:.3em;vertical-align:middle}
 .explore-remaining {font-size:.75rem}
 .explore-action-card > .explore-control-row:first-child {row-gap:.15rem}
 .map-site-card .action-cell:not(:has(.action-details)) {padding-block:.3rem!important}
 @media (max-width:767px) {
   .hex-exploration .hex-map {margin-bottom:.5rem}
-  .hex-exploration .map-site-card {padding:.625rem!important}
+  .hex-exploration .explore-map-section {padding-inline:.5rem!important}
+  .hex-exploration .map-site-card.card {padding:.625rem!important}
   .explore-action-card {padding:.5rem}
 }
 .map-site-card .action-cell:not(:has(.action-details)) {padding-inline:0!important;margin-bottom:0}
