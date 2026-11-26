@@ -1,5 +1,12 @@
 # Handoff
 
+## 2026-11-26 — editable chamber capacity
+
+- Colony Workshop edits Nest tunneling space and Food Storage sugar capacity
+  per purchased level in the shared chamber catalog. Old saves recover their
+  non-chamber base from historical rates. Adjusted saves keep that base and
+  reapply the active catalog on reload. Reduced caps preserve stored amounts.
+
 ## 2026-11-26 — Workshop chamber costs
 
 - All construction prices live in `src/main/balance/chambers.json`. The

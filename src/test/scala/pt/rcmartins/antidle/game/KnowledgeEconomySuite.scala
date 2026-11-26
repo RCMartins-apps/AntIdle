@@ -73,7 +73,8 @@ class KnowledgeEconomySuite extends FunSuite {
 
   test("Nest expansion costs stay within the tunneling capacity of the existing Nest") {
     ((0 to 100) :+ 1000).foreach { level =>
-      val capacity = 1000L * u + level.toLong * Constants.NestUpgradeBonusMaxTunnelingSpace
+      val capacity = 1000L * u + level.toLong *
+        ChamberBonuses.forChamber(ChamberType.Nest).maxTunnelingSpace
       assert(
         Construction.cost(ChamberType.Nest, level).tunnelingSpace <= capacity,
         s"level $level"

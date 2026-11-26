@@ -3,12 +3,14 @@
 const form = document.querySelector('.chamber-editor');
 const chamber = document.getElementById('chamber');
 const prices = document.getElementById('prices');
+const capacity = document.getElementById('capacity');
 const status = document.getElementById('status');
 const resources = {
   sugar: 'Sugar', protein: 'Protein', water: 'Water', tunnelingSpace: 'Tunneling Space',
   knowledge: 'Knowledge', resin: 'Resin',
 };
 let catalog, unit, revision, selected;
+const capacityResources = {Nest: 'tunnelingSpace', FoodStorage: 'sugar'};
 
 function field(name, value, step, max, optional = false) {
   const label = document.createElement('label');
@@ -26,8 +28,19 @@ function field(name, value, step, max, optional = false) {
 
 function render() {
   selected = chamber.value;
+  const resource = capacityResources[selected];
+  const definition = catalog[selected];
+  capacity.replaceChildren();
+  if (resource) {
+    const heading = document.createElement('h2');
+    heading.textContent = 'Capacity bonus';
+    capacity.append(heading, field(
+      `${resources[resource]} capacity per added level`,
+      (definition.bonuses?.[0]?.amount ?? 0) / unit, 1 / unit, Number.MAX_SAFE_INTEGER / unit,
+    ));
+  }
   prices.replaceChildren(...Object.entries(resources).map(([key, name]) => {
-    const rule = catalog[selected][key];
+    const rule = definition.costs[key];
     const row = document.createElement('fieldset');
     row.className = 'fields';
     row.dataset.resource = key;
@@ -59,7 +72,14 @@ function storeCurrent() {
       rules[row.dataset.resource] = rule;
     }
   }
-  catalog[selected] = rules;
+  const definition = catalog[selected];
+  definition.costs = rules;
+  const resource = capacityResources[selected];
+  if (resource) {
+    const amount = Math.round(capacity.querySelector('input').valueAsNumber * unit);
+    if (amount) definition.bonuses = [{type: 'storageCapacity', resource, amount}];
+    else delete definition.bonuses;
+  }
 }
 
 async function request(options) {
@@ -89,7 +109,7 @@ form.addEventListener('submit', async event => {
       body: JSON.stringify({catalog, revision}),
     });
     revision = data.revision;
-    status.textContent = 'Saved chamber costs. Rebuild the game or simulator to use them.';
+    status.textContent = 'Saved chamber settings. Rebuild the game or simulator to use them.';
   } catch (error) {
     status.textContent = error.message;
   } finally {

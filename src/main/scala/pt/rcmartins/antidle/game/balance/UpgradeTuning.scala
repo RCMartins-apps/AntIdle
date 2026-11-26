@@ -126,9 +126,11 @@ object UpgradeTuning {
     else if (required.discovery.exists(id => !DiscoveryProgression.all.exists(_.id == id)))
       Left(s"$name: unknown discovery")
     else if (
-      definition.bonuses.exists { case bonus: UpgradeBonus.ProductionPercent =>
-        !Set("sugarCollectors", "scrapsGatherers").contains(bonus.source) ||
-          bonus.percent < 1 || bonus.percent > 100
+      definition.bonuses.exists {
+        case bonus: UpgradeBonus.ProductionPercent =>
+          !Set("sugarCollectors", "scrapsGatherers").contains(bonus.source) ||
+            bonus.percent < 1 || bonus.percent > 100
+        case _: UpgradeBonus.StorageCapacity => true
       }
     ) Left(s"$name: production bonus needs a supported source and 1 to 100 percent")
     else Right(definition)

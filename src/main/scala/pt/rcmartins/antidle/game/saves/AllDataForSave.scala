@@ -2,6 +2,7 @@ package pt.rcmartins.antidle.game.saves
 
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.game.{
+  ChamberBonuses,
   DefaultWorkerAssignment,
   ExplorationProgression,
   PheromoneTrails,
@@ -22,6 +23,7 @@ case class AllDataForSave(
     exploration: ExplorationData,
     statistics: StatisticsData,
     messages: Seq[String],
+    chamberCapacityBase: Option[ChamberBonuses.CapacityBase] = None,
 ) {
 
   def toAllData: AllData = {
@@ -43,7 +45,9 @@ case class AllDataForSave(
           PopulationAging.reconcile(
             PheromoneTrails.migrateLegacy(
               ExplorationProgression.migrateLegacySupplies(
-                ResourceVisibility.resetUnstartedFounding(loaded)
+                ResourceVisibility.resetUnstartedFounding(
+                  ChamberBonuses.restoreCapacity(loaded, chamberCapacityBase)
+                )
               )
             )
           )
@@ -94,6 +98,7 @@ object AllDataForSave {
       exploration = allData.exploration,
       statistics = allData.statistics,
       messages = allData.messages,
+      chamberCapacityBase = ChamberBonuses.savedCapacityBase(allData),
     )
 
 }
