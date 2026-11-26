@@ -221,9 +221,24 @@ live. This link requirement supplements screenshots for visual changes.
 Once GitHub confirms auto-merge is queued with enforced checks, schedule a
 one-time follow-up about 15 minutes later when scheduling is available. Check
 whether the PR merged or passed CI. If it failed, inspect the failed job and
-report the cause. If checks are still running, report them as pending. Finish
-the original turn after scheduling and report whether the check was scheduled.
+report the cause. If checks are still running, report them as pending. Move on to the next independent ready task after scheduling. If there is no
+ready work you can advance, report whether the check was scheduled.
 Report an immediate merge only once GitHub confirms it.
+
+## Ready issues and blockers
+
+- Read repository issue labels. Start with the highest-priority open issue
+  labeled `ready` when choosing backlog work. Rank `priority:high` before
+  `priority:normal` before `priority:low`; use issue number to break ties.
+  Follow any direct instruction from the owner first.
+- When waiting on CI, a dependency, an approval, or another blocker, record
+  what is needed to resume and start the highest-priority ready task that can
+  proceed independently. Branch it from current main. Return to blocked work
+  when it can advance and bring overlapping branches up to date before merge.
+- The owner authorizes a PR with checked auto-merge for each finished task.
+  Use a separate PR per task, link its issue with `Closes #N` where applicable,
+  and follow the validation, preview and follow-up rules above. Respect explicit
+  requests to preview or hold a PR.
 
 ## Branch and push by default
 
@@ -252,10 +267,10 @@ project changes to `origin`, including documentation-only design decisions.
 - Report the branch and push result. If blocked, identify what remains local;
   never describe an unpushed commit as remotely preserved.
 - This authorizes ordinary pushes to work branches. It does not authorize
-  force-pushes, direct pushes to `main`, branch deletion, PR creation, merging or
-  deployment; those still need user authorization. Production deploys only from main. Same-repository PRs publish isolated
+  force-pushes, direct pushes to `main`, branch deletion or manual deployment.
+  Production deploys only from main. Same-repository PRs publish isolated
   previews after validation; `debug*` branch names have no special behavior.
 - A pushed branch is remotely saved, but new checkouts of `main` receive its
   context only after merge. Keep pending work discoverable in the handoff and
-  inspect relevant remote branches when resuming unfinished work. Once the owner
-  requests a PR, open it; push-only work does not need one automatically.
+  inspect relevant remote branches when resuming unfinished work. Open the PR
+  after the task is finished and validated.
