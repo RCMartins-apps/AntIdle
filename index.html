@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="c390a794f89bd91ca3e19928">
+    <meta name="antidle-build" content="49d0034f6d2536adeff15305">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -76,7 +76,11 @@
 
         @media (max-width: 767px) {
             .activity-column .build-queue-panel { display: none; }
-            .game-layout:has(#nestContent.active) .activity-column .build-queue-panel { display: block; }
+            .antidle-app[data-mobile-view=chambers] .activity-column .build-queue-panel { display: block; }
+            .antidle-app[data-mobile-view=nest] .nest-brood {
+                margin-block: 0 !important;
+                padding-block: .5rem !important;
+            }
             .antidle-app { font-size: 1rem; padding-bottom: env(safe-area-inset-bottom); }
             .antidle-app .game-layout { margin: .5rem !important; gap: .5rem; }
             .antidle-app .game-panel,
@@ -114,6 +118,8 @@
             .antidle-app .form-range { min-height: 44px; }
             .antidle-app .game-tooltip { display: none !important; }
             .antidle-app .alert { width: calc(100% - 1rem); max-width: 28rem; position: fixed !important; z-index: 1090; }
+            .antidle-app .alert-success[role="alert"] { pointer-events: none; }
+            .antidle-app .alert-success[role="alert"] .btn-close { pointer-events: auto; }
             .antidle-app .modal-dialog { margin: .5rem; }
             .antidle-app .modal-content { max-height: calc(100dvh - 1rem); overflow-y: auto; }
             .antidle-app textarea { min-width: 0; width: 100%; }
@@ -254,11 +260,11 @@
  .resources-column .game-panel.resources-expanded > .card-header {background:transparent;border-bottom:0}
  .resources-expanded .compact-resources {display:none}
  .resources-expanded .resource-summary-heading {margin-bottom:0}
- .compact-resource {display:grid;grid-template-columns:18px minmax(0,1fr);grid-template-rows:auto minmax(1.82rem,auto);align-items:center;gap:0 .25rem;min-width:0;font-size:.9rem;font-variant-numeric:tabular-nums}
+ .compact-resource {display:grid;grid-template-columns:18px minmax(0,1fr);grid-template-rows:auto 1rem;align-items:center;gap:0 .25rem;min-width:0;font-size:.9rem;font-variant-numeric:tabular-nums}
  .compact-resource .resource-icon {width:18px;height:18px;margin:0}
  .compact-resource-value {white-space:nowrap;font-size:clamp(.75rem,3.5vw,.9rem)}
  .compact-resource.at-capacity .compact-resource-value {color:var(--bs-primary);font-weight:700}
- .compact-resource-warning {grid-column:1 / -1;align-self:start;line-height:1.3;font-size:.7rem;color:var(--bs-secondary-color);overflow-wrap:anywhere}
+ .compact-resource-warning {grid-column:1 / -1;align-self:start;line-height:1.3;font-size:.7rem;color:var(--bs-secondary-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .compact-resource.running-low .compact-resource-warning {color:var(--bs-danger)}
  .resources-column .game-panel:not(.resources-expanded) > .card-body {display:none}
  .mobile-resource-toggle:focus-visible {outline:2px solid var(--bs-primary);outline-offset:4px;border-radius:3px}
@@ -271,8 +277,10 @@
 .catchup-controls button {min-width:44px;min-height:44px;pointer-events:auto}
 .resources-column .game-panel:has(.catchup-controls) > .card-header {min-height:56px;padding-right:12rem}
 @media (max-width:767px) {
- .resources-column .game-panel:has(.catchup-controls) > .card-header {padding-right:.75rem}
- .resources-column .game-panel:has(.catchup-controls) .resource-summary-heading {min-height:44px;padding-right:11rem;margin-bottom:.3rem}
+ .antidle-app .resources-column .catchup-controls button {position:relative;min-height:32px;padding:.15rem .5rem}
+ .catchup-controls button::after {content:"";position:absolute;inset:-6px 0}
+ .resources-column .game-panel:has(.catchup-controls) > .card-header {min-height:48px;padding-right:.75rem}
+ .resources-column .game-panel:has(.catchup-controls) .resource-summary-heading {min-height:32px;padding-right:11rem;margin-bottom:.3rem}
 }
 
 .queued-building {display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:.35rem .75rem;align-items:center}
@@ -344,7 +352,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.7e77730e3c9249e2.js"></script>
+<script type="text/javascript" src="game.5dc21b750cc82232.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
