@@ -88,6 +88,11 @@ object UpgradeBonus {
 
   }
 
+  @jsonHint("layingSpeedPercent")
+  case class LayingSpeedPercent(percent: Int) extends UpgradeBonus {
+    def description: String = s"+$percent% laying speed per added level"
+  }
+
   implicit val jsonCodec: JsonCodec[UpgradeBonus] = DeriveJsonCodec.gen[UpgradeBonus]
 }
 

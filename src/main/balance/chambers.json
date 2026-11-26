@@ -35,6 +35,10 @@
         "type": "slotCapacity",
         "slot": "population",
         "count": 5
+      },
+      {
+        "type": "layingSpeedPercent",
+        "percent": 25
       }
     ]
   },

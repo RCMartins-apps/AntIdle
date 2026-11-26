@@ -51,7 +51,8 @@ object BroodProgression {
     val percent =
       if (upgrades(UpgradeType.QueensRhythm).unlocked) MilestoneResearch.LayingIntervalPercent
       else 100L
-    (base * percent + 99L + improvements * 25L) / (100L + improvements * 25L)
+    val denominator = 100L + improvements.toLong * balance.ChamberPricing.layingSpeedPerLevel
+    (base * percent + denominator - 1L) / denominator
   }
 
   def incoming(ants: AntsData): Int = ants.eggsAndLarvae.count {

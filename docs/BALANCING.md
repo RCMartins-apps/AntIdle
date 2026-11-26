@@ -101,6 +101,11 @@ level. Starter housing includes the initial Queen Chamber. Loaded colonies
 recalculate the chamber share while preserving outpost housing and existing
 population. A lower limit blocks new orders until there is room.
 
+Queen Chamber laying speed adds a whole percentage per purchased level. The
+game divides the base laying interval by the resulting speed, applies Queen’s
+Rhythm, and rounds up to a full tick. The starter chamber and work already
+in progress keep their existing timing.
+
 Aphid and Replete housing is editable per level. Aphid Shelters adds a
 separate per-level bonus. Lower limits keep existing animals and reserved
 relocations. New trips and promotions wait until there is room. Excess aphids
