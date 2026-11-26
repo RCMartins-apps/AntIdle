@@ -1,7 +1,5 @@
 package pt.rcmartins.antidle.game
 
-import pt.rcmartins.antidle.model.Chamber.ChamberType
-
 object Constants {
 
   // UI Constants
@@ -34,10 +32,6 @@ object Constants {
 
   val MaxExponent = 100
   val exponent0_95: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(0.95, _))
-  val exponent1_14: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.14, _))
-  val exponent1_25: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.25, _))
-  val exponent1_50: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.50, _))
-  val exponent1_75: IndexedSeq[Double] = (0 to MaxExponent).map(Math.pow(1.75, _))
 
   val LayEggSugarCost: Long = 10 * u
 
@@ -63,27 +57,11 @@ object Constants {
 
   val LayEggAction = "Raise Worker Egg"
 
-  def getChamberTunnelingSpaceNeeded(chamberType: ChamberType, level: Int): Long = {
-    def cost(base: Long, multiplier: IndexedSeq[Double]): Long =
-      (base * multiplier(Math.min(level, MaxExponent))).toLong
-
-    chamberType match {
-      case ChamberType.Nest  => Math.min(cost(20 * u, exponent1_50), (500L + 250L * level) * u)
-      case ChamberType.Queen => cost(25 * u, exponent1_50)
-      case ChamberType.FoodStorage  => cost(50 * u, exponent1_14)
-      case ChamberType.Nursery      => cost(100 * u, exponent1_50)
-      case ChamberType.Aphid        => cost(75 * u, exponent1_14)
-      case ChamberType.Replete      => cost(100 * u, exponent1_25)
-      case ChamberType.RoyalNursery => cost(1500 * u, exponent1_50)
-    }
-  }
-
   val CarcassFood: Long = 120 * u
   val CarcassProtein: Long = 5 * u
   val CarcassCarriers: Long = 5 * u
   val CarcassRetrievalTicks: Long = 10 * TicksPerSecond
   val InitialCarcassSlots: Int = 1
-  val NurseryProteinCost: Long = 3 * u
   val NurseryBonusMaxAnts: Long = 3 * u
   val ScoutSugarCost: Long = 50 * u
   val ScoutProteinCost: Long = 2 * u

@@ -3,7 +3,7 @@ package pt.rcmartins.antidle.balance
 import scala.scalajs.js
 import zio.json._
 import pt.rcmartins.antidle.game.Constants
-import pt.rcmartins.antidle.game.balance.UpgradeTuning
+import pt.rcmartins.antidle.game.balance.{ChamberPricing, UpgradeTuning}
 import pt.rcmartins.antidle.game.saves.AllDataForSave
 import pt.rcmartins.antidle.model.AllData
 
@@ -12,6 +12,16 @@ object BalanceMain {
     val argv = js.Dynamic.global.process.argv.asInstanceOf[js.Array[String]]
     val args = argv.slice(2, argv.length).toArray
     val fs = js.Dynamic.global.require("fs")
+    if (args.sameElements(Array("--validate-chambers"))) {
+      val candidate = fs.readFileSync(0, "utf8").asInstanceOf[String]
+      ChamberPricing.validate(candidate) match {
+        case Right(_) => println(Map("unit" -> Constants.u).toJson)
+        case Left(error) =>
+          println(zio.json.ast.Json.Obj("error" -> zio.json.ast.Json.Str(error)).toJson)
+          js.Dynamic.global.process.exitCode = 1
+      }
+      return
+    }
     if (args.sameElements(Array("--upgrade-catalog"))) {
       val candidate = fs.readFileSync(0, "utf8").asInstanceOf[String]
       UpgradeTuning.catalog(candidate) match {

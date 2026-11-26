@@ -174,3 +174,6 @@ main {
 .node.related:not([aria-pressed="true"]) { border-color: #79947c; }
 .bonus-list { display: grid; gap: .5rem; }
 .bonus-list > button { justify-self: start; }
+.chamber-workspace { display: block; max-width: 52rem; margin-inline: auto; }
+.chamber-editor fieldset { min-width: 0; margin-block: 1rem; border: 1px solid var(--border); }
+.header-actions a { color: inherit; }

@@ -38,15 +38,20 @@ lazy val root =
         Seq(output)
       }.taskValue,
       Compile / sourceGenerators += Def.task {
-        val config = baseDirectory.value / "src" / "main" / "balance" / "upgrades.json"
-        val encoded = java.util.Base64.getEncoder.encodeToString(IO.readBytes(config))
-        val chunks = encoded.grouped(4000).map(chunk => "\"" + chunk + "\"").mkString(", ")
+        val directory = baseDirectory.value / "src" / "main" / "balance"
+        def chunks(file: String): String = {
+          val encoded = java.util.Base64.getEncoder.encodeToString(IO.readBytes(directory / file))
+          encoded.grouped(4000).map(chunk => "\"" + chunk + "\"").mkString(", ")
+        }
         val output =
           (Compile / sourceManaged).value / "pt" / "rcmartins" / "antidle" / "game" / "balance" / "UpgradeOverrides.scala"
         val source =
           s"""package pt.rcmartins.antidle.game.balance
              |private[balance] object UpgradeOverrides {
-             |  lazy val json: String = new String(java.util.Base64.getDecoder.decode(List($chunks).mkString), "UTF-8")
+             |  private def decode(chunks: String*): String =
+             |    new String(java.util.Base64.getDecoder.decode(chunks.mkString), "UTF-8")
+             |  lazy val json: String = decode(${chunks("upgrades.json")})
+             |  lazy val chambersJson: String = decode(${chunks("chambers.json")})
              |}
              |""".stripMargin
         if (!output.exists || IO.read(output) != source) IO.write(output, source)

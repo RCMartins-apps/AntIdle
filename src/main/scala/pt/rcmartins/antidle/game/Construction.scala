@@ -1,7 +1,7 @@
 package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
-import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.game.balance.ChamberPricing
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.{
@@ -20,17 +20,7 @@ object Construction {
     case ChamberType.RoyalNursery => chambers.royalNurseryChamber.level
   }
 
-  def cost(kind: ChamberType, level: Int): ActionCost = if (kind == ChamberType.RoyalNursery)
-    RoyalNurseryProgression.buildCost
-  else
-    ActionCost(
-      tunnelingSpace = getChamberTunnelingSpaceNeeded(kind, level),
-      protein =
-        if (kind == ChamberType.Nursery) NurseryProteinCost * (level + 1L)
-        else if (kind == ChamberType.Aphid) 2L * u * (level + 1L)
-        else if (kind == ChamberType.Replete) 5L * u * (level + 1L)
-        else 0L,
-    )
+  def cost(kind: ChamberType, level: Int): ActionCost = ChamberPricing.cost(kind, level)
 
   def nextCost(nest: NestAttributes, kind: ChamberType): ActionCost =
     cost(kind, level(nest.chambers, kind) + nest.buildQueue.count(_.chamberType == kind))

@@ -75,7 +75,7 @@ class KnowledgeEconomySuite extends FunSuite {
     ((0 to 100) :+ 1000).foreach { level =>
       val capacity = 1000L * u + level.toLong * Constants.NestUpgradeBonusMaxTunnelingSpace
       assert(
-        Constants.getChamberTunnelingSpaceNeeded(ChamberType.Nest, level) <= capacity,
+        Construction.cost(ChamberType.Nest, level).tunnelingSpace <= capacity,
         s"level $level"
       )
     }
