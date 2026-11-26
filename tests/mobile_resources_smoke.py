@@ -183,6 +183,7 @@ def check_catchup(page, width, url):
         label = page.locator('.resource-summary-heading > span').first.bounding_box()
         assert label['x'] + label['width'] <= catchup['x'], (label, catchup)
         assert catchup['y'] + catchup['height'] <= heading['y'] + heading['height'] + 2
+        assert toggle.bounding_box()['height'] <= 34
     before = save_game(page)['world']['currentTick']
     close = page.get_by_role('alert').locator('.btn-close')
     if close.is_visible():

@@ -9,6 +9,14 @@
 - Upgrades show an affordability estimate when current rates can reach the
   price. Basic cost shortages remain in the accessible action description.
 
+## 2026-11-26 — mobile colony spacing
+
+- On phones, the construction queue appears on Chambers. Brood has less
+  vertical padding, and the compact resource header and Catch up control
+  take less space while keeping the resource timer row stable.
+- Mobile success alerts let taps reach the controls beneath them while
+  keeping their close button interactive.
+
 ## 2026-11-25 — compact Explore layout
 
 - The hex map opens directly above the selected site's actions. Study groups
