@@ -8,6 +8,8 @@
 - Upgrades use a typed `bonuses` list with add and remove controls. The
   first supported type is `productionPercent`.
 - Chamber costs and bonuses still need their own catalog and editor controls.
+- Mobile navigation reapplies the saved scroll position after the tab and
+  resource layout update. Keyboard focus moves without scrolling the page.
 
 ## 2026-11-26 — presentation-only CI
 
