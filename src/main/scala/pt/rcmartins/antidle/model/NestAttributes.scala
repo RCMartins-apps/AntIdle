@@ -11,7 +11,7 @@ case class NestAttributes(
 //    deadAnts: Long = 0,
 //    detritus: Long = 0,
     maxEggs: Long = QueenChamberBonusMaxEggs,
-    maxAnts: Long = NestUpgradeBonusMaxAnts,
+    maxAnts: Long = InitialColonyPlaces,
     maxBuildQueue: Int = 1,
     dryClearingOutpost: Boolean = false,
     middenBuilt: Boolean = false,

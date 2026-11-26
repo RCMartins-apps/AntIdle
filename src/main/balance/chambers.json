@@ -15,6 +15,11 @@
         "type": "storageCapacity",
         "resource": "tunnelingSpace",
         "amount": 5000000
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "population",
+        "count": 10
       }
     ]
   },
@@ -24,7 +29,14 @@
         "base": 250000,
         "multiplier": 1.5
       }
-    }
+    },
+    "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "population",
+        "count": 5
+      }
+    ]
   },
   "FoodStorage": {
     "costs": {
@@ -72,6 +84,11 @@
         "type": "slotCapacity",
         "slot": "carcass",
         "count": 1
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "population",
+        "count": 3
       }
     ]
   },

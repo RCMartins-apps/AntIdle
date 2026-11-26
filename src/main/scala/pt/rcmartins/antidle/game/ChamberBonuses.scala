@@ -15,7 +15,7 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.ProteinStorage
 import zio.json._
 
 object ChamberBonuses {
-  case class CapacityBase(sugar: Long, tunnelingSpace: Long)
+  case class CapacityBase(sugar: Long, tunnelingSpace: Long, population: Option[Long] = None)
   object CapacityBase {
     implicit val codec: JsonCodec[CapacityBase] = DeriveJsonCodec.gen[CapacityBase]
   }
@@ -29,10 +29,28 @@ object ChamberBonuses {
   private def nestLevels(data: AllData): Int =
     Math.max(0, data.nestAttributes.chambers.nestChamber.level)
 
+  private[game] case class Housing(nest: Int, queen: Int, nursery: Int) {
+    def contribution(data: AllData): Long = {
+      val chambers = data.nestAttributes.chambers
+      (Math.max(0, chambers.nestChamber.level).toLong * nest +
+        Math.max(0L, chambers.queenChamber.level.toLong - 1L) * queen +
+        Math.max(0, chambers.nurseryChamber.level).toLong * nursery) * Constants.u
+    }
+
+  }
+
+  private val legacyHousing = Housing(10, 5, 3)
+  private lazy val housing = Housing(
+    ChamberPricing.slotsPerLevel(ChamberType.Nest, "population"),
+    ChamberPricing.slotsPerLevel(ChamberType.Queen, "population"),
+    ChamberPricing.slotsPerLevel(ChamberType.Nursery, "population")
+  )
+
   private def base(data: AllData, sugar: Long, space: Long): CapacityBase =
     CapacityBase(
       data.basicResources.sugar.maxAmount - contribution(sugar, paidStorageLevels(data)),
-      data.basicResources.tunnelingSpace.maxAmount - contribution(space, nestLevels(data))
+      data.basicResources.tunnelingSpace.maxAmount - contribution(space, nestLevels(data)),
+      Some(data.nestAttributes.maxAnts - housing.contribution(data))
     )
 
   private def contribution(rate: Long, levels: Int): Long =
@@ -54,20 +72,28 @@ object ChamberBonuses {
     ) * Constants.u
 
   def savedCapacityBase(data: AllData): Option[CapacityBase] =
-    Option.when(storage != legacySugar || space != legacySpace)(base(data, storage, space))
+    Option.when(storage != legacySugar || space != legacySpace || housing != legacyHousing)(
+      base(data, storage, space)
+    )
 
   private[game] def restoreCapacity(
       data: AllData,
       saved: Option[CapacityBase],
       sugarPerLevel: Long = storage,
-      spacePerLevel: Long = space
+      spacePerLevel: Long = space,
+      housingPerLevel: Housing = housing
   ): AllData = {
-    val capacity = saved.getOrElse(base(data, legacySugar, legacySpace))
+    val capacity = saved.getOrElse(base(data, legacySugar, legacySpace).copy(population = None))
+    val populationBase = saved
+      .flatMap(_.population)
+      .getOrElse(data.nestAttributes.maxAnts - legacyHousing.contribution(data))
     data
       .modify(_.basicResources.sugar.maxAmount)
       .setTo(total(capacity.sugar, sugarPerLevel, paidStorageLevels(data)))
       .modify(_.basicResources.tunnelingSpace.maxAmount)
       .setTo(total(capacity.tunnelingSpace, spacePerLevel, nestLevels(data)))
+      .modify(_.nestAttributes.maxAnts)
+      .setTo(total(populationBase, housingPerLevel.contribution(data), 1))
   }
 
   // Shared by action details and completed upgrades.
@@ -78,13 +104,13 @@ object ChamberBonuses {
     chamberType match {
       case ChamberType.Nest =>
         ActionBonus(
-          maxAnts = Constants.NestUpgradeBonusMaxAnts,
+          maxAnts = housing.nest.toLong * Constants.u,
           maxTunnelingSpace = space,
         )
       case ChamberType.Queen =>
         ActionBonus(
           maxEggs = Constants.QueenChamberBonusMaxEggs,
-          maxAnts = Constants.QueenChamberBonusMaxAnts,
+          maxAnts = housing.queen.toLong * Constants.u,
         )
       case ChamberType.FoodStorage =>
         ActionBonus(
@@ -101,7 +127,7 @@ object ChamberBonuses {
         )
       case ChamberType.Nursery =>
         ActionBonus(
-          maxAnts = Constants.NurseryBonusMaxAnts,
+          maxAnts = housing.nursery.toLong * Constants.u,
           maxCarcasses = ChamberPricing.nurserySlotsPerLevel("carcass")
         )
       case ChamberType.RoyalNursery =>
@@ -176,8 +202,6 @@ object ChamberBonuses {
     val bonus = forChamber(chamberType, allData.upgrades)
     reconcileProteinCapacity(
       restoreCapacity(withLevel, Some(base(allData, storage, space)))
-        .modify(_.nestAttributes.maxAnts)
-        .using(_ + bonus.maxAnts)
         .modify(_.nestAttributes.maxEggs)
         .using(_ + bonus.maxEggs)
     )
