@@ -40,21 +40,38 @@ object ChamberPricing {
 
   private val resources = Set("sugar", "protein", "water", "tunnelingSpace", "knowledge", "resin")
   private val MaxBase = 9007199254740991L
+  private val capacityResources = Map("Nest" -> "tunnelingSpace", "FoodStorage" -> "sugar")
 
-  private[balance] def load(json: String): Either[String, Map[String, Map[String, Price]]] =
-    json.fromJson[Map[String, Map[String, Price]]].flatMap { catalog =>
+  @jsonNoExtraFields
+  case class Definition(costs: Map[String, Price], bonuses: List[UpgradeBonus] = Nil)
+
+  object Definition {
+    implicit val decoder: JsonDecoder[Definition] = DeriveJsonDecoder.gen[Definition]
+  }
+
+  private[balance] def load(json: String): Either[String, Map[String, Definition]] =
+    json.fromJson[Map[String, Definition]].flatMap { catalog =>
       if (catalog.keySet != chambers) Left("Expected every known chamber ID")
       else {
         val invalid = catalog.iterator
-          .flatMap { case (chamber, costs) =>
-            costs.iterator.collectFirst {
-              case (resource, price)
-                  if !resources(resource) ||
-                    !validAmount(price.base) || !validAmount(price.perLevel) ||
-                    !(price.multiplier >= 1.0 && price.multiplier <= 10.0) ||
-                    price.cap.exists(cap => !validAmount(cap.base) || !validAmount(cap.perLevel)) =>
-                s"Invalid price for $chamber.$resource"
+          .flatMap { case (chamber, definition) =>
+            val bonuses = definition.bonuses
+            val invalidBonus = bonuses.size > 1 || bonuses.exists {
+              case UpgradeBonus.StorageCapacity(resource, amount) =>
+                !capacityResources.get(chamber).contains(resource) || !validAmount(amount)
+              case _ => true
             }
+            if (invalidBonus) Some(s"Invalid capacity bonus for $chamber")
+            else
+              definition.costs.iterator.collectFirst {
+                case (resource, price)
+                    if !resources(resource) ||
+                      !validAmount(price.base) || !validAmount(price.perLevel) ||
+                      !(price.multiplier >= 1.0 && price.multiplier <= 10.0) ||
+                      price.cap
+                        .exists(cap => !validAmount(cap.base) || !validAmount(cap.perLevel)) =>
+                  s"Invalid price for $chamber.$resource"
+              }
           }
           .nextOption()
         invalid.toLeft(catalog)
@@ -72,7 +89,7 @@ object ChamberPricing {
     )
 
   def cost(kind: ChamberType, level: Int): ActionCost = {
-    val rules = prices(kind.toString)
+    val rules = prices(kind.toString).costs
     def forResource(id: String): Long = rules.get(id).fold(0L)(_.at(level))
     ActionCost(
       sugar = forResource("sugar"),
@@ -83,5 +100,12 @@ object ChamberPricing {
       resin = forResource("resin")
     )
   }
+
+  def capacityBonus(kind: ChamberType): Long =
+    prices(kind.toString).bonuses
+      .collectFirst { case UpgradeBonus.StorageCapacity(_, amount) =>
+        amount
+      }
+      .getOrElse(0L)
 
 }

@@ -1,6 +1,7 @@
 package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
+import pt.rcmartins.antidle.game.balance.ChamberPricing
 import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.model.{
   ActionBonus,
@@ -11,8 +12,54 @@ import pt.rcmartins.antidle.model.{
   UpgradesData
 }
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.ProteinStorage
+import zio.json._
 
 object ChamberBonuses {
+  case class CapacityBase(sugar: Long, tunnelingSpace: Long)
+  object CapacityBase {
+    implicit val codec: JsonCodec[CapacityBase] = DeriveJsonCodec.gen[CapacityBase]
+  }
+
+  // Historical rates are used only to interpret saves without an explicit base.
+  private val legacySugar = 1000L * Constants.u
+  private val legacySpace = 500L * Constants.u
+  private def paidStorageLevels(data: AllData): Int =
+    Math.max(0, data.nestAttributes.chambers.foodStorageChamber.level - 1)
+
+  private def nestLevels(data: AllData): Int =
+    Math.max(0, data.nestAttributes.chambers.nestChamber.level)
+
+  private def base(data: AllData, sugar: Long, space: Long): CapacityBase =
+    CapacityBase(
+      data.basicResources.sugar.maxAmount - contribution(sugar, paidStorageLevels(data)),
+      data.basicResources.tunnelingSpace.maxAmount - contribution(space, nestLevels(data))
+    )
+
+  private def contribution(rate: Long, levels: Int): Long =
+    (BigInt(rate) * levels).min(BigInt(Long.MaxValue)).toLong
+
+  private def total(base: Long, rate: Long, levels: Int): Long =
+    (BigInt(base) + contribution(rate, levels)).max(BigInt(0L)).min(BigInt(Long.MaxValue)).toLong
+
+  private def storage = ChamberPricing.capacityBonus(ChamberType.FoodStorage)
+  private def space = ChamberPricing.capacityBonus(ChamberType.Nest)
+
+  def savedCapacityBase(data: AllData): Option[CapacityBase] =
+    Option.when(storage != legacySugar || space != legacySpace)(base(data, storage, space))
+
+  private[game] def restoreCapacity(
+      data: AllData,
+      saved: Option[CapacityBase],
+      sugarPerLevel: Long = storage,
+      spacePerLevel: Long = space
+  ): AllData = {
+    val capacity = saved.getOrElse(base(data, legacySugar, legacySpace))
+    data
+      .modify(_.basicResources.sugar.maxAmount)
+      .setTo(total(capacity.sugar, sugarPerLevel, paidStorageLevels(data)))
+      .modify(_.basicResources.tunnelingSpace.maxAmount)
+      .setTo(total(capacity.tunnelingSpace, spacePerLevel, nestLevels(data)))
+  }
 
   // Shared by action details and completed upgrades.
   def forChamber(
@@ -23,7 +70,7 @@ object ChamberBonuses {
       case ChamberType.Nest =>
         ActionBonus(
           maxAnts = Constants.NestUpgradeBonusMaxAnts,
-          maxTunnelingSpace = Constants.NestUpgradeBonusMaxTunnelingSpace,
+          maxTunnelingSpace = space,
         )
       case ChamberType.Queen =>
         ActionBonus(
@@ -32,7 +79,7 @@ object ChamberBonuses {
         )
       case ChamberType.FoodStorage =>
         ActionBonus(
-          maxSugar = Constants.FoodStorageChamberBonusMaxSugar,
+          maxSugar = storage,
           maxProtein = if (upgrades(ProteinStorage).unlocked) 100L * Constants.u else 0L
         )
       case ChamberType.Replete =>
@@ -114,15 +161,11 @@ object ChamberBonuses {
 
     val bonus = forChamber(chamberType, allData.upgrades)
     reconcileProteinCapacity(
-      withLevel
+      restoreCapacity(withLevel, Some(base(allData, storage, space)))
         .modify(_.nestAttributes.maxAnts)
         .using(_ + bonus.maxAnts)
         .modify(_.nestAttributes.maxEggs)
         .using(_ + bonus.maxEggs)
-        .modify(_.basicResources.sugar.maxAmount)
-        .using(_ + bonus.maxSugar)
-        .modify(_.basicResources.tunnelingSpace.maxAmount)
-        .using(_ + bonus.maxTunnelingSpace)
     )
   }
 

@@ -4,19 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>Chamber costs · Colony Workshop</title>
+  <title>Chambers · Colony Workshop</title>
   <link rel="stylesheet" href="/editor.css">
   <script src="/chambers.js" defer></script>
 </head>
 <body>
   <header class="header">
-    <div class="brand"><div><p>Colony Workshop</p><h1>Chamber costs</h1></div></div>
+    <div class="brand"><div><p>Colony Workshop</p><h1>Chambers</h1></div></div>
     <div class="header-actions"><a href="/">Upgrades</a></div>
   </header>
   <p id="status" role="status" aria-live="polite">Loading chamber costs…</p>
   <main class="chamber-workspace">
     <form class="inspector chamber-editor" hidden>
       <label>Chamber <select id="chamber"></select></label>
+      <div id="capacity"></div>
       <p>Leave Cap base blank for no cap.</p>
       <div id="prices"></div>
       <button type="submit" class="primary">Save changes</button>

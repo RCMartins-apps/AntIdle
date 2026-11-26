@@ -58,7 +58,7 @@ rewards retain their existing rules.
 
 ### Chamber costs
 
-Open **Chamber costs** in Colony Workshop to edit the construction catalog
+Open **Chambers** in Colony Workshop to edit the construction catalog
 in [chambers.json](../src/main/balance/chambers.json). The editor shows ordinary
 game units. The file stores fixed-point amounts like the upgrade catalog.
 Each resource's price is its base multiplied by the multiplier raised to
@@ -67,9 +67,15 @@ level. An optional cap limits the result to its base plus its own per-level
 amount. Level zero is the first purchase.
 
 Rebuild the game or simulator to apply edits. The game recalculates prices
-for existing queue entries when loading the colony. Chamber levels and already
-applied capacity bonuses remain saved. Moving chamber effects to the shared
-bonus model is a separate migration.
+for existing queue entries when loading the colony.
+
+Nest tunneling space and Food Storage sugar capacity are editable as typed
+`storageCapacity` effects. Both apply per purchased level. The starter Food
+Storage level is already included in the colony's base capacity. Previously
+saved capacities are migrated using the historical rates, and saves made with
+tuned rates store their non-chamber capacity base for later recalculation.
+Stored resources above the new cap stay available to spend. Other chamber
+effects retain their existing rules.
 
 ## Where to edit
 

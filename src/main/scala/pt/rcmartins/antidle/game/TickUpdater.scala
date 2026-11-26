@@ -153,7 +153,15 @@ object TickUpdater {
             Math.min(royalSugarSpent, Math.max(0L, surplusSugarU - sugarUpkeep))
           tended
             .modify(_.basicResources.sugar.amount)
-            .using(amount => Math.min(amount, tended.basicResources.sugar.maxAmount))
+            .using(amount =>
+              Math.min(
+                amount,
+                Math.max(
+                  tended.basicResources.sugar.maxAmount,
+                  allData.basicResources.sugar.amount
+                )
+              )
+            )
             .modify(_.statistics.sugarU)
             .usingIf(royalSurplusUsed > 0L)(_.addValue(royalSurplusUsed))
         },

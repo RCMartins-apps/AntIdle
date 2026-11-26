@@ -155,15 +155,27 @@ def main():
                         expect(protein.get_by_label('Base', exact=True)).to_have_value('3')
                         protein.get_by_label('Base', exact=True).fill('4.5')
                         page.get_by_role('button', name='Save changes').click()
-                        expect(page.get_by_role('status')).to_contain_text('Saved chamber costs')
-                        rule = json.loads(chambers.read_text())['Nursery']['protein']
+                        expect(page.get_by_role('status')).to_contain_text('Saved chamber settings')
+                        rule = json.loads(chambers.read_text())['Nursery']['costs']['protein']
                         assert rule == {'base': 45000, 'perLevel': 30000}
                         page.reload()
                         page.get_by_label('Chamber', exact=True).select_option('Nursery')
                         expect(protein.get_by_label('Base', exact=True)).to_have_value('4.5')
                         assert page.evaluate('document.documentElement.scrollWidth') == 390
+                        page.get_by_label('Chamber', exact=True).select_option('FoodStorage')
+                        capacity = page.get_by_label('Sugar capacity per added level')
+                        expect(capacity).to_have_value('1000')
+                        capacity.fill('750')
+                        page.get_by_role('button', name='Save changes').click()
+                        expect(page.get_by_role('status')).to_contain_text('Saved chamber settings')
+                        assert json.loads(chambers.read_text())['FoodStorage']['bonuses'] == [
+                            {'type': 'storageCapacity', 'resource': 'sugar', 'amount': 7500000}
+                        ]
+                        page.reload()
+                        page.get_by_label('Chamber', exact=True).select_option('FoodStorage')
+                        expect(capacity).to_have_value('750')
                         if output:
-                            protein.screenshot(path=str(output / 'chamber-protein-price.png'))
+                            page.locator('#capacity').screenshot(path=str(output / 'chamber-capacity.png'))
                         page.close()
                     finally:
                         browser.close()
