@@ -6,6 +6,19 @@
   the actual site names. Max fits a safe crew to the available haul and room,
   and trip time sits beside it. The launch label aligns text and icons.
 
+## 2026-11-26 — resource and collector polish
+
+- Resource totals use two decimal places below 100 and fewer digits at larger
+  scales. Standard collectors get the higher-yield positions in mixed crews.
+  The Sugar Collector row shows the gain from adding one worker on the left
+  and current standard-collector output on the right when staffed.
+- Sugar and protein display a two-second net-rate average. Resource countdowns
+  use that rate, while the tick engine continues to apply actual feeding.
+- Upgrades show an affordability estimate when current rates can reach the
+  price. Basic cost shortages remain in the accessible action description.
+- Brood rows lead with a zero-padded percentage in a fixed column.
+- Expanded mobile resources align status and per-second rate on one baseline.
+
 ## 2026-11-26 — mobile colony spacing
 
 - On phones, the construction queue appears on Chambers. Brood has less

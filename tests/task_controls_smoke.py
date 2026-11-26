@@ -74,6 +74,7 @@ def check(page, width, url):
     expect(small.locator('.brood-care-badge')).to_contain_text('+1 care')
     page.get_by_role('button',name='Remove small Brood Nurse',exact=True).click()
     expect(page.locator('#task-sugarcollector .job-rate .resource-icon-sugar')).to_have_count(1)
+    expect(page.locator('#task-sugarcollector .collector-total')).to_be_hidden()
     expect(page.locator('#task-tunneler .job-rate .resource-icon-tunneling')).to_have_count(1)
     small_plus=page.get_by_role('button',name='Assign small Tunneler',exact=True)
     normal_plus=page.get_by_role('button',name='Assign Tunneler',exact=True)

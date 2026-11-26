@@ -103,10 +103,14 @@
             .antidle-app .action-cell,
             .antidle-app #settingsContent .col-6 { width: 100%; padding: .5rem .75rem !important; }
             .antidle-app #settingsContent .justify-content-between { flex-wrap: wrap; gap: .5rem; }
-            .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
+            .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 6ch auto; align-items: baseline; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
             .antidle-app .resource-row > div { width: auto; padding: 0; }
             .antidle-app .resource-row > div:first-child { grid-column: 1; grid-row: 1 / span 2; align-self: start; white-space: normal !important; overflow-wrap: anywhere; }
             .antidle-app .resource-row > div:last-child { grid-column: 2 / -1; grid-row: 2; font-size: .875rem; color: var(--bs-secondary-color); }
+            .antidle-app .resource-name:has(> .resource-timing) { display: contents; }
+            .antidle-app .resource-name:has(> .resource-timing) > :first-child { grid-area: 1 / 1; }
+            .antidle-app .resource-name > .resource-timing { grid-area: 2 / 1; font-size: .875rem; }
+            .antidle-app .resource-timing:empty::before { content: "\00a0"; }
             .antidle-app .task-row { align-items: center; row-gap: .5rem; }
             .antidle-app .task-row > .col-6 { flex: 1; min-width: 0; }
             .antidle-app .task-controls { width: auto; display: flex; padding-left: 0; }
@@ -347,6 +351,12 @@
   .jobs-panel .task-controls .btn {margin-block:0!important}
   .jobs-panel .task-row + .task-row {margin-top:.25rem}
 }
+.collector-rates {display:flex;align-items:baseline;gap:.25rem;white-space:nowrap}
+.collector-rates > span {font-size:.72rem}
+.collector-total {margin-inline-start:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.jobs-panel .task-controls {padding-inline-end:0}
+.brood-entry {display:grid;grid-template-columns:4ch auto minmax(0,1fr);align-items:baseline;gap:.25rem}
+.brood-entry-progress {font-variant-numeric:tabular-nums;white-space:nowrap}
 </style>
 </head>
 <body>
