@@ -60,10 +60,8 @@ object AphidRelocation {
   def finish(data: AllData, party: ExplorationParty): AllData = {
     if (party.mission != "aphids" || !data.exploration.explorationParties.contains(party)) data
     else {
-      val received = Math.min(
-        party.aphids,
-        Math.max(0L, AphidHusbandry.housing(data.nestAttributes) - data.nestAttributes.aphids)
-      )
+      // The party already reserved its pickup before a catalog change could reduce housing.
+      val received = party.aphids
       val returned = data.copy(
         ants = data.ants.removeFromTask(AntTask.Explorer, party.amountWorkers),
         nestAttributes = data.nestAttributes.copy(aphids = data.nestAttributes.aphids + received),

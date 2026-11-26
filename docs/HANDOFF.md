@@ -2,12 +2,12 @@
 
 ## 2026-11-26
 
-Colony Workshop now exposes the Queen Chamber’s laying speed per purchased
-level. The game still uses the existing 25% speed per level by default. The
-catalog drives future eggs and the displayed chamber bonus. Queued orders and
-eggs already laying keep their current progress.
+Colony Workshop exposes aphid places, Aphid Shelters' extra places, and replete
+places per chamber level. Lower capacities preserve existing aphids, returning
+relocations, and repletes. Excess animals block new relocations or promotions
+until there is room. Existing repletes keep contributing water capacity.
 
-See [Workshop issue #130](https://github.com/RCMartins-apps/AntIdle/issues/130).
+See [Workshop issue #131](https://github.com/RCMartins-apps/AntIdle/issues/131).
 
-Verification passed: 31 focused game tests and a 390px Workshop
-save/reload of the edited laying speed.
+Verified aphid and replete engine suites, including a saved relocation returning
+after housing shrank, and a 390px Workshop save/reload of housing edits.

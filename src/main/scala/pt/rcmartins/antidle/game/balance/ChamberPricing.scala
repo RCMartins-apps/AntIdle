@@ -73,6 +73,11 @@ object ChamberPricing {
       slots("population", "Colony places"),
       BonusField("layingSpeedPercent", "", "", "percent", "Laying speed (%)", 1L, 1000L)
     ),
+    "Aphid" -> List(
+      slots("aphid", "Aphid places"),
+      slots("aphidShelters", "Extra places with Aphid Shelters")
+    ),
+    "Replete" -> List(slots("replete", "Replete places")),
     "Nursery" -> List(
       slots("brood", "Brood places"),
       slots("broodNurse", "Brood Nurse jobs"),
