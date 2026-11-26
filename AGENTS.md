@@ -38,7 +38,7 @@ Source paths below are relative to `src/main/scala/pt/rcmartins/antidle/`:
 - `game/ColonyMilestones.scala`: permanent achievement tiers, exact sugar multiplier and saved resource peaks.
 - `game/MilestoneResearch.scala`: current-colony goal previews and shared research effect values; see docs/MILESTONES.md.
 - `game/Prestige.scala`: founding resets, DNA purchases and inherited production.
-- `game/PheromoneTrails.scala`: safe finite collection automation, per-route staffing/guide reservations and supply costs; see docs/COLLECTION-TRAILS.md.
+- `game/PheromoneTrails.scala`: safe finite collection automation, per-route staffing/guide reservations and supply costs; see docs/EXPLORATION.md#shared-paths-collection-automation.
 - `game/TerritoryProgression.scala`: held crews, pending hauls, recurring contests and withdrawal.
   Task upkeep and `agesAtHome` are separate: holders consume sugar with cohorts reserved at the site.
 - `game/balance/UpgradeBalance.scala`: upgrade prices, help and structured reveal prerequisites; see docs/BALANCING.md.

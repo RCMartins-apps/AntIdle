@@ -88,7 +88,7 @@ cancel older production builds. Publishing and preview cleanup share the
 `github-pages-publish` concurrency group with cancellation disabled, serializing
 writes to gh-pages. Publishers check revision freshness before writing.
 Docs-only classification remains unchanged. Main is the only production deploy
-source; the former debug-prefix rule is removed. See [PR previews](PR-PREVIEWS.md).
+source; the former debug-prefix rule is removed. See [PR previews](#playable-pull-request-previews).
 
 These settings apply to newly started workflow executions after the change is
 available; they do not shorten already-running jobs. Those must be cancelled in
@@ -120,3 +120,28 @@ check. The formatter and its rules are pinned in `.scalafmt.conf`.
 
 To fix violations locally, run `sbt scalafmtAll balance/scalafmtAll scalafmtSbt`.
 Keep routine formatting scoped to the files being changed.
+
+## Playable pull-request previews
+
+After validation, same-repository game PRs publish at
+`https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-<number>/`.
+Use the environment link or the workflow summary. Updated commits replace the
+preview after validation. Closing or merging removes the hosted files. Fork and
+docs-only PRs publish no preview. Follow the first-line link and status convention
+in [AGENTS.md](../AGENTS.md).
+
+Each preview has its own browser save, UI preferences, and offline caches.
+Production uses the `save` key and bypasses preview requests in its service
+worker. Preview URLs with or without `index.html` share a save. Republishing or
+removing hosted files leaves browser saves intact.
+
+Read-only PR jobs build, test, and package static files. The separate write-enabled
+publisher downloads the package and skips closed or superseded revisions.
+Publishers and cleanup serialize writes to `gh-pages`; cleanup runs on
+`pull_request_target` closure and only checks out `gh-pages`. Production
+deploys from main and preserves active previews. The required `test` check
+includes preview deployment for eligible PRs.
+
+Validate workflow syntax with `actionlint`. Browser storage tests and
+`tests/preview_browser_smoke.py` cover save isolation, canonical preview URLs,
+and production-worker bypass.

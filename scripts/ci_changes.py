@@ -7,7 +7,7 @@ import subprocess
 
 def documentation_only(paths):
     return bool(paths) and all(
-        path.startswith("docs/") or ("/" not in path and path.lower().endswith(".md"))
+        path.startswith("docs/") or path.lower().endswith(".md")
         for path in paths
     )
 

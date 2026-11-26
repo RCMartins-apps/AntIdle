@@ -162,7 +162,7 @@ PR preview isolation: after `sbt fullOptJS`, run
 `python3 tests/preview_browser_smoke.py`. It packages production plus two preview
 subpaths on one origin, verifies the production worker bypass, canonical preview
 URLs, saved-colony restoration, unchanged production/other-PR saves and isolated
-UI preferences. See [preview lifecycle](../docs/PR-PREVIEWS.md).
+UI preferences. See [preview lifecycle](../docs/CI-WORKFLOW.md#playable-pull-request-previews).
 
 Brood layout checks cover worker/scout order counts with matching icons and
 accessible labels, same-line spacing, founding visibility and stable controls.

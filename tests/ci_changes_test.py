@@ -26,9 +26,11 @@ class ChangeClassification(unittest.TestCase):
         self.assertTrue(ci.documentation_only(["README.md", "AGENTS.md", "docs/VISION.md", "docs/design/sketch.png"]))
 
     def test_code_and_mixed_changes(self):
-        for path in ("src/main/content.md", "index.html", "build.sbt", "tests/browser_smoke.py", ".github/workflows/deploy.yml", "scripts/ci_changes.py"):
+        for path in ("src/main/balance/upgrades.json", "index.html", "build.sbt", "tests/browser_smoke.py", ".github/workflows/deploy.yml", "scripts/ci_changes.py"):
             with self.subTest(path=path):
                 self.assertFalse(ci.documentation_only(["docs/VISION.md", path]))
+        self.assertTrue(ci.documentation_only(["tests/README.md", "tools/balance/NOTES.MD"]))
+        self.assertFalse(ci.documentation_only(["tests/README.md", "scripts/ci_changes.py"]))
         self.assertFalse(ci.documentation_only([]))
 
     def test_deleted_or_renamed_code_is_not_documentation(self):
