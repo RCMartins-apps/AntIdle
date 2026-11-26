@@ -41,4 +41,4 @@ not that balance is universally fun or optimal. Actual players should compare
 manual bursts versus trail assignment, scouts needed for studies, and upkeep when
 running several resource trails. Future tuning should preserve finite deposits,
 manual cargo reservations and shared storage. See
-[collection rates and rules](../../docs/COLLECTION-TRAILS.md).
+[collection rates and rules](../../docs/EXPLORATION.md#shared-paths-collection-automation).

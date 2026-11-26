@@ -27,7 +27,7 @@ Version 7 uses the [handcrafted map](../../docs/EXPLORATION.md); rebuild before 
 Its first measured run is recorded in [MAP_RESULTS.md](MAP_RESULTS.md). The linear
 collection/Shared Paths pass is measured in [TRAIL_RESULTS.md](TRAIL_RESULTS.md).
 
-Use the [offline upgrade editor](../../docs/BALANCING.md#offline-upgrade-editor)
+Use the [Colony Workshop](../../docs/BALANCING.md#colony-workshop)
 to explore dependencies and change prices and unlocks before the `balance-after`
 run. Saving in the editor writes the same override file used by game builds and
 the simulator's rebuild.

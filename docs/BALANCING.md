@@ -91,7 +91,7 @@ Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
 | Expedition Supplies tiers/prices/reveal requirements | Offline upgrade editor, `ExpeditionSupplies1`–`3` |
 | Natural second expedition slot | `ExplorationProgression.maxParties` (four revealed sites) |
 | Linear haul scaling, 5–50-worker bounds and step | `game/ExplorationProgression.scala` |
-| Automatic trail efficiency and guide ratio | `game/PheromoneTrails.scala`; see [rate analysis](COLLECTION-TRAILS.md) |
+| Automatic trail efficiency and guide ratio | `game/PheromoneTrails.scala`; see [rate analysis](EXPLORATION.md#shared-paths-collection-automation) |
 | Supplies/scout multipliers | `game/ExplorationProgression.scala` |
 
 For example, to reveal Brood Care later, change its

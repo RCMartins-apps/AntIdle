@@ -4,10 +4,7 @@ For development context, start with [AGENTS.md](AGENTS.md). The repository keeps
 the [game vision](docs/VISION.md), [agreed design decisions](docs/DECISIONS.md)
 and [latest handoff](docs/HANDOFF.md) so work can continue across Codex sessions.
 These distinguish implemented behavior, approved direction and tentative ideas;
-the sections below document existing mechanics and setup. The dated
-[game-state review](docs/GAME_REVIEW.md) separates current strengths from proposed
-priorities; [recorded ideas](docs/IDEAS.md) preserves possibilities without
-turning them into implementation commitments.
+the sections below document existing mechanics and setup. [Recorded ideas](docs/IDEAS.md) lists proposals for future work.
 
 A Scala.js incremental game. Build with Java and the sbt version pinned in
 `project/build.properties`:
@@ -25,7 +22,7 @@ PR tests and deployment share a lightweight change check. Changes limited to
 or non-documentation change runs normal validation. The workflows still report
 completed/skipped job statuses, so documentation PRs do not leave required checks
 pending. Manual PR-test dispatch always validates the game. Production deploys only from main. Passing same-repository PRs publish
-isolated [playable previews](docs/PR-PREVIEWS.md); `debug*` names have no special
+isolated [playable previews](docs/CI-WORKFLOW.md#playable-pull-request-previews); `debug*` names have no special
 deployment behavior.
 Unknown comparisons run validation conservatively. Non-documentation PRs also
 run a small production-bundle browser gate at 390px and 1280px, covering navigation,
@@ -532,7 +529,7 @@ Expeditions adds one mission slot. These research upgrades reset each colony;
 the Understanding permanently retains access.
 
 See [Prestige](docs/PRESTIGE.md) for exact costs and reset rules, and
-[Collection trails](docs/COLLECTION-TRAILS.md) for tuning and resource/s math.
+[Collection trails](docs/EXPLORATION.md#shared-paths-collection-automation) for tuning and resource/s math.
 Engine tests cover guide reservations, finite resources, supply/storage pauses,
 aging replacements, migration and coexistence with manual cargo. Maintained
 map/browser checks cover mobile controls, reloads and live disclosure stability.
@@ -761,6 +758,21 @@ finite lifespans, type transition, staged nutrition, care capacity, shared job
 caps, queued laying, saves and phone/desktop controls. Existing lifecycle,
 raid/territory replacement and batch UI tests now expect the paced pipeline.
 
+### Nest refuse
+
+Nursery level 2 opens a 100-refuse buffer and five Refuse Carrier jobs. Every
+sugar spent feeding worker or scout larvae creates two refuse, for 40 over a
+larva's development. Each carrier clears three refuse per second. Founding
+workers, recovery brood and daughter queens use separate care.
+
+At 80% full, refuse closes one brood place. As it builds up, it can close up to
+one-third of ordinary brood places. Egg orders wait for a place and existing
+brood continues developing. Clearing the backlog reopens places.
+
+The Sealed Refuse Chamber costs 1,200 sugar and 750 tunnelling space and adds
+150 refuse capacity. Existing Refuse Midden purchases become sealed chambers
+and keep their stored refuse. A new founding starts with no chamber or refuse.
+
 ### Emergency colony recovery
 
 Each colony starts with **10 sugar**, enough for two small-worker eggs.
@@ -930,7 +942,7 @@ access; already-built Nurseries remain visible within a colony.
 
 Run `python3 scripts/upgrade_editor.py` for the offline dependency tree and
 upgrade editor. It saves prices and prerequisites for both the game and the
-simulator. See [Changing balance](docs/BALANCING.md#offline-upgrade-editor).
+simulator. See [Changing balance](docs/BALANCING.md#colony-workshop).
 
 Run `python3 scripts/balance.py --out /tmp/antidle-balance` for seeded real-engine
 strategy comparisons, a portable interactive report and importable milestone saves.
