@@ -11,6 +11,7 @@
 - Upgrades show an affordability estimate when current rates can reach the
   price. Basic cost shortages remain in the accessible action description.
 - Brood rows lead with a zero-padded percentage in a fixed column.
+- Expanded mobile resources align status and per-second rate on one baseline.
 
 ## 2026-11-26 — mobile colony spacing
 
