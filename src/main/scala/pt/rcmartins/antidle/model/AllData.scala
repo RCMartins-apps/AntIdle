@@ -41,20 +41,36 @@ case class AllData(
   ): AllData = {
     def received(resource: BasicResources.BasicResource, requested: Long): Long =
       Math.min(Math.max(0L, requested), Math.max(0L, resource.freeSpace))
-    val gainedSugar = received(basicResources.sugar, if (sugarBonusApplied) sugar else pt.rcmartins.antidle.game.ColonyMilestones.sugar(sugar, statistics))
+    val gainedSugar = received(
+      basicResources.sugar,
+      if (sugarBonusApplied) sugar
+      else pt.rcmartins.antidle.game.ColonyMilestones.sugar(sugar, statistics)
+    )
     val gainedSpace = received(basicResources.tunnelingSpace, tunnelingSpace)
     val gainedKnowledge = received(basicResources.knowledge, knowledge)
     val gainedProtein = received(basicResources.protein, protein)
     val gainedWater = received(basicResources.water, water)
     val gainedResin = received(basicResources.resin, resin)
-    pt.rcmartins.antidle.game.ColonyMilestones.recordPeaks(copy(
-      basicResources = basicResources.copy(sugar = basicResources.sugar + gainedSugar,
-        tunnelingSpace = basicResources.tunnelingSpace + gainedSpace, knowledge = basicResources.knowledge + gainedKnowledge,
-        protein = basicResources.protein + gainedProtein, water = basicResources.water + gainedWater, resin = basicResources.resin + gainedResin),
-      statistics = statistics.copy(sugarU = statistics.sugarU.addValue(gainedSugar),
-        tunnelingSpaceU = statistics.tunnelingSpaceU.addValue(gainedSpace), knowledgeU = statistics.knowledgeU.addValue(gainedKnowledge),
-        proteinU = statistics.proteinU.addValue(gainedProtein), waterU = statistics.waterU.addValue(gainedWater), resinU = statistics.resinU.addValue(gainedResin)),
-    ))
+    pt.rcmartins.antidle.game.ColonyMilestones.recordPeaks(
+      copy(
+        basicResources = basicResources.copy(
+          sugar = basicResources.sugar + gainedSugar,
+          tunnelingSpace = basicResources.tunnelingSpace + gainedSpace,
+          knowledge = basicResources.knowledge + gainedKnowledge,
+          protein = basicResources.protein + gainedProtein,
+          water = basicResources.water + gainedWater,
+          resin = basicResources.resin + gainedResin
+        ),
+        statistics = statistics.copy(
+          sugarU = statistics.sugarU.addValue(gainedSugar),
+          tunnelingSpaceU = statistics.tunnelingSpaceU.addValue(gainedSpace),
+          knowledgeU = statistics.knowledgeU.addValue(gainedKnowledge),
+          proteinU = statistics.proteinU.addValue(gainedProtein),
+          waterU = statistics.waterU.addValue(gainedWater),
+          resinU = statistics.resinU.addValue(gainedResin)
+        ),
+      )
+    )
   }
 
   def spendResources(actionCost: ActionCost): AllData =
@@ -76,7 +92,9 @@ case class AllData(
     )
 
   def addMessage(message: String): AllData =
-    this.modify(_.messages).using(oldMessages => pt.rcmartins.antidle.game.EventLog.append(oldMessages, message))
+    this
+      .modify(_.messages)
+      .using(oldMessages => pt.rcmartins.antidle.game.EventLog.append(oldMessages, message))
 
 }
 

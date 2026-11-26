@@ -15,37 +15,68 @@ class UpgradeVisibilitySuite extends FunSuite {
 
   test("fresh colonies reveal nothing, and discovering knowledge reveals both starting upgrades") {
     assertEquals(shown(UpgradeVisibility.reconcile(initial)), Set.empty[UpgradesData.UpgradeType])
-    val points = initial.copy(basicResources = initial.basicResources.copy(knowledge = BasicResource(u, 2000 * u)))
-    assertEquals(shown(UpgradeVisibility.reconcile(points)), Set[UpgradesData.UpgradeType](UnlockQueensChamber, ImproveSugarCollectorTask1))
-    val spentPoints = initial.copy(unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(upgradesTabUnlocked = true)))
-    assertEquals(shown(UpgradeVisibility.reconcile(spentPoints)), Set[UpgradesData.UpgradeType](UnlockQueensChamber, ImproveSugarCollectorTask1))
+    val points = initial.copy(basicResources =
+      initial.basicResources.copy(knowledge = BasicResource(u, 2000 * u))
+    )
+    assertEquals(
+      shown(UpgradeVisibility.reconcile(points)),
+      Set[UpgradesData.UpgradeType](UnlockQueensChamber, ImproveSugarCollectorTask1)
+    )
+    val spentPoints = initial.copy(unlocks =
+      initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(upgradesTabUnlocked = true))
+    )
+    assertEquals(
+      shown(UpgradeVisibility.reconcile(spentPoints)),
+      Set[UpgradesData.UpgradeType](UnlockQueensChamber, ImproveSugarCollectorTask1)
+    )
   }
 
   test("all upgrade prerequisites are evaluated independently of saved show flags") {
     val cases = List(
       (initial.upgrades.unlock(ImproveSugarCollectorTask1), ImproveSugarCollectorTask2),
       (initial.upgrades.unlock(ImproveSugarCollectorTask2), ImproveSugarCollectorTask3),
-      (initial.upgrades.unlock(UnlockQueensChamber, ImproveSugarCollectorTask1), UnlockFoodStorageChamber),
+      (
+        initial.upgrades.unlock(UnlockQueensChamber, ImproveSugarCollectorTask1),
+        UnlockFoodStorageChamber
+      ),
       (initial.upgrades.unlock(UnlockFoodStorageChamber), UnlockExplorerTask),
       (initial.upgrades.unlock(UnlockExplorerTask), DefaultWorkers),
     )
     cases.foreach { case (upgrades, expected) =>
-      assert(UpgradeVisibility.reconcile(initial.copy(upgrades = upgrades.unlock(UnlockExplorerTask))).upgrades(expected).show, expected.name)
+      assert(
+        UpgradeVisibility
+          .reconcile(initial.copy(upgrades = upgrades.unlock(UnlockExplorerTask)))
+          .upgrades(expected)
+          .show,
+        expected.name
+      )
     }
   }
 
-  test("food storage follows its configured prerequisite, and revealing upgrades does not purchase their successors") {
+  test(
+    "food storage follows its configured prerequisite, and revealing upgrades does not purchase their successors"
+  ) {
     assert(!UpgradeVisibility.reconcile(initial).upgrades(UnlockFoodStorageChamber).show)
-    assert(UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(UnlockQueensChamber)))
-      .upgrades(UnlockFoodStorageChamber).show)
-    val revealed = UpgradeVisibility.reconcile(initial.copy(upgrades = initial.upgrades.unlock(ImproveSugarCollectorTask1, UnlockExplorerTask)))
+    assert(
+      UpgradeVisibility
+        .reconcile(initial.copy(upgrades = initial.upgrades.unlock(UnlockQueensChamber)))
+        .upgrades(UnlockFoodStorageChamber)
+        .show
+    )
+    val revealed = UpgradeVisibility.reconcile(
+      initial.copy(upgrades =
+        initial.upgrades.unlock(ImproveSugarCollectorTask1, UnlockExplorerTask)
+      )
+    )
     assert(revealed.upgrades(ImproveSugarCollectorTask2).show)
     assert(!revealed.upgrades(ImproveSugarCollectorTask2).unlocked)
     assert(!revealed.upgrades(ImproveSugarCollectorTask3).show)
   }
 
   test("previously revealed or purchased upgrades remain visible and the check is idempotent") {
-    val existing = initial.copy(upgrades = initial.upgrades.show(DefaultWorkers).unlock(UnlockFoodStorageChamber, UnlockExplorerTask))
+    val existing = initial.copy(upgrades =
+      initial.upgrades.show(DefaultWorkers).unlock(UnlockFoodStorageChamber, UnlockExplorerTask)
+    )
     val first = UpgradeVisibility.reconcile(existing)
     assert(first.upgrades(DefaultWorkers).show)
     assert(first.upgrades(UnlockFoodStorageChamber).show)
@@ -53,11 +84,19 @@ class UpgradeVisibilitySuite extends FunSuite {
     assertEquals(first.copy(upgrades = existing.upgrades), existing)
   }
 
-  test("loading stale visibility and missing new upgrade entries repairs eligibility without changing progress") {
+  test(
+    "loading stale visibility and missing new upgrade entries repairs eligibility without changing progress"
+  ) {
     val savedGame = ColonyMilestones.recordPeaks(
-      initial.copy(upgrades = initial.upgrades.unlock(UnlockExplorerTask), messages = Seq("Existing message")))
+      initial.copy(
+        upgrades = initial.upgrades.unlock(UnlockExplorerTask),
+        messages = Seq("Existing message")
+      )
+    )
     val saved = AllDataForSave.fromAllData(savedGame)
-    val old = saved.copy(upgrades = saved.upgrades.copy(upgrades = saved.upgrades.upgrades.filterNot(_.name == "DefaultWorkers")))
+    val old = saved.copy(upgrades =
+      saved.upgrades.copy(upgrades = saved.upgrades.upgrades.filterNot(_.name == "DefaultWorkers"))
+    )
     val loaded = old.toAllData
     assert(loaded.upgrades(DefaultWorkers).show)
     assert(!loaded.upgrades(DefaultWorkers).unlocked)
@@ -78,14 +117,21 @@ class UpgradeVisibilitySuite extends FunSuite {
     assert(AllDataForSave.fromAllData(earned).toAllData.upgrades(ImproveSugarCollectorTask2).show)
     val exploring = before.copy(upgrades = before.upgrades.unlock(UnlockExplorerTask))
     assert(UpgradeVisibility.reconcile(exploring).upgrades(ImproveSugarCollectorTask2).show)
-    assert(UpgradeVisibility.reconcile(before.copy(upgrades = before.upgrades.unlock(ImproveSugarCollectorTask2))).upgrades(ImproveSugarCollectorTask2).unlocked)
+    assert(
+      UpgradeVisibility
+        .reconcile(before.copy(upgrades = before.upgrades.unlock(ImproveSugarCollectorTask2)))
+        .upgrades(ImproveSugarCollectorTask2)
+        .unlocked
+    )
   }
 
   test("normal gameplay checks the same rules after nest expansion") {
     val colony = initial.copy(
       ants = AntsData(workers = u),
-      nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
-        nestChamber = initial.nestAttributes.chambers.nestChamber.copy(level = 1))),
+      nestAttributes = initial.nestAttributes.copy(chambers =
+        initial.nestAttributes.chambers
+          .copy(nestChamber = initial.nestAttributes.chambers.nestChamber.copy(level = 1))
+      ),
       basicResources = initial.basicResources.copy(sugar = BasicResource(100 * u, 1000 * u)),
     )
     val ticked = TickUpdater.updateAllData(colony, None)
@@ -93,4 +139,5 @@ class UpgradeVisibilitySuite extends FunSuite {
     assert(ticked.upgrades(UnlockQueensChamber).show)
     assert(ticked.upgrades(ImproveSugarCollectorTask1).show)
   }
+
 }

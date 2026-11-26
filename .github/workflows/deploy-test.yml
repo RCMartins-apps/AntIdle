@@ -32,9 +32,9 @@ jobs:
         timeout-minutes: 5
         uses: olafurpg/setup-scala@v14
 
-      - name: Build project
+      - name: Check Scala formatting and build
         timeout-minutes: 10
-        run: sbt fullOptJS
+        run: sbt scalafmtCheckAll balance/scalafmtCheckAll scalafmtSbtCheck fullOptJS
 
       - name: Run tests
         timeout-minutes: 10

@@ -11,22 +11,35 @@ import zio.json._
 class ScoutQueueSuite extends FunSuite {
   def colony: AllData = {
     val d = AllData.initial
-    d.copy(world = d.world.copy(currentTick = 0L, targetTick = 0L, saveSeed = 42L),
+    d.copy(
+      world = d.world.copy(currentTick = 0L, targetTick = 0L, saveSeed = 42L),
       ants = AntsData(workers = 5L * u),
-      basicResources = d.basicResources.copy(sugar = BasicResource(1000L * u, 2000L * u), protein = BasicResource(100L * u, 100L * u)),
-      nestAttributes = d.nestAttributes.copy(maxAnts = 50L * u, maxEggs = 10L * u,
-        chambers = d.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))),
-      unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true)))
+      basicResources = d.basicResources.copy(
+        sugar = BasicResource(1000L * u, 2000L * u),
+        protein = BasicResource(100L * u, 100L * u)
+      ),
+      nestAttributes = d.nestAttributes.copy(
+        maxAnts = 50L * u,
+        maxEggs = 10L * u,
+        chambers = d.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))
+      ),
+      unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true))
+    )
   }
+
   def finishLaying(d: AllData): AllData = {
     val remaining = if (d.ants.layingBrood.nonEmpty) 1L else 0L
     BroodProgression.tick(d.copy(ants = d.ants.copy(layingCooldown = remaining)))
   }
+
   def ready(d: AllData): AllData = BroodProgression.layOrdered(finishLaying(d))
   def kind(d: AllData): String = d.ants.eggsAndLarvae.last.asInstanceOf[AntBrood.Developing].kind
-  def load(d: AllData): AllData = AllDataForSave.fromAllData(d).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+  def load(d: AllData): AllData =
+    AllDataForSave.fromAllData(d).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
-  test("a scout ordered during worker laying waits and is charged exactly once when the queen is ready") {
+  test(
+    "a scout ordered during worker laying waits and is charged exactly once when the queen is ready"
+  ) {
     val worker = BroodProgression.lay(colony)
     assert(worker.ants.layingCooldown > 0L)
     val queued = ScoutProgression.raise(worker)
@@ -35,7 +48,9 @@ class ScoutQueueSuite extends FunSuite {
     assertEquals(queued.basicResources, worker.basicResources)
     assertEquals(queued.statistics, worker.statistics)
     val before = (1 until worker.ants.layingCooldown.toInt).foldLeft(queued) { (d, _) =>
-      BroodProgression.layOrdered(BroodProgression.tick(d.copy(world = d.world.copy(currentTick = d.currentTick + 1L))))
+      BroodProgression.layOrdered(
+        BroodProgression.tick(d.copy(world = d.world.copy(currentTick = d.currentTick + 1L)))
+      )
     }
     assertEquals(before.ants.eggsAndLarvae.size, 1)
     val laid = BroodProgression.layOrdered(BroodProgression.tick(before))
@@ -75,8 +90,10 @@ class ScoutQueueSuite extends FunSuite {
   }
 
   test("full brood beds accept scout orders while both castes reserve future colony housing") {
-    val full = colony.copy(ants = colony.ants.copy(eggsAndLarvae = Seq.fill(13)(AntBrood.Developing(0L))),
-      nestAttributes = colony.nestAttributes.copy(maxAnts = 20L * u))
+    val full = colony.copy(
+      ants = colony.ants.copy(eggsAndLarvae = Seq.fill(13)(AntBrood.Developing(0L))),
+      nestAttributes = colony.nestAttributes.copy(maxAnts = 20L * u)
+    )
     assert(ScoutProgression.canRaise(full))
     val scout = ScoutProgression.raise(full)
     assertEquals(scout.ants.scoutEggOrders, Seq(0))
@@ -90,20 +107,31 @@ class ScoutQueueSuite extends FunSuite {
     assertEquals(kind(ready(space)), "scout")
   }
 
-  test("a scout waiting for supplies blocks later manual and automatic workers without losing its order") {
+  test(
+    "a scout waiting for supplies blocks later manual and automatic workers without losing its order"
+  ) {
     val busy = colony.copy(ants = colony.ants.copy(layingCooldown = 1L))
     val queued = BroodProgression.order(ScoutProgression.raise(busy), 1)
-    val hungry = queued.copy(ants = queued.ants.copy(layingCooldown = 0L,
-      queenRoutine = QueenRoutine(enabled = true, targetWorkers = 20)), upgrades = queued.upgrades.unlock(QueensRoutine),
-      basicResources = queued.basicResources.copy(protein = BasicResource(0L, 100L * u)))
+    val hungry = queued.copy(
+      ants = queued.ants
+        .copy(layingCooldown = 0L, queenRoutine = QueenRoutine(enabled = true, targetWorkers = 20)),
+      upgrades = queued.upgrades.unlock(QueensRoutine),
+      basicResources = queued.basicResources.copy(protein = BasicResource(0L, 100L * u))
+    )
     assertEquals(BroodProgression.layOrdered(hungry), hungry)
     assertEquals(AutomaticBrood.tick(hungry), hungry)
-    assert(BroodProgression.status(hungry.ants, hungry.nestAttributes, hungry.basicResources).contains("Needs protein for scout egg"))
+    assert(
+      BroodProgression
+        .status(hungry.ants, hungry.nestAttributes, hungry.basicResources)
+        .contains("Needs protein for scout egg")
+    )
     assertEquals(kind(ready(hungry.giveResources(protein = 2L * u))), "scout")
     assertEquals(hungry.ants.eggOrders, 1)
   }
 
-  test("cancelling orders clears both castes without refunding unpaid eggs or removing laid brood") {
+  test(
+    "cancelling orders clears both castes without refunding unpaid eggs or removing laid brood"
+  ) {
     val worker = BroodProgression.lay(colony)
     val queued = BroodProgression.order(ScoutProgression.raise(worker), 2)
     val cancelled = BroodProgression.cancel(queued)
@@ -127,16 +155,27 @@ class ScoutQueueSuite extends FunSuite {
   }
 
   test("nursery and standard workers are still required; queued scouts are not worker targets") {
-    assert(!ScoutProgression.canRaise(colony.copy(ants = colony.ants.copy(standardWorkersUnlocked = false))))
+    assert(
+      !ScoutProgression.canRaise(
+        colony.copy(ants = colony.ants.copy(standardWorkersUnlocked = false))
+      )
+    )
     assert(!ScoutProgression.canRaise(colony.copy(nestAttributes = NestAttributes.initial)))
     assert(ScoutProgression.canRaise(colony.copy(basicResources = BasicResources.initial)))
     val busy = colony.copy(ants = colony.ants.copy(layingCooldown = 1L))
     val scout = ScoutProgression.raise(busy)
-    val automated = scout.copy(ants = scout.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 6)),
-      upgrades = scout.upgrades.unlock(QueensRoutine))
-    assertEquals(AutomaticBrood.status(automated.ants, automated.nestAttributes, automated.basicResources.sugar.amount), "Waiting for manual egg orders")
+    val automated = scout.copy(
+      ants = scout.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 6)),
+      upgrades = scout.upgrades.unlock(QueensRoutine)
+    )
+    assertEquals(
+      AutomaticBrood
+        .status(automated.ants, automated.nestAttributes, automated.basicResources.sugar.amount),
+      "Waiting for manual egg orders"
+    )
     val laid = ready(automated)
     val next = AutomaticBrood.tick(finishLaying(laid))
     assertEquals(kind(next), "worker")
   }
+
 }

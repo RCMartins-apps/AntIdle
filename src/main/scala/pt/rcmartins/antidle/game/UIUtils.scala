@@ -37,11 +37,12 @@ object UIUtils {
       content: ReactiveHtmlElement[HTMLElement],
   ): EventListener[MouseEvent, MouseEvent] =
     onMouseEnter --> { _ =>
-      if (org.scalajs.dom.window.innerWidth > 767) Var.set(
-        tooltipVisible -> true,
-        tooltipTarget -> elem,
-        tooltipContent -> content,
-      )
+      if (org.scalajs.dom.window.innerWidth > 767)
+        Var.set(
+          tooltipVisible -> true,
+          tooltipTarget -> elem,
+          tooltipContent -> content,
+        )
     }
 
   def createShowGlobalAlertsDiv(): ReactiveHtmlElement[html.Div] = {

@@ -4,34 +4,49 @@ import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.{ConstructionPlanning, RoyalNurseryPlanning}
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.{
+  ConstructionPlanning,
+  RoyalNurseryPlanning
+}
 
 object Construction {
   def level(chambers: AllChamberData, kind: ChamberType): Int = kind match {
-    case ChamberType.Nest => chambers.nestChamber.level
-    case ChamberType.Queen => chambers.queenChamber.level
-    case ChamberType.FoodStorage => chambers.foodStorageChamber.level
-    case ChamberType.Nursery => chambers.nurseryChamber.level
-    case ChamberType.Aphid => chambers.aphidChamber.level
-    case ChamberType.Replete => chambers.repleteChamber.level
+    case ChamberType.Nest         => chambers.nestChamber.level
+    case ChamberType.Queen        => chambers.queenChamber.level
+    case ChamberType.FoodStorage  => chambers.foodStorageChamber.level
+    case ChamberType.Nursery      => chambers.nurseryChamber.level
+    case ChamberType.Aphid        => chambers.aphidChamber.level
+    case ChamberType.Replete      => chambers.repleteChamber.level
     case ChamberType.RoyalNursery => chambers.royalNurseryChamber.level
   }
 
-  def cost(kind: ChamberType, level: Int): ActionCost = if (kind == ChamberType.RoyalNursery) RoyalNurseryProgression.buildCost else ActionCost(
-    tunnelingSpace = getChamberTunnelingSpaceNeeded(kind, level),
-    protein = if (kind == ChamberType.Nursery) NurseryProteinCost * (level + 1L)
-      else if (kind == ChamberType.Aphid) 2L * u * (level + 1L)
-      else if (kind == ChamberType.Replete) 5L * u * (level + 1L) else 0L,
-  )
+  def cost(kind: ChamberType, level: Int): ActionCost = if (kind == ChamberType.RoyalNursery)
+    RoyalNurseryProgression.buildCost
+  else
+    ActionCost(
+      tunnelingSpace = getChamberTunnelingSpaceNeeded(kind, level),
+      protein =
+        if (kind == ChamberType.Nursery) NurseryProteinCost * (level + 1L)
+        else if (kind == ChamberType.Aphid) 2L * u * (level + 1L)
+        else if (kind == ChamberType.Replete) 5L * u * (level + 1L)
+        else 0L,
+    )
 
   def nextCost(nest: NestAttributes, kind: ChamberType): ActionCost =
     cost(kind, level(nest.chambers, kind) + nest.buildQueue.count(_.chamberType == kind))
 
-  def blockedReason(nest: NestAttributes, upgrades: UpgradesData, kind: ChamberType): Option[String] = {
-    if (kind == ChamberType.RoyalNursery && nest.chambers.royalNurseryChamber.level > 0) Some("Already built")
-    else if (kind == ChamberType.RoyalNursery && nest.buildQueue.exists(_.chamberType == kind)) Some("Already queued")
+  def blockedReason(
+      nest: NestAttributes,
+      upgrades: UpgradesData,
+      kind: ChamberType
+  ): Option[String] = {
+    if (kind == ChamberType.RoyalNursery && nest.chambers.royalNurseryChamber.level > 0)
+      Some("Already built")
+    else if (kind == ChamberType.RoyalNursery && nest.buildQueue.exists(_.chamberType == kind))
+      Some("Already queued")
     else if (nest.buildQueue.size >= nest.maxBuildQueue) Some("Build queue full")
-    else if (kind == ChamberType.RoyalNursery && !RoyalNurseryProgression.canPlan(nest, upgrades)) Some("Requires Royal Nursery Planning")
+    else if (kind == ChamberType.RoyalNursery && !RoyalNurseryProgression.canPlan(nest, upgrades))
+      Some("Requires Royal Nursery Planning")
     else None
   }
 
@@ -40,24 +55,43 @@ object Construction {
 
   def reconcile(data: AllData): AllData = {
     val nest = data.nestAttributes
-    val (_, queue) = nest.buildQueue.foldLeft((Map.empty[ChamberType, Int], List.empty[BuildTask])) {
-      case ((planned, queue), task) =>
-        val count = planned.getOrElse(task.chamberType, 0)
-        val allowed = task.chamberType != ChamberType.RoyalNursery ||
-          (data.upgrades(RoyalNurseryPlanning).unlocked &&
-            nest.chambers.royalNurseryChamber.level == 0 && count == 0)
-        if (!allowed) (planned, queue)
-        else (planned.updated(task.chamberType, count + 1),
-          queue :+ task.copy(actionCost = cost(task.chamberType, level(nest.chambers, task.chamberType) + count)))
-    }
-    data.modify(_.nestAttributes).using(_.copy(buildQueue = queue,
-      maxBuildQueue = if (data.upgrades(ConstructionPlanning).unlocked) Math.max(3, nest.maxBuildQueue) else nest.maxBuildQueue))
+    val (_, queue) =
+      nest.buildQueue.foldLeft((Map.empty[ChamberType, Int], List.empty[BuildTask])) {
+        case ((planned, queue), task) =>
+          val count = planned.getOrElse(task.chamberType, 0)
+          val allowed = task.chamberType != ChamberType.RoyalNursery ||
+            (data.upgrades(RoyalNurseryPlanning).unlocked &&
+              nest.chambers.royalNurseryChamber.level == 0 && count == 0)
+          if (!allowed) (planned, queue)
+          else
+            (
+              planned.updated(task.chamberType, count + 1),
+              queue :+ task.copy(actionCost =
+                cost(task.chamberType, level(nest.chambers, task.chamberType) + count)
+              )
+            )
+      }
+    data
+      .modify(_.nestAttributes)
+      .using(
+        _.copy(
+          buildQueue = queue,
+          maxBuildQueue =
+            if (data.upgrades(ConstructionPlanning).unlocked) Math.max(3, nest.maxBuildQueue)
+            else nest.maxBuildQueue
+        )
+      )
   }
 
   def enqueue(data: AllData, kind: ChamberType): AllData = {
     val ready = reconcile(data)
     if (!canEnqueue(ready.nestAttributes, ready.upgrades, kind)) ready
-    else reconcile(ready.modify(_.nestAttributes.buildQueue).using(_ :+ BuildTask(kind, nextCost(ready.nestAttributes, kind))))
+    else
+      reconcile(
+        ready
+          .modify(_.nestAttributes.buildQueue)
+          .using(_ :+ BuildTask(kind, nextCost(ready.nestAttributes, kind)))
+      )
   }
 
   def cancel(data: AllData, index: Int): AllData =
@@ -68,9 +102,17 @@ object Construction {
     val ready = reconcile(data)
     ready.nestAttributes.buildQueue match {
       case next :: rest if ready.hasResources(next.actionCost) =>
-        reconcile(ChamberBonuses.completeUpgrade(ready.spendResources(next.actionCost)
-          .modify(_.nestAttributes.buildQueue).setTo(rest), next.chamberType))
+        reconcile(
+          ChamberBonuses.completeUpgrade(
+            ready
+              .spendResources(next.actionCost)
+              .modify(_.nestAttributes.buildQueue)
+              .setTo(rest),
+            next.chamberType
+          )
+        )
       case _ => ready
     }
   }
+
 }

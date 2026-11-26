@@ -29,8 +29,16 @@ object TickUpdater {
           val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val totalSugarToGain: Long = ColonyMilestones.sugar(Foraging.production(allData.ants, allData.upgrades) +
-            AphidHusbandry.productionPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount), allData.statistics)
+          val totalSugarToGain: Long = ColonyMilestones.sugar(
+            Foraging.production(allData.ants, allData.upgrades) +
+              AphidHusbandry.productionPerTick(
+                allData.ants,
+                allData.nestAttributes,
+                allData.upgrades,
+                allData.basicResources.protein.amount
+              ),
+            allData.statistics
+          )
 
           val sugarToGive: Long =
             Math.min(allData.basicResources.sugar.freeSpace, totalSugarToGain)
@@ -38,22 +46,42 @@ object TickUpdater {
           surplusSugarU += totalSugarToGain - sugarToGive
 
           val tunnelingSpaceToGive: Long =
-            (tunnelerWorkers * 2L + allData.ants.smallTunnelers / u) * ColonyDevelopment.tunnelingPerWorkerTick(allData.upgrades) / 2L
+            (tunnelerWorkers * 2L + allData.ants.smallTunnelers / u) * ColonyDevelopment
+              .tunnelingPerWorkerTick(allData.upgrades) / 2L
 
-          val proteinUsed = AphidHusbandry.proteinPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources.protein.amount)
-          val harvest = OutpostProgression.harvestPerTick(allData.ants, allData.nestAttributes, allData.upgrades, allData.basicResources)
-          allData.modify(_.basicResources.protein).using(_ - proteinUsed)
-            .modify(_.basicResources.water).using(_ - harvest.water).giveResources(
-            sugar = sugarToGive, sugarBonusApplied = true,
-            water = OutpostProgression.dewPerTick(allData.ants),
-            tunnelingSpace = tunnelingSpaceToGive,
-            protein = harvest.protein + BroodProgression.scavenged(allData.ants, allData.basicResources.protein.freeSpace - harvest.protein + proteinUsed),
+          val proteinUsed = AphidHusbandry.proteinPerTick(
+            allData.ants,
+            allData.nestAttributes,
+            allData.upgrades,
+            allData.basicResources.protein.amount
           )
+          val harvest = OutpostProgression.harvestPerTick(
+            allData.ants,
+            allData.nestAttributes,
+            allData.upgrades,
+            allData.basicResources
+          )
+          allData
+            .modify(_.basicResources.protein)
+            .using(_ - proteinUsed)
+            .modify(_.basicResources.water)
+            .using(_ - harvest.water)
+            .giveResources(
+              sugar = sugarToGive,
+              sugarBonusApplied = true,
+              water = OutpostProgression.dewPerTick(allData.ants),
+              tunnelingSpace = tunnelingSpaceToGive,
+              protein = harvest.protein + BroodProgression.scavenged(
+                allData.ants,
+                allData.basicResources.protein.freeSpace - harvest.protein + proteinUsed
+              ),
+            )
         },
         Construction.tick,
         // Exploration parties update
         allData => {
-          val finishedParties = allData.exploration.explorationParties.filter(_.targetTick <= allData.currentTick)
+          val finishedParties =
+            allData.exploration.explorationParties.filter(_.targetTick <= allData.currentTick)
           finishedParties.foldLeft(allData) { case (current, party) =>
             ExplorationHelper.exploreBonus(current, party)
           }
@@ -63,14 +91,16 @@ object TickUpdater {
         // Charge adult upkeep first, then royal care, before automatic worker eggs.
         beforeUpkeep => {
           val (allData, foodOffset) = CarcassProgression.consumeFood(beforeUpkeep)
-          val sugarUpkeep = ScoutProgression.upkeepPerTick(allData.ants, allData.exploration) - foodOffset
+          val sugarUpkeep =
+            ScoutProgression.upkeepPerTick(allData.ants, allData.exploration) - foodOffset
           val sugarRemaining =
             Math.min(
               allData.basicResources.sugar.maxAmount,
               allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep,
             )
           // Let fresh surplus feed royal brood before storage overflow is discarded.
-          val sugarBeforeCare = Math.max(0L, allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep)
+          val sugarBeforeCare =
+            Math.max(0L, allData.basicResources.sugar.amount + surplusSugarU - sugarUpkeep)
 
           val sugarUsedFromSurplus: Long =
             Math.min(sugarUpkeep, surplusSugarU)
@@ -98,24 +128,33 @@ object TickUpdater {
                         allData.world.saveSeed + allData.currentTick,
                         allData.ants.sugarCumulativeDebt,
                       )
-                    )
-                      {
-                        val survivors = PopulationAging.starveOne(allData)
-                        val losses = (allData.ants.workers - survivors.workers + allData.ants.smallWorkers - survivors.smallWorkers + allData.ants.scouts - survivors.scouts +
+                    ) {
+                      val survivors = PopulationAging.starveOne(allData)
+                      val losses =
+                        (allData.ants.workers - survivors.workers + allData.ants.smallWorkers - survivors.smallWorkers + allData.ants.scouts - survivors.scouts +
                           allData.ants.repletes - survivors.repletes + allData.ants.daughterQueens - survivors.daughterQueens) / u
-                        val updated = allData.copy(ants = survivors).modify(_.statistics.starvationDeaths).using(_.addValue(losses))
-                        if (allData.ants.daughterQueens > survivors.daughterQueens) updated.addMessage("A daughter queen died of starvation.")
-                        else if (losses > 0L) updated.addMessage("An ant died of starvation.") else updated
-                      }
-                    else
+                      val updated = allData
+                        .copy(ants = survivors)
+                        .modify(_.statistics.starvationDeaths)
+                        .using(_.addValue(losses))
+                      if (allData.ants.daughterQueens > survivors.daughterQueens)
+                        updated.addMessage("A daughter queen died of starvation.")
+                      else if (losses > 0L) updated.addMessage("An ant died of starvation.")
+                      else updated
+                    } else
                       allData
                   }
             }
           val tended = BroodProgression.tick(RoyalBroodProgression.tick(afterUpkeep))
-          val royalSugarSpent = afterUpkeep.basicResources.sugar.amount - tended.basicResources.sugar.amount
-          val royalSurplusUsed = Math.min(royalSugarSpent, Math.max(0L, surplusSugarU - sugarUpkeep))
-          tended.modify(_.basicResources.sugar.amount).using(amount => Math.min(amount, tended.basicResources.sugar.maxAmount))
-            .modify(_.statistics.sugarU).usingIf(royalSurplusUsed > 0L)(_.addValue(royalSurplusUsed))
+          val royalSugarSpent =
+            afterUpkeep.basicResources.sugar.amount - tended.basicResources.sugar.amount
+          val royalSurplusUsed =
+            Math.min(royalSugarSpent, Math.max(0L, surplusSugarU - sugarUpkeep))
+          tended
+            .modify(_.basicResources.sugar.amount)
+            .using(amount => Math.min(amount, tended.basicResources.sugar.maxAmount))
+            .modify(_.statistics.sugarU)
+            .usingIf(royalSurplusUsed > 0L)(_.addValue(royalSurplusUsed))
         },
         BroodProgression.layOrdered,
         AutomaticBrood.tick,

@@ -9,6 +9,7 @@ object ResourceTiming {
       if (ticks == 0L) destination
       else s"$destination in ~${UINumbersUtils.prettyTimeFromTicks(ticks)}"
     }
+
   }
 
   // Round up: a remaining fraction of one tick must not appear as already empty/full.
@@ -22,4 +23,5 @@ object ResourceTiming {
       Some(Estimate(toEmpty = false, ticks(resource.freeSpace, BigInt(netPerTick))))
     else None
   }
+
 }

@@ -12,16 +12,32 @@ import zio.json._
 class UnlockDefinitionsSuite extends FunSuite {
   def ready: AllData = {
     val d = AllData.initial
-    d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = 5L * u, ages = d.ants.ages.copy(active = true)),
-      nestAttributes = d.nestAttributes.copy(dryClearingOutpost = true, chambers = d.nestAttributes.chambers.copy(
-        nestChamber = d.nestAttributes.chambers.nestChamber.copy(level = 1),
-        nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
+    d.copy(
+      ants = d.ants.copy(
+        lineage = Lineage(2, 0L, true, true),
+        smallWorkers = 5L * u,
+        ages = d.ants.ages.copy(active = true)
+      ),
+      nestAttributes = d.nestAttributes.copy(
+        dryClearingOutpost = true,
+        chambers = d.nestAttributes.chambers.copy(
+          nestChamber = d.nestAttributes.chambers.nestChamber.copy(level = 1),
+          nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 1)
+        )
+      ),
       unlocks = d.unlocks.copy(tabs = d.unlocks.tabs.copy(exploreTabUnlocked = true)),
       upgrades = UpgradeType.all.foldLeft(d.upgrades)((upgrades, t) => upgrades.unlock(t)),
-      statistics = d.statistics.copy(explorationsCompleted = StatisticsData.StatInt(100, 100),
-        workersMatured = StatisticsData.StatInt(100, 100), territoryContests = StatisticsData.StatInt(1, 1)),
-      exploration = d.exploration.copy(revealedSites = 6, proteinDiscovered = true,
-        surveys = DiscoveryProgression.all.map(_.destination -> 100).toMap))
+      statistics = d.statistics.copy(
+        explorationsCompleted = StatisticsData.StatInt(100, 100),
+        workersMatured = StatisticsData.StatInt(100, 100),
+        territoryContests = StatisticsData.StatInt(1, 1)
+      ),
+      exploration = d.exploration.copy(
+        revealedSites = 6,
+        proteinDiscovered = true,
+        surveys = DiscoveryProgression.all.map(_.destination -> 100).toMap
+      )
+    )
   }
 
   test("catalog covers stable upgrade identities and references known research/discoveries") {
@@ -30,7 +46,10 @@ class UnlockDefinitionsSuite extends FunSuite {
     UpgradeBalance.definitions.foreach { case (upgrade, definition) =>
       assert(definition.requirements.upgrades.forall(UpgradeType.all.contains), upgrade.name)
       assert(!definition.requirements.upgrades.contains(upgrade), upgrade.name)
-      assert(definition.requirements.discovery.forall(id => DiscoveryProgression.all.exists(_.id == id)), upgrade.name)
+      assert(
+        definition.requirements.discovery.forall(id => DiscoveryProgression.all.exists(_.id == id)),
+        upgrade.name
+      )
       assert(definition.requirements.minimumRevealedSites >= 0)
       assert(definition.requirements.minimumRevealedSites <= ExplorationMap.sites.size)
     }
@@ -40,7 +59,8 @@ class UnlockDefinitionsSuite extends FunSuite {
     UpgradeType.all.filter(_.cost.knowledge > 0L).foreach { upgrade =>
       assert(dependsOnExploration(upgrade), s"${upgrade.name} must depend on Local Exploration")
     }
-    val saved = AllDataForSave.fromAllData(ready).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+    val saved =
+      AllDataForSave.fromAllData(ready).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assert(UpgradeType.all.forall(saved.upgrades(_).unlocked))
   }
 
@@ -50,47 +70,144 @@ class UnlockDefinitionsSuite extends FunSuite {
       val r = upgrade.definition.requirements
       assert(upgrade.shouldShow(d), upgrade.name)
       if (r.minimumRevealedSites > 0) {
-        val before = d.copy(exploration = d.exploration.copy(revealedSites = r.minimumRevealedSites - 1))
+        val before =
+          d.copy(exploration = d.exploration.copy(revealedSites = r.minimumRevealedSites - 1))
         assert(!upgrade.shouldShow(before), upgrade.name)
-        assert(upgrade.shouldShow(before.copy(exploration = before.exploration.copy(revealedSites = before.exploration.revealedSites + 1))), upgrade.name)
+        assert(
+          upgrade.shouldShow(
+            before.copy(exploration =
+              before.exploration.copy(revealedSites = before.exploration.revealedSites + 1)
+            )
+          ),
+          upgrade.name
+        )
       }
       r.upgrades.foreach { required =>
-        assert(!upgrade.shouldShow(d.copy(upgrades = d.upgrades.modify(required)(_.copy(unlocked = false)))), upgrade.name)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(upgrades = d.upgrades.modify(required)(_.copy(unlocked = false)))
+          ),
+          upgrade.name
+        )
       }
       r.discovery.foreach { id =>
         val discovery = DiscoveryProgression.all.find(_.id == id).get
-        assert(!upgrade.shouldShow(d.copy(exploration = d.exploration.copy(surveys = d.exploration.surveys.updated(discovery.destination, discovery.trips - 1)))), upgrade.name)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(exploration =
+              d.exploration.copy(surveys =
+                d.exploration.surveys.updated(discovery.destination, discovery.trips - 1)
+              )
+            )
+          ),
+          upgrade.name
+        )
       }
-      if (r.completedMissions > 0) assert(!upgrade.shouldShow(d.copy(statistics = d.statistics.copy(explorationsCompleted = StatisticsData.StatInt(r.completedMissions - 1, 1000)))), upgrade.name)
-      if (r.matureWorkers > 0) assert(!upgrade.shouldShow(d.copy(statistics = d.statistics.copy(workersMatured = StatisticsData.StatInt(r.matureWorkers - 1, 1000)))), upgrade.name)
+      if (r.completedMissions > 0)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(statistics =
+              d.statistics
+                .copy(explorationsCompleted = StatisticsData.StatInt(r.completedMissions - 1, 1000))
+            )
+          ),
+          upgrade.name
+        )
+      if (r.matureWorkers > 0)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(statistics =
+              d.statistics.copy(workersMatured = StatisticsData.StatInt(r.matureWorkers - 1, 1000))
+            )
+          ),
+          upgrade.name
+        )
       if (r.territoryContests > 0) {
-        val prior = d.statistics.copy(territoryContests = StatisticsData.StatInt(r.territoryContests - 1, 10))
+        val prior =
+          d.statistics.copy(territoryContests = StatisticsData.StatInt(r.territoryContests - 1, 10))
         assert(!upgrade.shouldShow(d.copy(statistics = prior)), upgrade.name)
-        assert(upgrade.shouldShow(d.copy(statistics = prior.copy(territoryContests = prior.territoryContests.addValue(1L)))), upgrade.name)
+        assert(
+          upgrade.shouldShow(
+            d.copy(statistics =
+              prior.copy(territoryContests = prior.territoryContests.addValue(1L))
+            )
+          ),
+          upgrade.name
+        )
       }
-      if (r.beyondWoodland) assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(lineage = Lineage()))), upgrade.name)
-      if (r.nursery) assert(!upgrade.shouldShow(d.copy(nestAttributes = d.nestAttributes.copy(chambers = d.nestAttributes.chambers.copy(nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 0))))), upgrade.name)
-      if (r.outpost) assert(!upgrade.shouldShow(d.copy(nestAttributes = d.nestAttributes.copy(dryClearingOutpost = false))), upgrade.name)
-      if (r.aging) assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(ages = d.ants.ages.copy(active = false)))), upgrade.name)
-      if (r.proteinDiscovered) assert(!upgrade.shouldShow(d.copy(exploration = d.exploration.copy(proteinDiscovered = false))), upgrade.name)
+      if (r.beyondWoodland)
+        assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(lineage = Lineage()))), upgrade.name)
+      if (r.nursery)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(nestAttributes =
+              d.nestAttributes.copy(chambers =
+                d.nestAttributes.chambers
+                  .copy(nurseryChamber = d.nestAttributes.chambers.nurseryChamber.copy(level = 0))
+              )
+            )
+          ),
+          upgrade.name
+        )
+      if (r.outpost)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(nestAttributes = d.nestAttributes.copy(dryClearingOutpost = false))
+          ),
+          upgrade.name
+        )
+      if (r.aging)
+        assert(
+          !upgrade.shouldShow(d.copy(ants = d.ants.copy(ages = d.ants.ages.copy(active = false)))),
+          upgrade.name
+        )
+      if (r.proteinDiscovered)
+        assert(
+          !upgrade.shouldShow(d.copy(exploration = d.exploration.copy(proteinDiscovered = false))),
+          upgrade.name
+        )
       if (r.minimumSmallWorkers > 0) {
-        assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = (r.minimumSmallWorkers - 1L) * u))), upgrade.name)
-        assert(!upgrade.shouldShow(d.copy(ants = d.ants.copy(standardWorkersUnlocked = true))), upgrade.name)
+        assert(
+          !upgrade.shouldShow(
+            d.copy(ants =
+              d.ants.copy(
+                lineage = Lineage(2, 0L, true, true),
+                smallWorkers = (r.minimumSmallWorkers - 1L) * u
+              )
+            )
+          ),
+          upgrade.name
+        )
+        assert(
+          !upgrade.shouldShow(d.copy(ants = d.ants.copy(standardWorkersUnlocked = true))),
+          upgrade.name
+        )
       }
     }
   }
 
-  test("research purchase validates visibility and price, applies effects once, and rejects repeat charges") {
+  test(
+    "research purchase validates visibility and price, applies effects once, and rejects repeat charges"
+  ) {
     val fresh = AllData.initial
-    val rich = fresh.copy(basicResources = fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = 1000L * u)))
+    val rich = fresh.copy(basicResources =
+      fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = 1000L * u))
+    )
     assertEquals(UpgradeResearch.purchase(rich, UnlockExplorerTask), rich)
     val eligible = rich.copy(upgrades = rich.upgrades.show(UnlockQueensChamber))
     assert(UpgradeResearch.canPurchase(eligible, UnlockQueensChamber))
     val purchased = UpgradeResearch.purchase(eligible, UnlockQueensChamber)
-    assertEquals(purchased.basicResources.sugar.amount, eligible.basicResources.sugar.amount - UnlockQueensChamber.cost.sugar)
+    assertEquals(
+      purchased.basicResources.sugar.amount,
+      eligible.basicResources.sugar.amount - UnlockQueensChamber.cost.sugar
+    )
     assert(purchased.upgrades(UnlockQueensChamber).unlocked)
     assertEquals(UpgradeResearch.purchase(purchased, UnlockQueensChamber), purchased)
-    val poor = eligible.copy(basicResources = eligible.basicResources.copy(sugar = eligible.basicResources.sugar.copy(amount = UnlockQueensChamber.cost.sugar - 1L)))
+    val poor = eligible.copy(basicResources =
+      eligible.basicResources.copy(sugar =
+        eligible.basicResources.sugar.copy(amount = UnlockQueensChamber.cost.sugar - 1L)
+      )
+    )
     assert(!UpgradeResearch.canPurchase(poor, UnlockQueensChamber))
     assertEquals(UpgradeResearch.purchase(poor, UnlockQueensChamber), poor)
     assert(!UpgradeResearch.isVisible(rich, DefaultWorkers))
@@ -98,9 +215,12 @@ class UnlockDefinitionsSuite extends FunSuite {
   }
 
   test("earned visibility survives a transient prerequisite loss and save/load") {
-    val d = UpgradeVisibility.reconcile(AllData.initial.copy(ants = AllData.initial.ants.copy(smallWorkers = 5L * u)))
+    val d = UpgradeVisibility.reconcile(
+      AllData.initial.copy(ants = AllData.initial.ants.copy(smallWorkers = 5L * u))
+    )
     assert(d.upgrades(StandardWorkers).show)
-    val spent = d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = 4L * u))
+    val spent =
+      d.copy(ants = d.ants.copy(lineage = Lineage(2, 0L, true, true), smallWorkers = 4L * u))
     assert(!StandardWorkers.shouldShow(spent))
     assert(UpgradeResearch.isVisible(spent, StandardWorkers))
     assert(AllDataForSave.fromAllData(spent).toAllData.upgrades(StandardWorkers).show)
@@ -109,31 +229,49 @@ class UnlockDefinitionsSuite extends FunSuite {
   test("all destinations share their level/discovery gate between visibility and departure") {
     val d = ready
     val ants = AntsData(workers = 37L * u, scouts = 5L * u)
-    ExplorationDestination.all.filter(route => ExplorationMap.siteForRoute(route.id).nonEmpty).foreach { route =>
-      val unlocked = d.exploration.copy(revealedSites = 6, explorationParties = Nil)
-      assert(route.isUnlocked(unlocked, ants, d.nestAttributes), route.id)
-      assert(ExplorationHelper.canDepart(unlocked, ants, d.upgrades, route.minimumWorkers, route), route.id)
-      val below = unlocked.copy(revealedSites = 0)
-      assert(!route.isUnlocked(below, ants, d.nestAttributes), route.id)
-      assert(!ExplorationHelper.canDepart(below, ants, d.upgrades, route.minimumWorkers, route), route.id)
-      route.requiredDiscovery.foreach { id =>
-        val missing = DiscoveryProgression.all.find(_.id == id).get
-        val below = unlocked.copy(surveys = unlocked.surveys.updated(missing.destination, missing.trips - 1))
+    ExplorationDestination.all
+      .filter(route => ExplorationMap.siteForRoute(route.id).nonEmpty)
+      .foreach { route =>
+        val unlocked = d.exploration.copy(revealedSites = 6, explorationParties = Nil)
+        assert(route.isUnlocked(unlocked, ants, d.nestAttributes), route.id)
+        assert(
+          ExplorationHelper.canDepart(unlocked, ants, d.upgrades, route.minimumWorkers, route),
+          route.id
+        )
+        val below = unlocked.copy(revealedSites = 0)
         assert(!route.isUnlocked(below, ants, d.nestAttributes), route.id)
-        assert(!ExplorationHelper.canDepart(below, ants, d.upgrades, route.minimumWorkers, route), route.id)
+        assert(
+          !ExplorationHelper.canDepart(below, ants, d.upgrades, route.minimumWorkers, route),
+          route.id
+        )
+        route.requiredDiscovery.foreach { id =>
+          val missing = DiscoveryProgression.all.find(_.id == id).get
+          val below = unlocked
+            .copy(surveys = unlocked.surveys.updated(missing.destination, missing.trips - 1))
+          assert(!route.isUnlocked(below, ants, d.nestAttributes), route.id)
+          assert(
+            !ExplorationHelper.canDepart(below, ants, d.upgrades, route.minimumWorkers, route),
+            route.id
+          )
+        }
       }
-    }
   }
 
   test("supply tiers use standard sequential research, exact prices and map thresholds") {
     val fresh = AllData.initial
     UpgradeType.expeditionSupplies.zipWithIndex.foreach { case (tier, rank) =>
       val sites = List(1, 3, 5)(rank)
-      val d = fresh.copy(exploration = fresh.exploration.copy(revealedSites = sites),
+      val d = fresh.copy(
+        exploration = fresh.exploration.copy(revealedSites = sites),
         unlocks = fresh.unlocks.copy(tabs = fresh.unlocks.tabs.copy(exploreTabUnlocked = true)),
-        upgrades = fresh.upgrades.unlock((UnlockExplorerTask +: UpgradeType.expeditionSupplies.take(rank)): _*),
-        basicResources = fresh.basicResources.copy(sugar = fresh.basicResources.sugar.copy(amount = tier.cost.sugar),
-          knowledge = fresh.basicResources.knowledge.copy(amount = tier.cost.knowledge)))
+        upgrades = fresh.upgrades.unlock(
+          (UnlockExplorerTask +: UpgradeType.expeditionSupplies.take(rank)): _*
+        ),
+        basicResources = fresh.basicResources.copy(
+          sugar = fresh.basicResources.sugar.copy(amount = tier.cost.sugar),
+          knowledge = fresh.basicResources.knowledge.copy(amount = tier.cost.knowledge)
+        )
+      )
       val before = d.copy(exploration = d.exploration.copy(revealedSites = sites - 1))
       assert(!UpgradeResearch.isVisible(before, tier))
       assertEquals(UpgradeResearch.purchase(before, tier), before)
@@ -152,18 +290,28 @@ class UnlockDefinitionsSuite extends FunSuite {
 
   test("old supply ranks migrate once to standard upgrades, survive reload and reset on founding") {
     for (rank <- List(-1, 0, 1, 2, 3, 99)) {
-      val d = AllData.initial.copy(exploration = AllData.initial.exploration.copy(suppliesLevel = rank))
+      val d =
+        AllData.initial.copy(exploration = AllData.initial.exploration.copy(suppliesLevel = rank))
       val save = AllDataForSave.fromAllData(d)
-      val oldSave = save.copy(upgrades = save.upgrades.copy(upgrades = save.upgrades.upgrades
-        .filterNot(upgrade => upgrade.name.startsWith("ExpeditionSupplies"))))
+      val oldSave = save.copy(upgrades =
+        save.upgrades.copy(upgrades =
+          save.upgrades.upgrades
+            .filterNot(upgrade => upgrade.name.startsWith("ExpeditionSupplies"))
+        )
+      )
       val loaded = oldSave.toJson.fromJson[AllDataForSave].toOption.get.toAllData
-      assertEquals(ExplorationProgression.suppliesRank(loaded.upgrades), Math.max(0, Math.min(3, rank)))
+      assertEquals(
+        ExplorationProgression.suppliesRank(loaded.upgrades),
+        Math.max(0, Math.min(3, rank))
+      )
       assertEquals(loaded.exploration.suppliesLevel, 0)
       assertEquals(loaded.basicResources, d.basicResources)
-      val again = AllDataForSave.fromAllData(loaded).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+      val again =
+        AllDataForSave.fromAllData(loaded).toJson.fromJson[AllDataForSave].toOption.get.toAllData
       assertEquals(again.upgrades, loaded.upgrades)
       val reset = Prestige.found(loaded.copy(ants = loaded.ants.copy(daughterQueens = u)))
       assertEquals(ExplorationProgression.suppliesRank(reset.upgrades), 0)
     }
   }
+
 }

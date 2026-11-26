@@ -14,15 +14,24 @@ class RoyalBroodSuite extends FunSuite {
   def colony: AllData = {
     val initial = AllData.initial
     initial.copy(
-      ants = AntsData(workers = 35 * u,
+      ants = AntsData(
+        workers = 35 * u,
         tasks = Seq(AntTask.SugarCollector -> (30 * u), AntTask.RoyalNurse -> (5 * u)),
         defaultTask = Some(AntTask.SugarCollector),
-        ages = ColonyAges(active = true, workers = List(AgeCohort(18000L, 35L)))),
-      basicResources = initial.basicResources.copy(sugar = BasicResource(20000 * u, 40000 * u),
-        protein = BasicResource(500 * u, 500 * u), water = BasicResource(100 * u, 100 * u)),
-      nestAttributes = initial.nestAttributes.copy(maxAnts = 100 * u,
-        chambers = initial.nestAttributes.chambers.copy(royalNurseryChamber = Chamber.RoyalNurseryChamber(1))),
-      upgrades = initial.upgrades.unlock(DefaultWorkers, RoyalNurseryPlanning))
+        ages = ColonyAges(active = true, workers = List(AgeCohort(18000L, 35L)))
+      ),
+      basicResources = initial.basicResources.copy(
+        sugar = BasicResource(20000 * u, 40000 * u),
+        protein = BasicResource(500 * u, 500 * u),
+        water = BasicResource(100 * u, 100 * u)
+      ),
+      nestAttributes = initial.nestAttributes.copy(
+        maxAnts = 100 * u,
+        chambers =
+          initial.nestAttributes.chambers.copy(royalNurseryChamber = Chamber.RoyalNurseryChamber(1))
+      ),
+      upgrades = initial.upgrades.unlock(DefaultWorkers, RoyalNurseryPlanning)
+    )
   }
 
   def rearing(progress: Long = 0L, paused: Boolean = false): AllData =
@@ -31,7 +40,9 @@ class RoyalBroodSuite extends FunSuite {
   def roundTrip(data: AllData): AllData =
     AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
-  test("raising reserves one colony and royal slot, spends once and requires housing and supplies") {
+  test(
+    "raising reserves one colony and royal slot, spends once and requires housing and supplies"
+  ) {
     val initial = colony
     assert(canStart(initial))
     val started = start(initial)
@@ -46,13 +57,17 @@ class RoyalBroodSuite extends FunSuite {
     val blocked = Seq(
       initial.copy(nestAttributes = NestAttributes()),
       initial.copy(nestAttributes = initial.nestAttributes.copy(maxAnts = 35 * u)),
-      initial.copy(basicResources = initial.basicResources.copy(protein = BasicResource(49 * u, 500 * u))),
-      initial.copy(ants = initial.ants.copy(daughterQueens = u)))
+      initial.copy(basicResources =
+        initial.basicResources.copy(protein = BasicResource(49 * u, 500 * u))
+      ),
+      initial.copy(ants = initial.ants.copy(daughterQueens = u))
+    )
     blocked.foreach { data => assert(!canStart(data)); assertEquals(start(data), data) }
   }
 
   test("royal eggs may be laid without nurses and care resumes only with staff") {
-    val unstaffed = colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
+    val unstaffed =
+      colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
     val laid = start(unstaffed)
     assert(laid.ants.royalBrood.nonEmpty)
     assertEquals(laid.basicResources, unstaffed.basicResources.spendResources(startCost))
@@ -63,40 +78,68 @@ class RoyalBroodSuite extends FunSuite {
     val staffed = waiting.copy(ants = waiting.ants.copy(tasks = Seq(AntTask.RoyalNurse -> u)))
     val tending = tick(staffed)
     assertEquals(tending.ants.royalBrood.get.careUnits, 1L)
-    assertEquals(tick(tending.copy(ants = tending.ants.copy(tasks = Seq.empty))).ants.royalBrood,
-      tending.ants.royalBrood)
+    assertEquals(
+      tick(tending.copy(ants = tending.ants.copy(tasks = Seq.empty))).ants.royalBrood,
+      tending.ants.royalBrood
+    )
   }
+
   test("royal care forecast includes same-tick Dew Gatherer water at an empty store") {
     val base = rearing(EggCare)
-    var data = base.copy(ants = base.ants.copy(tasks = Seq(
-      AntTask.SugarCollector -> (25 * u), AntTask.RoyalNurse -> (5 * u), AntTask.WaterCollector -> (5 * u))),
+    var data = base.copy(
+      ants = base.ants.copy(tasks =
+        Seq(
+          AntTask.SugarCollector -> (25 * u),
+          AntTask.RoyalNurse -> (5 * u),
+          AntTask.WaterCollector -> (5 * u)
+        )
+      ),
       exploration = MapFixture.explored,
-      basicResources = base.basicResources.copy(water = BasicResource(0L, 100 * u)))
+      basicResources = base.basicResources.copy(water = BasicResource(0L, 100 * u))
+    )
     for (_ <- 1 to 10) {
-      val predicted = forecast(data.ants, data.nestAttributes, data.upgrades, data.exploration, data.basicResources)
+      val predicted = forecast(
+        data.ants,
+        data.nestAttributes,
+        data.upgrades,
+        data.exploration,
+        data.basicResources
+      )
       assert(predicted.units > 0L)
       val next = TickUpdater.updateAllData(data, None)
-      assertEquals(next.ants.royalBrood.get.careUnits - data.ants.royalBrood.get.careUnits, predicted.units)
-      assertEquals(next.basicResources.water.amount,
-        Math.min(data.basicResources.water.maxAmount, data.basicResources.water.amount + OutpostProgression.dewPerTick(data.ants)) - predicted.cost.water)
+      assertEquals(
+        next.ants.royalBrood.get.careUnits - data.ants.royalBrood.get.careUnits,
+        predicted.units
+      )
+      assertEquals(
+        next.basicResources.water.amount,
+        Math.min(
+          data.basicResources.water.maxAmount,
+          data.basicResources.water.amount + OutpostProgression.dewPerTick(data.ants)
+        ) - predicted.cost.water
+      )
       data = next
     }
   }
+
   test("care uses staffed nurses and stage-specific costs, independent of worker egg slots") {
     val egg = rearing().copy(nestAttributes = rearing().nestAttributes.copy(maxEggs = 0L))
     val larva = rearing(EggCare)
     val pupa = rearing(LarvaEnd)
-    Seq((egg, tendingUnitCost), (larva, larvaUnitCost), (pupa, tendingUnitCost)).foreach { case (data, price) =>
-      val next = tick(data)
-      assertEquals(next.ants.royalBrood.get.careUnits, data.ants.royalBrood.get.careUnits + 5L)
-      assertEquals(next.basicResources, data.basicResources.spendResources(scaledCost(price, 5L)))
+    Seq((egg, tendingUnitCost), (larva, larvaUnitCost), (pupa, tendingUnitCost)).foreach {
+      case (data, price) =>
+        val next = tick(data)
+        assertEquals(next.ants.royalBrood.get.careUnits, data.ants.royalBrood.get.careUnits + 5L)
+        assertEquals(next.basicResources, data.basicResources.spendResources(scaledCost(price, 5L)))
     }
     assertEquals(remainingTicks(RoyalBrood(), 5L), 600L * TicksPerSecond)
     assertEquals(remainingTicks(RoyalBrood(), 1L), 3000L * TicksPerSecond)
     assertEquals(remainingTicks(RoyalBrood(), 0L), -1L)
   }
 
-  test("ten minutes of full staffing conserves the complete feeding budget and matures exactly once") {
+  test(
+    "ten minutes of full staffing conserves the complete feeding budget and matures exactly once"
+  ) {
     val initial = start(colony)
     val almost = (1L until 600L * TicksPerSecond).foldLeft(initial)((data, _) => tick(data))
     assertEquals(almost.ants.daughterQueens, 0L)
@@ -116,18 +159,28 @@ class RoyalBroodSuite extends FunSuite {
   }
 
   test("partial supplies buy proportional care and never spend resources across a stage boundary") {
-    val data = rearing(EggCare).copy(basicResources = colony.basicResources.copy(protein = BasicResource(250L, 500 * u)))
+    val data = rearing(EggCare).copy(basicResources =
+      colony.basicResources.copy(protein = BasicResource(250L, 500 * u))
+    )
     val partial = tick(data)
     assertEquals(partial.ants.royalBrood.get.careUnits, EggCare + 2L)
     assertEquals(partial.basicResources.protein.amount, 50L)
     assertEquals(tick(partial), partial)
-    assert(status(data.ants, data.nestAttributes, data.basicResources).contains("Limited care · protein"))
-    assertEquals(status(partial.ants, partial.nestAttributes, partial.basicResources), "Needs protein")
+    assert(
+      status(data.ants, data.nestAttributes, data.basicResources).contains("Limited care · protein")
+    )
+    assertEquals(
+      status(partial.ants, partial.nestAttributes, partial.basicResources),
+      "Needs protein"
+    )
     val crossing = rearing(EggCare - 1L)
     val next = tick(crossing)
     assertEquals(next.ants.royalBrood.get.careUnits, EggCare)
     assertEquals(next.basicResources, crossing.basicResources.spendResources(tendingUnitCost))
-    assertEquals(tick(next).basicResources, next.basicResources.spendResources(scaledCost(larvaUnitCost, 5L)))
+    assertEquals(
+      tick(next).basicResources,
+      next.basicResources.spendResources(scaledCost(larvaUnitCost, 5L))
+    )
   }
 
   test("manual pause, missing staff, chamber or water preserve progress without feeding costs") {
@@ -135,19 +188,29 @@ class RoyalBroodSuite extends FunSuite {
     val paused = setPaused(initial, true)
     assertEquals(tick(paused), paused)
     assertEquals(tick(setPaused(paused, false)), tick(initial))
-    val noStaff = initial.copy(ants = initial.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
+    val noStaff =
+      initial.copy(ants = initial.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
     assertEquals(tick(reconcile(noStaff)), reconcile(noStaff))
-    assertEquals(status(noStaff.ants, noStaff.nestAttributes, noStaff.basicResources), "Needs Royal Nurses")
-    val dry = initial.copy(basicResources = initial.basicResources.copy(water = BasicResource(0L, 100 * u)))
+    assertEquals(
+      status(noStaff.ants, noStaff.nestAttributes, noStaff.basicResources),
+      "Needs Royal Nurses"
+    )
+    val dry =
+      initial.copy(basicResources = initial.basicResources.copy(water = BasicResource(0L, 100 * u)))
     assertEquals(tick(dry), dry)
     assertEquals(status(dry.ants, dry.nestAttributes, dry.basicResources), "Needs water")
     val noChamber = initial.copy(nestAttributes = NestAttributes())
     assertEquals(tick(noChamber), noChamber)
-    assertEquals(status(noChamber.ants, noChamber.nestAttributes, noChamber.basicResources), "Needs Royal Nursery")
+    assertEquals(
+      status(noChamber.ants, noChamber.nestAttributes, noChamber.basicResources),
+      "Needs Royal Nursery"
+    )
   }
 
   test("nurse capacity works with manual assignments, default staffing and returning workers") {
-    val initial = reconcile(colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u)))))
+    val initial = reconcile(
+      colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
+    )
     assertEquals(initial.ants.taskWorkers(AntTask.RoyalNurse), 0L)
     val assigned = DefaultWorkerAssignment.assign(initial, AntTask.RoyalNurse, 30 * u)
     assertEquals(assigned.ants.taskWorkers(AntTask.RoyalNurse), 5 * u)
@@ -156,68 +219,129 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals(defaults.ants.taskWorkers(AntTask.RoyalNurse), 5 * u)
     assertEquals(defaults.ants.idleWorkersCount, 30 * u)
     assertEquals(defaults.ants.availableWorkersCount, 35 * u)
-    val returned = DefaultWorkerAssignment.normalize(defaults.copy(ants = defaults.ants.copy(workers = 40 * u)))
+    val returned =
+      DefaultWorkerAssignment.normalize(defaults.copy(ants = defaults.ants.copy(workers = 40 * u)))
     assertEquals(returned.ants.taskWorkers(AntTask.RoyalNurse), 5 * u)
     assertEquals(returned.ants.idleWorkersCount, 35 * u)
-    val unbuilt = DefaultWorkerAssignment.normalize(returned.copy(nestAttributes = NestAttributes()))
+    val unbuilt =
+      DefaultWorkerAssignment.normalize(returned.copy(nestAttributes = NestAttributes()))
     assertEquals(unbuilt.ants.taskWorkers(AntTask.RoyalNurse), 0L)
   }
 
   test("nurses age normally and an egg can wait for replacement staff") {
-    val data = rearing().copy(ants = rearing().ants.copy(workers = 5 * u,
-      tasks = Seq(AntTask.RoyalNurse -> (5 * u)), ages = ColonyAges(active = true, workers = List(AgeCohort(1L, 5L)))))
+    val data = rearing().copy(ants =
+      rearing().ants.copy(
+        workers = 5 * u,
+        tasks = Seq(AntTask.RoyalNurse -> (5 * u)),
+        ages = ColonyAges(active = true, workers = List(AgeCohort(1L, 5L)))
+      )
+    )
     val aged = TickUpdater.updateAllData(data, None)
     assertEquals(aged.ants.workers, 0L)
     assertEquals(aged.ants.royalBrood.get.careUnits, 0L)
     assertEquals(aged.statistics.workersLostToAging.thisRun, 5)
-    val due = data.copy(world = data.world.copy(currentTick = 1L), ants = data.ants.copy(royalBrood = None))
+    val due =
+      data.copy(world = data.world.copy(currentTick = 1L), ants = data.ants.copy(royalBrood = None))
     assert(start(due).ants.royalBrood.nonEmpty)
     assertEquals(start(due).ants.workers, 0L)
   }
 
-  test("care runs after ordinary upkeep and before automatic eggs; forecasts match the actual feeding") {
+  test(
+    "care runs after ordinary upkeep and before automatic eggs; forecasts match the actual feeding"
+  ) {
     val initial = rearing(EggCare)
-    val feeding = forecast(initial.ants, initial.nestAttributes, initial.upgrades, initial.exploration, initial.basicResources)
+    val feeding = forecast(
+      initial.ants,
+      initial.nestAttributes,
+      initial.upgrades,
+      initial.exploration,
+      initial.basicResources
+    )
     val next = TickUpdater.updateAllData(initial, None)
     val production = Foraging.productionPerTick(30L, initial.upgrades)
-    val upkeep = ScoutProgression.upkeepCount(initial.ants, initial.exploration) * antsSugarUpkeepTick
-    assertEquals(next.basicResources.sugar.amount, initial.basicResources.sugar.amount + production - upkeep - feeding.cost.sugar)
-    assertEquals(next.basicResources.protein.amount, initial.basicResources.protein.amount - feeding.cost.protein)
-    assertEquals(next.basicResources.water.amount, initial.basicResources.water.amount - feeding.cost.water)
+    val upkeep =
+      ScoutProgression.upkeepCount(initial.ants, initial.exploration) * antsSugarUpkeepTick
+    assertEquals(
+      next.basicResources.sugar.amount,
+      initial.basicResources.sugar.amount + production - upkeep - feeding.cost.sugar
+    )
+    assertEquals(
+      next.basicResources.protein.amount,
+      initial.basicResources.protein.amount - feeding.cost.protein
+    )
+    assertEquals(
+      next.basicResources.water.amount,
+      initial.basicResources.water.amount - feeding.cost.water
+    )
     assertEquals(next.ants.royalBrood.get.careUnits, EggCare + feeding.units)
-    val routine = initial.copy(basicResources = initial.basicResources.copy(sugar = BasicResource(LayEggSugarCost - 1000L, 40000 * u)),
-      ants = initial.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 100, sugarReserve = 0L)),
+    val routine = initial.copy(
+      basicResources =
+        initial.basicResources.copy(sugar = BasicResource(LayEggSugarCost - 1000L, 40000 * u)),
+      ants = initial.ants
+        .copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 100, sugarReserve = 0L)),
       upgrades = initial.upgrades.unlock(QueensRoutine),
-      unlocks = initial.unlocks.copy(actions = initial.unlocks.actions.copy(canLayEggs = true)))
+      unlocks = initial.unlocks.copy(actions = initial.unlocks.actions.copy(canLayEggs = true))
+    )
     val step = TickUpdater.updateAllData(routine, None)
     assertEquals(step.ants.royalBrood.get.careUnits, EggCare + 5L)
     assert(step.ants.eggsAndLarvae.isEmpty)
-    assertEquals(TickUpdater.updateAllData(setPaused(routine, true), None).ants.eggsAndLarvae.size, 1)
+    assertEquals(
+      TickUpdater.updateAllData(setPaused(routine, true), None).ants.eggsAndLarvae.size,
+      1
+    )
   }
 
-  test("fresh production feeds brood at full storage without draining stock or counting discarded overflow") {
-    val initial = rearing(EggCare).copy(basicResources = colony.basicResources.copy(sugar = BasicResource(40000 * u, 40000 * u)))
+  test(
+    "fresh production feeds brood at full storage without draining stock or counting discarded overflow"
+  ) {
+    val initial = rearing(EggCare).copy(basicResources =
+      colony.basicResources.copy(sugar = BasicResource(40000 * u, 40000 * u))
+    )
     val next = TickUpdater.updateAllData(initial, None)
     assertEquals(next.basicResources.sugar.amount, initial.basicResources.sugar.amount)
-    assertEquals(next.statistics.sugarU.thisRun, 19000L) // 7 sugar/s adult upkeep + 2.5 sugar/s larval care.
+    assertEquals(
+      next.statistics.sugarU.thisRun,
+      19000L
+    ) // 7 sugar/s adult upkeep + 2.5 sugar/s larval care.
     assertEquals(next.ants.royalBrood.get.careUnits, EggCare + 5L)
   }
 
   test("fresh production can fund partial care at zero sugar and the forecast shows it") {
-    val initial = rearing(EggCare).copy(basicResources = colony.basicResources.copy(sugar = BasicResource(0L, 40000 * u)))
-    val predicted = forecast(initial.ants, initial.nestAttributes, initial.upgrades, initial.exploration, initial.basicResources)
+    val initial = rearing(EggCare).copy(basicResources =
+      colony.basicResources.copy(sugar = BasicResource(0L, 40000 * u))
+    )
+    val predicted = forecast(
+      initial.ants,
+      initial.nestAttributes,
+      initial.upgrades,
+      initial.exploration,
+      initial.basicResources
+    )
     assertEquals(predicted.units, 5L)
     val next = TickUpdater.updateAllData(initial, None)
     assertEquals(next.ants.royalBrood.get.careUnits, EggCare + predicted.units)
     assertEquals(next.basicResources.sugar.amount, 650L)
-    val fewer = initial.copy(ants = initial.ants.copy(workers = 10 * u,
-      tasks = Seq(AntTask.SugarCollector -> (5 * u), AntTask.RoyalNurse -> (5 * u)), ages = ColonyAges()))
-    val limited = forecast(fewer.ants, fewer.nestAttributes, fewer.upgrades, fewer.exploration, fewer.basicResources)
+    val fewer = initial.copy(ants =
+      initial.ants.copy(
+        workers = 10 * u,
+        tasks = Seq(AntTask.SugarCollector -> (5 * u), AntTask.RoyalNurse -> (5 * u)),
+        ages = ColonyAges()
+      )
+    )
+    val limited = forecast(
+      fewer.ants,
+      fewer.nestAttributes,
+      fewer.upgrades,
+      fewer.exploration,
+      fewer.basicResources
+    )
     assertEquals(limited.units, 0L)
     assertEquals(TickUpdater.updateAllData(fewer, None).ants.royalBrood.get.careUnits, EggCare)
   }
 
-  test("save/load retains paused and partial care, unlocks nurses and completion cannot be replayed") {
+  test(
+    "save/load retains paused and partial care, unlocks nurses and completion cannot be replayed"
+  ) {
     val paused = setPaused(rearing(EggCare + 123L), true)
     val loaded = roundTrip(paused)
     assertEquals(loaded.ants.royalBrood, paused.ants.royalBrood)
@@ -232,11 +356,14 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals("{}".fromJson[AntsData].toOption.get.royalBrood, None)
     assertEquals("{}".fromJson[AntsData].toOption.get.daughterQueens, 0L)
     assertEquals("{}".fromJson[StatisticsData].toOption.get.royalEggsRaised.thisRun, 0)
-    val noTask = colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
+    val noTask =
+      colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SugarCollector -> (35 * u))))
     assert(roundTrip(noTask).ants.tasks.exists(_._1 == AntTask.RoyalNurse))
   }
 
-  test("daughter queens have upkeep, preserve housing and visibility, and remain vulnerable to starvation") {
+  test(
+    "daughter queens have upkeep, preserve housing and visibility, and remain vulnerable to starvation"
+  ) {
     val queen = tick(rearing(TotalCare - 5L))
     assertEquals(queen.ants.upkeepWorkersCount, colony.ants.upkeepWorkersCount + 1L)
     assert(queen.unlocks.resources.showDaughterQueens)
@@ -250,4 +377,5 @@ class RoyalBroodSuite extends FunSuite {
     assertEquals(PopulationAging.starveOne(worker).daughterQueens, u)
     assertEquals(PopulationAging.starveOne(worker).workers, 0L)
   }
+
 }

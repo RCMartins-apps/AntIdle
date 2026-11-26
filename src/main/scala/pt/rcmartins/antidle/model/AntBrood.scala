@@ -18,7 +18,12 @@ object AntBrood {
   implicit val decoder: JsonDecoder[AntBrood] = DeriveJsonDecoder.gen[AntBrood]
   implicit val encoder: JsonEncoder[AntBrood] = DeriveJsonEncoder.gen[AntBrood]
 
-  case class Developing(initialTick: Long, kind: String = "worker", care: Long = 0L, laying: Boolean = false) extends AntBrood {
+  case class Developing(
+      initialTick: Long,
+      kind: String = "worker",
+      care: Long = 0L,
+      laying: Boolean = false
+  ) extends AntBrood {
     def small: Boolean = kind == "small" || kind == "emergency-small"
     def totalCare: Long = (if (small) 75L else if (kind == "scout") 450L else 600L) * 10000L
     def eggEnd: Long = totalCare / 6L
@@ -26,8 +31,15 @@ object AntBrood {
     def isEgg: Boolean = !laying && care < eggEnd
     def isLarvae: Boolean = !laying && care >= eggEnd && care < larvaEnd
     def isPupae: Boolean = !laying && care >= larvaEnd
-    def name: String = (if (kind == "emergency-small") "Emergency small worker" else if (small) "Small worker" else if (kind == "scout") "Scout" else "Worker") +
-      (if (laying) " egg being laid" else if (isEgg) " egg" else if (isLarvae) " larva" else " pupa")
+    def name: String = (if (kind == "emergency-small") "Emergency small worker"
+                        else if (small) "Small worker"
+                        else if (kind == "scout") "Scout"
+                        else "Worker") +
+      (if (laying) " egg being laid"
+       else if (isEgg) " egg"
+       else if (isLarvae) " larva"
+       else " pupa")
+
   }
 
   case class Egg(

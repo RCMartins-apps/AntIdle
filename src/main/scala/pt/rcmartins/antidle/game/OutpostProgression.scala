@@ -12,28 +12,37 @@ object OutpostProgression {
 
   def dewPerTick(ants: AntsData): Long =
     ants.taskWorkers(AntTask.WaterCollector) / u * dewPerWorkerSecond(ants.lineage) / TicksPerSecond
+
   val Housing: Long = 50L * u
   val ForagerSlots: Long = 5L * u
   val MaxExtensions: Int = 2
   val ExpansionHousing: Long = 25L * u
   val ProteinPerWorkerSecond: Long = 400L
   val WaterPerWorkerSecond: Long = 200L
-  val cost: ActionCost = ActionCost(sugar = 3000L * u, protein = 40L * u,
-    knowledge = 300L * u, tunnelingSpace = 750L * u, water = 150L * u)
+  val cost: ActionCost = ActionCost(
+    sugar = 3000L * u,
+    protein = 40L * u,
+    knowledge = 300L * u,
+    tunnelingSpace = 750L * u,
+    water = 150L * u
+  )
 
   val SeedStation = "seed-station"
   val ScoutStation = "scout-station"
   val SurveyWater: Long = 5L * u
 
   def establishmentCost(lineage: Lineage): ActionCost =
-    if (lineage.satelliteNests) cost.copy(sugar = cost.sugar / 2L, knowledge = cost.knowledge / 2L) else cost
+    if (lineage.satelliteNests) cost.copy(sugar = cost.sugar / 2L, knowledge = cost.knowledge / 2L)
+    else cost
 
   def specialization(nest: NestAttributes, lineage: Lineage): String =
     if (nest.dryClearingOutpost && lineage.satelliteNests) nest.dryClearingSpecialization else ""
 
   def specialize(data: AllData, station: String): AllData =
-    if (data.nestAttributes.dryClearingOutpost && data.ants.lineage.satelliteNests &&
-        data.nestAttributes.dryClearingSpecialization.isEmpty && (station == SeedStation || station == ScoutStation))
+    if (
+      data.nestAttributes.dryClearingOutpost && data.ants.lineage.satelliteNests &&
+        data.nestAttributes.dryClearingSpecialization.isEmpty && (station == SeedStation || station == ScoutStation)
+    )
       data.modify(_.nestAttributes.dryClearingSpecialization).setTo(station)
     else data
 
@@ -41,11 +50,13 @@ object OutpostProgression {
     DiscoveryProgression.DewPlants.found(exploration)
 
   def extensions(nest: NestAttributes): Int =
-    if (nest.dryClearingOutpost) Math.max(0, Math.min(MaxExtensions, nest.dryClearingExtensions)) else 0
+    if (nest.dryClearingOutpost) Math.max(0, Math.min(MaxExtensions, nest.dryClearingExtensions))
+    else 0
 
   def level(nest: NestAttributes): Int = if (nest.dryClearingOutpost) 1 + extensions(nest) else 0
   def capacity(nest: NestAttributes): Long = level(nest).toLong * ForagerSlots
-  def housing(nest: NestAttributes): Long = if (nest.dryClearingOutpost) Housing + extensions(nest).toLong * ExpansionHousing else 0L
+  def housing(nest: NestAttributes): Long =
+    if (nest.dryClearingOutpost) Housing + extensions(nest).toLong * ExpansionHousing else 0L
 
   def expansionVisible(nest: NestAttributes, exploration: ExplorationData): Boolean =
     nest.dryClearingOutpost && extensions(nest) < MaxExtensions &&
@@ -53,54 +64,110 @@ object OutpostProgression {
 
   def expansionCost(nest: NestAttributes): ActionCost = {
     val rank = extensions(nest).toLong
-    ActionCost(sugar = (5000L + 3000L * rank) * u, protein = (75L + 50L * rank) * u,
-      knowledge = (500L + 300L * rank) * u, tunnelingSpace = (1000L + 500L * rank) * u,
-      water = (250L + 100L * rank) * u)
+    ActionCost(
+      sugar = (5000L + 3000L * rank) * u,
+      protein = (75L + 50L * rank) * u,
+      knowledge = (500L + 300L * rank) * u,
+      tunnelingSpace = (1000L + 500L * rank) * u,
+      water = (250L + 100L * rank) * u
+    )
   }
 
-  def canExpand(nest: NestAttributes, exploration: ExplorationData, resources: BasicResources): Boolean =
+  def canExpand(
+      nest: NestAttributes,
+      exploration: ExplorationData,
+      resources: BasicResources
+  ): Boolean =
     expansionVisible(nest, exploration) && resources.hasResources(expansionCost(nest))
 
   def expand(data: AllData): AllData =
     if (!canExpand(data.nestAttributes, data.exploration, data.basicResources)) data
-    else DefaultWorkerAssignment.normalize(reconcile(data.spendResources(expansionCost(data.nestAttributes))
-      .modify(_.nestAttributes).using(n => n.copy(dryClearingExtensions = extensions(n) + 1, maxAnts = n.maxAnts + ExpansionHousing))
-      .addMessage(s"Dry Clearing Outpost expanded to level ${level(data.nestAttributes) + 1}: +25 colony capacity and 5 Seed Forager slots.")))
+    else
+      DefaultWorkerAssignment.normalize(
+        reconcile(
+          data
+            .spendResources(expansionCost(data.nestAttributes))
+            .modify(_.nestAttributes)
+            .using(n =>
+              n.copy(
+                dryClearingExtensions = extensions(n) + 1,
+                maxAnts = n.maxAnts + ExpansionHousing
+              )
+            )
+            .addMessage(
+              s"Dry Clearing Outpost expanded to level ${level(data.nestAttributes) + 1}: +25 colony capacity and 5 Seed Forager slots."
+            )
+        )
+      )
 
   def proteinPerWorkerSecond(upgrades: UpgradesData, station: String = ""): Long = {
-    val base = if (upgrades(SeedProcessing).unlocked) ProteinPerWorkerSecond * 3L / 2L else ProteinPerWorkerSecond
+    val base =
+      if (upgrades(SeedProcessing).unlocked) ProteinPerWorkerSecond * 3L / 2L
+      else ProteinPerWorkerSecond
     if (station == SeedStation) base * 3L / 2L else base
   }
 
   def waterPerWorkerSecond(upgrades: UpgradesData, station: String = ""): Long = {
-    val base = if (upgrades(CoveredTrails).unlocked) WaterPerWorkerSecond * 3L / 4L else WaterPerWorkerSecond
+    val base =
+      if (upgrades(CoveredTrails).unlocked) WaterPerWorkerSecond * 3L / 4L else WaterPerWorkerSecond
     if (station == SeedStation) base * 5L / 4L else base
   }
 
   def canEstablish(data: AllData): Boolean =
     canEstablish(data.nestAttributes, data.exploration, data.basicResources, data.ants.lineage)
 
-  def canEstablish(nest: NestAttributes, exploration: ExplorationData, resources: BasicResources, lineage: Lineage = Lineage()): Boolean =
-    !nest.dryClearingOutpost && visible(exploration) && resources.hasResources(establishmentCost(lineage))
+  def canEstablish(
+      nest: NestAttributes,
+      exploration: ExplorationData,
+      resources: BasicResources,
+      lineage: Lineage = Lineage()
+  ): Boolean =
+    !nest.dryClearingOutpost && visible(exploration) && resources.hasResources(
+      establishmentCost(lineage)
+    )
 
   def reconcile(data: AllData): AllData = {
-    val ready = data.modify(_.nestAttributes.dryClearingExtensions).setTo(extensions(data.nestAttributes))
-    if (ready.nestAttributes.dryClearingOutpost) ready.modify(_.ants).using(_.unlockTask(AntTask.SeedForager)) else ready
+    val ready =
+      data.modify(_.nestAttributes.dryClearingExtensions).setTo(extensions(data.nestAttributes))
+    if (ready.nestAttributes.dryClearingOutpost)
+      ready.modify(_.ants).using(_.unlockTask(AntTask.SeedForager))
+    else ready
   }
 
   def establish(data: AllData): AllData =
     if (!canEstablish(data)) data
-    else DefaultWorkerAssignment.normalize(reconcile(data.spendResources(establishmentCost(data.ants.lineage))
-      .modify(_.nestAttributes).using(n => n.copy(dryClearingOutpost = true, dryClearingExtensions = 0, maxAnts = n.maxAnts + Housing))
-      .addMessage("Dry Clearing Outpost established! Assign Seed Foragers in Tasks; they need water to gather protein-rich seeds.")))
+    else
+      DefaultWorkerAssignment.normalize(
+        reconcile(
+          data
+            .spendResources(establishmentCost(data.ants.lineage))
+            .modify(_.nestAttributes)
+            .using(n =>
+              n.copy(
+                dryClearingOutpost = true,
+                dryClearingExtensions = 0,
+                maxAnts = n.maxAnts + Housing
+              )
+            )
+            .addMessage(
+              "Dry Clearing Outpost established! Assign Seed Foragers in Tasks; they need water to gather protein-rich seeds."
+            )
+        )
+      )
 
   case class Harvest(protein: Long = 0L, water: Long = 0L)
 
   // Make room for this tick's aphid feeding before collecting; full stores waste no water.
-  def harvestPerTick(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData, resources: BasicResources): Harvest = {
+  def harvestPerTick(
+      ants: AntsData,
+      nest: NestAttributes,
+      upgrades: UpgradesData,
+      resources: BasicResources
+  ): Harvest = {
     val workers = Math.min(capacity(nest), Math.max(0L, ants.taskWorkers(AntTask.SeedForager))) / u
     val fed = AphidHusbandry.proteinPerTick(ants, nest, upgrades, resources.protein.amount)
-    val room = Math.max(0L, resources.protein.maxAmount - Math.max(0L, resources.protein.amount - fed))
+    val room =
+      Math.max(0L, resources.protein.maxAmount - Math.max(0L, resources.protein.amount - fed))
     val station = specialization(nest, ants.lineage)
     val demand = workers * waterPerWorkerSecond(upgrades, station) / TicksPerSecond
     val potential = workers * proteinPerWorkerSecond(upgrades, station) / TicksPerSecond
@@ -112,4 +179,5 @@ object OutpostProgression {
       Harvest(protein = protein, water = water)
     }
   }
+
 }

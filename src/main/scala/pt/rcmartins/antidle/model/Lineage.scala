@@ -1,4 +1,5 @@
 package pt.rcmartins.antidle.model
+
 import zio.json._
 case class Lineage(
     foundings: Int = 0,
@@ -10,10 +11,12 @@ case class Lineage(
     drySeasonCompleted: Boolean = false,
     foundingProvisions: Boolean = false,
 )
+
 object Lineage {
   implicit val encoder: JsonEncoder[Lineage] = DeriveJsonEncoder.gen[Lineage]
   implicit val decoder: JsonDecoder[Lineage] = DeriveJsonDecoder.gen[Lineage]
 }
+
 case class SugarTrail(remaining: Long = 0L, marked: Boolean = false)
 object SugarTrail {
   implicit val encoder: JsonEncoder[SugarTrail] = DeriveJsonEncoder.gen[SugarTrail]

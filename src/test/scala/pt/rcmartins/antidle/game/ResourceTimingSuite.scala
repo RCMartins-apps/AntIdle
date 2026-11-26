@@ -14,7 +14,8 @@ class ResourceTimingSuite extends FunSuite {
   }
 
   test("full storage keeps its status at zero income but shows depletion when draining") {
-    for (rate <- Seq(0L, 3L)) assertEquals(ResourceTiming.estimate(BasicResource(10L, 10L), rate).get.text, "Full")
+    for (rate <- Seq(0L, 3L))
+      assertEquals(ResourceTiming.estimate(BasicResource(10L, 10L), rate).get.text, "Full")
     val draining = ResourceTiming.estimate(BasicResource(10L, 10L), -2L).get
     assertEquals(draining.text, "Empty in ~1.0s")
     assertEquals(ResourceTiming.estimate(BasicResource(20L, 10L), -2L).get.ticks, 10L)
@@ -29,7 +30,14 @@ class ResourceTimingSuite extends FunSuite {
   }
 
   test("large reserves and extreme drain rates do not overflow") {
-    assertEquals(ResourceTiming.estimate(BasicResource(Long.MaxValue, Long.MaxValue), -1L).get.ticks, Long.MaxValue)
-    assertEquals(ResourceTiming.estimate(BasicResource(Long.MaxValue, Long.MaxValue), Long.MinValue).get.ticks, 1L)
+    assertEquals(
+      ResourceTiming.estimate(BasicResource(Long.MaxValue, Long.MaxValue), -1L).get.ticks,
+      Long.MaxValue
+    )
+    assertEquals(
+      ResourceTiming.estimate(BasicResource(Long.MaxValue, Long.MaxValue), Long.MinValue).get.ticks,
+      1L
+    )
   }
+
 }

@@ -22,7 +22,10 @@ object Actions {
 
   def reduceAntTask(antTask: AntTask, amountU: Long): Unit =
     actionUpdater.writer.onNext { allData =>
-      AgingJobReplacement.cancel(allData, antTask).modify(_.ants).using(_.removeFromTask(antTask, amountU))
+      AgingJobReplacement
+        .cancel(allData, antTask)
+        .modify(_.ants)
+        .using(_.removeFromTask(antTask, amountU))
     }
 
   def incrementAntTask(antTask: AntTask, amountU: Long): Unit =
@@ -33,7 +36,8 @@ object Actions {
   def selectDefaultTask(task: Option[AntTask]): Unit =
     actionUpdater.writer.onNext(DefaultWorkerAssignment.select(_, task))
 
-  def cancelAgingJobReplacements(): Unit = actionUpdater.writer.onNext(AgingJobReplacement.cancelAll)
+  def cancelAgingJobReplacements(): Unit =
+    actionUpdater.writer.onNext(AgingJobReplacement.cancelAll)
 
   def configureQueenRoutine(enabled: Boolean, target: Int, reserve: Long): Unit =
     actionUpdater.writer.onNext(AutomaticBrood.configure(_, enabled, target, reserve))
@@ -44,7 +48,8 @@ object Actions {
 
   def buildMidden(): Unit = actionUpdater.writer.onNext(Midden.build)
 
-  def establishDryClearingOutpost(): Unit = actionUpdater.writer.onNext(OutpostProgression.establish)
+  def establishDryClearingOutpost(): Unit =
+    actionUpdater.writer.onNext(OutpostProgression.establish)
 
   def specializeDryClearingOutpost(station: String): Unit =
     actionUpdater.writer.onNext(data => OutpostProgression.specialize(data, station))
@@ -53,48 +58,67 @@ object Actions {
 
   def purchaseSharedPaths(): Unit = actionUpdater.writer.onNext(Prestige.purchase)
 
-  def purchaseUnderstanding(id: String): Unit = actionUpdater.writer.onNext(Prestige.purchase(_, id))
+  def purchaseUnderstanding(id: String): Unit =
+    actionUpdater.writer.onNext(Prestige.purchase(_, id))
 
-  def foundDaughterColony(selected: Seq[String] = Nil, drySeason: Boolean = false): Unit = actionUpdater.writer.onNext { data =>
-    val next = Prestige.found(data, selected, drySeason)
-    if (next != data) {
-      Utils.pause = true
-      scala.scalajs.js.timers.setTimeout(0) {
-        saves.SaveLoad.reloadDataFromLoadedSave(next, messageAlert = None)
-        saves.SaveLoad.saveToLocalStorage(next)
+  def foundDaughterColony(selected: Seq[String] = Nil, drySeason: Boolean = false): Unit =
+    actionUpdater.writer.onNext { data =>
+      val next = Prestige.found(data, selected, drySeason)
+      if (next != data) {
+        Utils.pause = true
+        scala.scalajs.js.timers.setTimeout(0) {
+          saves.SaveLoad.reloadDataFromLoadedSave(next, messageAlert = None)
+          saves.SaveLoad.saveToLocalStorage(next)
+        }
       }
+      next
     }
-    next
-  }
 
   def claimTerritory(workers: Int, guards: Int): Unit =
     actionUpdater.writer.onNext(TerritoryProgression.claim(_, workers, guards))
-  def planTerritoryGuards(guards: Int): Unit = actionUpdater.writer.onNext(TerritoryProgression.planGuards(_, guards))
+
+  def planTerritoryGuards(guards: Int): Unit =
+    actionUpdater.writer.onNext(TerritoryProgression.planGuards(_, guards))
+
   def reinforceTerritory(): Unit = actionUpdater.writer.onNext(TerritoryProgression.reinforce)
-  def maintainTerritory(enabled: Boolean): Unit = actionUpdater.writer.onNext(TerritoryProgression.setMaintain(_, enabled))
+  def maintainTerritory(enabled: Boolean): Unit =
+    actionUpdater.writer.onNext(TerritoryProgression.setMaintain(_, enabled))
+
   def withdrawTerritory(): Unit = actionUpdater.writer.onNext(TerritoryProgression.withdraw)
 
   def assignTrailWorkers(destination: String, delta: Long): Unit =
     actionUpdater.writer.onNext(PheromoneTrails.adjust(_, destination, delta))
-  def recallTrail(destination: String): Unit = actionUpdater.writer.onNext(PheromoneTrails.recall(_, destination))
-  def maximizeTrail(destination: String): Unit = actionUpdater.writer.onNext(PheromoneTrails.maximize(_, destination))
+
+  def recallTrail(destination: String): Unit =
+    actionUpdater.writer.onNext(PheromoneTrails.recall(_, destination))
+
+  def maximizeTrail(destination: String): Unit =
+    actionUpdater.writer.onNext(PheromoneTrails.maximize(_, destination))
 
   def raiseRoyalEgg(): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.start)
 
-  def setRoyalCarePaused(paused: Boolean): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.setPaused(_, paused))
+  def setRoyalCarePaused(paused: Boolean): Unit =
+    actionUpdater.writer.onNext(RoyalBroodProgression.setPaused(_, paused))
 
   def retrieveCarcass(index: Int): Unit =
     actionUpdater.writer.onNext(CarcassProgression.retrieve(_, index))
 
-  def assignSmallWorker(task: AntTask, delta: Long): Unit = actionUpdater.writer.onNext(BroodProgression.assignSmall(_, task, delta))
+  def assignSmallWorker(task: AntTask, delta: Long): Unit =
+    actionUpdater.writer.onNext(BroodProgression.assignSmall(_, task, delta))
+
   def cancelEggOrders(): Unit = actionUpdater.writer.onNext(BroodProgression.cancel)
-  def setBroodPriority(priority: BroodPriority): Unit = actionUpdater.writer.onNext(BroodProgression.setPriority(_, priority))
+  def setBroodPriority(priority: BroodPriority): Unit =
+    actionUpdater.writer.onNext(BroodProgression.setPriority(_, priority))
+
   val layEggActionEnabled: Signal[Boolean] = antsSignal.combineWith(nestSignal).map {
     case (ants, nest) => BroodProgression.orderAmount(ants, nest, 1) > 0
   }
+
   def workerEggAmount(ants: AntsData, nest: NestAttributes, requested: Int): Int =
     BroodProgression.orderAmount(ants, nest, requested)
-  def layEggAction(maxMultiplierUsed: Int): Unit = actionUpdater.writer.onNext(BroodProgression.order(_, maxMultiplierUsed))
+
+  def layEggAction(maxMultiplierUsed: Int): Unit =
+    actionUpdater.writer.onNext(BroodProgression.order(_, maxMultiplierUsed))
 
   def addBuildTask(buildTask: BuildTask): Unit =
     actionUpdater.writer.onNext(Construction.enqueue(_, buildTask.chamberType))
@@ -108,20 +132,23 @@ object Actions {
   def getChamber(chamberType: ChamberType): Signal[Chamber] =
     chambersSignal.map { chambers =>
       chamberType match {
-        case ChamberType.Nest        => chambers.nestChamber
-        case ChamberType.Queen       => chambers.queenChamber
-        case ChamberType.FoodStorage => chambers.foodStorageChamber
-        case ChamberType.Nursery     => chambers.nurseryChamber
-        case ChamberType.Aphid       => chambers.aphidChamber
-        case ChamberType.Replete     => chambers.repleteChamber
+        case ChamberType.Nest         => chambers.nestChamber
+        case ChamberType.Queen        => chambers.queenChamber
+        case ChamberType.FoodStorage  => chambers.foodStorageChamber
+        case ChamberType.Nursery      => chambers.nurseryChamber
+        case ChamberType.Aphid        => chambers.aphidChamber
+        case ChamberType.Replete      => chambers.repleteChamber
         case ChamberType.RoyalNursery => chambers.royalNurseryChamber
       }
     }
 
   def getActionBonus(chamberType: ChamberType): Signal[ActionBonus] =
-    antsSignal.combineWith(nestSignal, upgradesSignal).map { case (ants, nest, upgrades) =>
-      ChamberBonuses.forDisplay(chamberType, ants, nest, upgrades)
-    }.distinct
+    antsSignal
+      .combineWith(nestSignal, upgradesSignal)
+      .map { case (ants, nest, upgrades) =>
+        ChamberBonuses.forDisplay(chamberType, ants, nest, upgrades)
+      }
+      .distinct
 
   def buildChamberCost(chamberType: ChamberType): Signal[ActionCost] =
     nestSignal.map(nest => Construction.nextCost(nest, chamberType)).distinct
@@ -134,10 +161,12 @@ object Actions {
 
   def relocateAphids(): Unit = actionUpdater.writer.onNext(AphidRelocation.start)
 
-  def orderSurveys(site: String, count: Int): Unit = actionUpdater.writer.onNext(SurveyOrders.start(_, site, count))
+  def orderSurveys(site: String, count: Int): Unit =
+    actionUpdater.writer.onNext(SurveyOrders.start(_, site, count))
+
   def cancelSurveys(): Unit = actionUpdater.writer.onNext(SurveyOrders.cancel)
 
-  def scoutMap(site: String, count: Int): Unit = actionUpdater.writer.onNext(ExplorationMap.scout(_, site, count))
-
+  def scoutMap(site: String, count: Int): Unit =
+    actionUpdater.writer.onNext(ExplorationMap.scout(_, site, count))
 
 }

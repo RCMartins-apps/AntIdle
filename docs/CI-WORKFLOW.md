@@ -57,9 +57,9 @@ in GitHub, or use the connector's enable-auto-merge action. GitHub waits for the
 required checks and reviews, if any. Confirm the queued state before ending work.
 If already eligible, GitHub may merge immediately; verify the actual result.
 
-Codex can then report the PR URL and pending status and end the turn. It does not
-need to poll or send waiting updates. If a check fails, the PR remains unmerged;
-use GitHub notifications or return with the failed PR to have it investigated.
+Schedule one status check about 15 minutes after enabling auto-merge. End the
+original turn after scheduling. The follow-up reports the merge or CI status and
+inspects the failing job when needed.
 No additional bot workflow or write-enabled Actions token is needed.
 
 With strict up-to-date checks enabled, a PR may need its branch updated when main
@@ -103,3 +103,13 @@ heap on PR #78 (GC overhead limit, followed by the ten-minute build timeout).
 Repository .jvmopts now sets a 3 GB maximum heap, 256 MB initial heap and G1 GC,
 compatible with Java 8 and newer. This matches successful local production builds;
 workflow/job timeouts and required checks remain unchanged.
+
+## Scalafmt gate
+
+PR validation runs `sbt scalafmtCheckAll balance/scalafmtCheckAll scalafmtSbtCheck`
+before building. This covers the game, the balance tool, their tests, and sbt
+sources. Formatting failures propagate through the existing required `test`
+check. The formatter and its rules are pinned in `.scalafmt.conf`.
+
+To fix violations locally, run `sbt scalafmtAll balance/scalafmtAll scalafmtSbt`.
+Keep routine formatting scoped to the files being changed.

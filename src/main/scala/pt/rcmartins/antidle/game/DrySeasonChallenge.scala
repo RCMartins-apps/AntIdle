@@ -18,4 +18,5 @@ object DrySeasonChallenge {
 
   def description: String =
     s"Dew Gatherers collect half as much water. Found with the Dry Clearing Outpost and $RequiredRepletes living repletes to earn +${WaterBonus / u} water capacity per replete permanently."
+
 }

@@ -12,12 +12,24 @@ class UnlockReconciliationSuite extends FunSuite {
     val tick = TickUpdater.updateAllData(fresh, None)
     assert(action.unlocks.actions.canLayEggs)
     assert(tick.unlocks.actions.canLayEggs)
-    assert(GameTransition.afterAction(action.copy(basicResources = BasicResources.initial)).unlocks.actions.canLayEggs)
+    assert(
+      GameTransition
+        .afterAction(action.copy(basicResources = BasicResources.initial))
+        .unlocks
+        .actions
+        .canLayEggs
+    )
     assertEquals(GameTransition.afterAction(action), action)
   }
+
   test("research restores action gates and tasks without subscriptions or duplicate messages") {
     val initial = AllData.initial
-    val researched = initial.copy(upgrades = initial.upgrades.unlock(UnlockExplorerTask).unlock(UnlockQueensChamber).unlock(UnlockFoodStorageChamber))
+    val researched = initial.copy(upgrades =
+      initial.upgrades
+        .unlock(UnlockExplorerTask)
+        .unlock(UnlockQueensChamber)
+        .unlock(UnlockFoodStorageChamber)
+    )
     val updated = UnlockUtils.reconcile(researched)
     assert(updated.unlocks.tabs.exploreTabUnlocked)
     assert(updated.unlocks.actions.canBuildQueenChamber)
@@ -25,12 +37,16 @@ class UnlockReconciliationSuite extends FunSuite {
     assert(updated.ants.tasks.exists(_._1 == AntTask.Explorer))
     assertEquals(UnlockUtils.reconcile(updated), updated)
   }
+
   test("population unlock includes brood and messages occur once") {
     val initial = AllData.initial
-    val populated = initial.copy(ants = initial.ants.copy(smallWorkers = 4L * u,
-      eggsAndLarvae = Seq(AntBrood.Developing(100L, "small"))))
+    val populated = initial.copy(ants =
+      initial.ants
+        .copy(smallWorkers = 4L * u, eggsAndLarvae = Seq(AntBrood.Developing(100L, "small")))
+    )
     val updated = UnlockUtils.reconcile(populated)
     assert(updated.unlocks.actions.canBuildNestUpgrade)
     assertEquals(UnlockUtils.reconcile(updated), updated)
   }
+
 }

@@ -44,25 +44,36 @@ object UpgradesData {
 
     case object UnlockQueensChamber extends UpgradeType { val name: String = "UnlockQueensChamber" }
 
-    case object ImproveSugarCollectorTask1 extends UpgradeType { val name: String = "ImproveSugarCollectorTask1" }
+    case object ImproveSugarCollectorTask1 extends UpgradeType {
+      val name: String = "ImproveSugarCollectorTask1"
+    }
 
-    case object ImproveSugarCollectorTask2 extends UpgradeType { val name: String = "ImproveSugarCollectorTask2" }
+    case object ImproveSugarCollectorTask2 extends UpgradeType {
+      val name: String = "ImproveSugarCollectorTask2"
+    }
 
-    case object ImproveSugarCollectorTask3 extends UpgradeType { val name: String = "ImproveSugarCollectorTask3" }
+    case object ImproveSugarCollectorTask3 extends UpgradeType {
+      val name: String = "ImproveSugarCollectorTask3"
+    }
 
-    case object UnlockFoodStorageChamber extends UpgradeType { val name: String = "UnlockFoodStorageChamber" }
+    case object UnlockFoodStorageChamber extends UpgradeType {
+      val name: String = "UnlockFoodStorageChamber"
+    }
 
     case object UnlockExplorerTask extends UpgradeType { val name: String = "UnlockExplorerTask" }
 
     case object DefaultWorkers extends UpgradeType { val name: String = "DefaultWorkers" }
 
-    case object AdditionalExpeditionSlot extends UpgradeType { val name: String = "AdditionalExpeditionSlot" }
+    case object AdditionalExpeditionSlot extends UpgradeType {
+      val name: String = "AdditionalExpeditionSlot"
+    }
 
     case object ExpeditionSupplies1 extends UpgradeType { val name: String = "ExpeditionSupplies1" }
     case object ExpeditionSupplies2 extends UpgradeType { val name: String = "ExpeditionSupplies2" }
     case object ExpeditionSupplies3 extends UpgradeType { val name: String = "ExpeditionSupplies3" }
 
-    val expeditionSupplies: Seq[UpgradeType] = Seq(ExpeditionSupplies1, ExpeditionSupplies2, ExpeditionSupplies3)
+    val expeditionSupplies: Seq[UpgradeType] =
+      Seq(ExpeditionSupplies1, ExpeditionSupplies2, ExpeditionSupplies3)
 
     case object EstablishedTrails extends UpgradeType { val name: String = "EstablishedTrails" }
 
@@ -76,7 +87,9 @@ object UpgradesData {
 
     case object QueensRoutine extends UpgradeType { val name: String = "QueensRoutine" }
 
-    case object ConstructionPlanning extends UpgradeType { val name: String = "ConstructionPlanning" }
+    case object ConstructionPlanning extends UpgradeType {
+      val name: String = "ConstructionPlanning"
+    }
 
     case object ColonyNutrition extends UpgradeType { val name: String = "ColonyNutrition" }
 
@@ -86,7 +99,9 @@ object UpgradesData {
 
     case object SeedProcessing extends UpgradeType { val name: String = "SeedProcessing" }
 
-    case object RoyalNurseryPlanning extends UpgradeType { val name: String = "RoyalNurseryPlanning" }
+    case object RoyalNurseryPlanning extends UpgradeType {
+      val name: String = "RoyalNurseryPlanning"
+    }
 
     case object AphidShelters extends UpgradeType { val name = "AphidShelters" }
     case object TrailLogistics extends UpgradeType { val name = "TrailLogistics" }
@@ -125,8 +140,13 @@ object UpgradesData {
       CoveredTrails,
       SeedProcessing,
       RoyalNurseryPlanning,
-      AphidShelters, TrailLogistics, CoordinatedExpeditions,
-      ScoutWayfinding, NurseTraining, QueensRhythm, TerritoryGuards,
+      AphidShelters,
+      TrailLogistics,
+      CoordinatedExpeditions,
+      ScoutWayfinding,
+      NurseTraining,
+      QueensRhythm,
+      TerritoryGuards,
     )
 
   }

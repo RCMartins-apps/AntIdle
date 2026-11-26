@@ -22,7 +22,11 @@ class DiscoverySuite extends FunSuite {
     )
   }
 
-  def complete(data: AllData, destination: ExplorationDestination, workers: Long = 5 * u): AllData = {
+  def complete(
+      data: AllData,
+      destination: ExplorationDestination,
+      workers: Long = 5 * u
+  ): AllData = {
     val sent = ExplorationHelper.start(data, workers, destination)
     assert(sent.exploration.explorationParties.nonEmpty)
     val party = sent.exploration.explorationParties.head
@@ -62,7 +66,9 @@ class DiscoverySuite extends FunSuite {
   }
 
   test("seed gathering preview matches guaranteed protein without requiring carcass slots") {
-    val initial = colony.copy(exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map(NectarMeadow.id -> 3)))
+    val initial = colony.copy(exploration =
+      MapFixture.explored.copy(revealedSites = 6, surveys = Map(NectarMeadow.id -> 3))
+    )
     val sent = ExplorationHelper.start(initial, 10 * u, SeedGathering)
     val party = sent.exploration.explorationParties.head
     val expected = ExplorationProgression.partyReward(10 * u, 10 * u, 0)
@@ -70,16 +76,31 @@ class DiscoverySuite extends FunSuite {
     assertEquals(result.basicResources.protein.amount, expected)
     assert(result.exploration.proteinDiscovered)
     assert(result.exploration.discoveredCarcasses.isEmpty && result.exploration.carcasses.isEmpty)
-    assert(ExplorationHelper.summary(initial, 10 * u, SeedGathering).contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein"))
-    assert(ExplorationHelper.outcomePreview(initial.exploration, 10 * u, SeedGathering).contains("Protein guaranteed"))
-    val nearlyFull = sent.copy(basicResources = sent.basicResources.copy(protein = BasicResource(99 * u, 100 * u)))
-    assertEquals(ExplorationHelper.exploreBonus(nearlyFull, party).basicResources.protein.amount, 100L * u)
+    assert(
+      ExplorationHelper
+        .summary(initial, 10 * u, SeedGathering)
+        .contains(s"${UINumbersUtils.prettyNumberStr(expected)} protein")
+    )
+    assert(
+      ExplorationHelper
+        .outcomePreview(initial.exploration, 10 * u, SeedGathering)
+        .contains("Protein guaranteed")
+    )
+    val nearlyFull =
+      sent.copy(basicResources = sent.basicResources.copy(protein = BasicResource(99 * u, 100 * u)))
+    assertEquals(
+      ExplorationHelper.exploreBonus(nearlyFull, party).basicResources.protein.amount,
+      100L * u
+    )
   }
 
   test("aphid task is restored immediately on research and reload, but never before research") {
-    val discovered = colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 5)))
+    val discovered =
+      colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 5)))
     assert(!UpgradeVisibility.reconcile(discovered).ants.tasks.exists(_._1 == AntTask.AphidTender))
-    val researched = UpgradeVisibility.reconcile(discovered.copy(upgrades = discovered.upgrades.unlock(AphidTending)))
+    val researched = UpgradeVisibility.reconcile(
+      discovered.copy(upgrades = discovered.upgrades.unlock(AphidTending))
+    )
     assertEquals(researched.ants.taskWorkers(AntTask.AphidTender), 0L)
     assert(researched.ants.defaultTaskChoices.contains(AntTask.AphidTender))
     val loaded = AllDataForSave.fromAllData(researched.copy(ants = discovered.ants)).toAllData
@@ -88,9 +109,15 @@ class DiscoverySuite extends FunSuite {
   }
 
   test("aphid workers participate in the default worker pool without duplicating ants") {
-    val ready = UpgradeVisibility.reconcile(colony.copy(
-      nestAttributes = colony.nestAttributes.copy(aphids = 400L, chambers = colony.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(40))),
-      upgrades = colony.upgrades.unlock(AphidTending, DefaultWorkers)))
+    val ready = UpgradeVisibility.reconcile(
+      colony.copy(
+        nestAttributes = colony.nestAttributes.copy(
+          aphids = 400L,
+          chambers = colony.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(40))
+        ),
+        upgrades = colony.upgrades.unlock(AphidTending, DefaultWorkers)
+      )
+    )
     val selected = DefaultWorkerAssignment.select(ready, Some(AntTask.AphidTender))
     assertEquals(selected.ants.taskWorkers(AntTask.AphidTender), 40L * u)
     val sent = ExplorationHelper.start(selected, 5 * u, NectarMeadow)
@@ -101,9 +128,16 @@ class DiscoverySuite extends FunSuite {
     assertEquals(returned.ants.idleWorkersCount, 0L)
   }
 
-  test("survey progress, research and assignments persist; saves without surveys start undiscovered") {
-    val data = UpgradeVisibility.reconcile(colony.copy(exploration = colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 3, NectarMeadow.id -> 2))))
-    val loaded = AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+  test(
+    "survey progress, research and assignments persist; saves without surveys start undiscovered"
+  ) {
+    val data = UpgradeVisibility.reconcile(
+      colony.copy(exploration =
+        colony.exploration.copy(surveys = Map(WoodlandEdge.id -> 3, NectarMeadow.id -> 2))
+      )
+    )
+    val loaded =
+      AllDataForSave.fromAllData(data).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assertEquals(loaded.exploration, data.exploration)
     val discovered = loaded
     assert(WildAphids.found(discovered.exploration))
@@ -111,17 +145,35 @@ class DiscoverySuite extends FunSuite {
     val task = AntTask.AphidTender: AntTask
     assertEquals(task.toJson.fromJson[AntTask], Right(task))
   }
+
   test("discovery indicators identify only destinations with unfinished discoveries") {
     val empty = ExplorationData()
     assert(!hasUnfound(empty, Surroundings))
     assert(!hasUnfound(empty, CollectResin))
-    DiscoveryProgression.all.filter(d => ExplorationDestination.all.exists(_.id == d.destination)).foreach { discovery =>
-      val destination = ExplorationDestination.all.find(_.id == discovery.destination).get
-      assert(hasUnfound(empty, destination))
-      assert(hasUnfound(empty.copy(surveys = Map(discovery.destination -> (discovery.trips - 1))), destination))
-      assert(!hasUnfound(empty.copy(surveys = Map(discovery.destination -> discovery.trips)), destination))
-      assert(!hasUnfound(empty.copy(surveys = Map(discovery.destination -> (discovery.trips + 1))), destination))
-    }
+    DiscoveryProgression.all
+      .filter(d => ExplorationDestination.all.exists(_.id == d.destination))
+      .foreach { discovery =>
+        val destination = ExplorationDestination.all.find(_.id == discovery.destination).get
+        assert(hasUnfound(empty, destination))
+        assert(
+          hasUnfound(
+            empty.copy(surveys = Map(discovery.destination -> (discovery.trips - 1))),
+            destination
+          )
+        )
+        assert(
+          !hasUnfound(
+            empty.copy(surveys = Map(discovery.destination -> discovery.trips)),
+            destination
+          )
+        )
+        assert(
+          !hasUnfound(
+            empty.copy(surveys = Map(discovery.destination -> (discovery.trips + 1))),
+            destination
+          )
+        )
+      }
   }
 
 }

@@ -15,8 +15,10 @@ class ColonyDevelopmentSuite extends FunSuite {
       ants = AntsData(workers = 20 * u, scouts = u, tasks = Seq(AntTask.Explorer -> 0L)),
       exploration = MapFixture.explored.copy(revealedSites = 6),
       basicResources = initial.basicResources.copy(sugar = BasicResource(3000 * u, 10000 * u)),
-      nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
-        nurseryChamber = initial.nestAttributes.chambers.nurseryChamber.copy(level = 1))),
+      nestAttributes = initial.nestAttributes.copy(chambers =
+        initial.nestAttributes.chambers
+          .copy(nurseryChamber = initial.nestAttributes.chambers.nurseryChamber.copy(level = 1))
+      ),
       upgrades = initial.upgrades.unlock(UnlockExplorerTask),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
     )
@@ -27,8 +29,17 @@ class ColonyDevelopmentSuite extends FunSuite {
     val hidden = ready.copy(exploration = ExplorationData())
     assert(!ExplorationHelper.canStart(hidden, 5 * u, NectarMeadow))
     assert(!ExplorationHelper.canStart(ready, 4 * u, NectarMeadow))
-    assert(ExplorationHelper.canStart(ready.copy(ants = ready.ants.copy(scouts = 0L)), 5 * u, NectarMeadow))
-    assertEquals(ExplorationHelper.cost(5 * u, NectarMeadow), ActionCost(sugar = 50 * u, idleWorkers = 5 * u))
+    assert(
+      ExplorationHelper.canStart(
+        ready.copy(ants = ready.ants.copy(scouts = 0L)),
+        5 * u,
+        NectarMeadow
+      )
+    )
+    assertEquals(
+      ExplorationHelper.cost(5 * u, NectarMeadow),
+      ActionCost(sugar = 50 * u, idleWorkers = 5 * u)
+    )
   }
 
   test("meadow previews match collection cargo without generating knowledge") {
@@ -42,8 +53,10 @@ class ColonyDevelopmentSuite extends FunSuite {
 
   test("meadow returns through the tick engine, respects storage caps and releases scouts") {
     val sent = ExplorationHelper.start(colony(), 5 * u, NectarMeadow)
-    val capped = sent.copy(basicResources = sent.basicResources.copy(sugar = BasicResource(2900 * u, 3000 * u)),
-      world = sent.world.copy(currentTick = NectarMeadow.duration - 1L))
+    val capped = sent.copy(
+      basicResources = sent.basicResources.copy(sugar = BasicResource(2900 * u, 3000 * u)),
+      world = sent.world.copy(currentTick = NectarMeadow.duration - 1L)
+    )
     val result = TickUpdater.updateAllData(capped, None)
     assert(result.exploration.explorationParties.isEmpty)
     assertEquals(ScoutProgression.available(result.ants, result.exploration), u)
@@ -53,18 +66,32 @@ class ColonyDevelopmentSuite extends FunSuite {
   }
 
   test("Reinforced Mandibles changes actual tunneling output by fifty percent") {
-    val initial = colony().copy(ants = AntsData(workers = 5 * u, tasks = Seq(AntTask.Tunneler -> (5 * u))))
+    val initial =
+      colony().copy(ants = AntsData(workers = 5 * u, tasks = Seq(AntTask.Tunneler -> (5 * u))))
     val plain = TickUpdater.updateAllData(initial, None)
-    val upgraded = TickUpdater.updateAllData(initial.copy(upgrades = initial.upgrades.unlock(ReinforcedMandibles)), None)
+    val upgraded = TickUpdater.updateAllData(
+      initial.copy(upgrades = initial.upgrades.unlock(ReinforcedMandibles)),
+      None
+    )
     assertEquals(ColonyDevelopment.tunnelingPerWorkerTick(initial.upgrades) * TicksPerSecond, u)
-    assertEquals(upgraded.basicResources.tunnelingSpace.amount - initial.basicResources.tunnelingSpace.amount, 15000L)
-    assertEquals(plain.basicResources.tunnelingSpace.amount - initial.basicResources.tunnelingSpace.amount, 10000L)
+    assertEquals(
+      upgraded.basicResources.tunnelingSpace.amount - initial.basicResources.tunnelingSpace.amount,
+      15000L
+    )
+    assertEquals(
+      plain.basicResources.tunnelingSpace.amount - initial.basicResources.tunnelingSpace.amount,
+      10000L
+    )
   }
 
-  test("Brood Care changes the exact worker and scout maturity boundaries, including existing eggs") {
-    val initial = colony().copy(ants = AntsData(eggsAndLarvae = Seq(AntBrood.Egg(0L), AntBrood.ScoutEgg(0L))))
+  test(
+    "Brood Care changes the exact worker and scout maturity boundaries, including existing eggs"
+  ) {
+    val initial =
+      colony().copy(ants = AntsData(eggsAndLarvae = Seq(AntBrood.Egg(0L), AntBrood.ScoutEgg(0L))))
     val upgraded = initial.copy(upgrades = initial.upgrades.unlock(BroodCare))
-    def grow(data: AllData, tick: Long): AllData = ScoutProgression.growBrood(data.copy(world = data.world.copy(currentTick = tick)))
+    def grow(data: AllData, tick: Long): AllData =
+      ScoutProgression.growBrood(data.copy(world = data.world.copy(currentTick = tick)))
     assertEquals(grow(initial, 40L).ants.workers, 0L)
     assertEquals(grow(upgraded, 39L).ants.workers, 0L)
     assertEquals(grow(upgraded, 40L).ants.workers, u)
@@ -76,32 +103,67 @@ class ColonyDevelopmentSuite extends FunSuite {
 
   test("new upgrades require mapped sites and a nursery where specified") {
     val ready = colony()
-    assert(!ReinforcedMandibles.shouldShow(ready.copy(exploration = ready.exploration.copy(revealedSites = 1))))
-    assert(ReinforcedMandibles.shouldShow(ready.copy(exploration = ready.exploration.copy(revealedSites = 2))))
-    assert(!BroodCare.shouldShow(ready.copy(exploration = ready.exploration.copy(revealedSites = 2))))
+    assert(
+      !ReinforcedMandibles.shouldShow(
+        ready.copy(exploration = ready.exploration.copy(revealedSites = 1))
+      )
+    )
+    assert(
+      ReinforcedMandibles.shouldShow(
+        ready.copy(exploration = ready.exploration.copy(revealedSites = 2))
+      )
+    )
+    assert(
+      !BroodCare.shouldShow(ready.copy(exploration = ready.exploration.copy(revealedSites = 2)))
+    )
     assert(BroodCare.shouldShow(ready))
     assert(!BroodCare.shouldShow(ready.copy(nestAttributes = NestAttributes.initial)))
   }
 
   test("new colony upgrades and a meadow party survive save reload without changing rewards") {
-    val sent = ExplorationHelper.start(ResourceVisibility.reconcile(colony().copy(upgrades = UpgradesData.initial.unlock(ReinforcedMandibles, BroodCare))), 5 * u, NectarMeadow)
+    val sent = ExplorationHelper.start(
+      ResourceVisibility.reconcile(
+        colony().copy(upgrades = UpgradesData.initial.unlock(ReinforcedMandibles, BroodCare))
+      ),
+      5 * u,
+      NectarMeadow
+    )
     val loaded = AllDataForSave.fromAllData(sent).toAllData
     assert(loaded.upgrades(ReinforcedMandibles).unlocked && loaded.upgrades(BroodCare).unlocked)
-    assertEquals(ExplorationDestination.forParty(loaded.exploration.explorationParties.head), NectarMeadow)
+    assertEquals(
+      ExplorationDestination.forParty(loaded.exploration.explorationParties.head),
+      NectarMeadow
+    )
     val party = loaded.exploration.explorationParties.head
-    assertEquals(ExplorationHelper.exploreBonus(loaded, party).basicResources, ExplorationHelper.exploreBonus(sent, party).basicResources)
+    assertEquals(
+      ExplorationHelper.exploreBonus(loaded, party).basicResources,
+      ExplorationHelper.exploreBonus(sent, party).basicResources
+    )
   }
+
   test("chamber previews include derived nursery places and actual laying interval reduction") {
     val d = colony()
-    val nursery = ChamberBonuses.forDisplay(Chamber.ChamberType.Nursery, d.ants, d.nestAttributes, d.upgrades)
+    val nursery =
+      ChamberBonuses.forDisplay(Chamber.ChamberType.Nursery, d.ants, d.nestAttributes, d.upgrades)
     val built = ChamberBonuses.completeUpgrade(d, Chamber.ChamberType.Nursery)
-    assertEquals(nursery.maxEggs / u, (BroodProgression.capacity(built.nestAttributes) - BroodProgression.capacity(d.nestAttributes)).toLong)
+    assertEquals(
+      nursery.maxEggs / u,
+      (BroodProgression.capacity(built.nestAttributes) - BroodProgression.capacity(
+        d.nestAttributes
+      )).toLong
+    )
     assertEquals(nursery.broodNurseSlots, 5)
     assertEquals(built.nestAttributes.maxEggs, d.nestAttributes.maxEggs)
-    val queen = ChamberBonuses.forDisplay(Chamber.ChamberType.Queen, d.ants, d.nestAttributes, d.upgrades)
+    val queen =
+      ChamberBonuses.forDisplay(Chamber.ChamberType.Queen, d.ants, d.nestAttributes, d.upgrades)
     val expanded = ChamberBonuses.completeUpgrade(d, Chamber.ChamberType.Queen)
-    assertEquals(queen.layingIntervalReduction,
-      BroodProgression.interval(d.ants, d.nestAttributes) - BroodProgression.interval(d.ants, expanded.nestAttributes))
+    assertEquals(
+      queen.layingIntervalReduction,
+      BroodProgression.interval(d.ants, d.nestAttributes) - BroodProgression.interval(
+        d.ants,
+        expanded.nestAttributes
+      )
+    )
   }
 
 }
