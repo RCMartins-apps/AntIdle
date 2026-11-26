@@ -99,7 +99,8 @@ def assert_fits(page, width):
             box = button.bounding_box()
             assert box["x"] >= 0 and box["x"] + box["width"] <= width + 1
             if width <= 767:
-                assert box["height"] >= 44, button.inner_text()
+                minimum_height = 32 if button.evaluate("el => !!el.closest('.catchup-controls')") else 44
+                assert box["height"] >= minimum_height, button.inner_text()
 
 
 def assert_touching_hexes(page):

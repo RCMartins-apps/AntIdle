@@ -63,7 +63,7 @@ def check_milestones(page, width, base):
     expect(page.locator('.milestone-progress')).to_have_text('24/25 standard workers raised')
     page.get_by_role('button', name='Scout Wayfinding', exact=True).click()
     select_tab(page, 'Explore')
-    expect(page.locator('.map-site-card .mission-preview')).to_contain_text('16.0s')
+    expect(page.locator('.map-site-card .explore-duration')).to_have_text('16.0s')
     saved = save_game(page)
     saved['ants']['eggsAndLarvae'] = [{'Developing': {'initialTick': saved['world']['currentTick'], 'kind': 'worker', 'care': 600 * UNIT - 1}}]
     load_game(page, saved)
@@ -278,6 +278,8 @@ def check_game(page, width, url):
     if width <= 767:
         expect(page.locator('.build-queue-panel')).not_to_be_visible()
         select_tab(page, 'Nest')
+        expect(page.locator('.build-queue-panel')).not_to_be_visible()
+        select_tab(page, 'Chambers')
         expect(page.locator('.build-queue-panel')).to_be_visible()
         select_tab(page, 'Tasks')
     else:
