@@ -255,7 +255,8 @@
 .catchup-controls button {min-width:44px;min-height:44px;pointer-events:auto}
 .resources-column .game-panel:has(.catchup-controls) > .card-header {min-height:56px;padding-right:12rem}
 @media (max-width:767px) {
- .antidle-app .resources-column .catchup-controls button {min-height:32px;padding:.15rem .5rem}
+ .antidle-app .resources-column .catchup-controls button {position:relative;min-height:32px;padding:.15rem .5rem}
+ .catchup-controls button::after {content:"";position:absolute;inset:-6px 0}
  .resources-column .game-panel:has(.catchup-controls) > .card-header {min-height:48px;padding-right:.75rem}
  .resources-column .game-panel:has(.catchup-controls) .resource-summary-heading {min-height:32px;padding-right:11rem;margin-bottom:.3rem}
 }
