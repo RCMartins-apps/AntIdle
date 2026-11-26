@@ -29,7 +29,7 @@ object Foraging {
       lineage: Lineage = Lineage()
   ): Long =
     Prestige.sugar(
-      UpgradeBalance.production(basePerTick(collectors, upgrades), "sugar", upgrades),
+      UpgradeBalance.production(basePerTick(collectors, upgrades), "sugarCollectors", upgrades),
       lineage
     )
 
@@ -42,7 +42,7 @@ object Foraging {
 
   def production(ants: AntsData, upgrades: UpgradesData): Long =
     Prestige.sugar(
-      UpgradeBalance.production(mixedBasePerTick(ants, upgrades), "sugar", upgrades),
+      UpgradeBalance.production(mixedBasePerTick(ants, upgrades), "sugarCollectors", upgrades),
       ants.lineage
     )
 

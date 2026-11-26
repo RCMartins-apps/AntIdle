@@ -27,9 +27,12 @@ class UpgradeTuningSuite extends FunSuite {
         bonuses = List(UpgradeBonus.ProductionPercent("scrapsGatherers", 5))
       )
     ).fold(error => fail(error), identity)
-    assertEquals(UpgradeBalance.production(100L, "sugar", owned, edited), 100L)
-    assertEquals(UpgradeBalance.production(100L, "protein", owned, edited), 105L)
-    assertEquals(UpgradeBalance.production(100L, "protein", UpgradesData.initial, edited), 100L)
+    assertEquals(UpgradeBalance.production(100L, "sugarCollectors", owned, edited), 100L)
+    assertEquals(UpgradeBalance.production(100L, "scrapsGatherers", owned, edited), 105L)
+    assertEquals(
+      UpgradeBalance.production(100L, "scrapsGatherers", UpgradesData.initial, edited),
+      100L
+    )
   }
 
   test("the editor catalog provides an actual game icon for every cost field") {
@@ -49,8 +52,8 @@ class UpgradeTuningSuite extends FunSuite {
         )
       )
     ).fold(error => fail(error), identity)
-    assertEquals(UpgradeBalance.production(100L, "sugar", owned, edited), 120L)
-    assertEquals(UpgradeBalance.production(100L, "protein", owned, edited), 115L)
+    assertEquals(UpgradeBalance.production(100L, "sugarCollectors", owned, edited), 120L)
+    assertEquals(UpgradeBalance.production(100L, "scrapsGatherers", owned, edited), 115L)
     assert(UpgradeTuning.load(encode(edited).replace("productionPercent", "unknownEffect")).isLeft)
   }
 
@@ -73,6 +76,21 @@ class UpgradeTuningSuite extends FunSuite {
         _.copy(bonuses = List(UpgradeBonus.SlotCapacity("expedition", 101)))
       ).isLeft
     )
+  }
+
+  test("renewable production targets are independent even when they yield the same resource") {
+    val owned = UpgradesData.initial.unlock(ImproveSugarCollectorTask1)
+    val edited = change(ImproveSugarCollectorTask1)(
+      _.copy(bonuses =
+        List(
+          UpgradeBonus.ProductionPercent("aphidTenders", 20),
+          UpgradeBonus.ProductionPercent("dewGatherers", 10)
+        )
+      )
+    ).fold(error => fail(error), identity)
+    assertEquals(UpgradeBalance.production(100L, "sugarCollectors", owned, edited), 100L)
+    assertEquals(UpgradeBalance.production(100L, "aphidTenders", owned, edited), 120L)
+    assertEquals(UpgradeBalance.production(100L, "dewGatherers", owned, edited), 110L)
   }
 
   test("invalid fields, gates, and production bonuses are rejected") {

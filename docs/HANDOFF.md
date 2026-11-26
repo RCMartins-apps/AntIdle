@@ -2,14 +2,12 @@
 
 ## 2026-11-26
 
-Colony Workshop can compare the current page's unsaved catalog with the saved
-catalog pair using one repeatable balanced scenario. It runs isolated Node
-processes and shows milestone times, sugar shortages, and starvation deaths.
-The comparison and its checkpoints are temporary.
+Production effects target a job's output. The Workshop now offers Aphid
+Tenders' sugar and Dew Gatherers' water alongside the existing jobs. Bonuses
+apply to the chosen job alone and neither add upkeep nor change shipped output.
+The tick, resource forecasts, and task detail rates share the effective rates.
 
-See [Workshop issue #134](https://github.com/RCMartins-apps/AntIdle/issues/134).
+See [Workshop issue #133](https://github.com/RCMartins-apps/AntIdle/issues/133).
 
-Verified the simulator build and a 390px Chromium run. Making Standard Worker
-Development unaffordable caused the draft to miss that milestone while the
-saved run reached it. Both catalog files stayed byte-for-byte unchanged.
-Verified cancellation with a second run.
+Verified 39 focused engine tests, the bonus schema tests after final labels,
+and a 390px Workshop save and reload of both new production targets.

@@ -72,7 +72,9 @@ object UpgradeTuning {
           Json.Str("sugarCollectors"),
           List(
             Choice("sugarCollectors", "Sugar Collectors"),
-            Choice("scrapsGatherers", "Scraps Gatherers")
+            Choice("scrapsGatherers", "Scraps Gatherers"),
+            Choice("aphidTenders", "Aphid Tenders"),
+            Choice("dewGatherers", "Dew Gatherers")
           )
         ),
         BonusField("percent", "Bonus (%)", Json.Num(5), min = 1, max = 100)

@@ -195,6 +195,7 @@ main {
   gap: .5rem;
   margin-block: .25rem;
 }
+.bonus-fields:has(select) { grid-template-columns: minmax(0, 1fr) 5rem auto; }
 
 .comparison { padding: 12px 15px; border-top: 1px solid var(--border); }
 #comparison-status { margin-block: 8px; font-size: .85rem; color: var(--muted); }

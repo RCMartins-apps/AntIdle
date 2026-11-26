@@ -52,6 +52,9 @@ object AphidHusbandry {
       workers(ants, nest, upgrades) * ProteinPerWorkerSecond / TicksPerSecond
     )
 
+  def sugarPerWorkerSecond(upgrades: UpgradesData): Long =
+    balance.UpgradeBalance.production(SugarPerWorkerSecond, "aphidTenders", upgrades)
+
   def productionPerTick(
       ants: AntsData,
       nest: NestAttributes,
@@ -59,7 +62,9 @@ object AphidHusbandry {
       protein: Long
   ): Long =
     Prestige.sugar(
-      proteinPerTick(ants, nest, upgrades, protein) * SugarPerWorkerSecond / ProteinPerWorkerSecond,
+      proteinPerTick(ants, nest, upgrades, protein) * sugarPerWorkerSecond(
+        upgrades
+      ) / ProteinPerWorkerSecond,
       ants.lineage
     )
 
