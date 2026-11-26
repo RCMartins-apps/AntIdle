@@ -8,9 +8,10 @@ import json
 from pathlib import Path
 import subprocess
 from tempfile import NamedTemporaryFile
-from threading import Lock
+from threading import Event, Lock
 
 from balance import ROOT, balance_bundle, executable_command
+from workshop_comparison import compare
 
 ASSETS = ROOT / 'tools/balance/editor'
 TUNING = ROOT / 'src/main/balance/upgrades.json'
@@ -23,6 +24,7 @@ FILES = {
     '/editor.js': ('editor.js', 'text/javascript'),
     '/chambers': ('chambers.html', 'text/html'),
     '/chambers.js': ('chambers.js', 'text/javascript'),
+    '/comparison.js': ('comparison.js', 'text/javascript'),
 }
 
 
@@ -60,6 +62,8 @@ class EditorServer(ThreadingHTTPServer):
         self.tuning = tuning
         self.chambers = chambers
         self.write_lock = Lock()
+        self.comparison_lock = Lock()
+        self.comparison = None
         self.host = f'127.0.0.1:{self.server_port}'
         self.origin = 'http://' + self.host
 
@@ -108,6 +112,52 @@ class EditorHandler(BaseHTTPRequestHandler):
                 self.send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {'error': str(error)})
         else:
             self.send_json(HTTPStatus.NOT_FOUND, {'error': 'Unknown route.'})
+
+    def do_POST(self):
+        if self.headers.get('Host') != self.server.host or self.headers.get('Origin') != self.server.origin:
+            self.send_json(HTTPStatus.FORBIDDEN, {'error': 'Run comparisons from the local editor tab.'})
+            return
+        if self.path == '/api/compare/cancel':
+            with self.server.comparison_lock:
+                if self.server.comparison is not None:
+                    self.server.comparison.set()
+            self.send_json(HTTPStatus.OK, {})
+            return
+        if self.path != '/api/compare':
+            self.send_json(HTTPStatus.NOT_FOUND, {'error': 'Unknown route.'})
+            return
+        cancelled = Event()
+        with self.server.comparison_lock:
+            occupied = self.server.comparison is not None
+            if not occupied:
+                self.server.comparison = cancelled
+        if occupied:
+            self.send_json(HTTPStatus.CONFLICT, {'error': 'A comparison is already running.'})
+            return
+        try:
+            size = int(self.headers.get('Content-Length', '0'))
+            if not 0 < size <= 262144:
+                raise ValueError('Expected a JSON comparison request of at most 256 KiB.')
+            request = json.loads(self.rfile.read(size))
+            routes = (CATALOG, CHAMBERS)
+            if not isinstance(request, dict) or request.get('route') not in routes or not isinstance(request.get('catalog'), dict):
+                raise ValueError('Expected a complete draft catalog.')
+            route = request['route']
+            index = routes.index(route)
+            draft = json.dumps(request['catalog'], allow_nan=False).encode('utf-8')
+            with self.server.write_lock:
+                saved = [self.server.catalog_path(path).read_bytes() for path in routes]
+            if request.get('revision') != revision(saved[index]):
+                self.send_json(HTTPStatus.CONFLICT, {'error': 'The balance file changed on disk. Reload to compare.'})
+                return
+            self.server.catalog(route, draft)
+            result = compare(self.server.bundle, saved, index, draft, cancelled)
+            self.send_json(HTTPStatus.OK, result)
+        except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired) as error:
+            self.send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {'error': str(error)})
+        finally:
+            with self.server.comparison_lock:
+                self.server.comparison = None
 
     def do_PUT(self):
         if self.headers.get('Host') != self.server.host or self.headers.get('Origin') != self.server.origin:

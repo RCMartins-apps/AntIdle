@@ -42,6 +42,15 @@ The editor checks for unknown references and dependency cycles before saving.
 in the current editor build.
 **Revert edits** resets unsaved changes to the last loaded or saved values.
 
+### Compare a draft
+
+Use **Compare draft** on either editor page before saving. The Workshop runs
+the saved catalog pair and the current page's draft with the same balanced
+policy, seed 42, and a four-hour simulated limit or first founding. Results
+show milestone times, time without sugar, and starvation deaths side by side.
+Each run uses an isolated simulator process and temporary inputs and checkpoints.
+**Cancel comparison** stops the run. To compare the other catalog, open its editor.
+
 ### Canonical upgrade catalog
 
 The JSON file contains every upgrade's price, title, help, prerequisites and
