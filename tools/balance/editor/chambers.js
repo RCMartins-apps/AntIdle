@@ -9,8 +9,7 @@ const resources = {
   sugar: 'Sugar', protein: 'Protein', water: 'Water', tunnelingSpace: 'Tunneling Space',
   knowledge: 'Knowledge', resin: 'Resin',
 };
-let catalog, unit, revision, selected;
-const capacityResources = {Nest: 'tunnelingSpace', FoodStorage: 'sugar'};
+let catalog, unit, revision, selected, bonusFields;
 
 function field(name, value, step, max, optional = false) {
   const label = document.createElement('label');
@@ -28,16 +27,17 @@ function field(name, value, step, max, optional = false) {
 
 function render() {
   selected = chamber.value;
-  const resource = capacityResources[selected];
+  const fields = bonusFields[selected] ?? [];
   const definition = catalog[selected];
   capacity.replaceChildren();
-  if (resource) {
+  if (fields.length) {
     const heading = document.createElement('h2');
-    heading.textContent = 'Capacity bonus';
-    capacity.append(heading, field(
-      `${resources[resource]} capacity per added level`,
-      (definition.bonuses?.[0]?.amount ?? 0) / unit, 1 / unit, Number.MAX_SAFE_INTEGER / unit,
-    ));
+    heading.textContent = 'Capacity per level';
+    capacity.append(heading);
+    for (const {kind, targetKey, target, valueKey, label, scale, max} of fields) {
+      const bonus = definition.bonuses?.find(item => item.type === kind && item[targetKey] === target);
+      capacity.append(field(label, (bonus?.[valueKey] ?? 0) / scale, 1 / scale, max / scale));
+    }
   }
   prices.replaceChildren(...Object.entries(resources).map(([key, name]) => {
     const rule = definition.costs[key];
@@ -74,10 +74,14 @@ function storeCurrent() {
   }
   const definition = catalog[selected];
   definition.costs = rules;
-  const resource = capacityResources[selected];
-  if (resource) {
-    const amount = Math.round(capacity.querySelector('input').valueAsNumber * unit);
-    if (amount) definition.bonuses = [{type: 'storageCapacity', resource, amount}];
+  const fields = bonusFields[selected];
+  if (fields) {
+    const inputs = capacity.querySelectorAll('input');
+    const bonuses = fields.flatMap(({kind, targetKey, target, valueKey, scale}, index) => {
+      const value = Math.round(inputs[index].valueAsNumber * scale);
+      return value ? [{type: kind, [targetKey]: target, [valueKey]: value}] : [];
+    });
+    if (bonuses.length) definition.bonuses = bonuses;
     else delete definition.bonuses;
   }
 }
@@ -118,7 +122,7 @@ form.addEventListener('submit', async event => {
 });
 
 request().then(data => {
-  ({catalog, unit, revision} = data);
+  ({catalog, unit, revision, bonusFields} = data);
   for (const id of Object.keys(catalog)) {
     const label = id.replace(/([a-z])([A-Z])/g, '$1 $2');
     chamber.add(new Option(label, id));

@@ -8,6 +8,14 @@ import pt.rcmartins.antidle.game.saves.AllDataForSave
 import pt.rcmartins.antidle.model.AllData
 
 object BalanceMain {
+  private case class ChamberEditorFields(
+      unit: Long,
+      bonusFields: Map[String, List[ChamberPricing.BonusField]]
+  )
+
+  implicit private val chamberEditorEncoder: JsonEncoder[ChamberEditorFields] =
+    DeriveJsonEncoder.gen[ChamberEditorFields]
+
   def main(ignored: Array[String]): Unit = {
     val argv = js.Dynamic.global.process.argv.asInstanceOf[js.Array[String]]
     val args = argv.slice(2, argv.length).toArray
@@ -15,7 +23,8 @@ object BalanceMain {
     if (args.sameElements(Array("--validate-chambers"))) {
       val candidate = fs.readFileSync(0, "utf8").asInstanceOf[String]
       ChamberPricing.validate(candidate) match {
-        case Right(_) => println(Map("unit" -> Constants.u).toJson)
+        case Right(_) =>
+          println(ChamberEditorFields(Constants.u, ChamberPricing.bonusFields).toJson)
         case Left(error) =>
           println(zio.json.ast.Json.Obj("error" -> zio.json.ast.Json.Str(error)).toJson)
           js.Dynamic.global.process.exitCode = 1

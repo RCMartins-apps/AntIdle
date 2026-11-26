@@ -38,6 +38,11 @@
         "type": "storageCapacity",
         "resource": "sugar",
         "amount": 10000000
+      },
+      {
+        "type": "storageCapacity",
+        "resource": "protein",
+        "amount": 1000000
       }
     ]
   },
@@ -51,7 +56,24 @@
         "base": 30000,
         "perLevel": 30000
       }
-    }
+    },
+    "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "brood",
+        "count": 3
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "broodNurse",
+        "count": 5
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "carcass",
+        "count": 1
+      }
+    ]
   },
   "Aphid": {
     "costs": {

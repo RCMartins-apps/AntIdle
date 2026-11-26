@@ -1,6 +1,7 @@
 package pt.rcmartins.antidle.model
 
-import pt.rcmartins.antidle.game.balance.{UpgradeBalance, UpgradeDefinition}
+import pt.rcmartins.antidle.game.UINumbersUtils.prettyNumberStr
+import pt.rcmartins.antidle.game.balance.{ChamberPricing, UpgradeBalance, UpgradeDefinition}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import zio.json._
 
@@ -35,7 +36,12 @@ object UpgradesData {
     final def definition: UpgradeDefinition = UpgradeBalance(this)
     final def cost: ActionCost = definition.cost
     final def title: String = definition.title
-    final def description: String = definition.help
+    final def description: String =
+      if (this == UpgradeType.ProteinStorage) {
+        val capacity = ChamberPricing.capacityBonus(Chamber.ChamberType.FoodStorage, "protein")
+        s"+${prettyNumberStr(capacity)} protein capacity per Food Storage level. ${definition.help}".trim
+      } else definition.help
+
     final def shouldShow(data: AllData): Boolean = definition.requirements.met(data)
   }
 

@@ -80,6 +80,11 @@ object UpgradeBonus {
     def description: String = s"$resource storage capacity"
   }
 
+  @jsonHint("slotCapacity")
+  case class SlotCapacity(slot: String, count: Int) extends UpgradeBonus {
+    def description: String = s"$slot capacity"
+  }
+
   implicit val jsonCodec: JsonCodec[UpgradeBonus] = DeriveJsonCodec.gen[UpgradeBonus]
 }
 

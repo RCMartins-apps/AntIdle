@@ -11,7 +11,7 @@ object DefaultWorkerAssignment {
     case AntTask.SeedForager    => OutpostProgression.capacity(nest)
     case AntTask.Scavenger      => 2L * pt.rcmartins.antidle.game.Constants.u
     case AntTask.BroodNurse =>
-      nest.chambers.nurseryChamber.level.toLong * 5L * pt.rcmartins.antidle.game.Constants.u
+      ChamberBonuses.nurseryNurseCapacity(nest)
     case AntTask.RefuseCarrier =>
       if (Midden.visible(nest)) Midden.Places.toLong * pt.rcmartins.antidle.game.Constants.u else 0L
     case AntTask.RoyalNurse => RoyalBroodProgression.capacity(nest)

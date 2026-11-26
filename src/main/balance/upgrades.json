@@ -524,7 +524,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+100 protein capacity per Food Storage Chamber level; includes existing levels."
+    "description": "Includes existing Food Storage levels."
   },
   "QueensRoutine": {
     "title": "Queen's Routine",

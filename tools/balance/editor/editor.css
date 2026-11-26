@@ -177,3 +177,10 @@ main {
 .chamber-workspace { display: block; max-width: 52rem; margin-inline: auto; }
 .chamber-editor fieldset { min-width: 0; margin-block: 1rem; border: 1px solid var(--border); }
 .header-actions a { color: inherit; }
+#capacity > label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(5rem, 32%);
+  align-items: center;
+  gap: .5rem;
+  margin-block: .25rem;
+}

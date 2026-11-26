@@ -56,7 +56,7 @@ before inherited production and milestones. Protein bonuses apply to scraps
 gatherers before storage limits. Other kinds of ongoing output and expedition
 rewards retain their existing rules.
 
-### Chamber costs
+### Chamber costs and capacities
 
 Open **Chambers** in Colony Workshop to edit the construction catalog
 in [chambers.json](../src/main/balance/chambers.json). The editor shows ordinary
@@ -74,8 +74,16 @@ Nest tunneling space and Food Storage sugar capacity are editable as typed
 Storage level is already included in the colony's base capacity. Previously
 saved capacities are migrated using the historical rates, and saves made with
 tuned rates store their non-chamber capacity base for later recalculation.
-Stored resources above the new cap stay available to spend. Other chamber
-effects retain their existing rules.
+Stored resources above the new cap stay available to spend.
+
+Food Storage protein capacity also uses `storageCapacity`. It applies only
+after Protein Storage research and counts every Food Storage level, including
+the starter level. The Nursery uses whole-number `slotCapacity` effects for
+brood places, Brood Nurse jobs, and carcass slots. These limits are calculated
+from the active catalog and chamber level. A lower brood or carcass limit
+blocks new commitments until there is room. Other chamber effects retain
+their existing rules. The validator supplies the editor with supported bonus
+fields and bounds, so the same compact rows work across chambers.
 
 ## Where to edit
 
