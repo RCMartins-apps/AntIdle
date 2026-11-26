@@ -96,6 +96,11 @@ blocks new commitments until there is room. Other chamber effects retain
 their existing rules. The validator supplies the editor with supported bonus
 fields and bounds, so the same compact rows work across chambers.
 
+Queen Chamber laying speed adds a whole percentage per purchased level. The
+game divides the base laying interval by the resulting speed, applies Queen’s
+Rhythm, and rounds up to a full tick. The starter chamber and work already
+in progress keep their existing timing.
+
 ## Where to edit
 
 Paths below start at `src/main/scala/pt/rcmartins/antidle/`.

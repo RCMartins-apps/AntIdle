@@ -66,6 +66,9 @@ object ChamberPricing {
   val bonusFields: Map[String, List[BonusField]] = Map(
     "Nest" -> List(storage("tunnelingSpace", "Tunneling Space")),
     "FoodStorage" -> List(storage("sugar", "Sugar"), storage("protein", "Protein (with research)")),
+    "Queen" -> List(
+      BonusField("layingSpeedPercent", "", "", "percent", "Laying speed (%)", 1L, 1000L)
+    ),
     "Nursery" -> List(
       slots("brood", "Brood places"),
       slots("broodNurse", "Brood Nurse jobs"),
@@ -90,6 +93,7 @@ object ChamberPricing {
             val targets = bonuses.collect {
               case UpgradeBonus.StorageCapacity(resource, _) => resource
               case UpgradeBonus.SlotCapacity(slot, _)        => slot
+              case _: UpgradeBonus.LayingSpeedPercent        => "layingSpeedPercent"
             }
             def supports(kind: String, target: String): Boolean =
               bonusFields.getOrElse(chamber, Nil).exists(f => f.kind == kind && f.target == target)
@@ -99,6 +103,8 @@ object ChamberPricing {
                 !supports("storageCapacity", resource) || !validAmount(amount)
               case UpgradeBonus.SlotCapacity(slot, count) =>
                 !supports("slotCapacity", slot) || count < 0 || count > MaxSlots
+              case UpgradeBonus.LayingSpeedPercent(percent) =>
+                !supports("layingSpeedPercent", "") || percent < 0 || percent > 1000
               case _ => true
             }
             if (invalidBonus) Some(s"Invalid capacity bonus for $chamber")
@@ -152,6 +158,13 @@ object ChamberPricing {
     prices("Nursery").bonuses
       .collectFirst { case UpgradeBonus.SlotCapacity(`slot`, count) =>
         count
+      }
+      .getOrElse(0)
+
+  def layingSpeedPerLevel: Int =
+    prices("Queen").bonuses
+      .collectFirst { case UpgradeBonus.LayingSpeedPercent(percent) =>
+        percent
       }
       .getOrElse(0)
 

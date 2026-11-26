@@ -24,7 +24,13 @@
         "base": 250000,
         "multiplier": 1.5
       }
-    }
+    },
+    "bonuses": [
+      {
+        "type": "layingSpeedPercent",
+        "percent": 25
+      }
+    ]
   },
   "FoodStorage": {
     "costs": {
