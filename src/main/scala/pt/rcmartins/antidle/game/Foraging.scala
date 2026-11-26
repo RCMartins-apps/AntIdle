@@ -29,16 +29,29 @@ object Foraging {
   def mixedBasePerTick(ants: AntsData, upgrades: UpgradesData): Long = {
     val normal = ants.taskWorkers(AntTask.SugarCollector) / u
     val small = ants.smallCollectors / u
-    val count = normal + small
-    if (count == 0L) 0L else basePerTick(count, upgrades) * (2L * normal + small) / (2L * count)
+    val standard = basePerTick(normal, upgrades)
+    standard + (basePerTick(normal + small, upgrades) - standard) / 2L
   }
   def production(ants: AntsData, upgrades: UpgradesData): Long =
     Prestige.sugar(techniques.filter(upgrades(_).unlocked).foldLeft(mixedBasePerTick(ants, upgrades)) { (amount, _) =>
       (BigDecimal(amount) * BigDecimal.decimal(SugarImprovementBonusPerc)).toLong
     }, ants.lineage)
   def perCollector(ants: AntsData, upgrades: UpgradesData, small: Boolean): Long = {
-    val count = (ants.taskWorkers(AntTask.SugarCollector) + ants.smallCollectors) / u
-    if (count == 0L) 0L else productionPerTick(count, upgrades, ants.lineage) * TicksPerSecond / count / (if (small) 2L else 1L)
+    val standard = ants.taskWorkers(AntTask.SugarCollector) / u
+    val count = if (small) ants.smallCollectors / u else standard
+    if (count == 0L) 0L
+    else if (small) (productionPerTick(standard + count, upgrades, ants.lineage) -
+      productionPerTick(standard, upgrades, ants.lineage)) * TicksPerSecond / (2L * count)
+    else averagePerSecond(count, upgrades, ants.lineage)
+  }
+
+  def nextStandardPerSecond(ants: AntsData, upgrades: UpgradesData): Long = {
+    val collectors = ants.taskWorkers(AntTask.SugarCollector)
+    val next = ants.copy(tasks = ants.tasks.map {
+      case (AntTask.SugarCollector, _) => AntTask.SugarCollector -> (collectors + u)
+      case task => task
+    })
+    (production(next, upgrades) - production(ants, upgrades)) * TicksPerSecond
   }
 
   def averagePerSecond(collectors: Long, upgrades: UpgradesData, lineage: Lineage = Lineage()): Long = {

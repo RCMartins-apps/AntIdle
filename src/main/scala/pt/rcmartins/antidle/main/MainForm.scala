@@ -644,10 +644,10 @@ object MainForm {
         className := "card-body",
         child.maybe <-- createResourceDiv(
           name = "Sugar",
-          netRateSignal = Some(TickCalculator.sugarTickGain.sum),
+          netRateSignal = Some(TickCalculator.displayedSugarRate),
           resourceSignal = sugarSignal,
           resourceEstimationSignal =
-            Val(prettyResourceEstDiv(TickCalculator.sugarTickGain, sugarSignal)),
+            Val(prettyResourceEstDiv(TickCalculator.sugarTickGain, sugarSignal, Some(TickCalculator.displayedSugarRate))),
           showSignal = Val(true),
         ),
         child.maybe <-- createResourceDiv(
@@ -660,9 +660,9 @@ object MainForm {
         ),
         child.maybe <-- createResourceDiv(
           name = "Protein",
-          netRateSignal = Some(TickCalculator.proteinTickGain.sum),
+          netRateSignal = Some(TickCalculator.displayedProteinRate),
           resourceSignal = proteinSignal,
-          resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal)),
+          resourceEstimationSignal = Val(prettyResourceEstDiv(TickCalculator.proteinTickGain, proteinSignal, Some(TickCalculator.displayedProteinRate))),
           showSignal = proteinVisibleSignal,
         ),
         child.maybe <-- createResourceDiv(
@@ -707,16 +707,19 @@ object MainForm {
                       seq.map { antBlood =>
                         div(
                           className := "brood-entry",
+                          span(className := "brood-entry-progress",
+                            child.text <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
+                              val percent = antBlood match {
+                                case brood: AntBrood.Developing => brood.care * 100L / brood.totalCare
+                                case _ =>
+                                  val duration = Math.max(1L, ColonyDevelopment.growthTicks(antBlood, upgrades))
+                                  val elapsed = Math.max(0L, Math.min(duration, currentTick - antBlood.initialTick))
+                                  elapsed * 100L / duration
+                              }
+                              f"${percent}%02d%%"
+                            }.distinct),
                           ResourceIcons.icon(ResourceIcons.forBrood(antBlood)),
-                          b(antBlood.name + ": "),
-                          child <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
-                            antBlood match {
-                              case b: AntBrood.Developing if b.laying => "Laying"
-                              case b: AntBrood.Developing => s"${b.care * 100L / b.totalCare}% developed"
-                              case _ => prettyTimeFromTicks(Math.max(0L, antBlood.initialTick + ColonyDevelopment.growthTicks(antBlood, upgrades) - currentTick))
-                            }
-                          },
-                          ""
+                          b(antBlood.name),
                         )
                       }
                     )
@@ -813,7 +816,7 @@ object MainForm {
               className := "col-3 text-end text-nowrap resource-amount",
               className <-- resourceSignal.map(resource =>
                 if (resource.atCapacity) "text-primary fw-bold" else ""),
-              child.text <-- amountSignal.map(prettyNumberStr),
+              child.text <-- amountSignal.map(if (netRateSignal.isDefined || name == "Knowledge") resourceAmountStr else prettyNumberStr),
             ).amendThis(elem => setTooltipOpt(elem, tooltipOpt)),
             div(
               className := "col-2 text-start text-body-tertiary text-nowrap ps-0",
@@ -1829,7 +1832,8 @@ object MainForm {
       ),
       actionCosts(costSignal, requirementsSignal),
       child.maybe <-- blocker.map(_.map(reason =>
-          div(idAttr := reasonId, className := "action-blocked-reason small text-danger text-center", reason))),
+          div(idAttr := reasonId, className := "action-blocked-reason small text-danger text-center",
+            className("visually-hidden") := ActionBlockers.isBasicResourceShortage(reason), reason))),
           Option.when(showDetails)(detailsTag(
             className := "action-details", rememberDetails("action." + name),
             summaryTag(
@@ -2020,10 +2024,11 @@ object MainForm {
     } },
   )
 
-  private def jobRate(icon: ResourceIcons.ResourceIcon, resource: String, rate: Signal[Long]): ReactiveHtmlElement[HTMLSpanElement] =
+  private def jobRate(icon: ResourceIcons.ResourceIcon, resource: String, rate: Signal[Long],
+      scope: String = "per worker"): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := "job-rate small text-body-secondary", role := "img",
-      title <-- rate.map(n => s"${preciseRateStr(n)} $resource/s per worker").distinct,
-      aria.label <-- rate.map(n => s"${preciseRateStr(n)} $resource/s per worker").distinct,
+      title <-- rate.map(n => s"${preciseRateStr(n)} $resource/s $scope").distinct,
+      aria.label <-- rate.map(n => s"${preciseRateStr(n)} $resource/s $scope").distinct,
       ResourceIcons.icon(icon),
       child.text <-- rate.map(n => s"${signedRateStr(n, compact = false)}/s").distinct)
 
@@ -2058,8 +2063,20 @@ object MainForm {
           ResourceIcons.icon(icon), "!")))
 
     def rates = antTask match {
-      case AntTask.SugarCollector => jobRate(ResourceIcons.Sugar, "sugar", antsSignal.combineWith(upgradesSignal, statisticsData.signal)
-        .map { case (ants, upgrades, stats) => ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats) })
+      case AntTask.SugarCollector =>
+        val input = antsSignal.combineWith(upgradesSignal, statisticsData.signal)
+        span(className := "collector-rates",
+          jobRate(ResourceIcons.Sugar, "sugar", input.map { case (ants, upgrades, stats) =>
+            ColonyMilestones.sugar(Foraging.nextStandardPerSecond(ants, upgrades), stats)
+          }, scope = "from one more standard collector"),
+          span(className := "collector-total small text-body-secondary",
+            className("invisible") <-- amountSignal.map(_ == 0L),
+            "Total: ", ResourceIcons.icon(ResourceIcons.Sugar),
+            child.text <-- input.map { case (ants, upgrades, stats) =>
+              val collectors = ants.taskWorkers(AntTask.SugarCollector) / u
+              val total = ColonyMilestones.sugar(Foraging.productionPerTick(collectors, upgrades, ants.lineage), stats)
+              s"${signedRateStr(total * TicksPerSecond)}/s"
+            }.distinct))
       case AntTask.Tunneler => jobRate(ResourceIcons.Tunneling, "space",
         upgradesSignal.map(ColonyDevelopment.tunnelingPerWorkerTick(_) * TicksPerSecond))
       case AntTask.Scavenger => jobRate(ResourceIcons.Protein, "protein", Val(500L))
@@ -2138,6 +2155,12 @@ object MainForm {
   private def upgradesDiv(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     def createUpgrade(upgradeType: UpgradeType): ReactiveHtmlElement[HTMLDivElement] = {
       val costSignal: Signal[ActionCost] = Val(upgradeType.cost)
+      val wait = resourcesSignal.combineWith(TickCalculator.displayedSugarRate, TickCalculator.displayedProteinRate,
+        TickCalculator.waterTickGain.sum, TickCalculator.resinTickGain.sum, TickCalculator.tunnelingSpaceTickGain.sum)
+        .map { case (resources, sugar, protein, water, resin, space) =>
+          ConstructionWait.ticks(Seq(upgradeType.cost), resources,
+            ActionCost(sugar = sugar, protein = protein, water = water, resin = resin, tunnelingSpace = space)).head
+        }.distinct
       actionButton(
         name = upgradeType.title,
         enabledSignal = canPurchaseUpgradeSignal(upgradeType),
@@ -2145,7 +2168,9 @@ object MainForm {
         costSignal = costSignal,
         bonusSignal = Val(ActionBonus.empty),
         onClickAction = _ => Actions.unlockUpgrade(upgradeType),
-      )
+      ).amend(child.maybe <-- wait.map(ticks => Option.when(ticks > 0L)(
+        span(className := "small text-body-secondary text-center upgrade-estimate",
+          s"Resources in ~${prettyTimeFromTicks(ticks)}"))))
     }
 
     div(

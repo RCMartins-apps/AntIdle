@@ -7,6 +7,9 @@ import pt.rcmartins.antidle.model._
 object ActionBlockers {
   case class Requirement(label: String, available: Long, required: Long = u, maximum: Option[Long] = None, isCost: Boolean = false)
 
+  def isBasicResourceShortage(reason: String): Boolean =
+    Set("Needs sugar", "Needs protein", "Needs water", "Needs resin", "Needs knowledge", "Needs tunneling space").contains(reason)
+
   def missing(requirement: Requirement): Option[String] = Option.when(requirement.available < requirement.required) {
     requirement.label match {
       case "colony slots" => "No free colony slots"
