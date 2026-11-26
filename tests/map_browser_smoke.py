@@ -8,6 +8,7 @@ from functools import partial
 from http.server import ThreadingHTTPServer
 import os
 from pathlib import Path
+import re
 import shutil
 from threading import Thread
 
@@ -30,6 +31,7 @@ def check_map(page, width, url):
         tasks=[[{'SugarCollector': {}}, 40 * UNIT]], defaultTask={'SugarCollector': {}},
         eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
     game['basicResources']['knowledge']['amount'] = 0
+    game['basicResources']['protein']['amount'] = 0
     game['nestAttributes']['chambers']['nurseryChamber']['level'] = 1
     game['exploration'].update(revealedSites=0, surveys={}, depleted={}, explorationParties=[])
     for upgrade in game['upgrades']['upgrades']:
@@ -59,11 +61,17 @@ def check_map(page, width, url):
     expect(page.locator('.site-knowledge')).to_have_text('800 knowledge remaining')
     expect(page.locator('#map-worker-count')).to_have_count(0)
     assert page.locator('#scout-crew').bounding_box()['y'] >= page.locator('.hex-map').bounding_box()['y'] + page.locator('.hex-map').bounding_box()['height']
+    expect(page.get_by_role('button', name='Study Site', exact=True)).to_have_text('Send 3 scouts')
     page.get_by_role('button', name='Study Site', exact=True).click()
     page.clock.run_for(61000)
     expect(page.locator('.site-knowledge')).to_have_text('400 knowledge remaining')
     expect(tile).to_have_attribute('aria-pressed', 'true')
-    expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_be_visible()
+    collect = page.get_by_role('button', name='Collect Insects', exact=True)
+    expect(collect).to_be_enabled()
+    expect(collect.locator('.resource-icon-protein + span')).to_have_text(re.compile(r'^\d.* protein$'))
+    artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
+    artifacts.mkdir(parents=True, exist_ok=True)
+    page.locator('.hex-exploration').screenshot(path=str(artifacts / f'compact-explore-{width}.png'))
     # No scrolling through unrelated destinations: only selected-site actions appear.
     expect(page.get_by_role('button', name='Collect Resin', exact=True)).to_have_count(0)
     assert_fits(page, width)
@@ -83,6 +91,8 @@ def check_map(page, width, url):
     select_tab(page, 'Explore')
     page.locator('.map-hex[data-site="woodland-edge"]').click()
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_be_disabled()
+    expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_contain_text('No space for protein')
+    expect(page.get_by_role('button', name='Collect Insects', exact=True).locator('.resource-icon-protein')).to_be_hidden()
     # Spent insect deposits retain the wild aphid source, without collection controls.
     depleted = copy.deepcopy(studied)
     depleted['exploration'].update(surveys={'woodland-edge': 3}, depleted={'woodland-edge': 800 * UNIT})
@@ -94,8 +104,6 @@ def check_map(page, width, url):
     expect(page.locator('.map-site-card button')).to_have_count(0)
     expect(page.locator('#map-worker-count')).to_have_count(0)
     assert_fits(page, width)
-    artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-map-browser'))
-    artifacts.mkdir(parents=True, exist_ok=True)
     page.screenshot(path=str(artifacts / f'map-{width}.png'), full_page=True)
     ring = copy.deepcopy(studied)
     ring['exploration'].update(revealedSites=6, surveys={key: 1 for key in ['woodland-edge', 'nectar-meadow', 'rotten-log', 'dry-clearing', 'fallen-pine', 'rival-food-cache']}, depleted={})
@@ -174,17 +182,18 @@ def check_trails(page, width, base):
     expect(crew).to_have_value('10')
     page.get_by_role('button', name='Decrease collection workers', exact=True).click()
     expect(crew).to_have_value('5')
+    page.locator('.site-worker-controls').get_by_role('button', name='Max', exact=True).click()
+    expect(crew).to_have_value('50')
+    crew.fill('5')
+    crew.press('Tab')
     trail = page.locator('.collection-trail[data-route="nectar-meadow"]')
     add = page.get_by_role('button', name='Assign 5 trail workers to Nectar Meadow', exact=True)
     for _ in range(3):
         add.click()
     expect(trail.locator('.trail-staffing')).to_have_text('15/50 workers')
-    expect(page.locator('.scout-crew-control')).to_contain_text('3 / 5 available')
-    for _ in range(7):
-        add.click()
+    trail.get_by_role('button', name='Maximize trail workers at Nectar Meadow').click()
     expect(trail.locator('.trail-staffing')).to_have_text('50/50 workers')
     expect(add).to_be_disabled()
-    expect(page.locator('.scout-crew-control')).to_contain_text('0 / 5 available')
     trail.get_by_label('About Collection trail', exact=True).click()
     page.clock.run_for(1000)
     expect(trail.locator('.info-details')).to_have_attribute('open', '')

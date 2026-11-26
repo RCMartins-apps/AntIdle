@@ -66,6 +66,11 @@ def check(page, width, url):
     expect(page.get_by_role('button', name='Game menu', exact=True)).to_have_count(0)
     settings = nav.get_by_role('button', name='Settings', exact=True)
     select_tab(page, 'Chambers')
+    # Navigation collapses Resources, so use the same layout on both visits.
+    collapse = page.get_by_role('button', name='Collapse resource details', exact=True)
+    if collapse.is_visible():
+        collapse.click()
+    expect(page.locator('#resource-details')).not_to_be_visible()
     page.evaluate("window.scrollTo({top:120,behavior:'instant'})")
     page.wait_for_timeout(50)
     return_scroll = page.evaluate('scrollY')
@@ -74,8 +79,7 @@ def check(page, width, url):
     expect(page.locator('#settingsContent')).to_be_visible()
     nav.get_by_role('button',name='Nest',exact=True).click()
     expect(page.locator('.antidle-app')).to_have_attribute('data-mobile-view', 'chambers')
-    page.wait_for_timeout(50)
-    assert abs(page.evaluate('scrollY') - return_scroll) <= 2
+    page.wait_for_function('(saved) => Math.abs(window.scrollY - saved) <= 2', arg=return_scroll)
     settings.click()
     page.keyboard.press('Escape')
     expect(page.locator('.antidle-app')).to_have_attribute('data-mobile-view', 'chambers')

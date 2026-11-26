@@ -59,6 +59,9 @@ object PheromoneTrails {
         exploration = data.exploration.copy(collectionTrails = targets))))
     }
   }
+  def maximize(initial: AllData, destination: String): AllData =
+    (1L to Capacity / Step).foldLeft(initial) { (data, _) => adjust(data, destination, Step) }
+
   def recall(initial: AllData, destination: String): AllData = {
     val data = AgingJobReplacement.cancel(initial, AntTask.TrailForager)
     reconcile(DefaultWorkerAssignment.normalize(data.copy(

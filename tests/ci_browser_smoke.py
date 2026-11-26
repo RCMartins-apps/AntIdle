@@ -63,7 +63,7 @@ def check_milestones(page, width, base):
     expect(page.locator('.milestone-progress')).to_have_text('24/25 standard workers raised')
     page.get_by_role('button', name='Scout Wayfinding', exact=True).click()
     select_tab(page, 'Explore')
-    expect(page.locator('.map-site-card .mission-preview')).to_contain_text('16.0s')
+    expect(page.locator('.map-site-card .explore-duration')).to_have_text('16.0s')
     saved = save_game(page)
     saved['ants']['eggsAndLarvae'] = [{'Developing': {'initialTick': saved['world']['currentTick'], 'kind': 'worker', 'care': 600 * UNIT - 1}}]
     load_game(page, saved)
