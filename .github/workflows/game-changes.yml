@@ -6,6 +6,9 @@ on:
       run_game_jobs:
         description: Whether non-documentation files changed
         value: ${{ jobs.classify.outputs.run_game_jobs }}
+      run_balance_tests:
+        description: Whether the PR needs balance validation
+        value: ${{ jobs.classify.outputs.run_balance_tests }}
 
 permissions:
   contents: read
@@ -16,6 +19,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       run_game_jobs: ${{ steps.changes.outputs.run_game_jobs }}
+      run_balance_tests: ${{ steps.changes.outputs.run_balance_tests }}
     steps:
       - uses: actions/checkout@v4
         timeout-minutes: 3

@@ -36,9 +36,16 @@ jobs:
         timeout-minutes: 10
         run: sbt scalafmtCheckAll balance/scalafmtCheckAll scalafmtSbtCheck fullOptJS
 
-      - name: Run tests
+      - name: Run game and eligible balance tests
         timeout-minutes: 10
-        run: sbt test balance/test
+        env:
+          RUN_BALANCE: ${{ needs.changes.outputs.run_balance_tests }}
+        run: |
+          if [ "$RUN_BALANCE" = false ]; then
+            sbt test
+          else
+            sbt test balance/test
+          fi
 
       - name: Setup Python for browser checks
         timeout-minutes: 3
@@ -48,11 +55,14 @@ jobs:
           cache: pip
           cache-dependency-path: tests/requirements-browser.txt
 
-      - name: Check report and offline release packaging
+      - name: Check balance reports
+        if: needs.changes.outputs.run_balance_tests != 'false'
         timeout-minutes: 2
-        run: |
-          python3 -m unittest discover -s tests -p "balance*_test.py"
-          python3 -m unittest discover -s tests -p "package_site_test.py"
+        run: python3 -m unittest discover -s tests -p "balance*_test.py"
+
+      - name: Check offline release packaging
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s tests -p "package_site_test.py"
 
       - name: Install browser test dependencies
         timeout-minutes: 8

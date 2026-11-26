@@ -104,6 +104,13 @@ Repository .jvmopts now sets a 3 GB maximum heap, 256 MB initial heap and G1 GC,
 compatible with Java 8 and newer. This matches successful local production builds;
 workflow/job timeouts and required checks remain unchanged.
 
+## Presentation-only changes
+
+A PR limited to the UI path allowlist, browser smoke tests, and documentation
+skips the balance simulator and report tests. It still runs the game tests,
+Scalafmt, browser checks, and packaging. Changes outside that allowlist, manual
+validation, and unavailable classification retain the balance tests.
+
 ## Scalafmt gate
 
 PR validation runs `sbt scalafmtCheckAll balance/scalafmtCheckAll scalafmtSbtCheck`

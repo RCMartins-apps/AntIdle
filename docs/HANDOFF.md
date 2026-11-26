@@ -1,5 +1,10 @@
 # Handoff
 
+## 2026-11-26 — presentation-only CI
+
+- PR validation skips balance simulator and report tests for UI-only paths.
+  Game tests, formatting, browser checks, and packaging still run.
+
 ## 2026-11-26 — Scala formatting gate
 
 - The existing Scalafmt config now runs for game and balance sources, tests,

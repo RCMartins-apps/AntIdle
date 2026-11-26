@@ -10,6 +10,18 @@ spec.loader.exec_module(ci)
 
 
 class ChangeClassification(unittest.TestCase):
+    def test_presentation_only_paths(self):
+        self.assertTrue(ci.presentation_only([
+            "index.html", "assets/ui/mobile-navigation.js", "tests/map_browser_smoke.py",
+            "src/main/scala/pt/rcmartins/antidle/main/MainForm.scala", "docs/HANDOFF.md",
+        ]))
+        self.assertFalse(ci.presentation_only([]))
+        for path in ("src/main/balance/upgrades.json", "src/main/scala/Game.scala",
+                     "tools/balance/default.json", "tests/balance_report_test.py",
+                     "build.sbt", ".github/workflows/deploy-test.yml", "scripts/ci_changes.py"):
+            with self.subTest(path=path):
+                self.assertFalse(ci.presentation_only(["index.html", path]))
+
     def test_docs_only(self):
         self.assertTrue(ci.documentation_only(["README.md", "AGENTS.md", "docs/VISION.md", "docs/design/sketch.png"]))
 
