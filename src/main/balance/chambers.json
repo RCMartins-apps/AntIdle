@@ -15,6 +15,11 @@
         "type": "storageCapacity",
         "resource": "tunnelingSpace",
         "amount": 5000000
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "population",
+        "count": 10
       }
     ]
   },
@@ -26,6 +31,11 @@
       }
     },
     "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "population",
+        "count": 5
+      },
       {
         "type": "layingSpeedPercent",
         "percent": 25
@@ -78,6 +88,11 @@
         "type": "slotCapacity",
         "slot": "carcass",
         "count": 1
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "population",
+        "count": 3
       }
     ]
   },

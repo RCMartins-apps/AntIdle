@@ -96,6 +96,11 @@ blocks new commitments until there is room. Other chamber effects retain
 their existing rules. The validator supplies the editor with supported bonus
 fields and bounds, so the same compact rows work across chambers.
 
+Nest, Queen Chamber and Nursery support editable colony places per purchased
+level. Starter housing includes the initial Queen Chamber. Loaded colonies
+recalculate the chamber share while preserving outpost housing and existing
+population. A lower limit blocks new orders until there is room.
+
 Queen Chamber laying speed adds a whole percentage per purchased level. The
 game divides the base laying interval by the resulting speed, applies Queen’s
 Rhythm, and rounds up to a full tick. The starter chamber and work already
