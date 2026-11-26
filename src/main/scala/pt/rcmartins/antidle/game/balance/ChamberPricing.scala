@@ -66,6 +66,11 @@ object ChamberPricing {
   val bonusFields: Map[String, List[BonusField]] = Map(
     "Nest" -> List(storage("tunnelingSpace", "Tunneling Space")),
     "FoodStorage" -> List(storage("sugar", "Sugar"), storage("protein", "Protein (with research)")),
+    "Aphid" -> List(
+      slots("aphid", "Aphid places"),
+      slots("aphidShelters", "Extra places with Aphid Shelters")
+    ),
+    "Replete" -> List(slots("replete", "Replete places")),
     "Nursery" -> List(
       slots("brood", "Brood places"),
       slots("broodNurse", "Brood Nurse jobs"),
@@ -148,8 +153,10 @@ object ChamberPricing {
       }
       .getOrElse(0L)
 
-  def nurserySlotsPerLevel(slot: String): Int =
-    prices("Nursery").bonuses
+  def nurserySlotsPerLevel(slot: String): Int = slotsPerLevel(ChamberType.Nursery, slot)
+
+  def slotsPerLevel(kind: ChamberType, slot: String): Int =
+    prices(kind.toString).bonuses
       .collectFirst { case UpgradeBonus.SlotCapacity(`slot`, count) =>
         count
       }

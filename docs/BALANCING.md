@@ -96,6 +96,11 @@ blocks new commitments until there is room. Other chamber effects retain
 their existing rules. The validator supplies the editor with supported bonus
 fields and bounds, so the same compact rows work across chambers.
 
+Aphid and Replete housing is editable per level. Aphid Shelters adds a
+separate per-level bonus. Lower limits keep existing animals and reserved
+relocations. New trips and promotions wait until there is room. Excess aphids
+do not add tender jobs, and existing repletes keep their water capacity.
+
 ## Where to edit
 
 Paths below start at `src/main/scala/pt/rcmartins/antidle/`.

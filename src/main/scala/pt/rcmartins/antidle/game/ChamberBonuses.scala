@@ -92,7 +92,7 @@ object ChamberBonuses {
           maxProtein = if (upgrades(ProteinStorage).unlocked) protein else 0L
         )
       case ChamberType.Replete =>
-        ActionBonus(repleteSlots = 1)
+        ActionBonus(repleteSlots = RepleteProgression.placesPerLevel)
       case ChamberType.Aphid =>
         ActionBonus(aphidSlots =
           if (upgrades(pt.rcmartins.antidle.model.UpgradesData.UpgradeType.AphidShelters).unlocked)

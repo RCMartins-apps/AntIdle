@@ -85,7 +85,19 @@
         "base": 20000,
         "perLevel": 20000
       }
-    }
+    },
+    "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "aphid",
+        "count": 10
+      },
+      {
+        "type": "slotCapacity",
+        "slot": "aphidShelters",
+        "count": 10
+      }
+    ]
   },
   "Replete": {
     "costs": {
@@ -97,7 +109,14 @@
         "base": 50000,
         "perLevel": 50000
       }
-    }
+    },
+    "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "replete",
+        "count": 1
+      }
+    ]
   },
   "RoyalNursery": {
     "costs": {
