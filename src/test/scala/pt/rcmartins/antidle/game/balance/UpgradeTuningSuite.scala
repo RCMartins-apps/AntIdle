@@ -54,6 +54,27 @@ class UpgradeTuningSuite extends FunSuite {
     assert(UpgradeTuning.load(encode(edited).replace("productionPercent", "unknownEffect")).isLeft)
   }
 
+  test("the schema exposes expedition slots and owned upgrades stack their edited counts") {
+    val editor = UpgradeTuning.catalog(encode(catalog)).fold(error => fail(error), identity)
+    assertEquals(editor.bonusKinds.map(_.id).toSet, Set("productionPercent", "slotCapacity"))
+    val edited = change(AdditionalExpeditionSlot)(
+      _.copy(bonuses = List(UpgradeBonus.SlotCapacity("expedition", 3)))
+    ).fold(error => fail(error), identity)
+    val owned = UpgradesData.initial.unlock(AdditionalExpeditionSlot, CoordinatedExpeditions)
+    assertEquals(UpgradeBalance.addedSlots("expedition", owned, edited), 4)
+    assertEquals(UpgradeBalance.addedSlots("expedition", UpgradesData.initial, edited), 0)
+    assert(
+      change(AdditionalExpeditionSlot)(
+        _.copy(bonuses = List(UpgradeBonus.SlotCapacity("brood", 3)))
+      ).isLeft
+    )
+    assert(
+      change(AdditionalExpeditionSlot)(
+        _.copy(bonuses = List(UpgradeBonus.SlotCapacity("expedition", 101)))
+      ).isLeft
+    )
+  }
+
   test("invalid fields, gates, and production bonuses are rejected") {
     assert(UpgradeTuning.load(encode(catalog).replaceFirst(""""sugar"""", """"suggar"""")).isLeft)
     assert(change(StandardWorkers)(d => d.copy(cost = d.cost.copy(sugar = -1))).isLeft)

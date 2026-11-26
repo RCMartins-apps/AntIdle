@@ -29,10 +29,86 @@ object UpgradeTuning {
     "resin" -> ResourceIcons.Resin,
   ).map { case (field, icon) => field -> CostIcon(icon.id, icon.path) }
 
+  case class Choice(value: String, label: String)
+  object Choice {
+    implicit val encoder: JsonEncoder[Choice] = DeriveJsonEncoder.gen[Choice]
+  }
+
+  case class BonusField(
+      key: String,
+      label: String,
+      defaultValue: Json,
+      choices: List[Choice] = Nil,
+      min: Int = 0,
+      max: Int = 0
+  ) {
+    def accepts(value: Json): Boolean = value match {
+      case Json.Str(id) => choices.exists(_.value == id)
+      case Json.Num(value) =>
+        choices.isEmpty && value.compareTo(java.math.BigDecimal.valueOf(min.toLong)) >= 0 && value
+          .compareTo(java.math.BigDecimal.valueOf(max.toLong)) <= 0
+      case _ => false
+    }
+
+  }
+
+  object BonusField {
+    implicit val encoder: JsonEncoder[BonusField] = DeriveJsonEncoder.gen[BonusField]
+  }
+
+  case class BonusKind(id: String, label: String, fields: List[BonusField])
+  object BonusKind {
+    implicit val encoder: JsonEncoder[BonusKind] = DeriveJsonEncoder.gen[BonusKind]
+  }
+
+  private val bonusKinds = List(
+    BonusKind(
+      "productionPercent",
+      "Production bonus",
+      List(
+        BonusField(
+          "source",
+          "Production source",
+          Json.Str("sugarCollectors"),
+          List(
+            Choice("sugarCollectors", "Sugar Collectors"),
+            Choice("scrapsGatherers", "Scraps Gatherers")
+          )
+        ),
+        BonusField("percent", "Bonus (%)", Json.Num(5), min = 1, max = 100)
+      )
+    ),
+    BonusKind(
+      "slotCapacity",
+      "Extra slots",
+      List(
+        BonusField(
+          "slot",
+          "Slot type",
+          Json.Str("expedition"),
+          List(Choice("expedition", "Expeditions"))
+        ),
+        BonusField("count", "Slots added", Json.Num(1), min = 1, max = 100)
+      )
+    )
+  )
+
+  private def validBonus(bonus: UpgradeBonus): Boolean =
+    bonus.toJsonAST.toOption.exists {
+      case Json.Obj(entries) =>
+        val fields = entries.toMap
+        bonusKinds.exists(kind =>
+          fields.get("type").contains(Json.Str(kind.id)) &&
+            kind.fields.forall(field => fields.get(field.key).exists(field.accepts))
+        )
+      case _ => false
+    }
+
   case class Catalog(
       unit: Long,
       discoveries: Map[String, String],
       icons: Map[String, CostIcon],
+      bonusKinds: List[BonusKind],
       upgrades: Seq[Entry]
   )
 
@@ -47,6 +123,7 @@ object UpgradeTuning {
         Constants.u,
         DiscoveryProgression.all.map(d => d.id -> d.title).toMap,
         costIcons,
+        bonusKinds,
         UpgradeType.all.map(id => Entry(id.name, defaults(id), effective(id)))
       )
     )
@@ -125,14 +202,8 @@ object UpgradeTuning {
       Left(s"$name: repeated upgrade prerequisite")
     else if (required.discovery.exists(id => !DiscoveryProgression.all.exists(_.id == id)))
       Left(s"$name: unknown discovery")
-    else if (
-      definition.bonuses.exists {
-        case bonus: UpgradeBonus.ProductionPercent =>
-          !Set("sugarCollectors", "scrapsGatherers").contains(bonus.source) ||
-            bonus.percent < 1 || bonus.percent > 100
-        case _: UpgradeBonus.StorageCapacity | _: UpgradeBonus.SlotCapacity => true
-      }
-    ) Left(s"$name: production bonus needs a supported source and 1 to 100 percent")
+    else if (!definition.bonuses.forall(validBonus))
+      Left(s"$name: unsupported bonus type, target or value")
     else Right(definition)
   }
 

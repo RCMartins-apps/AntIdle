@@ -35,7 +35,7 @@ h2 { font-size: 1.1rem; }
 h3 { font-size: .95rem; }
 [hidden] { display: none !important; }
 
-.header, .header-actions, .brand, .toolbar, .tree-title, .zoom, .legend {
+.header, .header-actions, .brand, .toolbar, .tree-title, .tree-layout, .zoom, .legend {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -71,6 +71,8 @@ main {
 .tree-title { margin-right: auto; gap: 8px; }
 .tree-title span { color: var(--muted); font-size: .82rem; }
 #search { width: 13rem; }
+.tree-layout { gap: 6px; flex-wrap: wrap; }
+.tree-layout select { width: auto; }
 .zoom { gap: 4px; }
 .zoom button { min-width: 38px; padding-inline: 7px; }
 #viewport {
@@ -173,7 +175,16 @@ main {
 }
 .node.related:not([aria-pressed="true"]) { border-color: #79947c; }
 .bonus-list { display: grid; gap: .5rem; }
-.bonus-list > button { justify-self: start; }
+.bonus-fields {
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  border: 1px solid var(--border);
+}
+.bonus-fields:has(> label:only-of-type) { grid-template-columns: minmax(0, 1fr) auto; }
+.bonus-fields legend { padding-inline: 4px; }
+.bonus-fields .remove-bonus { grid-column: -2 / -1; grid-row: 1; padding-block: 2px; }
+.bonus-list .add-bonus { width: auto; justify-self: start; }
 .chamber-workspace { display: block; max-width: 52rem; margin-inline: auto; }
 .chamber-editor fieldset { min-width: 0; margin-block: 1rem; border: 1px solid var(--border); }
 .header-actions a { color: inherit; }

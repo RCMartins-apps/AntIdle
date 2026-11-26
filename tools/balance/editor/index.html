@@ -25,7 +25,15 @@
     <section class="workspace" aria-labelledby="tree-title">
       <div class="toolbar">
         <div class="tree-title"><h2 id="tree-title">Upgrade tree</h2><span id="matches"></span></div>
-        <input id="search" type="search" placeholder="Find an upgrade…" aria-label="Find an upgrade">
+        <input id="search" type="search" placeholder="Find an upgrade…" aria-label="Find an upgrade" disabled>
+        <div class="tree-layout">
+          <label for="tree-columns">Per row</label>
+          <select id="tree-columns" aria-label="Upgrades per row" disabled>
+            <option>1</option><option>2</option><option>3</option><option selected>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+          <button type="button" id="rearrange" disabled>Rearrange tree</button>
+        </div>
         <div class="zoom" aria-label="Tree zoom" role="group">
           <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
           <button type="button" id="fit" title="Fit tree width">Fit</button>
