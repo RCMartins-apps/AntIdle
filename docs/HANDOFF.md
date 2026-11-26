@@ -1,5 +1,11 @@
 # Handoff
 
+## 2026-11-26 — flatter Explore cards
+
+- Study and Collect sit directly below the selected site name. Map labels use
+  the actual site names. Max fits a safe crew to the available haul and room,
+  and trip time sits beside it. The launch label aligns text and icons.
+
 ## 2026-11-26 — resource and collector polish
 
 - Resource totals use two decimal places below 100 and fewer digits at larger
