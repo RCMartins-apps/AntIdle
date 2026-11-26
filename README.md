@@ -18,7 +18,7 @@ Open the served `index.html`. Use `sbt '~fastOptJS'` to rebuild while developing
 Production validation follows CI: `sbt fullOptJS test`.
 
 PR tests and deployment share a lightweight change check. Changes limited to
-`docs/**` and root Markdown files skip game builds/tests and deployment; a mixed
+`docs/**` and Markdown files at any depth skip game builds/tests and deployment; a mixed
 or non-documentation change runs normal validation. The workflows still report
 completed/skipped job statuses, so documentation PRs do not leave required checks
 pending. Manual PR-test dispatch always validates the game. Production deploys only from main. Passing same-repository PRs publish

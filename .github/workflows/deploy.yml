@@ -62,7 +62,7 @@ jobs:
             let current = branch.commit.sha === context.sha;
             if (!current) {
               const {data: diff} = await github.rest.repos.compareCommits({...context.repo, base: context.sha, head: branch.commit.sha});
-              const documentation = path => path.startsWith('docs/') || (!path.includes('/') && path.toLowerCase().endsWith('.md'));
+              const documentation = path => path.startsWith('docs/') || path.toLowerCase().endsWith('.md');
               current = diff.status === 'ahead' && diff.files && diff.files.length < 300 &&
                 diff.files.every(file => documentation(file.filename) && (!file.previous_filename || documentation(file.previous_filename)));
             }
