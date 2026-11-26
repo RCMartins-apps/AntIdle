@@ -5,7 +5,6 @@ import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.HTMLSpanElement
 import pt.rcmartins.antidle.game.Constants._
 
-
 object UINumbersUtils {
 
   private val Suffixes: IndexedSeq[String] = IndexedSeq("", "K", "M", "B", "T", "Q")
@@ -21,8 +20,10 @@ object UINumbersUtils {
     } else {
       val rounded = hundredths(magnitude, units)
       val fraction = (rounded % 100).toInt
-      val decimals = if (fraction == 0) ""
-        else if (fraction % 10 == 0) s".${fraction / 10}" else f".$fraction%02d"
+      val decimals =
+        if (fraction == 0) ""
+        else if (fraction % 10 == 0) s".${fraction / 10}"
+        else f".$fraction%02d"
       (if (negative) "-" else "") + (rounded / 100).toString + decimals
     }
   }
@@ -51,10 +52,16 @@ object UINumbersUtils {
   }
 
   def prettyNumberStr(num: Long): String = compact(num)
-  def prettyNumberStr(prefix: String, num: Long, suffix: Int): String = prefix + compact(num, suffix)
+  def prettyNumberStr(prefix: String, num: Long, suffix: Int): String =
+    prefix + compact(num, suffix)
 
-  def prettyNumberSimple(prefix: String, num: Long, suffixStr: String): ReactiveHtmlElement[HTMLSpanElement] =
+  def prettyNumberSimple(
+      prefix: String,
+      num: Long,
+      suffixStr: String
+  ): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := "numeric-value", prefix + compact(num) + suffixStr)
+
   def prettyNumberSimple(num: Long): ReactiveHtmlElement[HTMLSpanElement] =
     prettyNumberSimple("", num, "")
 

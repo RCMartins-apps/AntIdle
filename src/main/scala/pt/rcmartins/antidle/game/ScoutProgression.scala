@@ -16,10 +16,16 @@ object ScoutProgression {
 
   // Like expedition workers, scouts away from the nest do not consume colony food.
   def upkeepCount(ants: AntsData, exploration: ExplorationData): Long =
-    ants.upkeepWorkersCount - exploration.explorationParties.filter(p => p.mission == "haul" || p.mission == "aphids").map(_.scouts).sum / u
+    ants.upkeepWorkersCount - exploration.explorationParties
+      .filter(p => p.mission == "haul" || p.mission == "aphids")
+      .map(_.scouts)
+      .sum / u
 
   def upkeepPerTick(ants: AntsData, exploration: ExplorationData): Long =
-    upkeepCount(ants, exploration) * antsSugarUpkeepTick + ants.smallWorkers / u * antsSugarUpkeepTick / 2L
+    upkeepCount(
+      ants,
+      exploration
+    ) * antsSugarUpkeepTick + ants.smallWorkers / u * antsSugarUpkeepTick / 2L
 
   def canRaise(allData: AllData): Boolean =
     canRaise(allData.ants, allData.nestAttributes)
@@ -36,14 +42,23 @@ object ScoutProgression {
 
   def orderAmount(ants: AntsData, nest: NestAttributes, requested: Int): Int =
     if (!canRaise(ants, nest)) 0
-    else Math.max(0L, Math.min(Math.max(0, requested).toLong,
-      BroodProgression.availableColonySlots(ants, nest) / u)).toInt
+    else
+      Math
+        .max(
+          0L,
+          Math.min(
+            Math.max(0, requested).toLong,
+            BroodProgression.availableColonySlots(ants, nest) / u
+          )
+        )
+        .toInt
 
   def raise(allData: AllData, requested: Int = 1): AllData = {
     val amount = orderAmount(allData.ants, allData.nestAttributes, requested)
     if (amount == 0) allData
     else {
-      val ordered = allData.modify(_.ants.scoutEggOrders).using(_ ++ Seq.fill(amount)(allData.ants.eggOrders))
+      val ordered =
+        allData.modify(_.ants.scoutEggOrders).using(_ ++ Seq.fill(amount)(allData.ants.eggOrders))
       // Start the timer immediately if the queen is ready and no earlier orders exist.
       if (allData.ants.queuedEggs == 0) BroodProgression.layOrdered(ordered) else ordered
     }
@@ -51,25 +66,43 @@ object ScoutProgression {
 
   def lay(allData: AllData): AllData =
     if (!canLay(allData.ants, allData.nestAttributes, allData.basicResources)) allData
-    else BroodProgression.beginLaying(allData.spendResources(eggCost), "scout",
-      BroodProgression.interval(allData.ants, allData.nestAttributes, allData.upgrades))
+    else
+      BroodProgression.beginLaying(
+        allData.spendResources(eggCost),
+        "scout",
+        BroodProgression.interval(allData.ants, allData.nestAttributes, allData.upgrades)
+      )
 
   def growBrood(allData: AllData): AllData = {
     val (grown, growing) = allData.ants.eggsAndLarvae.partition {
-      case brood: AntBrood.Egg => allData.currentTick >= brood.initialTick + ColonyDevelopment.growthTicks(brood, allData.upgrades)
-      case brood: AntBrood.ScoutEgg => allData.currentTick >= brood.initialTick + ColonyDevelopment.growthTicks(brood, allData.upgrades)
+      case brood: AntBrood.Egg =>
+        allData.currentTick >= brood.initialTick + ColonyDevelopment.growthTicks(
+          brood,
+          allData.upgrades
+        )
+      case brood: AntBrood.ScoutEgg =>
+        allData.currentTick >= brood.initialTick + ColonyDevelopment.growthTicks(
+          brood,
+          allData.upgrades
+        )
       case _ => false
     }
     val newWorkers = grown.count(_.isInstanceOf[AntBrood.Egg]) * u
     val newScouts = grown.count(_.isInstanceOf[AntBrood.ScoutEgg]) * u
     val updated = allData
-      .modify(_.ants.eggsAndLarvae).setTo(growing)
-      .modify(_.ants.workers).using(_ + newWorkers)
-      .modify(_.ants.scouts).using(_ + newScouts)
-      .modify(_.statistics.workersMatured).using(_.addValue(newWorkers / u))
-      .modify(_.statistics.scoutsMatured).using(_.addValue(newScouts / u))
+      .modify(_.ants.eggsAndLarvae)
+      .setTo(growing)
+      .modify(_.ants.workers)
+      .using(_ + newWorkers)
+      .modify(_.ants.scouts)
+      .using(_ + newScouts)
+      .modify(_.statistics.workersMatured)
+      .using(_.addValue(newWorkers / u))
+      .modify(_.statistics.scoutsMatured)
+      .using(_.addValue(newScouts / u))
       .modify(_.statistics.maxAliveWorkers)
       .usingIf(newWorkers > 0)(_.max(allData.ants.workersCount + (newWorkers / u).toInt))
     DefaultWorkerAssignment.normalize(PopulationAging.reconcile(updated))
   }
+
 }

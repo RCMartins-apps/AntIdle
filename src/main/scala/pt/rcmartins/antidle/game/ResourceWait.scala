@@ -9,4 +9,5 @@ object ResourceWait {
     else if (income <= 0L || (resource.isLimited && required > resource.maxAmount)) -1L
     else 1L + (remaining - 1L) / income
   }
+
 }

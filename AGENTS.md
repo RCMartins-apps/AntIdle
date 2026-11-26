@@ -148,6 +148,8 @@ native toggle delivery; disconnect observers when their elements unmount.
 
 - `sbt fastOptJS`: development build; serve the repo with `python3 -m http.server 8000`.
 - `sbt fullOptJS test`: production build and engine tests, matching PR CI.
+- `sbt scalafmtCheckAll balance/scalafmtCheckAll scalafmtSbtCheck`: required
+  formatting checks for game, balance, test, and sbt sources.
 - After `fastOptJS`, run the relevant `tests/*_smoke.py` for UI changes;
   setup and coverage are documented in README and tests/README.md. Use the maintained map/CI gates; older XP/carousel harnesses are historical. Check phone and desktop layouts.
 - Choose checks for the change. Documentation-only work needs link/path checks

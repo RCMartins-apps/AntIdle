@@ -15,11 +15,14 @@ object Midden {
   private val CrowdingPercent = 80L
   private val CrowdingDivisor = 3
 
-  def visible(nest: NestAttributes): Boolean = nest.chambers.nurseryChamber.level >= RequiredNurseryLevel
+  def visible(nest: NestAttributes): Boolean =
+    nest.chambers.nurseryChamber.level >= RequiredNurseryLevel
+
   def capacity(nest: NestAttributes): Long =
     if (!visible(nest)) 0L else BaseCapacity + (if (nest.middenBuilt) AddedCapacity else 0L)
 
-  def stored(nest: NestAttributes): Long = Math.max(0L, Math.min(capacity(nest), nest.nurseryRefuse))
+  def stored(nest: NestAttributes): Long =
+    Math.max(0L, Math.min(capacity(nest), nest.nurseryRefuse))
 
   def canBuild(data: AllData): Boolean =
     visible(data.nestAttributes) && !data.nestAttributes.middenBuilt && data.hasResources(Cost)
@@ -28,8 +31,10 @@ object Midden {
     if (!canBuild(data)) data
     else {
       val paid = data.spendResources(Cost)
-      paid.copy(nestAttributes = paid.nestAttributes.copy(middenBuilt = true),
-        ants = paid.ants.unlockTask(AntTask.RefuseCarrier))
+      paid.copy(
+        nestAttributes = paid.nestAttributes.copy(middenBuilt = true),
+        ants = paid.ants.unlockTask(AntTask.RefuseCarrier)
+      )
     }
 
   def carriers(ants: AntsData): Long =
@@ -53,4 +58,5 @@ object Midden {
     if (max == 0L || maxBlocked == 0 || refuse < threshold) 0
     else 1 + ((refuse - threshold) * maxBlocked / (max - threshold + 1L)).toInt
   }
+
 }

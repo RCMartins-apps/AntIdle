@@ -104,12 +104,12 @@ Repository .jvmopts now sets a 3 GB maximum heap, 256 MB initial heap and G1 GC,
 compatible with Java 8 and newer. This matches successful local production builds;
 workflow/job timeouts and required checks remain unchanged.
 
-## Scalafmt gate (planned)
+## Scalafmt gate
 
-`.scalafmt.conf` configures the formatter but does not run it. Add the
-`sbt-scalafmt` plugin, normalize the existing Scala sources in an isolated
-formatting change, and run `sbt scalafmtCheckAll scalafmtSbtCheck` before building
-in PR validation. The existing required `test` check should propagate format
-failures. Keep the baseline and gate together so enforcement starts as soon
-as the formatted sources land. Use `sbt scalafmtAll scalafmtSbt` to fix violations
-locally and keep routine formatting scoped to the files being changed.
+PR validation runs `sbt scalafmtCheckAll balance/scalafmtCheckAll scalafmtSbtCheck`
+before building. This covers the game, the balance tool, their tests, and sbt
+sources. Formatting failures propagate through the existing required `test`
+check. The formatter and its rules are pinned in `.scalafmt.conf`.
+
+To fix violations locally, run `sbt scalafmtAll balance/scalafmtAll scalafmtSbt`.
+Keep routine formatting scoped to the files being changed.

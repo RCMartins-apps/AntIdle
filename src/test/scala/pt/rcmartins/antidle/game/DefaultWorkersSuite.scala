@@ -13,9 +13,13 @@ class DefaultWorkersSuite extends FunSuite {
   def colony: AllData = {
     val initial = AllData.initial
     initial.copy(
-      ants = AntsData(workers = 20 * u, scouts = 2 * u,
-        tasks = Seq(SugarCollector -> 0L, Tunneler -> 0L, Explorer -> 0L)),
-      upgrades = initial.upgrades.unlock(UpgradeType.UnlockExplorerTask, UpgradeType.DefaultWorkers),
+      ants = AntsData(
+        workers = 20 * u,
+        scouts = 2 * u,
+        tasks = Seq(SugarCollector -> 0L, Tunneler -> 0L, Explorer -> 0L)
+      ),
+      upgrades =
+        initial.upgrades.unlock(UpgradeType.UnlockExplorerTask, UpgradeType.DefaultWorkers),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
       exploration = MapFixture.explored.copy(revealedSites = 6),
@@ -74,13 +78,16 @@ class DefaultWorkersSuite extends FunSuite {
     val sent = ExplorationHelper.start(pooled, 5 * u, ExplorationDestination.WoodlandEdge)
     assertEquals(sent.ants.taskWorkers(SugarCollector), 15L * u)
     val carcass = Carcass(120 * u, 120 * u, 5 * u, 5 * u, 50L)
-    val discovery = sent.copy(exploration = sent.exploration.copy(discoveredCarcasses = List(carcass)))
+    val discovery =
+      sent.copy(exploration = sent.exploration.copy(discoveredCarcasses = List(carcass)))
     val retrieving = CarcassProgression.retrieve(discovery, 0)
     assertEquals(retrieving.ants.taskWorkers(SugarCollector), 10L * u)
     assertEquals(retrieving.ants.taskWorkers(Explorer), 5L * u)
     assertEquals(retrieving.ants.taskWorkers(CarcassCarrier), 5L * u)
     assertBalanced(retrieving.ants)
-    val finished = CarcassProgression.returnCarcasses(retrieving.copy(world = retrieving.world.copy(currentTick = 50L)))
+    val finished = CarcassProgression.returnCarcasses(
+      retrieving.copy(world = retrieving.world.copy(currentTick = 50L))
+    )
     assertEquals(finished.ants.taskWorkers(SugarCollector), 15L * u)
     assertEquals(finished.ants.taskWorkers(Explorer), 5L * u)
     assertBalanced(finished.ants)
@@ -107,8 +114,10 @@ class DefaultWorkersSuite extends FunSuite {
   }
 
   test("newly matured workers automatically join the default task") {
-    val initial = pooled.copy(ants = pooled.ants.copy(eggsAndLarvae = Seq(AntBrood.Egg(0L))),
-      world = pooled.world.copy(currentTick = AntBrood.defaultTicksToGrow))
+    val initial = pooled.copy(
+      ants = pooled.ants.copy(eggsAndLarvae = Seq(AntBrood.Egg(0L))),
+      world = pooled.world.copy(currentTick = AntBrood.defaultTicksToGrow)
+    )
     val grown = ScoutProgression.growBrood(initial)
     assertEquals(grown.ants.workers, 21L * u)
     assertEquals(grown.ants.taskWorkers(SugarCollector), 21L * u)
@@ -128,17 +137,21 @@ class DefaultWorkersSuite extends FunSuite {
     assertBalanced(result.ants)
   }
 
-  test("current saves preserve default choice and allocation; missing ownership clears the default") {
+  test(
+    "current saves preserve default choice and allocation; missing ownership clears the default"
+  ) {
     assertEquals("{}".fromJson[AntsData].toOption.get.defaultTask, None)
     val saved = AllDataForSave.fromAllData(pooled)
     val loaded = saved.toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assertEquals(loaded.ants.defaultTask, Some(SugarCollector))
     assertEquals(loaded.ants.taskWorkers(SugarCollector), 20L * u)
     assertBalanced(loaded.ants)
-    val withoutUpgrade = saved.copy(upgrades = saved.upgrades.copy(
-      upgrades = saved.upgrades.upgrades.filterNot(_.name == "DefaultWorkers")))
+    val withoutUpgrade = saved.copy(upgrades =
+      saved.upgrades.copy(upgrades = saved.upgrades.upgrades.filterNot(_.name == "DefaultWorkers"))
+    )
     val withoutOwnership = withoutUpgrade.toAllData
     assert(!withoutOwnership.upgrades(UpgradeType.DefaultWorkers).unlocked)
     assertEquals(withoutOwnership.ants.defaultTask, None)
   }
+
 }

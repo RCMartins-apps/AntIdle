@@ -10,9 +10,11 @@ object BroodPriority {
   case object Balanced extends BroodPriority("Balanced") {
     def prefers(brood: AntBrood.Developing): Boolean = false
   }
+
   case object WorkersFirst extends BroodPriority("Workers first") {
     def prefers(brood: AntBrood.Developing): Boolean = brood.kind != "scout"
   }
+
   case object ScoutsFirst extends BroodPriority("Scouts first") {
     def prefers(brood: AntBrood.Developing): Boolean = brood.kind == "scout"
   }

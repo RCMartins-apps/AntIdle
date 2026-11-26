@@ -12,8 +12,9 @@ object ColonyDevelopment {
   def growthTicks(brood: AntBrood, upgrades: UpgradesData): Long = {
     val base = brood match {
       case _: AntBrood.ScoutEgg => ScoutGrowthTicks
-      case _ => AntBrood.defaultTicksToGrow
+      case _                    => AntBrood.defaultTicksToGrow
     }
     if (upgrades(BroodCare).unlocked) base * 4L / 5L else base
   }
+
 }

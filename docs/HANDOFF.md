@@ -1,5 +1,11 @@
 # Handoff
 
+## 2026-11-26 — Scala formatting gate
+
+- The existing Scalafmt config now runs for game and balance sources, tests,
+  and sbt files. The formatted baseline and the required PR validation gate
+  ship together. See [CI workflow](CI-WORKFLOW.md#scalafmt-gate).
+
 ## 2026-11-26 — mobile colony spacing
 
 - On phones, the construction queue appears on Chambers. Brood has less

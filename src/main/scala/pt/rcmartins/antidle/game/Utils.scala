@@ -41,8 +41,12 @@ object Utils {
   val upgradesSignal: Signal[UpgradesData] = upgradesData.signal.distinct
   val explorationData: Var[ExplorationData] = Var(AllData.initial.exploration)
   val explorationSignal: Signal[ExplorationData] = explorationData.signal.distinct
-  val territoryVisibleSignal: Signal[Boolean] = explorationSignal.map(TerritoryProgression.visible).distinct
-  val discoveriesVisibleSignal: Signal[Boolean] = explorationSignal.map(data => data.surveys.values.exists(_ > 0)).distinct
+  val territoryVisibleSignal: Signal[Boolean] =
+    explorationSignal.map(TerritoryProgression.visible).distinct
+
+  val discoveriesVisibleSignal: Signal[Boolean] =
+    explorationSignal.map(data => data.surveys.values.exists(_ > 0)).distinct
+
   val statisticsData: Var[StatisticsData] = Var(AllData.initial.statistics)
 
   val currentTickSignal: Signal[Long] = worldData.signal.map(_.currentTick).distinct
@@ -59,25 +63,35 @@ object Utils {
     antsSignal.map(_.eggsAndLarvae.count(_.isPupae) * u).distinct
 
   val scoutsSignal: Signal[Long] = antsSignal.map(_.scouts).distinct
-  val availableScoutsSignal: Signal[Long] = antsSignal.combineWith(explorationSignal)
-    .map { case (ants, exploration) => ScoutProgression.available(ants, exploration) }.distinct
+  val availableScoutsSignal: Signal[Long] = antsSignal
+    .combineWith(explorationSignal)
+    .map { case (ants, exploration) => ScoutProgression.available(ants, exploration) }
+    .distinct
+
   val scoutResourceSignal: Signal[BasicResource] = scoutsSignal.map(BasicResource(_, 0L))
 
   val antAndBroodCount: Signal[Long] =
     antsSignal.map(_.populationCount.toLong * u).distinct
 
   val unlockedAntTasks: Signal[Seq[AntTask]] =
-    antsSignal.map(a => if (!a.standardWorkersUnlocked && a.workers == 0L) Seq.empty else a.tasks.map(_._1)).distinct
+    antsSignal
+      .map(a => if (!a.standardWorkersUnlocked && a.workers == 0L) Seq.empty else a.tasks.map(_._1))
+      .distinct
 
   val idleWorkersCountSignal: Signal[Long] = antsData.signal.map(_.idleWorkersCount).distinct
-  val availableWorkersCountSignal: Signal[Long] = antsData.signal.map(_.availableWorkersCount).distinct
+  val availableWorkersCountSignal: Signal[Long] =
+    antsData.signal.map(_.availableWorkersCount).distinct
 
   val sugarSignal: Signal[BasicResource] = resourcesSignal.map(_.sugar).distinct
   val proteinSignal: Signal[BasicResource] = resourcesSignal.map(_.protein).distinct
   val proteinVisibleSignal: Signal[Boolean] = explorationSignal.map(_.proteinDiscovered).distinct
-  val nurseryUnlockedSignal: Signal[Boolean] = antsSignal.combineWith(nestSignal, explorationSignal).map {
-    case (ants, nest, exploration) => BroodProgression.nurseryAvailable(ants, nest, exploration)
-  }.distinct
+  val nurseryUnlockedSignal: Signal[Boolean] = antsSignal
+    .combineWith(nestSignal, explorationSignal)
+    .map { case (ants, nest, exploration) =>
+      BroodProgression.nurseryAvailable(ants, nest, exploration)
+    }
+    .distinct
+
   val waterSignal: Signal[BasicResource] = resourcesSignal.map(_.water).distinct
   val resinSignal: Signal[BasicResource] = resourcesSignal.map(_.resin).distinct
   val tunnelingSpaceSignal: Signal[BasicResource] = resourcesSignal.map(_.tunnelingSpace).distinct
@@ -94,7 +108,12 @@ object Utils {
   val messagesSignal: Signal[Seq[String]] = messagesSeq.signal.distinct
 
   val eggResourceSignal: Signal[BasicResource] =
-    antsSignal.combineWith(nestSignal).map { case (ants, nest) => BasicResource(ants.eggsAndLarvae.size.toLong * u, (BroodProgression.usablePlaces(nest) + EmergencyRecovery.broodCount(ants)).toLong * u) }
+    antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
+      BasicResource(
+        ants.eggsAndLarvae.size.toLong * u,
+        (BroodProgression.usablePlaces(nest) + EmergencyRecovery.broodCount(ants)).toLong * u
+      )
+    }
 
   val workersResourceSignal: Signal[BasicResource] =
     antsSignal.map(a => BasicResource(a.workers, 0L))
@@ -261,13 +280,38 @@ object Utils {
         case true  => Some(value)
       }
 
-  val snapshotSignal: Signal[AllData] = allDataSignals.map { case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
-    AllData.simple(world, ants, basic, nest, unlocks, upgrades, exploration, statistics, Seq.empty)
+  val snapshotSignal: Signal[AllData] = allDataSignals.map {
+    case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
+      AllData.simple(
+        world,
+        ants,
+        basic,
+        nest,
+        unlocks,
+        upgrades,
+        exploration,
+        statistics,
+        Seq.empty
+      )
   }
 
   def canPurchaseUpgradeSignal(upgrade: UpgradesData.UpgradeType): Signal[Boolean] =
-    allDataSignals.map { case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
-      UpgradeResearch.canPurchase(AllData.simple(world, ants, basic, nest, unlocks, upgrades, exploration, statistics, Seq.empty), upgrade)
+    allDataSignals.map {
+      case (world, ants, basic, nest, unlocks, upgrades, exploration, statistics) =>
+        UpgradeResearch.canPurchase(
+          AllData.simple(
+            world,
+            ants,
+            basic,
+            nest,
+            unlocks,
+            upgrades,
+            exploration,
+            statistics,
+            Seq.empty
+          ),
+          upgrade
+        )
     }.distinct
 
   def hasResourcesSignal(costSignal: Signal[ActionCost]): Signal[Boolean] =

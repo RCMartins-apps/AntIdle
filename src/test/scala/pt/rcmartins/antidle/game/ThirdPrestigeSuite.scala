@@ -14,13 +14,22 @@ class ThirdPrestigeSuite extends FunSuite {
   private def colony: AllData = {
     val fresh = AllData.initial
     fresh.copy(
-      ants = AntsData(scouts = 3L * u, daughterQueens = u, lineage = lineage.copy(foundings = 3, satelliteNests = true)),
+      ants = AntsData(
+        scouts = 3L * u,
+        daughterQueens = u,
+        lineage = lineage.copy(foundings = 3, satelliteNests = true)
+      ),
       nestAttributes = fresh.nestAttributes.copy(dryClearingOutpost = true),
       exploration = ExplorationData(revealedSites = 6, surveys = Map("dry-clearing" -> 3)),
       unlocks = fresh.unlocks.copy(tabs = fresh.unlocks.tabs.copy(exploreTabUnlocked = true)),
-      basicResources = fresh.basicResources.copy(sugar = BasicResource(2000L * u, 3000L * u),
-        knowledge = BasicResource(150L * u, Long.MaxValue), protein = BasicResource(40L * u, 100L * u),
-        water = BasicResource(150L * u, 200L * u), tunnelingSpace = BasicResource(750L * u, 1000L * u)))
+      basicResources = fresh.basicResources.copy(
+        sugar = BasicResource(2000L * u, 3000L * u),
+        knowledge = BasicResource(150L * u, Long.MaxValue),
+        protein = BasicResource(40L * u, 100L * u),
+        water = BasicResource(150L * u, 200L * u),
+        tunnelingSpace = BasicResource(750L * u, 1000L * u)
+      )
+    )
   }
 
   test("the third founding inherits the Understanding and resets the station") {
@@ -32,7 +41,10 @@ class ThirdPrestigeSuite extends FunSuite {
     val founded = Prestige.found(ready, unlock)
     assertEquals(founded.ants.lineage, lineage.copy(foundings = 3, satelliteNests = true))
     assertEquals(founded.nestAttributes, NestAttributes.initial)
-    val legacy = """{"foundings":3,"dna":1,"sharedPaths":true,"beyondWoodland":true}""".fromJson[Lineage].toOption.get
+    val legacy = """{"foundings":3,"dna":1,"sharedPaths":true,"beyondWoodland":true}"""
+      .fromJson[Lineage]
+      .toOption
+      .get
     assert(!legacy.satelliteNests)
   }
 
@@ -41,14 +53,27 @@ class ThirdPrestigeSuite extends FunSuite {
     assert(!OutpostProgression.canEstablish(ready.copy(ants = ready.ants.copy(lineage = lineage))))
     val established = OutpostProgression.establish(ready)
     assert(established.nestAttributes.dryClearingOutpost)
-    assertEquals(established.basicResources, ready.basicResources.spendResources(
-      OutpostProgression.cost.copy(sugar = 1500L * u, knowledge = 150L * u)))
+    assertEquals(
+      established.basicResources,
+      ready.basicResources.spendResources(
+        OutpostProgression.cost.copy(sugar = 1500L * u, knowledge = 150L * u)
+      )
+    )
     val station = OutpostProgression.specialize(established, OutpostProgression.SeedStation)
     assertEquals(OutpostProgression.specialize(station, OutpostProgression.ScoutStation), station)
-    val loaded = AllDataForSave.fromAllData(station).toJson.fromJson[AllDataForSave].toOption.get.toAllData
-    assertEquals(OutpostProgression.specialization(loaded.nestAttributes, loaded.ants.lineage), OutpostProgression.SeedStation)
+    val loaded =
+      AllDataForSave.fromAllData(station).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+    assertEquals(
+      OutpostProgression.specialization(loaded.nestAttributes, loaded.ants.lineage),
+      OutpostProgression.SeedStation
+    )
     val staffed = station.ants.copy(workers = 5L * u, tasks = Seq(AntTask.SeedForager -> (5L * u)))
-    val harvest = OutpostProgression.harvestPerTick(staffed, station.nestAttributes, station.upgrades, ready.basicResources)
+    val harvest = OutpostProgression.harvestPerTick(
+      staffed,
+      station.nestAttributes,
+      station.upgrades,
+      ready.basicResources
+    )
     assertEquals(harvest, OutpostProgression.Harvest(protein = 600L, water = 250L))
   }
 
@@ -58,10 +83,16 @@ class ThirdPrestigeSuite extends FunSuite {
     assert(!ExplorationMap.supportedStudy(station, "surroundings", 2))
     val sent = ExplorationMap.scout(station, id, 2)
     val party = sent.exploration.explorationParties.head
-    assertEquals(party.targetTick - party.startingTick, ExplorationMap.scoutDuration(2, false) * 3L / 5L)
+    assertEquals(
+      party.targetTick - party.startingTick,
+      ExplorationMap.scoutDuration(2, false) * 3L / 5L
+    )
     assertEquals(sent.basicResources.water.amount, station.basicResources.water.amount - 5L * u)
-    val dry = station.copy(basicResources = station.basicResources.copy(water = BasicResource(0L, 200L * u)))
+    val dry = station.copy(basicResources =
+      station.basicResources.copy(water = BasicResource(0L, 200L * u))
+    )
     assertEquals(ExplorationMap.scout(dry, id, 2), dry)
     assert(ExplorationMap.canScout(dry, id, 1))
   }
+
 }

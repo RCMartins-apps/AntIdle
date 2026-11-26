@@ -22,7 +22,12 @@ object MapIcons {
     "root-hollow" -> "M3 26h26M7 26V12a9 9 0 0 1 18 0v14M12 26v-7a4 4 0 0 1 8 0v7M11 9l5 3 5-3",
     "fog" -> "M10 11a6 6 0 1 1 10 4l-4 3v3m0 5v1",
   )
+
   def apply(id: String): ReactiveHtmlElement[HTMLSpanElement] =
-    span(className := "map-terrain-icon", aria.hidden := true,
-      svg.svg(svg.viewBox := "0 0 32 32", svg.path(svg.d := paths.getOrElse(id, paths("fog")))))
+    span(
+      className := "map-terrain-icon",
+      aria.hidden := true,
+      svg.svg(svg.viewBox := "0 0 32 32", svg.path(svg.d := paths.getOrElse(id, paths("fog"))))
+    )
+
 }

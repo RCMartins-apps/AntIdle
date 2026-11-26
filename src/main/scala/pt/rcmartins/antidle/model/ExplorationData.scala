@@ -11,7 +11,8 @@ case class ExplorationData(
     proteinDiscovered: Boolean = false,
     revealedSites: Int = 0,
     depleted: Map[String, Long] = Map.empty,
-    suppliesLevel: Int = 0, // Legacy save input only; migrated to standard upgrades and cleared on load.
+    suppliesLevel: Int =
+      0, // Legacy save input only; migrated to standard upgrades and cleared on load.
     surveys: Map[String, Int] = Map.empty,
     sugarTrail: SugarTrail = SugarTrail(), // Legacy reserved nectar, returned on load.
     collectionTrails: List[CollectionTrail] = Nil,

@@ -12,13 +12,13 @@ object EmergencyRecovery {
 
   def broodCount(ants: AntsData): Int = ants.eggsAndLarvae.count {
     case b: AntBrood.Developing => b.kind == Kind
-    case _ => false
+    case _                      => false
   }
 
   def hasRecoveryBrood(ants: AntsData): Boolean = ants.eggsAndLarvae.exists {
     case b: AntBrood.Developing => b.small
-    case _: AntBrood.Egg => true // Legacy worker eggs need no feeding.
-    case _ => false
+    case _: AntBrood.Egg        => true // Legacy worker eggs need no feeding.
+    case _                      => false
   }
 
   def needed(ants: AntsData): Boolean =
@@ -35,13 +35,17 @@ object EmergencyRecovery {
   def layingTime(ants: AntsData, nest: NestAttributes, upgrades: UpgradesData): Long =
     BroodProgression.interval(ants.copy(standardWorkersUnlocked = false), nest, upgrades)
 
-  private def lay(data: AllData): AllData = BroodProgression.beginLaying(
-    data.copy(ants = data.ants.copy(emergencyForagingTicks = 0L)), Kind,
-    layingTime(data.ants, data.nestAttributes, data.upgrades))
+  private def lay(data: AllData): AllData = BroodProgression
+    .beginLaying(
+      data.copy(ants = data.ants.copy(emergencyForagingTicks = 0L)),
+      Kind,
+      layingTime(data.ants, data.nestAttributes, data.upgrades)
+    )
     .addMessage("The queen is rearing one small worker to restart sugar collection.")
 
   def raise(data: AllData): AllData =
-    if (!data.unlocks.actions.canLayEggs || !canRaise(data.ants, data.basicResources.sugar.amount)) data
+    if (!data.unlocks.actions.canLayEggs || !canRaise(data.ants, data.basicResources.sugar.amount))
+      data
     else lay(data.spendResources(ActionCost(sugar = EggCost)))
 
   def tick(data: AllData): AllData = {
@@ -58,11 +62,16 @@ object EmergencyRecovery {
       if (progress < ForagingTicks || data.ants.layingCooldown > 0L) prepared
       else {
         // Her protected provisions are gathered and consumed here, never banked in storage.
-        lay(prepared.copy(statistics = prepared.statistics.copy(sugarU = prepared.statistics.sugarU.addValue(EggCost))))
+        lay(
+          prepared.copy(statistics =
+            prepared.statistics.copy(sugarU = prepared.statistics.sugarU.addValue(EggCost))
+          )
+        )
       }
     }
   }
 
   def status(ants: AntsData): String =
     s"Queen foraging · ${UINumbersUtils.prettyTimeFromTicks(Math.max(0L, ForagingTicks - ants.emergencyForagingTicks))}"
+
 }

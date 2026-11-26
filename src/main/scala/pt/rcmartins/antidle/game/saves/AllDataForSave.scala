@@ -1,7 +1,14 @@
 package pt.rcmartins.antidle.game.saves
 
 import pt.rcmartins.antidle.model._
-import pt.rcmartins.antidle.game.{DefaultWorkerAssignment, PopulationAging, ResourceVisibility, UpgradeVisibility, ExplorationProgression, PheromoneTrails}
+import pt.rcmartins.antidle.game.{
+  DefaultWorkerAssignment,
+  ExplorationProgression,
+  PheromoneTrails,
+  PopulationAging,
+  ResourceVisibility,
+  UpgradeVisibility
+}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class AllDataForSave(
@@ -30,7 +37,19 @@ case class AllDataForSave(
       statistics = statistics,
       messages = messages,
     )
-    DefaultWorkerAssignment.normalize(UpgradeVisibility.reconcile(ResourceVisibility.reconcile(PopulationAging.reconcile(PheromoneTrails.migrateLegacy(ExplorationProgression.migrateLegacySupplies(ResourceVisibility.resetUnstartedFounding(loaded)))))))
+    DefaultWorkerAssignment.normalize(
+      UpgradeVisibility.reconcile(
+        ResourceVisibility.reconcile(
+          PopulationAging.reconcile(
+            PheromoneTrails.migrateLegacy(
+              ExplorationProgression.migrateLegacySupplies(
+                ResourceVisibility.resetUnstartedFounding(loaded)
+              )
+            )
+          )
+        )
+      )
+    )
   }
 
   private def toUpgrades: UpgradesData = {

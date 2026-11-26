@@ -10,15 +10,28 @@ import zio.json._
 class EmergencyRecoverySuite extends FunSuite {
   def collapsed: AllData = {
     val d = AllData.initial
-    d.copy(world = d.world.copy(currentTick = 100L, targetTick = 100L, saveSeed = 42L),
-      ants = AntsData(), basicResources = BasicResources.initial, unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true)))
+    d.copy(
+      world = d.world.copy(currentTick = 100L, targetTick = 100L, saveSeed = 42L),
+      ants = AntsData(),
+      basicResources = BasicResources.initial,
+      unlocks = d.unlocks.copy(actions = d.unlocks.actions.copy(canLayEggs = true))
+    )
   }
-  def automated: AllData = collapsed.copy(upgrades = collapsed.upgrades.unlock(QueensRoutine),
-    ants = collapsed.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 10, sugarReserve = 1000L * u)))
-  def tick(d: AllData): AllData = TickUpdater.updateAllData(d, None)
-  def load(d: AllData): AllData = AllDataForSave.fromAllData(d).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 
-  test("manual recovery costs five sugar, never protein, and preserves standard research and queued orders") {
+  def automated: AllData = collapsed.copy(
+    upgrades = collapsed.upgrades.unlock(QueensRoutine),
+    ants = collapsed.ants.copy(queenRoutine =
+      QueenRoutine(enabled = true, targetWorkers = 10, sugarReserve = 1000L * u)
+    )
+  )
+
+  def tick(d: AllData): AllData = TickUpdater.updateAllData(d, None)
+  def load(d: AllData): AllData =
+    AllDataForSave.fromAllData(d).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+
+  test(
+    "manual recovery costs five sugar, never protein, and preserves standard research and queued orders"
+  ) {
     val d = collapsed.giveResources(sugar = 5L * u).copy(ants = collapsed.ants.copy(eggOrders = 4))
     val laid = EmergencyRecovery.raise(d)
     assertEquals(laid.basicResources.sugar.amount, 0L)
@@ -26,7 +39,10 @@ class EmergencyRecoverySuite extends FunSuite {
     assertEquals(EmergencyRecovery.broodCount(laid.ants), 1)
     assert(laid.ants.standardWorkersUnlocked)
     assertEquals(laid.ants.eggOrders, 4)
-    assertEquals(EmergencyRecovery.raise(laid.giveResources(sugar = 5L * u)).ants.eggsAndLarvae.size, 1)
+    assertEquals(
+      EmergencyRecovery.raise(laid.giveResources(sugar = 5L * u)).ants.eggsAndLarvae.size,
+      1
+    )
     val adult = (1 to 105).foldLeft(laid)((d, _) => tick(d))
     assertEquals(adult.ants.smallWorkers, u)
     assertEquals(adult.ants.smallCollectors, u)
@@ -36,19 +52,33 @@ class EmergencyRecoverySuite extends FunSuite {
 
   test("recovery cannot subsidize fresh colonies, surviving workers or workers already returning") {
     val d = collapsed.giveResources(sugar = 5L * u)
-    for (ants <- Seq(AntsData.initial, AntsData(workers = u), AntsData(smallWorkers = u),
-      AntsData(workers = u, tasks = Seq(AntTask.Explorer -> u)),
-      AntsData(eggsAndLarvae = Seq(AntBrood.Developing(0L, "small"))),
-      AntsData(eggsAndLarvae = Seq(AntBrood.Egg(0L))))) {
+    for (
+      ants <- Seq(
+        AntsData.initial,
+        AntsData(workers = u),
+        AntsData(smallWorkers = u),
+        AntsData(workers = u, tasks = Seq(AntTask.Explorer -> u)),
+        AntsData(eggsAndLarvae = Seq(AntBrood.Developing(0L, "small"))),
+        AntsData(eggsAndLarvae = Seq(AntBrood.Egg(0L)))
+      )
+    ) {
       val current = d.copy(ants = ants)
       assertEquals(EmergencyRecovery.raise(current), current)
     }
     assertEquals(EmergencyRecovery.raise(collapsed), collapsed)
-    assertEquals(EmergencyRecovery.raise(d.copy(ants = d.ants.copy(layingCooldown = 1L))).ants.eggsAndLarvae.size, 0)
+    assertEquals(
+      EmergencyRecovery
+        .raise(d.copy(ants = d.ants.copy(layingCooldown = 1L)))
+        .ants
+        .eggsAndLarvae
+        .size,
+      0
+    )
   }
 
   test("automatic recovery gathers protected supplies once, respects the reserve and then stops") {
-    val before = (1 until EmergencyRecovery.ForagingTicks.toInt).foldLeft(automated)((d, _) => tick(d))
+    val before =
+      (1 until EmergencyRecovery.ForagingTicks.toInt).foldLeft(automated)((d, _) => tick(d))
     assertEquals(before.ants.emergencyForagingTicks, EmergencyRecovery.ForagingTicks - 1L)
     assert(before.ants.eggsAndLarvae.isEmpty)
     assertEquals(before.basicResources.sugar.amount, 0L)
@@ -66,14 +96,22 @@ class EmergencyRecoverySuite extends FunSuite {
   }
 
   test("funded automatic recovery spends only above the reserve and records no free income") {
-    val d = automated.giveResources(sugar = 25L * u).copy(ants = automated.ants.copy(
-      queenRoutine = QueenRoutine(enabled = true, targetWorkers = 10, sugarReserve = 20L * u)))
+    val d = automated
+      .giveResources(sugar = 25L * u)
+      .copy(ants =
+        automated.ants.copy(
+          queenRoutine = QueenRoutine(enabled = true, targetWorkers = 10, sugarReserve = 20L * u)
+        )
+      )
     val laid = AutomaticBrood.tick(d)
     assertEquals(EmergencyRecovery.broodCount(laid.ants), 1)
     assertEquals(laid.basicResources.sugar.amount, 20L * u)
     assertEquals(laid.statistics.sugarU, d.statistics.sugarU)
-    val reserved = AutomaticBrood.tick(d.copy(basicResources = d.basicResources.copy(
-      sugar = d.basicResources.sugar.copy(amount = 24L * u))))
+    val reserved = AutomaticBrood.tick(
+      d.copy(basicResources =
+        d.basicResources.copy(sugar = d.basicResources.sugar.copy(amount = 24L * u))
+      )
+    )
     assertEquals(reserved.ants.emergencyForagingTicks, 1L)
     assert(reserved.ants.eggsAndLarvae.isEmpty)
     assertEquals(reserved.basicResources.sugar.amount, 24L * u)
@@ -84,12 +122,21 @@ class EmergencyRecoverySuite extends FunSuite {
     val paused = AutomaticBrood.configure(partial, enabled = false, target = 10, reserve = 20L * u)
     assert(!paused.ants.queenRoutine.enabled)
     assertEquals(paused.ants.emergencyForagingTicks, 50L)
-    for (d <- Seq(paused, automated.copy(ants = automated.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 0))),
-      collapsed, collapsed.copy(ants = AntsData.initial, unlocks = Unlocks()))) {
+    for (
+      d <- Seq(
+        paused,
+        automated.copy(ants =
+          automated.ants.copy(queenRoutine = QueenRoutine(enabled = true, targetWorkers = 0))
+        ),
+        collapsed,
+        collapsed.copy(ants = AntsData.initial, unlocks = Unlocks())
+      )
+    ) {
       val prepared = GameTransition.afterAction(load(d))
       assert(prepared.unlocks.actions.canLayEggs)
-      val laid = (1 to (EmergencyRecovery.ForagingTicks - prepared.ants.emergencyForagingTicks).toInt)
-        .foldLeft(prepared)((state, _) => tick(state))
+      val laid =
+        (1 to (EmergencyRecovery.ForagingTicks - prepared.ants.emergencyForagingTicks).toInt)
+          .foldLeft(prepared)((state, _) => tick(state))
       assertEquals(EmergencyRecovery.broodCount(laid.ants), 1)
       assertEquals(laid.basicResources.sugar.amount, 0L)
       assertEquals(laid.statistics.sugarU.thisRun, EmergencyRecovery.EggCost)
@@ -106,8 +153,10 @@ class EmergencyRecoverySuite extends FunSuite {
   test("full hungry brood and housing cannot block the single queen-tended recovery place") {
     val hungry = AntBrood.Developing(100L, "worker", care = 100L * u)
     val count = BroodProgression.capacity(collapsed.nestAttributes)
-    val d = automated.copy(ants = automated.ants.copy(eggsAndLarvae = Seq.fill(count)(hungry)),
-      nestAttributes = automated.nestAttributes.copy(maxAnts = count.toLong * u))
+    val d = automated.copy(
+      ants = automated.ants.copy(eggsAndLarvae = Seq.fill(count)(hungry)),
+      nestAttributes = automated.nestAttributes.copy(maxAnts = count.toLong * u)
+    )
     val recovered = (1 to 235).foldLeft(d)((d, _) => tick(d))
     assertEquals(recovered.ants.smallWorkers, u)
     assertEquals(recovered.ants.eggsAndLarvae, Seq.fill(count)(hungry))
@@ -115,7 +164,9 @@ class EmergencyRecoverySuite extends FunSuite {
     assert(!BroodProgression.canLay(recovered.ants, recovered.nestAttributes, 1000L * u))
     val gathering = BroodProgression.assignSmall(recovered, AntTask.Scavenger, u)
     val fed = (1 to 30).foldLeft(gathering)((d, _) => tick(d))
-    assert(fed.ants.eggsAndLarvae.exists { case b: AntBrood.Developing => b.care > hungry.care; case _ => false })
+    assert(fed.ants.eggsAndLarvae.exists {
+      case b: AntBrood.Developing => b.care > hungry.care; case _ => false
+    })
   }
 
   test("recovery progress and emergency brood survive save reload without duplicate grants") {
@@ -131,11 +182,19 @@ class EmergencyRecoverySuite extends FunSuite {
   }
 
   test("the founding queen remains a recovery path after starvation has killed every other ant") {
-    val d = collapsed.copy(ants = collapsed.ants.copy(workers = u, scouts = u, repletes = u, daughterQueens = u))
+    val d = collapsed.copy(ants =
+      collapsed.ants.copy(workers = u, scouts = u, repletes = u, daughterQueens = u)
+    )
     val empty = (1 to 4).foldLeft(d.ants)((a, _) => PopulationAging.starveOne(d.copy(ants = a)))
     assertEquals(empty.populationCount, 0)
     assert(EmergencyRecovery.needed(empty))
     assertEquals(PopulationAging.starveOne(d.copy(ants = empty)).populationCount, 0)
-    assertEquals(EmergencyRecovery.broodCount(EmergencyRecovery.raise(d.copy(ants = empty).giveResources(sugar = 5L * u)).ants), 1)
+    assertEquals(
+      EmergencyRecovery.broodCount(
+        EmergencyRecovery.raise(d.copy(ants = empty).giveResources(sugar = 5L * u)).ants
+      ),
+      1
+    )
   }
+
 }

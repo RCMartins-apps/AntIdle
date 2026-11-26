@@ -23,11 +23,18 @@ class UpgradeTuningSuite extends FunSuite {
     val edited = tune(
       """{"StandardWorkers":{"cost":{"sugar":805000},"requirements":{"minimumSmallWorkers":6,"earlyResearch":true}},
         |"ImproveSugarCollectorTask2":{"requirements":{"upgrades":["UnlockQueensChamber"],"discovery":"resin-seep"}},
-        |"RepleteStorage":{"requirements":{"discovery":null}}}""".stripMargin).fold(error => fail(error), identity)
+        |"RepleteStorage":{"requirements":{"discovery":null}}}""".stripMargin
+    ).fold(error => fail(error), identity)
     val before = defaults(StandardWorkers)
     assertEquals(edited(StandardWorkers).cost, before.cost.copy(sugar = 80L * u + u / 2L))
-    assertEquals(edited(StandardWorkers).requirements, before.requirements.copy(minimumSmallWorkers = 6, earlyResearch = true))
-    assertEquals(edited(ImproveSugarCollectorTask2).requirements.upgrades, List(UnlockQueensChamber))
+    assertEquals(
+      edited(StandardWorkers).requirements,
+      before.requirements.copy(minimumSmallWorkers = 6, earlyResearch = true)
+    )
+    assertEquals(
+      edited(ImproveSugarCollectorTask2).requirements.upgrades,
+      List(UnlockQueensChamber)
+    )
     assertEquals(edited(ImproveSugarCollectorTask2).requirements.discovery, Some("resin-seep"))
     assertEquals(edited(RepleteStorage).requirements.discovery, None)
     assertEquals(edited(BroodCare), defaults(BroodCare))
@@ -47,9 +54,16 @@ class UpgradeTuningSuite extends FunSuite {
   }
 
   test("purchase dependency cycles are rejected") {
-    assert(tune("""{"UnlockQueensChamber":{"requirements":{"upgrades":["UnlockFoodStorageChamber"]}}}""")
-      .left.toOption.exists(_.contains("Dependency cycle")))
-    assert(tune("""{"UnlockExplorerTask":{"requirements":{"upgrades":["ExpeditionSupplies1"]}}}""")
-      .left.toOption.exists(_.contains("Dependency cycle")))
+    assert(
+      tune(
+        """{"UnlockQueensChamber":{"requirements":{"upgrades":["UnlockFoodStorageChamber"]}}}"""
+      ).left.toOption.exists(_.contains("Dependency cycle"))
+    )
+    assert(
+      tune(
+        """{"UnlockExplorerTask":{"requirements":{"upgrades":["ExpeditionSupplies1"]}}}"""
+      ).left.toOption.exists(_.contains("Dependency cycle"))
+    )
   }
+
 }

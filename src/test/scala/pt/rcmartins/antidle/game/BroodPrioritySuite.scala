@@ -12,17 +12,27 @@ class BroodPrioritySuite extends FunSuite {
 
   private def colony(brood: AntBrood.Developing*): AllData = {
     val fresh = AllData.initial
-    fresh.copy(
-      ants = fresh.ants.copy(standardWorkersUnlocked = true, workers = u, eggsAndLarvae = brood,
-        tasks = Seq(AntTask.BroodNurse -> u)),
-      nestAttributes = fresh.nestAttributes.copy(
-        chambers = fresh.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))))
+    fresh
+      .copy(
+        ants = fresh.ants.copy(
+          standardWorkersUnlocked = true,
+          workers = u,
+          eggsAndLarvae = brood,
+          tasks = Seq(AntTask.BroodNurse -> u)
+        ),
+        nestAttributes = fresh.nestAttributes.copy(
+          chambers = fresh.nestAttributes.chambers.copy(nurseryChamber = Chamber.NurseryChamber(1))
+        )
+      )
       .giveResources(sugar = 100L * u, protein = 100L * u)
   }
 
   private def advances(data: AllData, priority: BroodPriority): (Long, Long) = {
     val before = data.ants.eggsAndLarvae.collect { case b: AntBrood.Developing => b }
-    val after = BroodProgression.tick(BroodProgression.setPriority(data, priority)).ants.eggsAndLarvae
+    val after = BroodProgression
+      .tick(BroodProgression.setPriority(data, priority))
+      .ants
+      .eggsAndLarvae
       .collect { case b: AntBrood.Developing => b }
     val (scouts, workers) = after.zip(before).partition(_._1.kind == "scout")
     def total(brood: Seq[(AntBrood.Developing, AntBrood.Developing)]): Long =
@@ -30,7 +40,9 @@ class BroodPrioritySuite extends FunSuite {
     total(workers) -> total(scouts)
   }
 
-  test("priority shifts the same care budget in both directions and preserves care for the other caste") {
+  test(
+    "priority shifts the same care budget in both directions and preserves care for the other caste"
+  ) {
     val data = colony(worker, scout, worker, scout)
     val (workerCare, scoutCare) = advances(data, BroodPriority.Balanced)
     val (prioritizedWorkers, otherScouts) = advances(data, BroodPriority.WorkersFirst)
@@ -73,11 +85,20 @@ class BroodPrioritySuite extends FunSuite {
   }
 
   test("larval feeding previews match the selected priority and actual feeding") {
-    val food = colony(worker.copy(care = worker.eggEnd), scout.copy(care = scout.eggEnd),
-      worker.copy(care = worker.eggEnd), scout.copy(care = scout.eggEnd))
+    val food = colony(
+      worker.copy(care = worker.eggEnd),
+      scout.copy(care = scout.eggEnd),
+      worker.copy(care = worker.eggEnd),
+      scout.copy(care = scout.eggEnd)
+    )
     val priority = BroodProgression.setPriority(food, BroodPriority.ScoutsFirst)
-    val cost = BroodProgression.forecastCost(priority.ants, priority.nestAttributes, priority.upgrades,
-      priority.exploration, priority.basicResources)
+    val cost = BroodProgression.forecastCost(
+      priority.ants,
+      priority.nestAttributes,
+      priority.upgrades,
+      priority.exploration,
+      priority.basicResources
+    )
     val after = BroodProgression.tick(priority).basicResources
 
     assert(cost.sugar > 0L)
@@ -89,13 +110,18 @@ class BroodPrioritySuite extends FunSuite {
   test("priority needs a nursery, persists on reload and resets with the next colony") {
     val fresh = AllData.initial
     assertEquals(BroodProgression.setPriority(fresh, BroodPriority.ScoutsFirst), fresh)
-    assertEquals("{}".fromJson[AntsData].toOption.get.broodPriority, BroodPriority.Balanced: BroodPriority)
+    assertEquals(
+      "{}".fromJson[AntsData].toOption.get.broodPriority,
+      BroodPriority.Balanced: BroodPriority
+    )
     val priority = BroodProgression.setPriority(colony(worker, scout), BroodPriority.ScoutsFirst)
-    val restored = AllDataForSave.fromAllData(priority).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+    val restored =
+      AllDataForSave.fromAllData(priority).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assertEquals(restored.ants.broodPriority, BroodPriority.ScoutsFirst: BroodPriority)
     val ready = restored.copy(ants = restored.ants.copy(daughterQueens = u))
     val next = Prestige.found(ready)
     assertEquals(next.ants.broodPriority, BroodPriority.Balanced: BroodPriority)
     assert(!BroodProgression.priorityAvailable(next.nestAttributes))
   }
+
 }

@@ -13,7 +13,8 @@ import scala.util.chaining.scalaUtilChainingOps
 // TODO check for save/load/import/export errors?
 object SaveLoad {
 
-  private lazy val SaveGameName = BrowserStorage.key("save", org.scalajs.dom.window.location.pathname)
+  private lazy val SaveGameName =
+    BrowserStorage.key("save", org.scalajs.dom.window.location.pathname)
 
   def saveToLocalStorage(allData: AllData): Either[Throwable, Unit] =
     Try {
@@ -43,7 +44,9 @@ object SaveLoad {
   }
 
   private def loadFromJson(str: String): Option[AllData] =
-    str.fromJson[AllDataForSave].toOption
+    str
+      .fromJson[AllDataForSave]
+      .toOption
       .filter(_.version == AllData.CurrentVersion)
       .map(_.toAllData)
 

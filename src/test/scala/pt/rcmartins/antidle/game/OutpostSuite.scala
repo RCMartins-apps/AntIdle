@@ -12,25 +12,41 @@ class OutpostSuite extends FunSuite {
   def colony: AllData = {
     val initial = AllData.initial
     initial.copy(
-      ants = AntsData(workers = 20 * u, scouts = 2 * u, repletes = u,
-        tasks = Seq(AntTask.SugarCollector -> (20 * u), AntTask.Explorer -> 0L), defaultTask = Some(AntTask.SugarCollector)),
-      basicResources = initial.basicResources.copy(sugar = BasicResource(6000 * u, 10000 * u),
-        protein = BasicResource(80 * u, 100 * u), water = BasicResource(180 * u, 200 * u),
-        tunnelingSpace = BasicResource(1000 * u, 1500 * u), knowledge = BasicResource(500 * u, Long.MaxValue)),
+      ants = AntsData(
+        workers = 20 * u,
+        scouts = 2 * u,
+        repletes = u,
+        tasks = Seq(AntTask.SugarCollector -> (20 * u), AntTask.Explorer -> 0L),
+        defaultTask = Some(AntTask.SugarCollector)
+      ),
+      basicResources = initial.basicResources.copy(
+        sugar = BasicResource(6000 * u, 10000 * u),
+        protein = BasicResource(80 * u, 100 * u),
+        water = BasicResource(180 * u, 200 * u),
+        tunnelingSpace = BasicResource(1000 * u, 1500 * u),
+        knowledge = BasicResource(500 * u, Long.MaxValue)
+      ),
       exploration = MapFixture.explored.copy(revealedSites = 6, surveys = Map("dry-clearing" -> 3)),
       unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)),
-      nestAttributes = initial.nestAttributes.copy(chambers = initial.nestAttributes.chambers.copy(
-        nurseryChamber = Chamber.NurseryChamber(1), repleteChamber = Chamber.RepleteChamber(1))),
+      nestAttributes = initial.nestAttributes.copy(chambers =
+        initial.nestAttributes.chambers.copy(
+          nurseryChamber = Chamber.NurseryChamber(1),
+          repleteChamber = Chamber.RepleteChamber(1)
+        )
+      ),
       upgrades = initial.upgrades.unlock(DefaultWorkers, RepleteStorage),
     )
   }
 
-  def staffed: AllData = DefaultWorkerAssignment.assign(OutpostProgression.establish(colony), AntTask.SeedForager, 5 * u)
+  def staffed: AllData =
+    DefaultWorkerAssignment.assign(OutpostProgression.establish(colony), AntTask.SeedForager, 5 * u)
 
   test("outpost requires discovery, level and every resource in the engine") {
     assert(OutpostProgression.canEstablish(colony))
-    val hidden = colony.copy(exploration = colony.exploration.copy(surveys = Map("dry-clearing" -> 2)))
-    val early = colony.copy(exploration = colony.exploration.copy(surveys = Map("dry-clearing" -> 1)))
+    val hidden =
+      colony.copy(exploration = colony.exploration.copy(surveys = Map("dry-clearing" -> 2)))
+    val early =
+      colony.copy(exploration = colony.exploration.copy(surveys = Map("dry-clearing" -> 1)))
     assert(!OutpostProgression.visible(hidden.exploration))
     assert(!OutpostProgression.visible(early.exploration))
     val base = colony.basicResources
@@ -39,7 +55,8 @@ class OutpostSuite extends FunSuite {
       base.copy(protein = BasicResource(39 * u, 100 * u)),
       base.copy(water = BasicResource(149 * u, 200 * u)),
       base.copy(knowledge = BasicResource(299 * u, Long.MaxValue)),
-      base.copy(tunnelingSpace = BasicResource(749 * u, 1500 * u)))
+      base.copy(tunnelingSpace = BasicResource(749 * u, 1500 * u))
+    )
     (Seq(hidden, early) ++ shortages.map(r => colony.copy(basicResources = r))).foreach { data =>
       assertEquals(OutpostProgression.establish(data), data)
     }
@@ -49,7 +66,10 @@ class OutpostSuite extends FunSuite {
     val initial = colony
     val built = OutpostProgression.establish(initial)
     assert(built.nestAttributes.dryClearingOutpost)
-    assertEquals(built.basicResources, initial.basicResources.spendResources(OutpostProgression.cost))
+    assertEquals(
+      built.basicResources,
+      initial.basicResources.spendResources(OutpostProgression.cost)
+    )
     assertEquals(built.nestAttributes.maxAnts, initial.nestAttributes.maxAnts + 50 * u)
     assertEquals(built.ants.populationCount, initial.ants.populationCount)
     assertEquals(built.ants.upkeepWorkersCount, initial.ants.upkeepWorkersCount)
@@ -89,7 +109,8 @@ class OutpostSuite extends FunSuite {
   }
 
   test("partial and absent water never produce debt, and replenishment resumes foraging") {
-    val dry = staffed.copy(basicResources = staffed.basicResources.copy(water = BasicResource(1L, 200 * u)))
+    val dry =
+      staffed.copy(basicResources = staffed.basicResources.copy(water = BasicResource(1L, 200 * u)))
     val lastDrop = TickUpdater.updateAllData(dry, None)
     assertEquals(lastDrop.basicResources.water.amount, 0L)
     assertEquals(lastDrop.basicResources.protein.amount, dry.basicResources.protein.amount + 2L)
@@ -103,11 +124,15 @@ class OutpostSuite extends FunSuite {
   }
 
   test("full protein pauses water use and last storage units charge only needed water") {
-    val full = staffed.copy(basicResources = staffed.basicResources.copy(protein = BasicResource(100 * u, 100 * u)))
+    val full = staffed.copy(basicResources =
+      staffed.basicResources.copy(protein = BasicResource(100 * u, 100 * u))
+    )
     val paused = TickUpdater.updateAllData(full, None)
     assertEquals(paused.basicResources.water, full.basicResources.water)
     assertEquals(paused.statistics.proteinU, full.statistics.proteinU)
-    val almost = full.copy(basicResources = full.basicResources.copy(protein = BasicResource(100 * u - 3L, 100 * u)))
+    val almost = full.copy(basicResources =
+      full.basicResources.copy(protein = BasicResource(100 * u - 3L, 100 * u))
+    )
     val filled = TickUpdater.updateAllData(almost, None)
     assertEquals(filled.basicResources.protein.amount, 100L * u)
     assertEquals(almost.basicResources.water.amount - filled.basicResources.water.amount, 2L)
@@ -116,10 +141,15 @@ class OutpostSuite extends FunSuite {
 
   test("aphid feeding frees real storage room before the same tick's harvest") {
     val initial = staffed
-    val feeding = initial.copy(ants = initial.ants.unlockTask(AntTask.AphidTender).addToTask(AntTask.AphidTender, u),
-      nestAttributes = initial.nestAttributes.copy(aphids = 10L, chambers = initial.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))),
+    val feeding = initial.copy(
+      ants = initial.ants.unlockTask(AntTask.AphidTender).addToTask(AntTask.AphidTender, u),
+      nestAttributes = initial.nestAttributes.copy(
+        aphids = 10L,
+        chambers = initial.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))
+      ),
       basicResources = initial.basicResources.copy(protein = BasicResource(100 * u, 100 * u)),
-      upgrades = initial.upgrades.unlock(AphidTending))
+      upgrades = initial.upgrades.unlock(AphidTending)
+    )
     val next = TickUpdater.updateAllData(feeding, None)
     assertEquals(next.basicResources.protein.amount, 100L * u)
     assertEquals(feeding.basicResources.water.amount - next.basicResources.water.amount, 10L)
@@ -127,13 +157,17 @@ class OutpostSuite extends FunSuite {
   }
 
   test("load restores outpost tasks and enforces staffing without repeating housing bonuses") {
-    val initial = DefaultWorkerAssignment.select(OutpostProgression.establish(colony), Some(AntTask.SeedForager))
+    val initial = DefaultWorkerAssignment.select(
+      OutpostProgression.establish(colony),
+      Some(AntTask.SeedForager)
+    )
     val saved = AllDataForSave.fromAllData(initial)
     val loaded = saved.toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assert(loaded.nestAttributes.dryClearingOutpost)
     assertEquals(loaded.nestAttributes.maxAnts, initial.nestAttributes.maxAnts)
     assertEquals(loaded.ants.taskWorkers(AntTask.SeedForager), 5L * u)
-    val missingTask = saved.copy(ants = initial.ants.copy(tasks = Seq(AntTask.SugarCollector -> 0L)))
+    val missingTask =
+      saved.copy(ants = initial.ants.copy(tasks = Seq(AntTask.SugarCollector -> 0L)))
     assertEquals(missingTask.toAllData.ants.taskWorkers(AntTask.SeedForager), 5L * u)
     assert(!"{}".fromJson[NestAttributes].toOption.get.dryClearingOutpost)
     assertEquals(OutpostProgression.establish(loaded), loaded)
@@ -141,9 +175,27 @@ class OutpostSuite extends FunSuite {
 
   test("unestablished or over-assigned imported state cannot bypass production limits") {
     val invalid = colony.copy(ants = colony.ants.copy(tasks = Seq(AntTask.SeedForager -> (20 * u))))
-    assertEquals(OutpostProgression.harvestPerTick(invalid.ants, invalid.nestAttributes, invalid.upgrades, invalid.basicResources), OutpostProgression.Harvest())
-    assertEquals(DefaultWorkerAssignment.normalize(invalid).ants.taskWorkers(AntTask.SeedForager), 0L)
-    val built = invalid.copy(nestAttributes = invalid.nestAttributes.copy(dryClearingOutpost = true))
-    assertEquals(OutpostProgression.harvestPerTick(built.ants, built.nestAttributes, built.upgrades, built.basicResources).protein, 400L)
+    assertEquals(
+      OutpostProgression.harvestPerTick(
+        invalid.ants,
+        invalid.nestAttributes,
+        invalid.upgrades,
+        invalid.basicResources
+      ),
+      OutpostProgression.Harvest()
+    )
+    assertEquals(
+      DefaultWorkerAssignment.normalize(invalid).ants.taskWorkers(AntTask.SeedForager),
+      0L
+    )
+    val built =
+      invalid.copy(nestAttributes = invalid.nestAttributes.copy(dryClearingOutpost = true))
+    assertEquals(
+      OutpostProgression
+        .harvestPerTick(built.ants, built.nestAttributes, built.upgrades, built.basicResources)
+        .protein,
+      400L
+    )
   }
+
 }

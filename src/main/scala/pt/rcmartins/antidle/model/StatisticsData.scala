@@ -46,7 +46,10 @@ object StatisticsData {
   case class StatInt(thisRun: Int = 0, total: Int = 0) {
 
     def addValue(value: Long): StatInt = {
-      def add(current: Int): Int = (current.toLong + Math.min(Int.MaxValue.toLong, Math.max(0L, value))).min(Int.MaxValue.toLong).toInt
+      def add(current: Int): Int =
+        (current.toLong + Math.min(Int.MaxValue.toLong, Math.max(0L, value)))
+          .min(Int.MaxValue.toLong)
+          .toInt
       copy(thisRun = add(thisRun), total = add(total))
     }
 
@@ -62,10 +65,12 @@ object StatisticsData {
 
   case class StatLong(thisRun: Long = 0, total: Long = 0) {
 
-    def max(value: Long): StatLong = copy(thisRun = Math.max(thisRun, value), total = Math.max(total, value))
+    def max(value: Long): StatLong =
+      copy(thisRun = Math.max(thisRun, value), total = Math.max(total, value))
 
     def addValue(value: Long): StatLong = {
-      def add(current: Long): Long = current + Math.min(Math.max(0L, value), Long.MaxValue - current)
+      def add(current: Long): Long =
+        current + Math.min(Math.max(0L, value), Long.MaxValue - current)
       copy(thisRun = add(thisRun), total = add(total))
     }
 

@@ -68,12 +68,12 @@ object Constants {
       (base * multiplier(Math.min(level, MaxExponent))).toLong
 
     chamberType match {
-      case ChamberType.Nest        => Math.min(cost(20 * u, exponent1_50), (500L + 250L * level) * u)
-      case ChamberType.Queen       => cost(25 * u, exponent1_50)
-      case ChamberType.FoodStorage => cost(50 * u, exponent1_14)
-      case ChamberType.Nursery     => cost(100 * u, exponent1_50)
-      case ChamberType.Aphid       => cost(75 * u, exponent1_14)
-      case ChamberType.Replete     => cost(100 * u, exponent1_25)
+      case ChamberType.Nest  => Math.min(cost(20 * u, exponent1_50), (500L + 250L * level) * u)
+      case ChamberType.Queen => cost(25 * u, exponent1_50)
+      case ChamberType.FoodStorage  => cost(50 * u, exponent1_14)
+      case ChamberType.Nursery      => cost(100 * u, exponent1_50)
+      case ChamberType.Aphid        => cost(75 * u, exponent1_14)
+      case ChamberType.Replete      => cost(100 * u, exponent1_25)
       case ChamberType.RoyalNursery => cost(1500 * u, exponent1_50)
     }
   }
@@ -89,7 +89,6 @@ object Constants {
   val ScoutProteinCost: Long = 2 * u
   val ScoutGrowthTicks: Long = 30 * TicksPerSecond
   val DistantExplorationTicks: Long = 45 * TicksPerSecond
-
 
   val SugarImprovementBonusPerc: Double = 1.15
 

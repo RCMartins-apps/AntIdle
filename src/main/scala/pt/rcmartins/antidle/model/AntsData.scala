@@ -34,7 +34,9 @@ case class AntsData(
   lazy val idleWorkersCount: Long =
     workers - tasks.map(_._2).sum
 
-  lazy val smallCollectors: Long = Math.max(0L, smallWorkers - smallTunnelers - smallScavengers - smallNurses)
+  lazy val smallCollectors: Long =
+    Math.max(0L, smallWorkers - smallTunnelers - smallScavengers - smallNurses)
+
   lazy val totalWorkers: Long = workers + smallWorkers
   lazy val totalWorkersCount: Int = (totalWorkers / u).toInt
 
@@ -82,9 +84,11 @@ case class AntsData(
   lazy val availableWorkersCount: Long =
     idleWorkersCount + effectiveDefaultTask.map(taskWorkers).getOrElse(0L)
 
-  def availableWorkersLabel: String = effectiveDefaultTask.map { task =>
-    if (idleWorkersCount > 0L) "available workers" else s"${task.name} workers"
-  }.getOrElse("idle workers")
+  def availableWorkersLabel: String = effectiveDefaultTask
+    .map { task =>
+      if (idleWorkersCount > 0L) "available workers" else s"${task.name} workers"
+    }
+    .getOrElse("idle workers")
 
   def assignIdleToDefault: AntsData = effectiveDefaultTask match {
     case Some(task) if idleWorkersCount > 0 =>
@@ -98,9 +102,12 @@ case class AntsData(
     if (next.exists(task => !defaultTaskChoices.contains(task))) this
     else {
       val released = effectiveDefaultTask.filterNot(next.contains)
-      copy(defaultTask = next, tasks = tasks.map { case (task, amount) =>
-        task -> (if (released.contains(task)) 0L else amount)
-      }).assignIdleToDefault
+      copy(
+        defaultTask = next,
+        tasks = tasks.map { case (task, amount) =>
+          task -> (if (released.contains(task)) 0L else amount)
+        }
+      ).assignIdleToDefault
     }
   }
 
@@ -114,12 +121,14 @@ case class AntsData(
         task -> (if (task == antTask) Math.max(0L, amount + deltaAmountU) else amount)
       }).assignIdleToDefault
     } else {
-      val available = if (effectiveDefaultTask.contains(antTask)) idleWorkersCount else availableWorkersCount
+      val available =
+        if (effectiveDefaultTask.contains(antTask)) idleWorkersCount else availableWorkersCount
       val moved = Math.max(0L, Math.min(available, deltaAmountU))
       val borrowed = Math.max(0L, moved - idleWorkersCount)
       copy(tasks = tasks.map { case (task, amount) =>
         task -> (if (task == antTask) amount + moved
-          else if (effectiveDefaultTask.contains(task)) amount - borrowed else amount)
+                 else if (effectiveDefaultTask.contains(task)) amount - borrowed
+                 else amount)
       }).assignIdleToDefault
     }
   }

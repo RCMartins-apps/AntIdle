@@ -13,10 +13,15 @@ object RepleteProgression {
     WaterPerReplete + (if (lineage.drySeasonCompleted) DrySeasonChallenge.WaterBonus else 0L)
 
   def capacity(data: AllData): Long =
-    BasicResources.initial.water.maxAmount + data.ants.repletes / u * waterPerReplete(data.ants.lineage)
-  def slots(data: AllData): Long = Math.max(0L, data.nestAttributes.chambers.repleteChamber.level.toLong - data.ants.repletes / u)
+    BasicResources.initial.water.maxAmount + data.ants.repletes / u * waterPerReplete(
+      data.ants.lineage
+    )
 
-  def reconcile(data: AllData): AllData = data.modify(_.basicResources.water.maxAmount).setTo(capacity(data))
+  def slots(data: AllData): Long =
+    Math.max(0L, data.nestAttributes.chambers.repleteChamber.level.toLong - data.ants.repletes / u)
+
+  def reconcile(data: AllData): AllData =
+    data.modify(_.basicResources.water.maxAmount).setTo(capacity(data))
 
   def canPromote(data: AllData): Boolean =
     data.upgrades(RepleteStorage).unlocked && slots(data) > 0L && data.hasResources(cost)
@@ -29,12 +34,23 @@ object RepleteProgression {
       else {
         val moved = PopulationAging.promoteReplete(ready)
         val borrowed = Math.max(0L, u - moved.ants.idleWorkersCount)
-        val promoted = moved.spendResources(cost).modify(_.ants).using(a => a.copy(
-          workers = a.workers - u, repletes = a.repletes + u,
-          tasks = a.tasks.map { case (task, amount) => task -> (if (a.effectiveDefaultTask.contains(task)) amount - borrowed else amount) }))
-          .modify(_.statistics.repletesPromoted).using(_.addValue(1))
+        val promoted = moved
+          .spendResources(cost)
+          .modify(_.ants)
+          .using(a =>
+            a.copy(
+              workers = a.workers - u,
+              repletes = a.repletes + u,
+              tasks = a.tasks.map { case (task, amount) =>
+                task -> (if (a.effectiveDefaultTask.contains(task)) amount - borrowed else amount)
+              }
+            )
+          )
+          .modify(_.statistics.repletesPromoted)
+          .using(_.addValue(1))
         DefaultWorkerAssignment.normalize(reconcile(promoted))
       }
     }
   }
+
 }

@@ -11,11 +11,22 @@ import zio.json._
 class ExpeditionStaffingSuite extends FunSuite {
   def colony: AllData = {
     val initial = AllData.initial
-    initial.copy(ants = AntsData(workers = 100 * u, scouts = 5 * u, tasks = Seq(AntTask.Explorer -> 0L),
-      ages = ColonyAges(active = true, workers = List(AgeCohort(300L, 100L)), scouts = List(AgeCohort(300L, 5L)))),
+    initial.copy(
+      ants = AntsData(
+        workers = 100 * u,
+        scouts = 5 * u,
+        tasks = Seq(AntTask.Explorer -> 0L),
+        ages = ColonyAges(
+          active = true,
+          workers = List(AgeCohort(300L, 100L)),
+          scouts = List(AgeCohort(300L, 5L))
+        )
+      ),
       basicResources = initial.basicResources.copy(sugar = BasicResource(10000 * u, 10000 * u)),
-      exploration = MapFixture.explored.copy(revealedSites = 6, surveys = MapFixture.explored.surveys),
-      unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true)))
+      exploration =
+        MapFixture.explored.copy(revealedSites = 6, surveys = MapFixture.explored.surveys),
+      unlocks = initial.unlocks.copy(tabs = initial.unlocks.tabs.copy(exploreTabUnlocked = true))
+    )
   }
 
   test("expeditions accept only groups of five between five and fifty") {
@@ -28,7 +39,10 @@ class ExpeditionStaffingSuite extends FunSuite {
   }
 
   test("extra scouts improve travel speed with clear sugar costs and unchanged per-trip rewards") {
-    assertEquals((0 to 3).map(ExplorationProgression.duration(WoodlandEdge, _)), Seq(225L, 180L, 150L, 129L))
+    assertEquals(
+      (0 to 3).map(ExplorationProgression.duration(WoodlandEdge, _)),
+      Seq(225L, 180L, 150L, 129L)
+    )
     val original = ExplorationHelper.start(colony, 5 * u, WoodlandEdge)
     val boosted = ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 3)
     val party = boosted.exploration.explorationParties.head
@@ -52,12 +66,16 @@ class ExpeditionStaffingSuite extends FunSuite {
     assertEquals(ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 4), colony)
   }
 
-  test("saved parties retain their speed and reservations, return on time, and preserve fixed age expiry") {
+  test(
+    "saved parties retain their speed and reservations, return on time, and preserve fixed age expiry"
+  ) {
     val sent = ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 3)
-    val loaded = AllDataForSave.fromAllData(sent).toJson.fromJson[AllDataForSave].toOption.get.toAllData
+    val loaded =
+      AllDataForSave.fromAllData(sent).toJson.fromJson[AllDataForSave].toOption.get.toAllData
     assertEquals(loaded.exploration.explorationParties.head.extraScouts, 3)
     assertEquals(loaded.exploration.explorationParties.head.targetTick, 129L)
-    val waiting = TickUpdater.updateAllData(loaded.copy(world = loaded.world.copy(currentTick = 127L)), None)
+    val waiting =
+      TickUpdater.updateAllData(loaded.copy(world = loaded.world.copy(currentTick = 127L)), None)
     assertEquals(waiting.exploration.explorationParties.size, 1)
     val returned = TickUpdater.updateAllData(waiting, None)
     assert(returned.exploration.explorationParties.isEmpty)
@@ -67,13 +85,20 @@ class ExpeditionStaffingSuite extends FunSuite {
     assertEquals(returned.statistics.explorationsCompleted.thisRun, 1)
   }
 
-  test("extra scouts are optional even on the first route, and supplies remain an independent bonus") {
-    val party = ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 2).exploration.explorationParties.head
+  test(
+    "extra scouts are optional even on the first route, and supplies remain an independent bonus"
+  ) {
+    val party =
+      ExplorationHelper.start(colony, 5 * u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(party.scouts, 2L * u)
     assertEquals(party.targetTick, 150L)
-    val supplied = colony.copy(upgrades = colony.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(1): _*))
-    val next = ExplorationHelper.start(supplied, 5 * u, WoodlandEdge, 2).exploration.explorationParties.head
+    val supplied = colony.copy(upgrades =
+      colony.upgrades.unlock(UpgradesData.UpgradeType.expeditionSupplies.take(1): _*)
+    )
+    val next =
+      ExplorationHelper.start(supplied, 5 * u, WoodlandEdge, 2).exploration.explorationParties.head
     assertEquals(next.targetTick, party.targetTick)
     assert(next.cargo.protein > party.cargo.protein)
   }
+
 }

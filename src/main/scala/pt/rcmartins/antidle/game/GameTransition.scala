@@ -4,5 +4,8 @@ import pt.rcmartins.antidle.model.AllData
 
 object GameTransition {
   def afterAction(data: AllData): AllData =
-    ResourceVisibility.reconcile(UnlockUtils.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.reconcile(data))))
+    ResourceVisibility.reconcile(
+      UnlockUtils.reconcile(DefaultWorkerAssignment.normalize(PopulationAging.reconcile(data)))
+    )
+
 }
