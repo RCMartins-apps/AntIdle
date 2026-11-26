@@ -2,14 +2,18 @@ package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.model._
+import pt.rcmartins.antidle.game.balance.ChamberPricing
+import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.AphidTending
 
 object AphidHusbandry {
   val SugarPerWorkerSecond: Long = 8000L
   val ProteinPerWorkerSecond: Long = 100L
 
-  val BasePlacesPerLevel: Int = 10
-  val ShelteredPlacesPerLevel: Int = 20
+  def BasePlacesPerLevel: Int = ChamberPricing.slotsPerLevel(ChamberType.Aphid, "aphid")
+  def ShelteredPlacesPerLevel: Int =
+    BasePlacesPerLevel + ChamberPricing.slotsPerLevel(ChamberType.Aphid, "aphidShelters")
+
   val AphidsPerTender: Long = 10L
   def housing(nest: NestAttributes): Long =
     Math.max(0L, nest.chambers.aphidChamber.level.toLong) * nest.aphidPlacesPerLevel
@@ -24,7 +28,7 @@ object AphidHusbandry {
     )
     val stocked =
       if (!nest.aphidsInitialized) nest.copy(aphids = housing(nest), aphidsInitialized = true)
-      else nest.copy(aphids = Math.max(0L, Math.min(housing(nest), nest.aphids)))
+      else nest.copy(aphids = Math.max(0L, nest.aphids))
     val first = stocked.aphids == 0L && housing(stocked) >= AphidsPerTender &&
       data.upgrades(AphidTending).unlocked && DiscoveryProgression.WildAphids.found(
         data.exploration

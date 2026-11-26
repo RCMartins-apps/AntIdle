@@ -32,10 +32,10 @@ function render() {
   capacity.replaceChildren();
   if (fields.length) {
     const heading = document.createElement('h2');
-    heading.textContent = 'Capacity per level';
+    heading.textContent = 'Bonuses per level';
     capacity.append(heading);
     for (const {kind, targetKey, target, valueKey, label, scale, max} of fields) {
-      const bonus = definition.bonuses?.find(item => item.type === kind && item[targetKey] === target);
+      const bonus = definition.bonuses?.find(item => item.type === kind && (!targetKey || item[targetKey] === target));
       capacity.append(field(label, (bonus?.[valueKey] ?? 0) / scale, 1 / scale, max / scale));
     }
   }
@@ -79,7 +79,7 @@ function storeCurrent() {
     const inputs = capacity.querySelectorAll('input');
     const bonuses = fields.flatMap(({kind, targetKey, target, valueKey, scale}, index) => {
       const value = Math.round(inputs[index].valueAsNumber * scale);
-      return value ? [{type: kind, [targetKey]: target, [valueKey]: value}] : [];
+      return value ? [{type: kind, ...(targetKey ? {[targetKey]: target} : {}), [valueKey]: value}] : [];
     });
     if (bonuses.length) definition.bonuses = bonuses;
     else delete definition.bonuses;
@@ -129,5 +129,10 @@ request().then(data => {
   }
   render();
   form.hidden = false;
+  comparisonControls(() => {
+    if (!form.reportValidity()) return null;
+    storeCurrent();
+    return {route: '/api/chambers', catalog, revision};
+  });
   status.textContent = 'Prices are in game units. Base is the cost of the first level.';
 }).catch(error => { status.textContent = error.message; });

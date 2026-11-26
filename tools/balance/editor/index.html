@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>Colony Workshop · Ant Idle</title>
   <link rel="stylesheet" href="/editor.css">
+  <script src="/comparison.js" defer></script>
   <script src="/editor.js" defer></script>
 </head>
 <body>
@@ -54,6 +55,12 @@
     </section>
     <aside class="inspector" aria-label="Upgrade settings">
       <form id="upgrade" hidden></form>
+      <section class="comparison" aria-label="Balance comparison">
+      <button type="button" id="compare" disabled>Compare draft</button>
+      <button type="button" id="cancel-comparison" hidden>Cancel comparison</button>
+      <p id="comparison-status" aria-live="polite"></p>
+      <div id="comparison-result"></div>
+    </section>
     </aside>
   </main>
 </body>

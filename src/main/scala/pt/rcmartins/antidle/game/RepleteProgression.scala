@@ -3,6 +3,8 @@ package pt.rcmartins.antidle.game
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.model._
+import pt.rcmartins.antidle.game.balance.ChamberPricing
+import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.RepleteStorage
 
 object RepleteProgression {
@@ -17,8 +19,13 @@ object RepleteProgression {
       data.ants.lineage
     )
 
+  def placesPerLevel: Int = ChamberPricing.slotsPerLevel(ChamberType.Replete, "replete")
+
+  def housing(nest: NestAttributes): Long =
+    Math.max(0L, nest.chambers.repleteChamber.level.toLong) * placesPerLevel
+
   def slots(data: AllData): Long =
-    Math.max(0L, data.nestAttributes.chambers.repleteChamber.level.toLong - data.ants.repletes / u)
+    Math.max(0L, housing(data.nestAttributes) - data.ants.repletes / u)
 
   def reconcile(data: AllData): AllData =
     data.modify(_.basicResources.water.maxAmount).setTo(capacity(data))

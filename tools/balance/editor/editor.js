@@ -572,6 +572,8 @@ window.addEventListener('beforeunload', event => {
 
 api().then(data => {
   loadCatalog(data);
+  comparisonControls(() => form.reportValidity() && !layout.error
+    ? {route: '/api/catalog', catalog: draft, revision: savedRevision} : null);
   scale = Math.max(.73, Math.min(1, viewport.clientWidth / layout.width));
   resizeBoard();
   centerNode(selected, false);

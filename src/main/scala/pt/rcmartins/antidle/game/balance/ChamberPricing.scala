@@ -68,8 +68,16 @@ object ChamberPricing {
       storage("tunnelingSpace", "Tunneling Space"),
       slots("population", "Colony places")
     ),
-    "Queen" -> List(slots("population", "Colony places")),
     "FoodStorage" -> List(storage("sugar", "Sugar"), storage("protein", "Protein (with research)")),
+    "Queen" -> List(
+      slots("population", "Colony places"),
+      BonusField("layingSpeedPercent", "", "", "percent", "Laying speed (%)", 1L, 1000L)
+    ),
+    "Aphid" -> List(
+      slots("aphid", "Aphid places"),
+      slots("aphidShelters", "Extra places with Aphid Shelters")
+    ),
+    "Replete" -> List(slots("replete", "Replete places")),
     "Nursery" -> List(
       slots("brood", "Brood places"),
       slots("broodNurse", "Brood Nurse jobs"),
@@ -95,6 +103,7 @@ object ChamberPricing {
             val targets = bonuses.collect {
               case UpgradeBonus.StorageCapacity(resource, _) => resource
               case UpgradeBonus.SlotCapacity(slot, _)        => slot
+              case _: UpgradeBonus.LayingSpeedPercent        => "layingSpeedPercent"
             }
             def supports(kind: String, target: String): Boolean =
               bonusFields.getOrElse(chamber, Nil).exists(f => f.kind == kind && f.target == target)
@@ -104,6 +113,8 @@ object ChamberPricing {
                 !supports("storageCapacity", resource) || !validAmount(amount)
               case UpgradeBonus.SlotCapacity(slot, count) =>
                 !supports("slotCapacity", slot) || count < 0 || count > MaxSlots
+              case UpgradeBonus.LayingSpeedPercent(percent) =>
+                !supports("layingSpeedPercent", "") || percent < 0 || percent > 1000
               case _ => true
             }
             if (invalidBonus) Some(s"Invalid capacity bonus for $chamber")
@@ -127,11 +138,22 @@ object ChamberPricing {
 
   def validate(json: String): Either[String, Unit] = load(json).map(_ => ())
 
-  private lazy val prices = load(UpgradeOverrides.chambersJson)
+  private lazy val embedded = load(UpgradeOverrides.chambersJson)
     .fold(
       error => throw new IllegalArgumentException(s"src/main/balance/chambers.json: $error"),
       identity
     )
+
+  private var scenarioDefinitions: Option[Map[String, Definition]] = None
+
+  private def prices: Map[String, Definition] = scenarioDefinitions.getOrElse(embedded)
+
+  private[antidle] def useScenarioCatalog(json: String): Unit = {
+    require(scenarioDefinitions.isEmpty, "A chamber scenario catalog is already active")
+    scenarioDefinitions = Some(
+      load(json).fold(error => throw new IllegalArgumentException(error), identity)
+    )
+  }
 
   def cost(kind: ChamberType, level: Int): ActionCost = {
     val rules = prices(kind.toString).costs
@@ -159,6 +181,13 @@ object ChamberPricing {
     prices(kind.toString).bonuses
       .collectFirst { case UpgradeBonus.SlotCapacity(`slot`, count) =>
         count
+      }
+      .getOrElse(0)
+
+  def layingSpeedPerLevel: Int =
+    prices("Queen").bonuses
+      .collectFirst { case UpgradeBonus.LayingSpeedPercent(percent) =>
+        percent
       }
       .getOrElse(0)
 

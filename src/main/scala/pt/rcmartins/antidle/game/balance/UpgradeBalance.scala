@@ -93,6 +93,11 @@ object UpgradeBonus {
 
   }
 
+  @jsonHint("layingSpeedPercent")
+  case class LayingSpeedPercent(percent: Int) extends UpgradeBonus {
+    def description: String = s"+$percent% laying speed per added level"
+  }
+
   implicit val jsonCodec: JsonCodec[UpgradeBonus] = DeriveJsonCodec.gen[UpgradeBonus]
 }
 
@@ -117,13 +122,24 @@ object UpgradeDefinition {
 object UpgradeBalance {
   def apply(upgrade: UpgradeType): UpgradeDefinition = definitions(upgrade)
 
-  lazy val definitions: Map[UpgradeType, UpgradeDefinition] =
+  private lazy val embedded: Map[UpgradeType, UpgradeDefinition] =
     UpgradeTuning
       .load(UpgradeOverrides.json)
       .fold(
         error => throw new IllegalArgumentException(s"src/main/balance/upgrades.json: $error"),
         identity
       )
+
+  private var scenarioDefinitions: Option[Map[UpgradeType, UpgradeDefinition]] = None
+
+  def definitions: Map[UpgradeType, UpgradeDefinition] = scenarioDefinitions.getOrElse(embedded)
+
+  private[antidle] def useScenarioCatalog(json: String): Unit = {
+    require(scenarioDefinitions.isEmpty, "An upgrade scenario catalog is already active")
+    scenarioDefinitions = Some(
+      UpgradeTuning.load(json).fold(error => throw new IllegalArgumentException(error), identity)
+    )
+  }
 
   private def ownedBonuses(
       upgrades: UpgradesData,

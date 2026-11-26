@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>Chambers · Colony Workshop</title>
   <link rel="stylesheet" href="/editor.css">
+  <script src="/comparison.js" defer></script>
   <script src="/chambers.js" defer></script>
 </head>
 <body>
@@ -22,6 +23,12 @@
       <div id="prices"></div>
       <button type="submit" class="primary">Save changes</button>
     </form>
+    <section class="comparison" aria-label="Balance comparison">
+      <button type="button" id="compare" disabled>Compare draft</button>
+      <button type="button" id="cancel-comparison" hidden>Cancel comparison</button>
+      <p id="comparison-status" aria-live="polite"></p>
+      <div id="comparison-result"></div>
+    </section>
   </main>
 </body>
 </html>
