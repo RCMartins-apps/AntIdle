@@ -45,6 +45,7 @@ def check(page, width, url):
     select_tab(page, 'Chambers')
     expect(page.locator('.nest-chambers')).to_be_visible()
     expect(page.locator('.nest-brood')).not_to_be_visible()
+    expect(page.locator('.build-queue-panel')).to_be_visible()
     select_tab(page, 'Jobs')
     expect(nav.get_by_role('button',name='Jobs',exact=True)).to_have_count(0)
     expect(page.locator('.antidle-app')).to_have_attribute('data-mobile-group','nest')
@@ -60,6 +61,7 @@ def check(page, width, url):
     page.get_by_role('tab', name='Brood', exact=True).click()
     expect(page.locator('.nest-brood')).to_be_visible()
     expect(page.locator('.nest-chambers')).not_to_be_visible()
+    expect(page.locator('.build-queue-panel')).not_to_be_visible()
     # Settings is a primary destination; returning preserves the prior sub-view/scroll.
     expect(page.get_by_role('button', name='Game menu', exact=True)).to_have_count(0)
     settings = nav.get_by_role('button', name='Settings', exact=True)

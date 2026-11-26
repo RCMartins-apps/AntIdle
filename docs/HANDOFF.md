@@ -1,5 +1,11 @@
 # Handoff
 
+## 2026-11-26 — mobile colony spacing
+
+- On phones, the construction queue appears on Chambers. Brood has less
+  vertical padding, and the compact resource header and Catch up control
+  take less space while keeping the resource timer row stable.
+
 ## 2026-11-25 — offline upgrade balance editor
 
 - `tools/upgrade-balance-editor` includes main through 3018708. Run
