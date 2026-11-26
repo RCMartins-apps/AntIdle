@@ -129,5 +129,10 @@ request().then(data => {
   }
   render();
   form.hidden = false;
+  comparisonControls(() => {
+    if (!form.reportValidity()) return null;
+    storeCurrent();
+    return {route: '/api/chambers', catalog, revision};
+  });
   status.textContent = 'Prices are in game units. Base is the cost of the first level.';
 }).catch(error => { status.textContent = error.message; });

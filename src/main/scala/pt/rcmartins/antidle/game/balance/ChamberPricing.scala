@@ -138,11 +138,22 @@ object ChamberPricing {
 
   def validate(json: String): Either[String, Unit] = load(json).map(_ => ())
 
-  private lazy val prices = load(UpgradeOverrides.chambersJson)
+  private lazy val embedded = load(UpgradeOverrides.chambersJson)
     .fold(
       error => throw new IllegalArgumentException(s"src/main/balance/chambers.json: $error"),
       identity
     )
+
+  private var scenarioDefinitions: Option[Map[String, Definition]] = None
+
+  private def prices: Map[String, Definition] = scenarioDefinitions.getOrElse(embedded)
+
+  private[antidle] def useScenarioCatalog(json: String): Unit = {
+    require(scenarioDefinitions.isEmpty, "A chamber scenario catalog is already active")
+    scenarioDefinitions = Some(
+      load(json).fold(error => throw new IllegalArgumentException(error), identity)
+    )
+  }
 
   def cost(kind: ChamberType, level: Int): ActionCost = {
     val rules = prices(kind.toString).costs

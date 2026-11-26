@@ -3,7 +3,7 @@ package pt.rcmartins.antidle.balance
 import scala.scalajs.js
 import zio.json._
 import pt.rcmartins.antidle.game.Constants
-import pt.rcmartins.antidle.game.balance.{ChamberPricing, UpgradeTuning}
+import pt.rcmartins.antidle.game.balance.{ChamberPricing, UpgradeBalance, UpgradeTuning}
 import pt.rcmartins.antidle.game.saves.AllDataForSave
 import pt.rcmartins.antidle.model.AllData
 
@@ -42,9 +42,14 @@ object BalanceMain {
       return
     }
     require(
-      args.length == 2,
-      "Usage: node main.js config.json output-directory or --upgrade-catalog"
+      args.length == 2 || args.length == 4,
+      "Usage: node main.js config.json output-directory [upgrades.json chambers.json] or --upgrade-catalog"
     )
+    // The comparison runner launches one fresh engine process per catalog pair.
+    if (args.length == 4) {
+      UpgradeBalance.useScenarioCatalog(fs.readFileSync(args(2), "utf8").asInstanceOf[String])
+      ChamberPricing.useScenarioCatalog(fs.readFileSync(args(3), "utf8").asInstanceOf[String])
+    }
     val config = fs
       .readFileSync(args(0), "utf8")
       .asInstanceOf[String]
