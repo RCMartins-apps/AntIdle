@@ -707,16 +707,22 @@ object MainForm {
                       seq.map { antBlood =>
                         div(
                           className := "brood-entry",
+                          span(className := "brood-entry-progress",
+                            child.text <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
+                              val percent = antBlood match {
+                                case b: AntBrood.Developing => b.care * 100L / b.totalCare
+                                case _ =>
+                                  val duration = Math.max(1L, ColonyDevelopment.growthTicks(antBlood, upgrades))
+                                  val elapsed = Math.max(0L, Math.min(duration, currentTick - antBlood.initialTick))
+                                  elapsed * 100L / duration
+                              }
+                              f"${percent}%02d%%"
+                            }.distinct),
                           ResourceIcons.icon(ResourceIcons.forBrood(antBlood)),
-                          b(antBlood.name + ": "),
-                          child <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
-                            antBlood match {
-                              case b: AntBrood.Developing if b.laying => "Laying"
-                              case b: AntBrood.Developing => s"${b.care * 100L / b.totalCare}% developed"
-                              case _ => prettyTimeFromTicks(Math.max(0L, antBlood.initialTick + ColonyDevelopment.growthTicks(antBlood, upgrades) - currentTick))
-                            }
-                          },
-                          ""
+                          b(antBlood.name, antBlood match {
+                            case b: AntBrood.Developing if b.laying => " · Laying"
+                            case _ => ""
+                          }),
                         )
                       }
                     )
