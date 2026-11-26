@@ -77,6 +77,7 @@ object Actions {
   def assignTrailWorkers(destination: String, delta: Long): Unit =
     actionUpdater.writer.onNext(PheromoneTrails.adjust(_, destination, delta))
   def recallTrail(destination: String): Unit = actionUpdater.writer.onNext(PheromoneTrails.recall(_, destination))
+  def maximizeTrail(destination: String): Unit = actionUpdater.writer.onNext(PheromoneTrails.maximize(_, destination))
 
   def raiseRoyalEgg(): Unit = actionUpdater.writer.onNext(RoyalBroodProgression.start)
 

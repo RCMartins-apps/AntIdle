@@ -1781,6 +1781,9 @@ object MainForm {
       blockedReasonSignal: Signal[Option[String]] = Val(None),
       displayNameSignal: Option[Signal[String]] = None,
       progressBadge: Option[ReactiveHtmlElement[HTMLSpanElement]] = None,
+      showDetails: Boolean = true,
+      buttonContent: Option[ReactiveHtmlElement[HTMLSpanElement]] = None,
+      accessibleName: Option[String] = None,
   )(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     nextActionId += 1L
     val reasonId = s"action-blocker-$nextActionId"
@@ -1794,8 +1797,11 @@ object MainForm {
         className := "btn btn-primary position-relative",
         className := "fs-4",
         `type` := "button",
-        aria.label <-- displayNameSignal.getOrElse(Val(name)),
-        child.text <-- displayNameSignal.getOrElse(Val(name)),
+        aria.label <-- accessibleName.map(Val(_)).getOrElse(displayNameSignal.getOrElse(Val(name))),
+        buttonContent match {
+          case Some(content) => content
+          case None => span(child.text <-- displayNameSignal.getOrElse(Val(name)))
+        },
         progressBadge.map(badge => badge.amend(idAttr := s"$reasonId-counts")),
         disabled <-- enabledSignal.map(!_),
         aria.describedBy <-- blocker.map(reason => (reason.map(_ => reasonId).toList ++ progressBadge.map(_ => s"$reasonId-counts")).mkString(" ")),
@@ -1824,7 +1830,7 @@ object MainForm {
       actionCosts(costSignal, requirementsSignal),
       child.maybe <-- blocker.map(_.map(reason =>
           div(idAttr := reasonId, className := "action-blocked-reason small text-danger text-center", reason))),
-          detailsTag(
+          Option.when(showDetails)(detailsTag(
             className := "action-details", rememberDetails("action." + name),
             summaryTag(
               aria.label <-- displayNameSignal.getOrElse(Val(name)).map(n => s"Details for $n"),
@@ -1835,7 +1841,7 @@ object MainForm {
               ),
             ),
             actionDetails(descriptionSignal, costSignal, bonusSignal, requirementsSignal, includeCosts = false),
-          ),
+          )),
     )
   }
 
@@ -2224,22 +2230,41 @@ object MainForm {
       display <-- feedback(id).map(f => if (f.percent.isDefined) "" else "none"),
       div(className := "map-progress-fill", width.percent <-- feedback(id).map(_.percent.getOrElse(0).toDouble)))
     val scoutCrew = Var(1)
+    def exploreAmount(icon: Option[ResourceIcons.ResourceIcon], amount: Signal[String]): ReactiveHtmlElement[HTMLSpanElement] =
+      span(className := "d-inline-flex align-items-center gap-1 text-nowrap",
+        icon.map(ResourceIcons.icon), span(child.text <-- amount))
     val requestedWorkers = Var(5L * u)
     val workers = requestedWorkers.signal.combineWith(availableWorkersCountSignal).map {
       case (n, available) => ExplorationProgression.selectedWorkers(n, available)
     }.distinct
+    def scoutPicker = div(idAttr := "scout-crew", role := "group", aria.label := "Scout crew",
+      className := "btn-group",
+      (1 to ExplorationMap.MaxSurveyScouts).map(n => button(
+        typ := "button", className := "btn", minWidth.px := 44, minHeight.px := 44,
+        className("btn-primary") <-- scoutCrew.signal.map(_ == n),
+        className("btn-outline-primary") <-- scoutCrew.signal.map(_ != n),
+        aria.label := s"$n ${if (n == 1) "scout" else "scouts"}",
+        aria.pressed <-- scoutCrew.signal.map(current => (current == n).toString), n.toString,
+        onClick --> (_ => scoutCrew.set(n)),
+      )),
+    )
     def scoutAction(id: String): ReactiveHtmlElement[HTMLDivElement] = {
       val supported = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) =>
         ExplorationMap.supportedStudy(data, id, count)
       }.distinct
       div(
-        p(className := "mission-preview", child.text <-- scoutCrew.signal.combineWith(explorationSignal, upgradesSignal, supported).map { case (count, data, upgrades, stationSupport) =>
-          val time = prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings", upgrades, stationSupport))
-          if (id == "surroundings") s"$time · reveals one hexagon" else s"$time · ${prettyNumberStr(ExplorationMap.studyReward(data, id))} knowledge"
-        }),
+        div(className := "explore-control-row", ResourceIcons.icon(ResourceIcons.Scouts), scoutPicker,
+          span(className := "explore-duration", child.text <-- scoutCrew.signal.combineWith(upgradesSignal, supported).map {
+            case (count, upgrades, stationSupport) =>
+              prettyTimeFromTicks(ExplorationMap.scoutDuration(count, id == "surroundings", upgrades, stationSupport))
+          })),
         actionButton(
           descriptionSignal = Val(None),
           name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
+          buttonContent = Option.when(id != "surroundings")(span("Send ",
+            exploreAmount(Some(ResourceIcons.Scouts), scoutCrew.signal.map(n => s"$n ${if (n == 1) "scout" else "scouts"}")))),
+          accessibleName = Option.when(id != "surroundings")("Study Site"),
+          showDetails = false,
           enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) => ExplorationMap.canScout(data, id, count) },
           blockedReasonSignal = explorationSignal.map(data =>
             Option.when(ExplorationMap.busy(data, id, if (id == "surroundings") "reveal" else "study"))(
@@ -2294,7 +2319,12 @@ object MainForm {
             val rate = if (route.sugarReward > 0L) ColonyMilestones.sugar(baseRate, data.statistics) else baseRate
             s"${signedRateStr(rate * TicksPerSecond)} ${ExplorationHelper.resource(route)}/s · ${signedRateStr(-cost * TicksPerSecond)} sugar/s supplies"
           }),
-          div(className := "d-flex flex-wrap align-items-center gap-2 my-2",
+          div(className := "explore-control-row my-2",
+            ResourceIcons.icon(ResourceIcons.Workers),
+            button(typ := "button", className := "btn btn-outline-secondary", minHeight.px := 44, "0",
+              aria.label := "Recall trail",
+              disabled <-- explorationSignal.map(data => PheromoneTrails.target(data, route.id) == 0L),
+              onClick --> (_ => Actions.recallTrail(route.id))),
             button(typ := "button", className := "btn btn-outline-primary", minHeight.px := 44, "−5",
               aria.label := s"Remove 5 trail workers from ${route.name}",
               disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, -PheromoneTrails.Step)),
@@ -2306,9 +2336,10 @@ object MainForm {
               aria.label := s"Assign 5 trail workers to ${route.name}",
               disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, PheromoneTrails.Step)),
               onClick --> (_ => Actions.assignTrailWorkers(route.id, PheromoneTrails.Step))),
-            button(typ := "button", className := "btn btn-outline-secondary", minHeight.px := 44, "Recall trail",
-              disabled <-- explorationSignal.map(data => PheromoneTrails.target(data, route.id) == 0L),
-              onClick --> (_ => Actions.recallTrail(route.id))),
+            button(typ := "button", className := "btn btn-outline-secondary", minHeight.px := 44, "Max",
+              aria.label := s"Maximize trail workers at ${route.name}",
+              disabled <-- snapshotSignal.map(data => !PheromoneTrails.canAdjust(data, route.id, PheromoneTrails.Step)),
+              onClick --> (_ => Actions.maximizeTrail(route.id))),
           ),
           actionCosts(Val(ActionCost.empty), antsSignal.combineWith(explorationSignal).map { case (ants, data) =>
             val current = PheromoneTrails.target(data, route.id)
@@ -2328,26 +2359,61 @@ object MainForm {
               .find(_.destination == route.id).map(_.status).getOrElse("No workers assigned")), "trail-status small"),
         ))),
     )
-    def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = div(className := "site-haul my-3",
-      b(route.actionName),
-      p(className := "mb-1", child.text <-- explorationSignal.map(data =>
-        s"${prettyNumberStr(ExplorationMap.remaining(data, route.id))} ${ExplorationHelper.resource(route)} remaining")),
-      p(className := "mission-preview", child.text <-- snapshotSignal.combineWith(workers).map { case (data, count) =>
-        ExplorationHelper.summary(data, count, route)
-      }),
+    def workerPicker = div(className := "site-worker-controls my-2",
+      div(className := "explore-control-row", ResourceIcons.icon(ResourceIcons.Workers),
+        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Decrease collection workers", "−5",
+          disabled <-- workers.map(_ <= ExplorationProgression.MinWorkers),
+          onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.max(ExplorationProgression.MinWorkers, n - ExplorationProgression.WorkerStep))))),
+        input(idAttr := "map-worker-count", aria.label := "Collection crew", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "5", stepAttr := "5",
+          maxAttr <-- availableWorkersCountSignal.map(n => (ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, n) / u).toString),
+          disabled <-- availableWorkersCountSignal.map(_ < ExplorationProgression.MinWorkers),
+          value <-- workers.map(n => (n / u).toString),
+          onChange --> (event => {
+            val field = event.target.asInstanceOf[HTMLInputElement]
+            useSignalValue[Long](availableWorkersCountSignal, available => {
+              val count = ExplorationProgression.selectedWorkers(field.value.toLongOption.getOrElse(5L) * u, available)
+              field.value = (count / u).toString
+              requestedWorkers.set(count)
+            })
+          })),
+        button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Increase collection workers", "+5",
+          disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) => count >= ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, available) },
+          onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.min(ExplorationProgression.MaxWorkers, n + ExplorationProgression.WorkerStep))))),
+        button(className := "btn btn-outline-secondary", typ := "button", "Max",
+          disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) =>
+            count >= ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, available)
+          },
+          onClick --> (_ => requestedWorkers.set(ExplorationProgression.MaxWorkers))),
+      ),
+    )
+    def haul(route: ExplorationDestination): ReactiveHtmlElement[HTMLDivElement] = {
+      val resource = ExplorationHelper.resource(route)
+      val resourceIcon = ResourceIcons.forLabel(resource)
+      val noSpace = snapshotSignal.map(data => ExplorationHelper.free(data, resource) == 0L).distinct
+      div(className := "site-haul explore-action-card",
+      div(className := "explore-control-row justify-content-between",
+        b(route.actionName),
+        span(className := "explore-remaining", exploreAmount(resourceIcon, explorationSignal.map(data =>
+          s"${prettyNumberStr(ExplorationMap.remaining(data, route.id))} $resource remaining")))),
+      workerPicker,
+      div(className := "small text-end", prettyTimeFromTicks(ExplorationProgression.duration(route, 0))),
       if (RaidProgression.isRaid(route)) div(className := "text-danger raid-risk", child.text <-- workers.map(RaidProgression.risk)) else emptyNode,
       if (RaidProgression.isRaid(route)) div(className := "text-danger raid-aging small",
         child.text <-- antsSignal.combineWith(currentTickSignal, workers).map { case (ants, tick, count) => RaidProgression.ageWarning(ants, tick, count, 0) }) else emptyNode,
       actionButton(
         descriptionSignal = Val(None),
         name = route.actionName,
+        accessibleName = Some(route.actionName),
+        showDetails = false,
+        buttonContent = Some(span(
+          span(display <-- noSpace.map(full => if (full) "" else "none"), s"No space for $resource"),
+          span(display <-- noSpace.map(full => if (full) "none" else ""),
+            if (RaidProgression.isRaid(route)) "Raid · " else "Collect ",
+            exploreAmount(resourceIcon, snapshotSignal.combineWith(workers).map { case (data, count) =>
+              ExplorationHelper.haulPreview(data, count, route)
+            }.distinct)))),
         enabledSignal = snapshotSignal.combineWith(workers).map { case (data, count) => ExplorationHelper.canStart(data, count, route) },
         costSignal = workers.map(ExplorationHelper.cost(_, route)), bonusSignal = Val(ActionBonus.empty),
-        blockedReasonSignal = snapshotSignal.combineWith(workers).map { case (data, count) =>
-          val cargo = ExplorationHelper.load(data, count, route)
-          if (ExplorationMap.remaining(data.exploration, route.id) <= 0L) Some("Site exhausted")
-          else Option.when(cargo.sugar + cargo.protein + cargo.water + cargo.resin == 0L)(s"No ${ExplorationHelper.resource(route)} storage room")
-        },
         requirementsSignal = workers.combineWith(explorationSignal, upgradesSignal, availableScoutsSignal).map { case (count, data, upgrades, scouts) =>
           List(ActionRequirement("mission slots", Math.max(0, ExplorationProgression.maxParties(data, upgrades) - data.explorationParties.size).toLong * u)) ++
             Option.when(count < route.minimumWorkers)(ActionRequirement("party workers", count, route.minimumWorkers)) ++
@@ -2364,7 +2430,7 @@ object MainForm {
           onClick --> (_ => useSignalValue[Option[Long]](fitted, _.foreach(requestedWorkers.set))))
       },
       trailControls(route),
-    )
+    )}
     def relocateAphids: ReactiveHtmlElement[HTMLDivElement] = div(className := "aphid-relocation",
       div(className := "aphid-housing small mb-1", child.text <-- nestSignal.combineWith(explorationSignal).map { case (nest, data) =>
         val incoming = AphidRelocation.reserved(data)
@@ -2395,37 +2461,13 @@ object MainForm {
         val unlockLabel: String = DiscoveryProgression.all.find(_.destination == id).map(d => s"3 studies: ${d.title} research").getOrElse("")
         div(className := "map-site-card card p-3", h5(site.name),
           if (ExplorationMap.outerSites.exists(_.id == id)) div(className := "site-unlock small mb-2", unlockLabel) else emptyNode,
-          p(className := "site-knowledge", child.text <-- explorationSignal.map(data => s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")),
-          child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
-          surveyOrderControls(id),
-          child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
-            site.routes.flatMap(id => ExplorationDestination.all.find(_.id == id)).exists(route =>
-              route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L)
-          }.distinct.map(active => Option.when(active)(
-          div(className := "site-worker-controls my-2",
-            label(forId := "map-worker-count", "Collection crew"),
-            div(className := "d-flex gap-2 align-items-center",
-              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Decrease collection workers", "−5",
-                disabled <-- workers.map(_ <= ExplorationProgression.MinWorkers),
-                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.max(ExplorationProgression.MinWorkers, n - ExplorationProgression.WorkerStep))))),
-              input(idAttr := "map-worker-count", className := "form-control", typ := "number", inputMode := "numeric", minAttr := "5", stepAttr := "5",
-                maxAttr <-- availableWorkersCountSignal.map(n => (ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, n) / u).toString),
-                disabled <-- availableWorkersCountSignal.map(_ < ExplorationProgression.MinWorkers),
-                value <-- workers.map(n => (n / u).toString),
-                onChange --> (event => {
-                  val field = event.target.asInstanceOf[HTMLInputElement]
-                  useSignalValue[Long](availableWorkersCountSignal, available => {
-                    val count = ExplorationProgression.selectedWorkers(field.value.toLongOption.getOrElse(5L) * u, available)
-                    field.value = (count / u).toString
-                    requestedWorkers.set(count)
-                  })
-                })),
-              button(className := "btn btn-outline-secondary", typ := "button", aria.label := "Increase collection workers", "+5",
-                disabled <-- workers.combineWith(availableWorkersCountSignal).map { case (count, available) => count >= ExplorationProgression.selectedWorkers(ExplorationProgression.MaxWorkers, available) },
-                onClick --> (_ => useSignalValue[Long](workers, n => requestedWorkers.set(Math.min(ExplorationProgression.MaxWorkers, n + ExplorationProgression.WorkerStep))))),
-            ),
-          )
-          )),
+          div(className := "explore-action-card",
+            div(className := "explore-control-row justify-content-between",
+              b("Study"), span(className := "site-knowledge explore-remaining",
+                exploreAmount(Some(ResourceIcons.Knowledge), explorationSignal.map(data =>
+                  s"${prettyNumberStr(ExplorationMap.knowledgeRemaining(data, id))} knowledge remaining")))),
+            child.maybe <-- explorationSignal.map(data => ExplorationMap.studyReward(data, id) > 0L).distinct.map(more => Option.when(more)(scoutAction(id))),
+            surveyOrderControls(id)),
           site.routes.flatMap(route => ExplorationDestination.all.find(_.id == route)).map { route =>
             child.maybe <-- explorationSignal.combineWith(antsSignal, nestSignal).map { case (data, ants, nest) =>
               route.isUnlocked(data, ants, nest) && ExplorationMap.remaining(data, route.id) > 0L
@@ -2446,7 +2488,6 @@ object MainForm {
         if (!validSelection(selected.now(), data, AntsData(lineage = lineage))) selected.set("surroundings")
       },
       div(className := "col-12 p-3",
-        infoHeading("Local map", div("Scouts reveal hexagons and study sites. Knowledge and deposits are finite. Workers collect resources. Scout crews of 2–3 finish sooner and cost more supplies. Local scouting still consumes sugar upkeep.")),
         div(className := "hex-map", className("expanded") <-- antsSignal.map(_.lineage.beyondWoodland),
           styleAttr <-- antsSignal.map(_.lineage.beyondWoodland).distinct.map(expanded =>
             s"--hex-width:${mapHexWidth(expanded)}%;--hex-height:${mapHexHeight(expanded)}%"), role := "group", aria.label := "Exploration map",
@@ -2487,23 +2528,6 @@ object MainForm {
             )
             }
           },
-        ),
-        div(className := "scout-crew-control d-flex flex-wrap gap-2 align-items-center mb-2",
-          span("Scout crew"),
-          div(idAttr := "scout-crew", role := "group", aria.label := "Scout crew",
-            className := "btn-group",
-            (1 to ExplorationMap.MaxSurveyScouts).map(n => button(
-              typ := "button", className := "btn", minWidth.px := 44, minHeight.px := 44,
-              className("btn-primary") <-- scoutCrew.signal.map(_ == n),
-              className("btn-outline-primary") <-- scoutCrew.signal.map(_ != n),
-              aria.label := s"$n ${if (n == 1) "scout" else "scouts"}",
-              aria.pressed <-- scoutCrew.signal.map(current => (current == n).toString), n.toString,
-              onClick --> (_ => scoutCrew.set(n)),
-            )),
-          ),
-          span(className := "small", child.text <-- availableScoutsSignal.combineWith(scoutsSignal).map {
-            case (available, total) => s"${available / u} / ${total / u} available"
-          }),
         ),
         child <-- selected.signal.map(sitePanel),
         div(className := "mission-status my-3",
