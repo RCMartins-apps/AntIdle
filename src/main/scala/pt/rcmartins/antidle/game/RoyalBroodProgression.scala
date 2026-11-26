@@ -99,7 +99,7 @@ object RoyalBroodProgression {
         .copy(amount = Math.max(0L, trailResources.sugar.amount + sugar - upkeep)),
       protein = (trailResources.protein - feeding) + (harvest.protein + BroodProgression
         .scavenged(ants, trailResources.protein.freeSpace - harvest.protein + feeding, upgrades)),
-      water = (trailResources.water - harvest.water) + OutpostProgression.dewPerTick(ants)
+      water = (trailResources.water - harvest.water) + OutpostProgression.dewPerTick(ants, upgrades)
     )
   }
 

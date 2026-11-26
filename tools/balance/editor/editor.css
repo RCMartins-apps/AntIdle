@@ -195,3 +195,4 @@ main {
   gap: .5rem;
   margin-block: .25rem;
 }
+.bonus-fields:has(select) { grid-template-columns: minmax(0, 1fr) 5rem auto; }

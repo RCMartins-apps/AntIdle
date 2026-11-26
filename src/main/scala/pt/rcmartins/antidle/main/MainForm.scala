@@ -3422,7 +3422,8 @@ object MainForm {
                       ResourceIcons.Protein,
                       "protein",
                       upgradesSignal.map(upgrades =>
-                        balance.UpgradeBalance.production(50L, "protein", upgrades) * TicksPerSecond
+                        balance.UpgradeBalance
+                          .production(50L, "scrapsGatherers", upgrades) * TicksPerSecond
                       )
                     )
                   case AntTask.BroodNurse =>
@@ -3594,7 +3595,7 @@ object MainForm {
           ResourceIcons.Protein,
           "protein",
           upgradesSignal.map(upgrades =>
-            balance.UpgradeBalance.production(100L, "protein", upgrades) * TicksPerSecond
+            balance.UpgradeBalance.production(100L, "scrapsGatherers", upgrades) * TicksPerSecond
           )
         )
       case AntTask.BroodNurse => broodCareBadge(amountSignal, small = false)
@@ -3602,16 +3603,22 @@ object MainForm {
         jobRate(
           ResourceIcons.Water,
           "water",
-          antsSignal.map(a => OutpostProgression.dewPerWorkerSecond(a.lineage))
+          antsSignal.combineWith(upgradesSignal).map { case (ants, upgrades) =>
+            OutpostProgression.dewPerWorkerSecond(ants.lineage, upgrades)
+          }
         )
       case AntTask.AphidTender =>
         span(
           jobRate(
             ResourceIcons.Sugar,
             "sugar",
-            antsSignal.combineWith(statisticsData.signal).map { case (ants, stats) =>
-              ColonyMilestones
-                .sugar(Prestige.sugar(AphidHusbandry.SugarPerWorkerSecond, ants.lineage), stats)
+            antsSignal.combineWith(statisticsData.signal, upgradesSignal).map {
+              case (ants, stats, upgrades) =>
+                ColonyMilestones
+                  .sugar(
+                    Prestige.sugar(AphidHusbandry.sugarPerWorkerSecond(upgrades), ants.lineage),
+                    stats
+                  )
             }
           ),
           jobRate(ResourceIcons.Protein, "protein", Val(-100L)),

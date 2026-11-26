@@ -117,7 +117,7 @@ object TickCalculator {
                   "Research",
                   balance.UpgradeBalance.production(
                     Foraging.mixedBasePerTick(ants, upgrades),
-                    "sugar",
+                    "sugarCollectors",
                     upgrades
                   ) - Foraging.mixedBasePerTick(ants, upgrades)
                 )
@@ -241,7 +241,7 @@ object TickCalculator {
           PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
         List(
           ResourceOrigin("Collection trails", afterTrails.water.amount - resources.water.amount),
-          ResourceOrigin("Dew Gatherers", OutpostProgression.dewPerTick(ants)),
+          ResourceOrigin("Dew Gatherers", OutpostProgression.dewPerTick(ants, upgrades)),
           ResourceOrigin(
             "Seed Foragers",
             -OutpostProgression.harvestPerTick(ants, nest, upgrades, afterTrails).water

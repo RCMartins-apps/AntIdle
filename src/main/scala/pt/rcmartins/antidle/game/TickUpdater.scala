@@ -69,7 +69,7 @@ object TickUpdater {
             .giveResources(
               sugar = sugarToGive,
               sugarBonusApplied = true,
-              water = OutpostProgression.dewPerTick(allData.ants),
+              water = OutpostProgression.dewPerTick(allData.ants, allData.upgrades),
               tunnelingSpace = tunnelingSpaceToGive,
               protein = harvest.protein + BroodProgression.scavenged(
                 allData.ants,

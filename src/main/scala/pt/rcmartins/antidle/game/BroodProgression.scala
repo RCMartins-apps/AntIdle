@@ -123,7 +123,7 @@ object BroodProgression {
     val small = Math.min(2L - normal, Math.max(0L, ants.smallScavengers / u))
     Math.min(
       Math.max(0L, room),
-      balance.UpgradeBalance.production((normal * 2L + small) * 50L, "protein", upgrades)
+      balance.UpgradeBalance.production((normal * 2L + small) * 50L, "scrapsGatherers", upgrades)
     )
   }
 

@@ -68,10 +68,15 @@ sealed trait UpgradeBonus {
 object UpgradeBonus {
   @jsonHint("productionPercent")
   case class ProductionPercent(source: String, percent: Int) extends UpgradeBonus {
-    def resource: String = if (source == "sugarCollectors") "sugar" else "protein"
-    def description: String =
-      s"+$percent% ${if (source == "sugarCollectors") "sugar collection"
-        else "protein from Scraps Gatherers"}."
+    def description: String = {
+      val output = source match {
+        case "sugarCollectors" => "sugar collection"
+        case "scrapsGatherers" => "protein from Scraps Gatherers"
+        case "aphidTenders"    => "sugar from Aphid Tenders"
+        case "dewGatherers"    => "water from Dew Gatherers"
+      }
+      s"+$percent% $output."
+    }
 
   }
 
@@ -138,18 +143,18 @@ object UpgradeBalance {
       count
     }.sum
 
-  def production(amount: Long, resource: String, upgrades: UpgradesData): Long =
-    production(amount, resource, upgrades, definitions)
+  def production(amount: Long, source: String, upgrades: UpgradesData): Long =
+    production(amount, source, upgrades, definitions)
 
   private[balance] def production(
       amount: Long,
-      resource: String,
+      source: String,
       upgrades: UpgradesData,
       catalog: Map[UpgradeType, UpgradeDefinition]
   ): Long =
     ownedBonuses(upgrades, catalog)
       .collect {
-        case bonus: UpgradeBonus.ProductionPercent if bonus.resource == resource => bonus
+        case bonus: UpgradeBonus.ProductionPercent if bonus.source == source => bonus
       }
       .foldLeft(amount) { (value, bonus) =>
         (BigDecimal(value) * (100 + bonus.percent) / 100).toLong
