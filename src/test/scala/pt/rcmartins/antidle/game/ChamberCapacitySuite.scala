@@ -35,4 +35,31 @@ class ChamberCapacitySuite extends FunSuite {
     assertEquals(reloaded.basicResources.tunnelingSpace, old.basicResources.tunnelingSpace)
   }
 
+  test("housing edits preserve starter and outpost capacity, adults, and queued eggs") {
+    val initial = AllData.initial
+    val old = initial.copy(
+      ants = initial.ants.copy(smallWorkers = 40L * u, eggOrders = 2),
+      nestAttributes = initial.nestAttributes.copy(
+        maxAnts = 48 * u,
+        chambers = AllChamberData(
+          nestChamber = NestChamber(1),
+          queenChamber = QueenChamber(2),
+          nurseryChamber = NurseryChamber(1)
+        )
+      )
+    )
+    val reduced = ChamberBonuses.Housing(2, 1, 1)
+    val olderStorageOnly = Some(ChamberBonuses.CapacityBase(1000 * u, 1000 * u))
+    val edited = ChamberBonuses.restoreCapacity(old, olderStorageOnly, housingPerLevel = reduced)
+    assertEquals(edited.nestAttributes.maxAnts, 34L * u)
+    assertEquals(edited.ants, old.ants)
+    assertEquals(BroodProgression.availableColonySlots(edited.ants, edited.nestAttributes), 0L)
+    val saved = olderStorageOnly.map(_.copy(population = Some(30L * u)))
+    assertEquals(ChamberBonuses.restoreCapacity(edited, saved, housingPerLevel = reduced), edited)
+    assertEquals(
+      ChamberBonuses.restoreCapacity(edited, saved).nestAttributes.maxAnts,
+      old.nestAttributes.maxAnts
+    )
+  }
+
 }

@@ -47,8 +47,7 @@ object Constants {
   val (antsSugarUpkeepTick: Long, antsSugarUpkeepSecond: Long) =
     tickAndSeconds(perSecondValue = (0.2 * u).toLong)
 
-  val NestUpgradeBonusMaxAnts: Long = 10 * u
-  val QueenChamberBonusMaxAnts: Long = 5 * u
+  val InitialColonyPlaces: Long = 10 * u
   val QueenChamberBonusMaxEggs: Long = 2 * u
 
   val AntDeathRiskThreshold: Long = 10 * u
@@ -60,7 +59,6 @@ object Constants {
   val CarcassCarriers: Long = 5 * u
   val CarcassRetrievalTicks: Long = 10 * TicksPerSecond
   val InitialCarcassSlots: Int = 1
-  val NurseryBonusMaxAnts: Long = 3 * u
   val ScoutSugarCost: Long = 50 * u
   val ScoutProteinCost: Long = 2 * u
   val ScoutGrowthTicks: Long = 30 * TicksPerSecond

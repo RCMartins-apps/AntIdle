@@ -105,6 +105,11 @@ blocks new commitments until there is room. Other chamber effects retain
 their existing rules. The validator supplies the editor with supported bonus
 fields and bounds, so the same compact rows work across chambers.
 
+Nest, Queen Chamber and Nursery support editable colony places per purchased
+level. Starter housing includes the initial Queen Chamber. Loaded colonies
+recalculate the chamber share while preserving outpost housing and existing
+population. A lower limit blocks new orders until there is room.
+
 ## Where to edit
 
 Paths below start at `src/main/scala/pt/rcmartins/antidle/`.
