@@ -1,16 +1,9 @@
 package pt.rcmartins.antidle.game.balance
 
-import pt.rcmartins.antidle.game.{
-  AphidHusbandry,
-  DiscoveryProgression,
-  MilestoneResearch,
-  PheromoneTrails,
-  TerritoryProgression
-}
-import pt.rcmartins.antidle.game.Constants.{u, FoodStorageChamberBonusMaxSugar}
+import pt.rcmartins.antidle.game.{DiscoveryProgression, MilestoneResearch}
+import pt.rcmartins.antidle.game.Constants.u
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
-import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 import zio.json._
 
 /** Conditions for earning visibility. Once earned, visibility normally persists. These are
@@ -67,279 +60,78 @@ object UpgradeRequirements {
   implicit val jsonCodec: JsonCodec[UpgradeRequirements] = DeriveJsonCodec.gen[UpgradeRequirements]
 }
 
+@jsonDiscriminator("type")
+sealed trait UpgradeBonus {
+  def description: String
+}
+
+object UpgradeBonus {
+  @jsonHint("productionPercent")
+  case class ProductionPercent(source: String, percent: Int) extends UpgradeBonus {
+    def resource: String = if (source == "sugarCollectors") "sugar" else "protein"
+    def description: String =
+      s"+$percent% ${if (source == "sugarCollectors") "sugar collection"
+        else "protein from Scraps Gatherers"}."
+
+  }
+
+  implicit val jsonCodec: JsonCodec[UpgradeBonus] = DeriveJsonCodec.gen[UpgradeBonus]
+}
+
+@jsonExplicitNull
 case class UpgradeDefinition(
     title: String,
     cost: ActionCost,
     requirements: UpgradeRequirements,
-    description: String
-)
+    description: String,
+    bonuses: List[UpgradeBonus] = Nil
+) {
+  def help: String =
+    (bonuses.map(_.description) :+ description).filter(_.nonEmpty).mkString(" ")
+
+}
 
 object UpgradeDefinition {
   implicit val jsonCodec: JsonCodec[UpgradeDefinition] = DeriveJsonCodec.gen[UpgradeDefinition]
 }
 
-/** Edit upgrade prices and reveal prerequisites here. Keep saved UpgradeType names stable. Effect
-  * implementations remain in their mechanic modules; see docs/BALANCING.md.
-  */
+/** Apply catalog data using the stable upgrade IDs stored in saves. */
 object UpgradeBalance {
   def apply(upgrade: UpgradeType): UpgradeDefinition = definitions(upgrade)
 
   lazy val definitions: Map[UpgradeType, UpgradeDefinition] =
     UpgradeTuning
-      .resolve(defaults, UpgradeOverrides.json)
+      .load(UpgradeOverrides.json)
       .fold(
         error => throw new IllegalArgumentException(s"src/main/balance/upgrades.json: $error"),
         identity
       )
 
-  private[balance] lazy val defaults: Map[UpgradeType, UpgradeDefinition] = Map(
-    ScoutWayfinding -> UpgradeDefinition(
-      "Scout Wayfinding",
-      ActionCost(sugar = 500L * u, knowledge = 50L * u),
-      UpgradeRequirements(upgrades = List(UnlockExplorerTask), completedMissions = 20),
-      s"−${100 - MilestoneResearch.ScoutDurationPercent}% scout reveal/study time. Applies to new departures."
-    ),
-    NurseTraining -> UpgradeDefinition(
-      "Nurse Training",
-      ActionCost(sugar = 1000L * u, protein = 30L * u, knowledge = 100L * u),
-      UpgradeRequirements(upgrades = List(BroodCare), matureWorkers = 25),
-      s"+${MilestoneResearch.NurseCarePercent - 100}% Brood Nurse care."
-    ),
-    QueensRhythm -> UpgradeDefinition(
-      "Queen's Rhythm",
-      ActionCost(sugar = 2000L * u, protein = 50L * u, knowledge = 150L * u),
-      UpgradeRequirements(upgrades = List(QueensRoutine), matureWorkers = 50),
-      s"−${100 - MilestoneResearch.LayingIntervalPercent}% laying time for new worker and scout eggs."
-    ),
-    TerritoryGuards -> UpgradeDefinition(
-      "Territory Guards",
-      ActionCost(sugar = 800L * u, protein = 30L * u, knowledge = 75L * u),
-      UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        discovery = Some(DiscoveryProgression.ContestedGround.id),
-        territoryContests = TerritoryProgression.GuardResearchContests
-      ),
-      s"Assign up to ${TerritoryProgression.MaxGuards} holders to guard for a full contest. Each guard reduces the combat loss range by 1 and gives up their protein haul. At least 1 combat loss remains."
-    ),
-    AphidShelters -> UpgradeDefinition(
-      "Aphid Shelters",
-      ActionCost(sugar = 2000L * u, resin = 20L * u, knowledge = 200L * u),
-      UpgradeRequirements(
-        upgrades = List(AphidTending),
-        discovery = Some("aphid-shelters"),
-        beyondWoodland = true
-      ),
-      s"Aphid Chamber: ${AphidHusbandry.BasePlacesPerLevel} → ${AphidHusbandry.ShelteredPlacesPerLevel} aphid places per level."
-    ),
-    TrailLogistics -> UpgradeDefinition(
-      "Trail Logistics",
-      ActionCost(sugar = 3000L * u, knowledge = 300L * u),
-      UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        discovery = Some("trail-logistics"),
-        beyondWoodland = true
-      ),
-      s"Collection trails: ${PheromoneTrails.EfficiencyPercent}% → ${PheromoneTrails.LogisticsEfficiencyPercent}% of manual haul rate; +${PheromoneTrails.LogisticsEfficiencyPercent * 100L / PheromoneTrails.EfficiencyPercent - 100L}% supply use."
-    ),
-    CoordinatedExpeditions -> UpgradeDefinition(
-      "Coordinated Expeditions",
-      ActionCost(sugar = 4000L * u, knowledge = 400L * u),
-      UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        discovery = Some("coordinated-expeditions"),
-        beyondWoodland = true
-      ),
-      "+1 expedition slot."
-    ),
-    StandardWorkers -> UpgradeDefinition(
-      title = "Standard Worker Development",
-      cost = ActionCost(sugar = 75 * u, tunnelingSpace = 10 * u),
-      requirements = UpgradeRequirements(minimumSmallWorkers = 5),
-      description =
-        "Future worker eggs: full-sized workers (2× small-worker output). Brood requires protein. Unlocks Scraps Gatherers. Existing ants and brood keep their caste.",
-    ),
-    UnlockQueensChamber -> UpgradeDefinition(
-      title = "Unlock Queen's Chamber",
-      cost = ActionCost(sugar = 100 * u),
-      requirements = UpgradeRequirements(earlyResearch = true),
-      description = "Chamber upgrades: more brood places and faster laying.",
-    ),
-    ImproveSugarCollectorTask1 -> UpgradeDefinition(
-      title = "Foraging Techniques 1",
-      cost = ActionCost(sugar = 150 * u),
-      requirements = UpgradeRequirements(earlyResearch = true),
-      description = "+15% sugar collection.",
-    ),
-    ImproveSugarCollectorTask2 -> UpgradeDefinition(
-      title = "Foraging Techniques 2",
-      cost = ActionCost(sugar = 750 * u, knowledge = 75 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(ImproveSugarCollectorTask1, UnlockExplorerTask)),
-      description = "+15% sugar collection.",
-    ),
-    ImproveSugarCollectorTask3 -> UpgradeDefinition(
-      title = "Foraging Techniques 3",
-      cost = ActionCost(sugar = 2500 * u, knowledge = 300 * u),
-      requirements = UpgradeRequirements(upgrades = List(ImproveSugarCollectorTask2)),
-      description = "+15% sugar collection.",
-    ),
-    UnlockFoodStorageChamber -> UpgradeDefinition(
-      title = "Unlock Food Storage Chamber",
-      cost = ActionCost(sugar = 400 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockQueensChamber, ImproveSugarCollectorTask1)),
-      description =
-        s"Food Storage Chamber: +${FoodStorageChamberBonusMaxSugar / u} sugar capacity per level.",
-    ),
-    UnlockExplorerTask -> UpgradeDefinition(
-      title = "Local Exploration",
-      cost = ActionCost(sugar = 750 * u),
-      requirements = UpgradeRequirements(upgrades = List(UnlockFoodStorageChamber)),
-      description = "Unlocks the map: scouts reveal and study sites; workers collect resources.",
-    ),
-    DefaultWorkers -> UpgradeDefinition(
-      title = "Default Workers",
-      cost = ActionCost(sugar = 500 * u, knowledge = 50 * u),
-      requirements = UpgradeRequirements(upgrades = List(UnlockExplorerTask)),
-      description =
-        "Idle workers join a chosen default task and remain available for colony actions.",
-    ),
-    AdditionalExpeditionSlot -> UpgradeDefinition(
-      title = "Expedition Coordination",
-      cost = ActionCost(sugar = 1000 * u, knowledge = 100 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), minimumRevealedSites = 2),
-      description = "+1 expedition slot.",
-    ),
-    ExpeditionSupplies1 -> UpgradeDefinition(
-      title = "Expedition Supplies 1",
-      cost = ActionCost(sugar = 500L * u, knowledge = 20L * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), minimumRevealedSites = 1),
-      description = "+20% base expedition haul capacity.",
-    ),
-    ExpeditionSupplies2 -> UpgradeDefinition(
-      title = "Expedition Supplies 2",
-      cost = ActionCost(sugar = 1500L * u, knowledge = 80L * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(ExpeditionSupplies1), minimumRevealedSites = 3),
-      description = "+20% base expedition haul capacity (40% total).",
-    ),
-    ExpeditionSupplies3 -> UpgradeDefinition(
-      title = "Expedition Supplies 3",
-      cost = ActionCost(sugar = 4500L * u, knowledge = 200L * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(ExpeditionSupplies2), minimumRevealedSites = 5),
-      description = "+20% base expedition haul capacity (60% total).",
-    ),
-    EstablishedTrails -> UpgradeDefinition(
-      title = "Established Trails",
-      cost = ActionCost(sugar = 600 * u, knowledge = 60 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), minimumRevealedSites = 1),
-      description = "−20% sugar-yield loss per added collector.",
-    ),
-    ReinforcedMandibles -> UpgradeDefinition(
-      title = "Reinforced Mandibles",
-      cost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), minimumRevealedSites = 2),
-      description = "+50% Tunneler output.",
-    ),
-    BroodCare -> UpgradeDefinition(
-      title = "Brood Care",
-      cost = ActionCost(sugar = 2000 * u, protein = 40 * u, knowledge = 180 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        nursery = true,
-        minimumRevealedSites = 3
-      ),
-      description = "−20% worker/scout development time; includes growing brood.",
-    ),
-    AphidTending -> UpgradeDefinition(
-      title = "Aphid Tending",
-      cost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 100 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), discovery = Some("wild-aphids")),
-      description =
-        "Unlocks Aphid Chamber: +10 aphid places per level. One tender per 10 aphids: +0.8 sugar/s · −0.01 protein/s.",
-    ),
-    ProteinStorage -> UpgradeDefinition(
-      title = "Protein Storage",
-      cost = ActionCost(sugar = 1000 * u, protein = 25 * u, knowledge = 75 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockFoodStorageChamber, UnlockExplorerTask),
-        proteinDiscovered = true
-      ),
-      description =
-        "+100 protein capacity per Food Storage Chamber level; includes existing levels.",
-    ),
-    QueensRoutine -> UpgradeDefinition(
-      title = "Queen's Routine",
-      cost = ActionCost(sugar = 1200 * u, protein = 20 * u, knowledge = 100 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        nursery = true,
-        minimumRevealedSites = 2
-      ),
-      description =
-        "Automatic worker eggs and aging-job replacements. Set a population target and sugar reserve in Brood.",
-    ),
-    ConstructionPlanning -> UpgradeDefinition(
-      title = "Construction Planning",
-      cost = ActionCost(sugar = 500 * u, knowledge = 50 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), minimumRevealedSites = 1),
-      description = "+2 construction queue slots (3 total).",
-    ),
-    ColonyNutrition -> UpgradeDefinition(
-      title = "Colony Nutrition",
-      cost = ActionCost(sugar = 2500 * u, protein = 60 * u, knowledge = 200 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        aging = true,
-        minimumRevealedSites = 3
-      ),
-      description = "New workers and scouts: +20% lifespan.",
-    ),
-    RepleteStorage -> UpgradeDefinition(
-      title = "Replete Storage",
-      cost = ActionCost(sugar = 1500 * u, protein = 20 * u, knowledge = 150 * u),
-      requirements =
-        UpgradeRequirements(upgrades = List(UnlockExplorerTask), discovery = Some("dew-plants")),
-      description = "Unlocks Replete Chamber and worker promotion for water storage.",
-    ),
-    CoveredTrails -> UpgradeDefinition(
-      title = "Covered Trails",
-      cost = ActionCost(sugar = 3000 * u, protein = 60 * u, knowledge = 300 * u, water = 100 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        outpost = true,
-        minimumRevealedSites = 5
-      ),
-      description = "−25% Seed Forager water use.",
-    ),
-    SeedProcessing -> UpgradeDefinition(
-      title = "Seed Processing",
-      cost = ActionCost(sugar = 6000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        outpost = true,
-        minimumRevealedSites = 5
-      ),
-      description = "+50% Seed Forager protein output (0.06 protein/s each).",
-    ),
-    RoyalNurseryPlanning -> UpgradeDefinition(
-      title = "Royal Nursery Planning",
-      cost = ActionCost(sugar = 5000 * u, protein = 100 * u, knowledge = 700 * u, water = 150 * u),
-      requirements = UpgradeRequirements(
-        upgrades = List(UnlockExplorerTask),
-        nursery = true,
-        discovery = Some("resin-seep"),
-        minimumRevealedSites = 5
-      ),
-      description = "Unlocks Royal Nursery construction.",
-    )
-  )
+  private def productionBonuses(
+      resource: String,
+      upgrades: UpgradesData,
+      catalog: Map[UpgradeType, UpgradeDefinition]
+  ): List[UpgradeBonus.ProductionPercent] =
+    UpgradeType.all.iterator
+      .filter(upgrades(_).unlocked)
+      .flatMap { id =>
+        catalog(id).bonuses.collect {
+          case bonus: UpgradeBonus.ProductionPercent if bonus.resource == resource => bonus
+        }
+      }
+      .toList
+
+  def production(amount: Long, resource: String, upgrades: UpgradesData): Long =
+    production(amount, resource, upgrades, definitions)
+
+  private[balance] def production(
+      amount: Long,
+      resource: String,
+      upgrades: UpgradesData,
+      catalog: Map[UpgradeType, UpgradeDefinition]
+  ): Long =
+    productionBonuses(resource, upgrades, catalog).foldLeft(amount) { (value, bonus) =>
+      (BigDecimal(value) * (100 + bonus.percent) / 100).toLong
+    }
 
 }

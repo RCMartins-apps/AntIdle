@@ -1,13 +1,11 @@
 package pt.rcmartins.antidle.game
 
 import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.game.balance.UpgradeBalance
 import pt.rcmartins.antidle.model.{AntTask, AntsData, Lineage, UpgradesData}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 
 object Foraging {
-  private val techniques =
-    List(ImproveSugarCollectorTask1, ImproveSugarCollectorTask2, ImproveSugarCollectorTask3)
-
   val ProductiveCollectors: Long =
     (defaultTaskCollectSugarTick - 1L) / sugarCollectorPenaltyTick + 1L
 
@@ -31,10 +29,7 @@ object Foraging {
       lineage: Lineage = Lineage()
   ): Long =
     Prestige.sugar(
-      techniques.filter(upgrades(_).unlocked).foldLeft(basePerTick(collectors, upgrades)) {
-        (amount, _) =>
-          (BigDecimal(amount) * BigDecimal.decimal(SugarImprovementBonusPerc)).toLong
-      },
+      UpgradeBalance.production(basePerTick(collectors, upgrades), "sugar", upgrades),
       lineage
     )
 
@@ -47,10 +42,7 @@ object Foraging {
 
   def production(ants: AntsData, upgrades: UpgradesData): Long =
     Prestige.sugar(
-      techniques.filter(upgrades(_).unlocked).foldLeft(mixedBasePerTick(ants, upgrades)) {
-        (amount, _) =>
-          (BigDecimal(amount) * BigDecimal.decimal(SugarImprovementBonusPerc)).toLong
-      },
+      UpgradeBalance.production(mixedBasePerTick(ants, upgrades), "sugar", upgrades),
       ants.lineage
     )
 

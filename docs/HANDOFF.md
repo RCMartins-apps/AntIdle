@@ -1,5 +1,16 @@
 # Handoff
 
+## 2026-11-26 — Colony Workshop
+
+- The upgrade editor saves a complete catalog to `src/main/balance/upgrades.json`.
+  The game and simulator share that file. Production bonuses are editable for
+  sugar collectors and protein scraps gatherers and derive from upgrade ownership.
+- Upgrades use a typed `bonuses` list with add and remove controls. The
+  first supported type is `productionPercent`.
+- Chamber costs and bonuses still need their own catalog and editor controls.
+- Mobile navigation reapplies the saved scroll position after the tab and
+  resource layout update. Keyboard focus moves without scrolling the page.
+
 ## 2026-11-26 — presentation-only CI
 
 - PR validation skips balance simulator and report tests for UI-only paths.
@@ -55,10 +66,8 @@
 - `tools/upgrade-balance-editor` includes main through 3018708. Run
   `python3 scripts/upgrade_editor.py` and open the loopback URL it prints.
   The top-down graph links purchased prerequisites.
-- The editor changes costs, reveal gates, title and help in
-  `src/main/balance/upgrades.json`. The engine and simulator embed those
-  sparse overrides during compilation. The file ships empty and keeps current
-  prices and gates. See [Changing balance](BALANCING.md#offline-upgrade-editor).
+- The editor changes costs, reveal gates, title and help. See
+  [Colony Workshop](BALANCING.md#colony-workshop) for the current catalog.
 - Resource icons come from the game catalog. Chromium checks passed at desktop
   and phone widths, including edits, dependency validation, reload and conflicting
   tabs. An example rebuild charged the edited price and applied the edited reveal
@@ -74,10 +83,6 @@
 - Exploration access is represented only by the normal Local Exploration
   upgrade dependency. The editor no longer exposes separate Explore-tab or
   exploration-available switches, implicit dashed edges, or special cycle rules.
-- Important future work is recorded in
-  [Changing balance](BALANCING.md#important-todo).
-  Replace the temporary Scala-default plus sparse-JSON override layer with one
-  complete JSON catalog for all editor-owned upgrade data.
 - The production map regression fixture now purchases Local Exploration instead
   of relying on the removed tab-only visibility rule. The complete production
   map, trails, aphid and territory browser suite passes at 320, 390 and 1280 px.

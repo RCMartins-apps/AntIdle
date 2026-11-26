@@ -57,10 +57,11 @@ def check(browser, origin, tuning, output):
 
     page.get_by_role('button', name='Save changes').click()
     expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
-    assert json.loads(tuning.read_text()) == {
-        'StandardWorkers': {'cost': {'sugar': 822500},
-                            'requirements': {'minimumSmallWorkers': 6, 'earlyResearch': True}}
-    }
+    catalog = json.loads(tuning.read_text())
+    assert len(catalog) == first_count
+    assert catalog['StandardWorkers']['cost']['sugar'] == 822500
+    assert catalog['StandardWorkers']['requirements']['minimumSmallWorkers'] == 6
+    assert catalog['StandardWorkers']['requirements']['earlyResearch'] is True
     stale.get_by_label('Sugar', exact=True).fill('84')
     stale.get_by_role('button', name='Save changes').click()
     expect(stale.get_by_role('status')).to_contain_text('changed on disk')
@@ -82,7 +83,32 @@ def check(browser, origin, tuning, output):
     page.get_by_role('button', name='Restore defaults').click()
     page.get_by_role('button', name='Save changes').click()
     expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
-    assert json.loads(tuning.read_text()) == {}
+    assert json.loads(tuning.read_text())['StandardWorkers']['cost']['sugar'] == 750000
+
+    page.get_by_label('Find an upgrade').fill('Foraging Techniques 1')
+    page.get_by_label('Find an upgrade').press('Enter')
+    expect(page.get_by_label('Production bonus (%)')).to_have_value('15')
+    page.get_by_label('Production source').select_option('scrapsGatherers')
+    page.get_by_label('Production bonus (%)').fill('5')
+    page.get_by_role('button', name='Save changes').click()
+    expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
+    assert json.loads(tuning.read_text())['ImproveSugarCollectorTask1']['bonuses'] == [
+        {'type': 'productionPercent', 'source': 'scrapsGatherers', 'percent': 5}
+    ]
+    page.get_by_role('button', name='Add production bonus').click()
+    expect(page.get_by_label('Production source')).to_have_count(2)
+    page.get_by_label('Production bonus (%)').nth(1).fill('10')
+    page.get_by_role('button', name='Save changes').click()
+    expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
+    assert len(json.loads(tuning.read_text())['ImproveSugarCollectorTask1']['bonuses']) == 2
+    if output:
+        page.locator('.inspector').screenshot(path=str(output / 'colony-workshop-bonus.png'))
+    page.get_by_role('button', name='Remove bonus 2').click()
+    expect(page.get_by_label('Production source')).to_have_count(1)
+    page.get_by_role('button', name='Remove bonus 1').click()
+    page.get_by_role('button', name='Save changes').click()
+    expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
+    assert 'bonuses' not in json.loads(tuning.read_text())['ImproveSugarCollectorTask1']
     assert not errors, errors
     assert not unexpected_requests, unexpected_requests
     context.close()
@@ -109,7 +135,7 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory() as directory:
         tuning = Path(directory) / 'upgrades.json'
-        tuning.write_text('{}\n')
+        shutil.copyfile(Path(__file__).resolve().parents[1] / 'src/main/balance/upgrades.json', tuning)
         with EditorServer(0, balance_bundle(), tuning) as server:
             Thread(target=server.serve_forever, daemon=True).start()
             try:

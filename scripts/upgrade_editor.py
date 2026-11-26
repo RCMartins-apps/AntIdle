@@ -108,9 +108,9 @@ class EditorHandler(BaseHTTPRequestHandler):
             if not 0 < size <= 262144:
                 raise ValueError('Expected a JSON save request of at most 256 KiB.')
             request = json.loads(self.rfile.read(size))
-            if not isinstance(request, dict) or not isinstance(request.get('overrides'), dict):
-                raise ValueError('Expected upgrade overrides keyed by ID.')
-            encoded = json.dumps(request['overrides'], indent=2, ensure_ascii=False, allow_nan=False) + '\n'
+            if not isinstance(request, dict) or not isinstance(request.get('catalog'), dict):
+                raise ValueError('Expected a complete upgrade catalog keyed by ID.')
+            encoded = json.dumps(request['catalog'], indent=2, ensure_ascii=False, allow_nan=False) + '\n'
             validated = read_catalog(self.server.bundle, encoded)
             with self.server.write_lock:
                 if request.get('revision') != revision(self.server.tuning.read_bytes()):

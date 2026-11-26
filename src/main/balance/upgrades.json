@@ -1,9 +1,949 @@
 {
+  "StandardWorkers": {
+    "title": "Standard Worker Development",
+    "cost": {
+      "sugar": 750000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 100000,
+      "knowledge": 0,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 5,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Future worker eggs: full-sized workers (2× small-worker output). Brood requires protein. Unlocks Scraps Gatherers. Existing ants and brood keep their caste."
+  },
+  "UnlockQueensChamber": {
+    "title": "Unlock Queen's Chamber",
+    "cost": {
+      "sugar": 1000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 0,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": true,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Chamber upgrades: more brood places and faster laying."
+  },
+  "ImproveSugarCollectorTask1": {
+    "title": "Foraging Techniques 1",
+    "cost": {
+      "sugar": 1500000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 0,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": true,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "",
+    "bonuses": [
+      {
+        "type": "productionPercent",
+        "source": "sugarCollectors",
+        "percent": 15
+      }
+    ]
+  },
+  "ImproveSugarCollectorTask2": {
+    "title": "Foraging Techniques 2",
+    "cost": {
+      "sugar": 7500000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 750000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "ImproveSugarCollectorTask1",
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "",
+    "bonuses": [
+      {
+        "type": "productionPercent",
+        "source": "sugarCollectors",
+        "percent": 15
+      }
+    ]
+  },
+  "ImproveSugarCollectorTask3": {
+    "title": "Foraging Techniques 3",
+    "cost": {
+      "sugar": 25000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 3000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "ImproveSugarCollectorTask2"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "",
+    "bonuses": [
+      {
+        "type": "productionPercent",
+        "source": "sugarCollectors",
+        "percent": 15
+      }
+    ]
+  },
   "UnlockFoodStorageChamber": {
+    "title": "Unlock Food Storage Chamber",
+    "cost": {
+      "sugar": 4000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 0,
+      "idleWorkers": 0,
+      "resin": 0
+    },
     "requirements": {
       "upgrades": [
         "UnlockQueensChamber"
-      ]
-    }
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Food Storage Chamber: +1000 sugar capacity per level."
+  },
+  "UnlockExplorerTask": {
+    "title": "Local Exploration",
+    "cost": {
+      "sugar": 7500000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 0,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockFoodStorageChamber"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Unlocks the map: scouts reveal and study sites; workers collect resources."
+  },
+  "DefaultWorkers": {
+    "title": "Default Workers",
+    "cost": {
+      "sugar": 5000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 500000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Idle workers join a chosen default task and remain available for colony actions."
+  },
+  "AdditionalExpeditionSlot": {
+    "title": "Expedition Coordination",
+    "cost": {
+      "sugar": 10000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 2,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+1 expedition slot."
+  },
+  "ExpeditionSupplies1": {
+    "title": "Expedition Supplies 1",
+    "cost": {
+      "sugar": 5000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 200000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 1,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+20% base expedition haul capacity."
+  },
+  "ExpeditionSupplies2": {
+    "title": "Expedition Supplies 2",
+    "cost": {
+      "sugar": 15000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 800000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "ExpeditionSupplies1"
+      ],
+      "minimumRevealedSites": 3,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+20% base expedition haul capacity (40% total)."
+  },
+  "ExpeditionSupplies3": {
+    "title": "Expedition Supplies 3",
+    "cost": {
+      "sugar": 45000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 2000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "ExpeditionSupplies2"
+      ],
+      "minimumRevealedSites": 5,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+20% base expedition haul capacity (60% total)."
+  },
+  "EstablishedTrails": {
+    "title": "Established Trails",
+    "cost": {
+      "sugar": 6000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 600000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 1,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "−20% sugar-yield loss per added collector."
+  },
+  "ReinforcedMandibles": {
+    "title": "Reinforced Mandibles",
+    "cost": {
+      "sugar": 12000000,
+      "protein": 200000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 2,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+50% Tunneler output."
+  },
+  "BroodCare": {
+    "title": "Brood Care",
+    "cost": {
+      "sugar": 20000000,
+      "protein": 400000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1800000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 3,
+      "discovery": null,
+      "nursery": true,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "−20% worker/scout development time; includes growing brood."
+  },
+  "AphidTending": {
+    "title": "Aphid Tending",
+    "cost": {
+      "sugar": 15000000,
+      "protein": 200000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": "wild-aphids",
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Unlocks Aphid Chamber: +10 aphid places per level. One tender per 10 aphids: +0.8 sugar/s · −0.01 protein/s."
+  },
+  "ProteinStorage": {
+    "title": "Protein Storage",
+    "cost": {
+      "sugar": 10000000,
+      "protein": 250000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 750000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockFoodStorageChamber",
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": true,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+100 protein capacity per Food Storage Chamber level; includes existing levels."
+  },
+  "QueensRoutine": {
+    "title": "Queen's Routine",
+    "cost": {
+      "sugar": 12000000,
+      "protein": 200000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 2,
+      "discovery": null,
+      "nursery": true,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Automatic worker eggs and aging-job replacements. Set a population target and sugar reserve in Brood."
+  },
+  "ConstructionPlanning": {
+    "title": "Construction Planning",
+    "cost": {
+      "sugar": 5000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 500000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 1,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+2 construction queue slots (3 total)."
+  },
+  "ColonyNutrition": {
+    "title": "Colony Nutrition",
+    "cost": {
+      "sugar": 25000000,
+      "protein": 600000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 2000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 3,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": true,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "New workers and scouts: +20% lifespan."
+  },
+  "RepleteStorage": {
+    "title": "Replete Storage",
+    "cost": {
+      "sugar": 15000000,
+      "protein": 200000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1500000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": "dew-plants",
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Unlocks Replete Chamber and worker promotion for water storage."
+  },
+  "CoveredTrails": {
+    "title": "Covered Trails",
+    "cost": {
+      "sugar": 30000000,
+      "protein": 600000,
+      "water": 1000000,
+      "tunnelingSpace": 0,
+      "knowledge": 3000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 5,
+      "discovery": null,
+      "nursery": false,
+      "outpost": true,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "−25% Seed Forager water use."
+  },
+  "SeedProcessing": {
+    "title": "Seed Processing",
+    "cost": {
+      "sugar": 60000000,
+      "protein": 1000000,
+      "water": 1500000,
+      "tunnelingSpace": 0,
+      "knowledge": 7000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 5,
+      "discovery": null,
+      "nursery": false,
+      "outpost": true,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+50% Seed Forager protein output (0.06 protein/s each)."
+  },
+  "RoyalNurseryPlanning": {
+    "title": "Royal Nursery Planning",
+    "cost": {
+      "sugar": 50000000,
+      "protein": 1000000,
+      "water": 1500000,
+      "tunnelingSpace": 0,
+      "knowledge": 7000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 5,
+      "discovery": "resin-seep",
+      "nursery": true,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Unlocks Royal Nursery construction."
+  },
+  "AphidShelters": {
+    "title": "Aphid Shelters",
+    "cost": {
+      "sugar": 20000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 2000000,
+      "idleWorkers": 0,
+      "resin": 200000
+    },
+    "requirements": {
+      "upgrades": [
+        "AphidTending"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": "aphid-shelters",
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": true,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Aphid Chamber: 10 → 20 aphid places per level."
+  },
+  "TrailLogistics": {
+    "title": "Trail Logistics",
+    "cost": {
+      "sugar": 30000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 3000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": "trail-logistics",
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": true,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "Collection trails: 60% → 75% of manual haul rate; +25% supply use."
+  },
+  "CoordinatedExpeditions": {
+    "title": "Coordinated Expeditions",
+    "cost": {
+      "sugar": 40000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 4000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": "coordinated-expeditions",
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": true,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "+1 expedition slot."
+  },
+  "ScoutWayfinding": {
+    "title": "Scout Wayfinding",
+    "cost": {
+      "sugar": 5000000,
+      "protein": 0,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 500000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 20,
+      "matureWorkers": 0,
+      "territoryContests": 0
+    },
+    "description": "−20% scout reveal/study time. Applies to new departures."
+  },
+  "NurseTraining": {
+    "title": "Nurse Training",
+    "cost": {
+      "sugar": 10000000,
+      "protein": 300000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1000000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "BroodCare"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 25,
+      "territoryContests": 0
+    },
+    "description": "+50% Brood Nurse care."
+  },
+  "QueensRhythm": {
+    "title": "Queen's Rhythm",
+    "cost": {
+      "sugar": 20000000,
+      "protein": 500000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 1500000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "QueensRoutine"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": null,
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 50,
+      "territoryContests": 0
+    },
+    "description": "−20% laying time for new worker and scout eggs."
+  },
+  "TerritoryGuards": {
+    "title": "Territory Guards",
+    "cost": {
+      "sugar": 8000000,
+      "protein": 300000,
+      "water": 0,
+      "tunnelingSpace": 0,
+      "knowledge": 750000,
+      "idleWorkers": 0,
+      "resin": 0
+    },
+    "requirements": {
+      "upgrades": [
+        "UnlockExplorerTask"
+      ],
+      "minimumRevealedSites": 0,
+      "discovery": "contested-ground",
+      "nursery": false,
+      "outpost": false,
+      "aging": false,
+      "proteinDiscovered": false,
+      "minimumSmallWorkers": 0,
+      "earlyResearch": false,
+      "beyondWoodland": false,
+      "completedMissions": 0,
+      "matureWorkers": 0,
+      "territoryContests": 1
+    },
+    "description": "Assign up to 5 holders to guard for a full contest. Each guard reduces the combat loss range by 1 and gives up their protein haul. At least 1 combat loss remains."
   }
 }

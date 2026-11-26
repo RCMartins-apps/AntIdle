@@ -421,22 +421,53 @@ function renderForm() {
   });
   copy.append(field('Title', name, true), field('Help text', description, true));
 
+  const bonus = element('div', undefined, 'bonus-list');
+  const bonuses = row.bonuses ?? [];
+  for (const [index, effect] of bonuses.entries()) {
+    const controls = element('div', undefined, 'fields');
+    const source = element('select');
+    for (const [key, label] of [['sugarCollectors', 'Sugar Collectors'], ['scrapsGatherers', 'Scraps Gatherers']]) {
+      source.append(option(key, label, key === effect.source));
+    }
+    source.addEventListener('change', () => {
+      effect.source = source.value;
+      touch();
+    });
+    const percent = input('number', effect.percent);
+    percent.min = '1';
+    percent.max = '100';
+    percent.step = '1';
+    percent.required = true;
+    percent.addEventListener('input', () => {
+      if (!percent.validity.valid) return;
+      effect.percent = Number(percent.value);
+      touch();
+    });
+    const remove = element('button', 'Remove bonus');
+    remove.type = 'button';
+    remove.setAttribute('aria-label', `Remove bonus ${index + 1}`);
+    remove.addEventListener('click', () => {
+      bonuses.splice(index, 1);
+      renderForm();
+      touch();
+    });
+    controls.append(field('Production source', source), field('Production bonus (%)', percent));
+    bonus.append(controls, remove);
+  }
+  const addBonus = element('button', 'Add production bonus');
+  addBonus.type = 'button';
+  addBonus.addEventListener('click', () => {
+    row.bonuses = [...bonuses, {type: 'productionPercent', source: 'sugarCollectors', percent: 5}];
+    renderForm();
+    touch();
+  });
+  bonus.append(addBonus);
+
   const neighbours = element('div', undefined, 'connections');
   neighbours.id = 'connections';
-  form.replaceChildren(heading, section('Costs', costs), section('Prerequisites', requirements), section('Title and help', copy, false), neighbours);
+  form.replaceChildren(heading, section('Costs', costs), section('Bonuses', bonus), section('Prerequisites', requirements), section('Title and help', copy, false), neighbours);
   form.hidden = false;
   if (layout) renderConnections();
-}
-
-function differences(base, current) {
-  return Object.fromEntries(Object.entries(current).flatMap(([key, value]) => {
-    if (equal(base[key], value)) return [];
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const changed = differences(base[key], value);
-      return Object.keys(changed).length ? [[key, changed]] : [];
-    }
-    return [[key, value]];
-  }));
 }
 
 function loadCatalog(catalog) {
@@ -471,7 +502,8 @@ el('save').addEventListener('click', async () => {
     const catalog = await api({
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({revision: savedRevision, overrides: differences(defaults, draft)}),
+      body: JSON.stringify({revision: savedRevision, catalog: draft}, (key, value) =>
+        key === 'bonuses' && value.length === 0 ? undefined : value),
     });
     loadCatalog(catalog);
   } catch (error) {

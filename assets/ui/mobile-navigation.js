@@ -30,6 +30,17 @@
       if (a) a.innerHTML = `<span class=desktop-tab-label>${a.textContent}</span><span class=mobile-tab-label>${label}</span>`;
     }
     let current = 'nest', group = 'nest', changing = false, returnView = 'nest';
+    let restoreFrame = 0;
+    function restoreScroll(id) {
+      cancelAnimationFrame(restoreFrame);
+      if (!media.matches) return;
+      const top = scroll[id] || 0;
+      window.scrollTo({top, behavior: 'instant'});
+      // Resource collapse and Bootstrap tab changes can clamp scroll during layout.
+      restoreFrame = requestAnimationFrame(() => {
+        if (media.matches && current === id) window.scrollTo({top, behavior: 'instant'});
+      });
+    }
     const tab = id => app.querySelector('#' + id + '-tab');
     const available = id => !!tab(id) && !tab(id).parentElement.hidden;
     const groupFor = id => id === 'milestones' && !available('lineage') ? 'settings' : Object.keys(groups).find(key => groups[key].tabs.includes(id)) || 'settings';
@@ -47,7 +58,7 @@
       if (media.matches && group === 'settings' && event.key === 'Escape') {
         event.preventDefault();
         select(available(returnView) && groupFor(returnView) !== 'settings' ? returnView : 'nest');
-        nav.querySelector(`[data-destination="${group}"]`)?.focus();
+        nav.querySelector(`[data-destination="${group}"]`)?.focus({preventScroll: true});
       }
     });
     // Secondary views share their existing panels without duplicating controls/state.
@@ -93,7 +104,7 @@
       changing = true;
       bootstrap.Tab.getOrCreateInstance(tab(base)).show();
       changing = false; refresh();
-      if (media.matches) window.scrollTo({top: scroll[id] || 0, behavior: 'instant'});
+      restoreScroll(id);
     }
     tabs.addEventListener('show.bs.tab', () => {
       // Bootstrap can handle an anchor before our click listener runs.
@@ -105,7 +116,7 @@
         const id = event.target.id.replace(/-tab$/, '');
         if (groupFor(id) === 'settings' && group !== 'settings') returnView = current;
         current = id; group = groupFor(id); last[group] = id; refresh();
-        if (media.matches) window.scrollTo({top: scroll[id] || 0, behavior: 'instant'});
+        restoreScroll(id);
       }
     });
     // Bootstrap ignores a click on an already-active base anchor; handle secondary→base too.
@@ -133,7 +144,7 @@
       event.preventDefault(); event.stopPropagation();
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? visible.length - 1 :
         (index + (event.key === 'ArrowRight' ? 1 : -1) + visible.length) % visible.length;
-      select(visible[next].id.replace(/-tab$/, '')); visible[next].focus();
+      select(visible[next].id.replace(/-tab$/, '')); visible[next].focus({preventScroll: true});
     }, true);
     new MutationObserver(refresh).observe(tabs, { childList: true });
     const chambers = app.querySelector('.nest-chambers');
