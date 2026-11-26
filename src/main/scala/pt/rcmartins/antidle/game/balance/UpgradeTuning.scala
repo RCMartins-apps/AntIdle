@@ -7,7 +7,7 @@ import zio.Chunk
 import zio.json._
 import zio.json.ast.Json
 
-/** Resolve per-field balance overrides against the same definitions used in play. */
+/** Load the shared catalog and validate the editor's unsaved changes. */
 object UpgradeTuning {
   case class Entry(id: String, base: UpgradeDefinition, current: UpgradeDefinition)
   object Entry {
@@ -41,8 +41,8 @@ object UpgradeTuning {
   }
 
   def catalog(candidate: String): Either[String, Catalog] = {
-    val defaults = UpgradeBalance.defaults
-    resolve(defaults, candidate).map(effective =>
+    val defaults = UpgradeBalance.definitions
+    load(candidate).map(effective =>
       Catalog(
         Constants.u,
         DiscoveryProgression.all.map(d => d.id -> d.title).toMap,
@@ -52,71 +52,50 @@ object UpgradeTuning {
     )
   }
 
-  private[balance] def resolve(
-      defaults: Map[UpgradeType, UpgradeDefinition],
-      candidate: String
-  ): Either[String, Map[UpgradeType, UpgradeDefinition]] =
+  def load(candidate: String): Either[String, Map[UpgradeType, UpgradeDefinition]] =
     candidate.fromJson[Json].flatMap {
-      case Json.Obj(fields) if fields.isEmpty => Right(defaults)
       case Json.Obj(fields) =>
-        val ids = defaults.keysIterator.map(t => t.name -> t).toMap
-        val changed = unique(fields, "Upgrades").flatMap { _ =>
-          fields.foldLeft[Either[String, Map[UpgradeType, UpgradeDefinition]]](Right(defaults)) {
-            case (result, (name, change: Json.Obj)) =>
-              for {
-                current <- result
-                id <- ids.get(name).toRight(s"Unknown upgrade: $name")
-                source <- current(id).toJson.fromJson[Json]
-                base <- source match {
-                  case obj: Json.Obj => Right(obj)
-                  case _             => Left(s"$name: expected an upgrade object")
-                }
-                patched <- merge(base, change, name)
-                decoded <- patched.toJson
-                  .fromJson[UpgradeDefinition]
-                  .left
-                  .map(error => s"$name: $error")
-                validated <- validate(decoded, name)
-              } yield current.updated(id, validated)
-            case (_, (name, _)) => Left(s"$name: expected an object")
-          }
+        val ids = UpgradeType.all.iterator.map(id => id.name -> id).toMap
+        unique(fields, "Upgrades").flatMap { _ =>
+          if (fields.map(_._1).toSet != ids.keySet)
+            Left("Catalog must contain exactly the known upgrade IDs")
+          else
+            fields
+              .foldLeft[Either[String, Map[UpgradeType, UpgradeDefinition]]](Right(Map.empty)) {
+                case (result, (name, raw)) =>
+                  for {
+                    entries <- result
+                    decoded <- raw.toJson
+                      .fromJson[UpgradeDefinition]
+                      .left
+                      .map(error => s"$name: $error")
+                    expected <- decoded.toJson.fromJson[Json]
+                    _ <- checkFields(raw, expected, name)
+                    valid <- validate(decoded, name)
+                  } yield entries.updated(ids(name), valid)
+              }
+              .flatMap(definitions => checkCycles(definitions).map(_ => definitions))
         }
-        changed.flatMap(definitions => checkCycles(definitions).map(_ => definitions))
-      case _ => Left("Expected an object keyed by upgrade ID")
+      case _ => Left("Expected a complete object keyed by upgrade ID")
     }
 
   private def unique(fields: Chunk[(String, Json)], path: String): Either[String, Unit] =
     if (fields.map(_._1).distinct.size == fields.size) Right(())
     else Left(s"$path: repeated field")
 
-  private def merge(base: Json.Obj, changes: Json.Obj, path: String): Either[String, Json.Obj] =
-    unique(changes.fields, path).flatMap { _ =>
-      changes.fields.foldLeft[Either[String, Json.Obj]](Right(base)) {
-        case (current, (key, change)) =>
-          val field = s"$path.$key"
-          current.flatMap { obj =>
-            obj.fields.find(_._1 == key).map(_._2).toRight(s"Unknown field: $field").flatMap {
-              original =>
-                val patched = (original, change) match {
-                  case (a: Json.Obj, b: Json.Obj)   => merge(a, b, field)
-                  case (_: Json.Obj, _)             => Left(s"$field: expected an object")
-                  case (Json.Null, value: Json.Str) => Right(value)
-                  case (_: Json.Str, Json.Null) if key == "discovery" => Right(Json.Null)
-                  case (_: Json.Bool, value: Json.Bool)               => Right(value)
-                  case (_: Json.Num, value: Json.Num)                 => Right(value)
-                  case (_: Json.Str, value: Json.Str)                 => Right(value)
-                  case (_: Json.Arr, value: Json.Arr)                 => Right(value)
-                  case (Json.Null, Json.Null)                         => Right(Json.Null)
-                  case _ => Left(s"$field: unexpected value type")
-                }
-                patched.map(value =>
-                  Json.Obj(obj.fields.map { case (name, old) =>
-                    name -> (if (name == key) value else old)
-                  })
-                )
+  private def checkFields(raw: Json, expected: Json, path: String): Either[String, Unit] =
+    (raw, expected) match {
+      case (Json.Obj(actual), Json.Obj(required)) =>
+        val known = required.toMap
+        unique(actual, path).flatMap { _ =>
+          if (actual.map(_._1).toSet != known.keySet)
+            Left(s"$path: missing or unknown fields")
+          else
+            actual.foldLeft[Either[String, Unit]](Right(())) { case (result, (key, value)) =>
+              result.flatMap(_ => checkFields(value, known(key), s"$path.$key"))
             }
-          }
-      }
+        }
+      case _ => Right(())
     }
 
   private def validate(
@@ -137,6 +116,12 @@ object UpgradeTuning {
       Left(s"$name: repeated upgrade prerequisite")
     else if (required.discovery.exists(id => !DiscoveryProgression.all.exists(_.id == id)))
       Left(s"$name: unknown discovery")
+    else if (
+      definition.productionBonus.exists(bonus =>
+        !Set("sugar", "protein")
+          .contains(bonus.resource) || bonus.percent < 1 || bonus.percent > 100
+      )
+    ) Left(s"$name: production bonus must be sugar or protein and between 1 and 100 percent")
     else Right(definition)
   }
 

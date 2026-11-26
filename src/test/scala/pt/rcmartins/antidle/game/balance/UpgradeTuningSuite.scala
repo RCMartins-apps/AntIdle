@@ -1,69 +1,73 @@
 package pt.rcmartins.antidle.game.balance
 
 import munit.FunSuite
-import pt.rcmartins.antidle.game.Constants.u
-import pt.rcmartins.antidle.model.ActionCost
+import pt.rcmartins.antidle.model.{ActionCost, UpgradesData}
+import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
+import zio.json._
 
 class UpgradeTuningSuite extends FunSuite {
-  private val defaults = UpgradeBalance.defaults
-  private def tune(json: String) = UpgradeTuning.resolve(defaults, json)
+  private val catalog = UpgradeBalance.definitions
+  private def encode(entries: Map[UpgradeType, UpgradeDefinition]): String =
+    entries.map { case (id, definition) => id.name -> definition }.toJson
 
-  test("empty overrides preserve all currently shipped balance") {
-    assertEquals(tune("{}"), Right(defaults))
+  private def change(id: UpgradeType)(f: UpgradeDefinition => UpgradeDefinition) =
+    UpgradeTuning.load(encode(catalog.updated(id, f(catalog(id)))))
+
+  test("the complete catalog round trips with all stable upgrade IDs") {
+    assertEquals(UpgradeTuning.load(encode(catalog)), Right(catalog))
+    assert(UpgradeTuning.load(encode(catalog - StandardWorkers)).isLeft)
+    assert(UpgradeTuning.load("{}").isLeft)
+  }
+
+  test("a catalog edit redirects an owned upgrade from sugar to protein") {
+    val owned = UpgradesData.initial.unlock(ImproveSugarCollectorTask1)
+    val edited = change(ImproveSugarCollectorTask1)(
+      _.copy(
+        productionBonus = Some(ProductionBonus("protein", 5))
+      )
+    ).fold(error => fail(error), identity)
+    assertEquals(UpgradeBalance.production(100L, "sugar", owned, edited), 100L)
+    assertEquals(UpgradeBalance.production(100L, "protein", owned, edited), 105L)
+    assertEquals(UpgradeBalance.production(100L, "protein", UpgradesData.initial, edited), 100L)
   }
 
   test("the editor catalog provides an actual game icon for every cost field") {
-    val catalog = UpgradeTuning.catalog("{}").fold(error => fail(error), identity)
-    assertEquals(catalog.icons.keySet, ActionCost.empty.productElementNames.toSet)
-    assert(catalog.icons.values.forall(_.path.nonEmpty))
+    val editor = UpgradeTuning.catalog(encode(catalog)).fold(error => fail(error), identity)
+    assertEquals(editor.icons.keySet, ActionCost.empty.productElementNames.toSet)
+    assert(editor.icons.values.forall(_.path.nonEmpty))
   }
 
-  test("overrides retain other fields and use stable prerequisite IDs and discovery IDs") {
-    val edited = tune(
-      """{"StandardWorkers":{"cost":{"sugar":805000},"requirements":{"minimumSmallWorkers":6,"earlyResearch":true}},
-        |"ImproveSugarCollectorTask2":{"requirements":{"upgrades":["UnlockQueensChamber"],"discovery":"resin-seep"}},
-        |"RepleteStorage":{"requirements":{"discovery":null}}}""".stripMargin
-    ).fold(error => fail(error), identity)
-    val before = defaults(StandardWorkers)
-    assertEquals(edited(StandardWorkers).cost, before.cost.copy(sugar = 80L * u + u / 2L))
-    assertEquals(
-      edited(StandardWorkers).requirements,
-      before.requirements.copy(minimumSmallWorkers = 6, earlyResearch = true)
+  test("invalid fields, gates, and production bonuses are rejected") {
+    assert(UpgradeTuning.load(encode(catalog).replaceFirst(""""sugar"""", """"suggar"""")).isLeft)
+    assert(change(StandardWorkers)(d => d.copy(cost = d.cost.copy(sugar = -1))).isLeft)
+    assert(
+      change(StandardWorkers)(d =>
+        d.copy(requirements = d.requirements.copy(minimumSmallWorkers = -2))
+      ).isLeft
     )
-    assertEquals(
-      edited(ImproveSugarCollectorTask2).requirements.upgrades,
-      List(UnlockQueensChamber)
+    assert(
+      change(StandardWorkers)(d =>
+        d.copy(requirements = d.requirements.copy(discovery = Some("missing")))
+      ).isLeft
     )
-    assertEquals(edited(ImproveSugarCollectorTask2).requirements.discovery, Some("resin-seep"))
-    assertEquals(edited(RepleteStorage).requirements.discovery, None)
-    assertEquals(edited(BroodCare), defaults(BroodCare))
-  }
-
-  test("invalid references, numbers and fields fail before being applied") {
-    Seq(
-      """{"Missing":{"title":"Anything"}}""",
-      """{"StandardWorkers":{"cost":{"suggar":3}}}""",
-      """{"StandardWorkers":{"cost":{"sugar":-1}}}""",
-      """{"StandardWorkers":{"cost":{"sugar":1.5}}}""",
-      """{"StandardWorkers":{"requirements":{"minimumSmallWorkers":-2}}}""",
-      """{"StandardWorkers":{"requirements":{"upgrades":["Missing"]}}}""",
-      """{"StandardWorkers":{"requirements":{"discovery":"missing"}}}""",
-      """{"StandardWorkers":{"title":null}}""",
-    ).foreach(candidate => assert(tune(candidate).isLeft, candidate))
+    assert(
+      change(StandardWorkers)(_.copy(productionBonus = Some(ProductionBonus("water", 5)))).isLeft
+    )
+    assert(
+      change(StandardWorkers)(
+        _.copy(productionBonus = Some(ProductionBonus("protein", 101)))
+      ).isLeft
+    )
   }
 
   test("purchase dependency cycles are rejected") {
-    assert(
-      tune(
-        """{"UnlockQueensChamber":{"requirements":{"upgrades":["UnlockFoodStorageChamber"]}}}"""
-      ).left.toOption.exists(_.contains("Dependency cycle"))
+    val result = change(UnlockQueensChamber)(d =>
+      d.copy(
+        requirements = d.requirements.copy(upgrades = List(UnlockFoodStorageChamber))
+      )
     )
-    assert(
-      tune(
-        """{"UnlockExplorerTask":{"requirements":{"upgrades":["ExpeditionSupplies1"]}}}"""
-      ).left.toOption.exists(_.contains("Dependency cycle"))
-    )
+    assert(result.left.toOption.exists(_.contains("Dependency cycle")))
   }
 
 }

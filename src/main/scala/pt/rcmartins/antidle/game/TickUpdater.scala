@@ -73,7 +73,8 @@ object TickUpdater {
               tunnelingSpace = tunnelingSpaceToGive,
               protein = harvest.protein + BroodProgression.scavenged(
                 allData.ants,
-                allData.basicResources.protein.freeSpace - harvest.protein + proteinUsed
+                allData.basicResources.protein.freeSpace - harvest.protein + proteinUsed,
+                allData.upgrades
               ),
             )
         },

@@ -112,12 +112,16 @@ object TickCalculator {
                   Foraging.mixedBasePerTick(ants, upgrades),
                 )
               ),
-              Some(PercentOrigin(ImproveSugarCollectorTask1.title, SugarImprovementBonusPerc))
-                .filter(_ => upgrades(ImproveSugarCollectorTask1).unlocked),
-              Some(PercentOrigin(ImproveSugarCollectorTask2.title, SugarImprovementBonusPerc))
-                .filter(_ => upgrades(ImproveSugarCollectorTask2).unlocked),
-              Some(PercentOrigin(ImproveSugarCollectorTask3.title, SugarImprovementBonusPerc))
-                .filter(_ => upgrades(ImproveSugarCollectorTask3).unlocked),
+              Some(
+                ResourceOrigin(
+                  "Research",
+                  balance.UpgradeBalance.production(
+                    Foraging.mixedBasePerTick(ants, upgrades),
+                    "sugar",
+                    upgrades
+                  ) - Foraging.mixedBasePerTick(ants, upgrades)
+                )
+              ).filter(_.tickResourceU != 0),
               Some(PercentOrigin("Inherited production", 1.0 + ants.lineage.foundings * 0.1))
                 .filter(_ => ants.lineage.foundings > 0),
               Some(
@@ -207,7 +211,8 @@ object TickCalculator {
               afterTrails.protein.freeSpace - OutpostProgression
                 .harvestPerTick(ants, nest, upgrades, afterTrails)
                 .protein + AphidHusbandry
-                .proteinPerTick(ants, nest, upgrades, afterTrails.protein.amount)
+                .proteinPerTick(ants, nest, upgrades, afterTrails.protein.amount),
+              upgrades
             )
           ),
           ResourceOrigin("Larval feeding", -larvalCost.protein),

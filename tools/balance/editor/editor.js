@@ -421,22 +421,36 @@ function renderForm() {
   });
   copy.append(field('Title', name, true), field('Help text', description, true));
 
+  const bonus = element('div', undefined, 'fields');
+  const resource = element('select');
+  for (const key of ['', 'sugar', 'protein']) {
+    resource.append(option(key, key ? labelFor(key) : 'None', key === (row.productionBonus?.resource ?? '')));
+  }
+  resource.addEventListener('change', () => {
+    row.productionBonus = resource.value ? {resource: resource.value, percent: row.productionBonus?.percent ?? 5} : null;
+    renderForm();
+    touch();
+  });
+  bonus.append(field('Production resource', resource));
+  if (row.productionBonus) {
+    const percent = input('number', row.productionBonus.percent);
+    percent.min = '1';
+    percent.max = '100';
+    percent.step = '1';
+    percent.required = true;
+    percent.addEventListener('input', () => {
+      if (!percent.validity.valid) return;
+      row.productionBonus.percent = Number(percent.value);
+      touch();
+    });
+    bonus.append(field('Production bonus (%)', percent));
+  }
+
   const neighbours = element('div', undefined, 'connections');
   neighbours.id = 'connections';
-  form.replaceChildren(heading, section('Costs', costs), section('Prerequisites', requirements), section('Title and help', copy, false), neighbours);
+  form.replaceChildren(heading, section('Costs', costs), section('Production bonus', bonus), section('Prerequisites', requirements), section('Title and help', copy, false), neighbours);
   form.hidden = false;
   if (layout) renderConnections();
-}
-
-function differences(base, current) {
-  return Object.fromEntries(Object.entries(current).flatMap(([key, value]) => {
-    if (equal(base[key], value)) return [];
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const changed = differences(base[key], value);
-      return Object.keys(changed).length ? [[key, changed]] : [];
-    }
-    return [[key, value]];
-  }));
 }
 
 function loadCatalog(catalog) {
@@ -471,7 +485,7 @@ el('save').addEventListener('click', async () => {
     const catalog = await api({
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({revision: savedRevision, overrides: differences(defaults, draft)}),
+      body: JSON.stringify({revision: savedRevision, catalog: draft}),
     });
     loadCatalog(catalog);
   } catch (error) {

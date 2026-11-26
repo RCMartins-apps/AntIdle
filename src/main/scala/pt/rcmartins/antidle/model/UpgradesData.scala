@@ -35,7 +35,7 @@ object UpgradesData {
     final def definition: UpgradeDefinition = UpgradeBalance(this)
     final def cost: ActionCost = definition.cost
     final def title: String = definition.title
-    final def description: String = definition.description
+    final def description: String = definition.help
     final def shouldShow(data: AllData): Boolean = definition.requirements.met(data)
   }
 

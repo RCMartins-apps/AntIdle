@@ -118,10 +118,13 @@ object BroodProgression {
     }
   }
 
-  def scavenged(ants: AntsData, room: Long): Long = {
+  def scavenged(ants: AntsData, room: Long, upgrades: UpgradesData = UpgradesData.initial): Long = {
     val normal = Math.min(2L, Math.max(0L, ants.taskWorkers(AntTask.Scavenger) / u))
     val small = Math.min(2L - normal, Math.max(0L, ants.smallScavengers / u))
-    Math.min(Math.max(0L, room), (normal * 2L + small) * 50L)
+    Math.min(
+      Math.max(0L, room),
+      balance.UpgradeBalance.production((normal * 2L + small) * 50L, "protein", upgrades)
+    )
   }
 
   def assignSmall(initial: AllData, task: AntTask, delta: Long): AllData = {

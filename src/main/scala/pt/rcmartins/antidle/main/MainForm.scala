@@ -3417,7 +3417,14 @@ object MainForm {
                       upgradesSignal
                         .map(ColonyDevelopment.tunnelingPerWorkerTick(_) * TicksPerSecond / 2L)
                     )
-                  case AntTask.Scavenger => jobRate(ResourceIcons.Protein, "protein", Val(250L))
+                  case AntTask.Scavenger =>
+                    jobRate(
+                      ResourceIcons.Protein,
+                      "protein",
+                      upgradesSignal.map(upgrades =>
+                        balance.UpgradeBalance.production(50L, "protein", upgrades) * TicksPerSecond
+                      )
+                    )
                   case AntTask.BroodNurse =>
                     broodCareBadge(antsSignal.map(_.smallNurses), small = true)
                   case _ => emptyNode
@@ -3582,7 +3589,14 @@ object MainForm {
           "space",
           upgradesSignal.map(ColonyDevelopment.tunnelingPerWorkerTick(_) * TicksPerSecond)
         )
-      case AntTask.Scavenger  => jobRate(ResourceIcons.Protein, "protein", Val(500L))
+      case AntTask.Scavenger =>
+        jobRate(
+          ResourceIcons.Protein,
+          "protein",
+          upgradesSignal.map(upgrades =>
+            balance.UpgradeBalance.production(100L, "protein", upgrades) * TicksPerSecond
+          )
+        )
       case AntTask.BroodNurse => broodCareBadge(amountSignal, small = false)
       case AntTask.WaterCollector =>
         jobRate(

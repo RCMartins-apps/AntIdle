@@ -3,7 +3,7 @@
 The game and the balance runner share upgrade and exploration definitions.
 Save version 7 uses a handcrafted finite map. Older XP pacing baselines are historical.
 
-## Offline upgrade editor
+## Colony Workshop
 
 From the repository root:
 
@@ -26,43 +26,34 @@ inputs use the game's resource icons.
 Select an upgrade to edit its prices, required purchases, discovery and
 other reveal gates. Add or remove links in **Prerequisites**.
 Search by title or stable ID and press Enter to jump to the matching node.
-**Title and help** edits player-facing copy. The code for effects such as
-production multipliers is listed below under Numbers and effects.
+**Title and help** edits player-facing copy. **Production bonus** can target
+sugar collection or protein scraps gathering. Edited percentages appear in
+the upgrade's game help automatically.
 
 **Save changes** writes the edited fields to
 [`src/main/balance/upgrades.json`](../src/main/balance/upgrades.json).
 The game and simulator read this file at build time. Rebuild with
 `sbt fastOptJS` to play locally, or run the balance lab for a new pacing report.
 The editor checks for unknown references and dependency cycles before saving.
-**Restore defaults** resets the current upgrade to its Scala values.
+**Restore defaults** resets the current upgrade to the catalog snapshot embedded
+in the current editor build.
 **Revert edits** resets unsaved changes to the last loaded or saved values.
 
-### Important TODO
+### Canonical upgrade catalog
 
-Move every editor-owned field out of Scala defaults and into the complete
-`src/main/balance/upgrades.json` catalog. This includes prices, titles, help,
-purchase dependencies and reveal thresholds. Scala should retain stable upgrade
-identities and the code that implements gameplay effects.
+The JSON file contains every upgrade's price, title, help, prerequisites and
+reveal thresholds. The game and simulator load the same catalog by stable
+upgrade ID. Saves keep ownership, so rebuilding after an edit applies the
+new value to existing colonies. Cost values use the engine's fixed-point units.
 
-The current sparse JSON override layer is an intermediate implementation. Do
-not expand it into additional parallel sources. The future migration must leave
-one obvious file to inspect and edit for upgrade balance, remove fallback values
-for editor-owned fields, validate the complete catalog during compilation, and
-keep save IDs stable.
+Production bonuses stack multiplicatively in stable upgrade declaration order, rounding down
+to a fixed-point unit after each multiplier. Sugar bonuses apply to collectors
+before inherited production and milestones. Protein bonuses apply to scraps
+gatherers before storage limits. Other kinds of ongoing output and expedition
+rewards retain their existing rules.
 
-The JSON file can also be edited by hand. Cost values in the file use the
-engine's fixed-point units. The editor shows and accepts ordinary units.
-For example, changing Standard Worker Development to 80 sugar and six
-small workers produces this patch:
-
-```json
-{
-  "StandardWorkers": {
-    "cost": {"sugar": 800000},
-    "requirements": {"minimumSmallWorkers": 6}
-  }
-}
-```
+Chamber prices and effects still live in Scala. Move those to the workshop
+next while preserving chamber levels and avoiding duplicate bonuses in saves.
 
 ## Where to edit
 
