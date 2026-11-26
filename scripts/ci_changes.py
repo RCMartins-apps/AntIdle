@@ -1,4 +1,4 @@
-"""Conservative documentation-only detection shared by test and deploy workflows."""
+"""Conservative change classification shared by test and deploy workflows."""
 import json
 import os
 from pathlib import Path
@@ -8,6 +8,20 @@ import subprocess
 def documentation_only(paths):
     return bool(paths) and all(
         path.startswith("docs/") or ("/" not in path and path.lower().endswith(".md"))
+        for path in paths
+    )
+
+
+def presentation_only(paths):
+    return bool(paths) and all(
+        documentation_only([path])
+        or path.startswith("assets/ui/")
+        or path in {
+            "index.html",
+            "src/main/scala/pt/rcmartins/antidle/main/MainForm.scala",
+            "src/main/scala/pt/rcmartins/antidle/game/ResourceIcons.scala",
+        }
+        or (path.startswith("tests/") and path.endswith("_smoke.py"))
         for path in paths
     )
 
@@ -38,12 +52,15 @@ def main():
         paths = changed_paths(event_name, event)
         print(f"Compared {len(paths)} changed paths for {event_name}.")
         skip = documentation_only(paths)
+        skip_balance = event_name == "pull_request" and presentation_only(paths)
     except (KeyError, ValueError, OSError, subprocess.CalledProcessError):
         skip = False
+        skip_balance = False
         print("Change detection unavailable; running game jobs conservatively.")
     value = "false" if skip else "true"
     with open(os.environ["GITHUB_OUTPUT"], "a") as output:
         output.write(f"run_game_jobs={value}\n")
+        output.write(f"run_balance_tests={str(not skip_balance).lower()}\n")
     print("Documentation-only: skipping game jobs." if skip else "Running game jobs.")
 
 
