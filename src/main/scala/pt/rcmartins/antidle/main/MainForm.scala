@@ -710,7 +710,7 @@ object MainForm {
                           span(className := "brood-entry-progress",
                             child.text <-- currentTickSignal.combineWith(upgradesSignal).map { case (currentTick, upgrades) =>
                               val percent = antBlood match {
-                                case b: AntBrood.Developing => b.care * 100L / b.totalCare
+                                case brood: AntBrood.Developing => brood.care * 100L / brood.totalCare
                                 case _ =>
                                   val duration = Math.max(1L, ColonyDevelopment.growthTicks(antBlood, upgrades))
                                   val elapsed = Math.max(0L, Math.min(duration, currentTick - antBlood.initialTick))
@@ -720,7 +720,7 @@ object MainForm {
                             }.distinct),
                           ResourceIcons.icon(ResourceIcons.forBrood(antBlood)),
                           b(antBlood.name, antBlood match {
-                            case b: AntBrood.Developing if b.laying => " · Laying"
+                            case brood: AntBrood.Developing if brood.laying => " · Laying"
                             case _ => ""
                           }),
                         )
