@@ -4,6 +4,8 @@
 
 - Resource totals use two decimal places below 100 and fewer digits at larger
   scales. Standard collectors get the higher-yield positions in mixed crews.
+  The Sugar Collector row shows the gain from adding one worker on the left
+  and current standard-collector output on the right when staffed.
 - Sugar and protein display a two-second net-rate average. Resource countdowns
   use that rate, while the tick engine continues to apply actual feeding.
 - Upgrades show an affordability estimate when current rates can reach the

@@ -2021,10 +2021,11 @@ object MainForm {
     } },
   )
 
-  private def jobRate(icon: ResourceIcons.ResourceIcon, resource: String, rate: Signal[Long]): ReactiveHtmlElement[HTMLSpanElement] =
+  private def jobRate(icon: ResourceIcons.ResourceIcon, resource: String, rate: Signal[Long],
+      scope: String = "per worker"): ReactiveHtmlElement[HTMLSpanElement] =
     span(className := "job-rate small text-body-secondary", role := "img",
-      title <-- rate.map(n => s"${preciseRateStr(n)} $resource/s per worker").distinct,
-      aria.label <-- rate.map(n => s"${preciseRateStr(n)} $resource/s per worker").distinct,
+      title <-- rate.map(n => s"${preciseRateStr(n)} $resource/s $scope").distinct,
+      aria.label <-- rate.map(n => s"${preciseRateStr(n)} $resource/s $scope").distinct,
       ResourceIcons.icon(icon),
       child.text <-- rate.map(n => s"${signedRateStr(n, compact = false)}/s").distinct)
 
@@ -2063,12 +2064,15 @@ object MainForm {
         val input = antsSignal.combineWith(upgradesSignal, statisticsData.signal)
         span(className := "collector-rates",
           jobRate(ResourceIcons.Sugar, "sugar", input.map { case (ants, upgrades, stats) =>
-            ColonyMilestones.sugar(Foraging.perCollector(ants, upgrades, small = false), stats)
-          }),
-          span(className := "collector-next small text-body-secondary",
-            "Next: ", ResourceIcons.icon(ResourceIcons.Sugar),
+            ColonyMilestones.sugar(Foraging.nextStandardPerSecond(ants, upgrades), stats)
+          }, scope = "from one more standard collector"),
+          span(className := "collector-total small text-body-secondary",
+            className("invisible") <-- amountSignal.map(_ == 0L),
+            "Total: ", ResourceIcons.icon(ResourceIcons.Sugar),
             child.text <-- input.map { case (ants, upgrades, stats) =>
-              s"${signedRateStr(ColonyMilestones.sugar(Foraging.nextStandardPerSecond(ants, upgrades), stats), compact = false)}/s"
+              val collectors = ants.taskWorkers(AntTask.SugarCollector) / u
+              val total = ColonyMilestones.sugar(Foraging.productionPerTick(collectors, upgrades, ants.lineage), stats)
+              s"${signedRateStr(total * TicksPerSecond)}/s"
             }.distinct))
       case AntTask.Tunneler => jobRate(ResourceIcons.Tunneling, "space",
         upgradesSignal.map(ColonyDevelopment.tunnelingPerWorkerTick(_) * TicksPerSecond))
