@@ -24,11 +24,14 @@ Read the tree top to bottom. Lines link required upgrade purchases. Exploration
 research uses Local Exploration as an ordinary prerequisite. The tree and cost
 inputs use the game's resource icons.
 Select an upgrade to edit its prices, required purchases, discovery and
-other reveal gates. Add or remove links in **Prerequisites**.
+other reveal gates. Add or remove links in **Prerequisites**. The new links
+appear immediately. Use **Rearrange tree** to move cards into dependency order
+when ready, or change **Per row** to wrap wide tiers between one and eight cards.
 Search by title or stable ID and press Enter to jump to the matching node.
 **Title and help** edits player-facing copy. **Bonuses** lets you add, edit,
 or remove multiple typed effects. Production percentages target Sugar
-Collectors or Scraps Gatherers. The game generates effect help from the catalog.
+Collectors or Scraps Gatherers, and expedition slots add to the concurrent
+expedition limit. The game generates effect help from the catalog.
 
 **Save changes** writes the edited fields to
 [`src/main/balance/upgrades.json`](../src/main/balance/upgrades.json).
@@ -54,7 +57,15 @@ then in list order within each upgrade, rounding down
 to a fixed-point unit after each multiplier. Sugar bonuses apply to collectors
 before inherited production and milestones. Protein bonuses apply to scraps
 gatherers before storage limits. Other kinds of ongoing output and expedition
-rewards retain their existing rules.
+rewards retain their existing rules. Expedition slot bonuses add together
+across owned upgrades. The two shipped expedition researches still add one
+slot each. If carrying forward an older custom catalog file, add the new
+`slotCapacity` entries to the expedition upgrades to preserve those effects.
+
+When adding an upgrade effect, define its typed payload and gameplay behavior,
+then declare its fields, choices, defaults and bounds in `UpgradeTuning`.
+The editor and catalog validator read that declaration, so supported
+choice and integer fields require no effect-specific browser code.
 
 ### Chamber costs and capacities
 

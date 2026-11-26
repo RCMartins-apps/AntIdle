@@ -283,7 +283,14 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+1 expedition slot."
+    "description": "",
+    "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "expedition",
+        "count": 1
+      }
+    ]
   },
   "ExpeditionSupplies1": {
     "title": "Expedition Supplies 1",
@@ -824,7 +831,14 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+1 expedition slot."
+    "description": "",
+    "bonuses": [
+      {
+        "type": "slotCapacity",
+        "slot": "expedition",
+        "count": 1
+      }
+    ]
   },
   "ScoutWayfinding": {
     "title": "Scout Wayfinding",

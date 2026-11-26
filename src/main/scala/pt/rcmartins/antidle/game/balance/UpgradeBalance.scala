@@ -82,7 +82,10 @@ object UpgradeBonus {
 
   @jsonHint("slotCapacity")
   case class SlotCapacity(slot: String, count: Int) extends UpgradeBonus {
-    def description: String = s"$slot capacity"
+    def description: String =
+      if (slot == "expedition") s"+$count expedition ${if (count == 1) "slot" else "slots"}."
+      else s"$slot capacity"
+
   }
 
   implicit val jsonCodec: JsonCodec[UpgradeBonus] = DeriveJsonCodec.gen[UpgradeBonus]
@@ -117,19 +120,23 @@ object UpgradeBalance {
         identity
       )
 
-  private def productionBonuses(
-      resource: String,
+  private def ownedBonuses(
       upgrades: UpgradesData,
       catalog: Map[UpgradeType, UpgradeDefinition]
-  ): List[UpgradeBonus.ProductionPercent] =
-    UpgradeType.all.iterator
-      .filter(upgrades(_).unlocked)
-      .flatMap { id =>
-        catalog(id).bonuses.collect {
-          case bonus: UpgradeBonus.ProductionPercent if bonus.resource == resource => bonus
-        }
-      }
-      .toList
+  ): Iterator[UpgradeBonus] =
+    UpgradeType.all.iterator.filter(upgrades(_).unlocked).flatMap(id => catalog(id).bonuses)
+
+  def addedSlots(slot: String, upgrades: UpgradesData): Int =
+    addedSlots(slot, upgrades, definitions)
+
+  private[balance] def addedSlots(
+      slot: String,
+      upgrades: UpgradesData,
+      catalog: Map[UpgradeType, UpgradeDefinition]
+  ): Int =
+    ownedBonuses(upgrades, catalog).collect { case UpgradeBonus.SlotCapacity(`slot`, count) =>
+      count
+    }.sum
 
   def production(amount: Long, resource: String, upgrades: UpgradesData): Long =
     production(amount, resource, upgrades, definitions)
@@ -140,8 +147,12 @@ object UpgradeBalance {
       upgrades: UpgradesData,
       catalog: Map[UpgradeType, UpgradeDefinition]
   ): Long =
-    productionBonuses(resource, upgrades, catalog).foldLeft(amount) { (value, bonus) =>
-      (BigDecimal(value) * (100 + bonus.percent) / 100).toLong
-    }
+    ownedBonuses(upgrades, catalog)
+      .collect {
+        case bonus: UpgradeBonus.ProductionPercent if bonus.resource == resource => bonus
+      }
+      .foldLeft(amount) { (value, bonus) =>
+        (BigDecimal(value) * (100 + bonus.percent) / 100).toLong
+      }
 
 }

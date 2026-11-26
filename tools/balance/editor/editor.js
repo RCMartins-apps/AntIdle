@@ -25,9 +25,8 @@ const nodeWidth = 206;
 const nodeHeight = 101;
 const columnGap = 23;
 const sidePadding = 28;
-const rowCapacity = 4;
-const paperWidth = rowCapacity * nodeWidth + (rowCapacity - 1) * columnGap + 2 * sidePadding;
-let unit, discoveries, icons, savedRevision, ids, defaults, saved, draft, selected;
+const columns = el('tree-columns');
+let unit, discoveries, icons, bonusKinds, savedRevision, ids, defaults, saved, draft, selected;
 let scale = 1;
 let layout, saving = false;
 
@@ -79,6 +78,8 @@ function updateButtons(message) {
   const changed = ids.filter(id => !equal(saved[id], draft[id])).length;
   el('save').disabled = saving || changed === 0 || Boolean(layout?.error);
   el('revert').disabled = saving || changed === 0;
+  el('rearrange').disabled = Boolean(layout?.error);
+  columns.disabled = Boolean(layout?.error);
   if (layout?.error) status(layout.error, true);
   else status(message ?? (changed ? changed + (changed === 1 ? ' upgrade' : ' upgrades') + ' with unsaved changes' : 'No unsaved changes'));
 }
@@ -88,6 +89,8 @@ function parentEdges(id) {
 }
 
 function makeLayout() {
+  const rowCapacity = Number(columns.value);
+  const width = rowCapacity * nodeWidth + (rowCapacity - 1) * columnGap + 2 * sidePadding;
   const depths = new Map();
   const active = new Set();
   const parents = new Map(ids.map(id => [id, parentEdges(id)]));
@@ -120,20 +123,20 @@ function makeLayout() {
     for (let offset = 0; offset < band.length; offset += rowCapacity) {
       const row = band.slice(offset, offset + rowCapacity);
       const rowWidth = row.length * nodeWidth + (row.length - 1) * columnGap;
-      row.forEach((id, col) => positions.set(id, {x: (paperWidth - rowWidth) / 2 + col * (nodeWidth + columnGap), y}));
+      row.forEach((id, col) => positions.set(id, {x: (width - rowWidth) / 2 + col * (nodeWidth + columnGap), y}));
       y += nodeHeight + 38;
     }
     y += 15;
   }
-  return {parents, positions, height: y, error};
+  return {parents, positions, width, height: y, error};
 }
 
 function paintLinks() {
   const canvas = el('links');
   const ratio = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = Math.round(paperWidth * ratio);
+  canvas.width = Math.round(layout.width * ratio);
   canvas.height = Math.round(layout.height * ratio);
-  canvas.style.width = paperWidth + 'px';
+  canvas.style.width = layout.width + 'px';
   canvas.style.height = layout.height + 'px';
   if (layout.error) return;
   const ctx = canvas.getContext('2d');
@@ -149,7 +152,7 @@ function paintLinks() {
         const y1 = from.y + nodeHeight;
         const x2 = to.x + nodeWidth / 2;
         const y2 = to.y;
-        const bend = Math.min(58, (y2 - y1) / 2);
+        const bend = Math.min(58, Math.abs(y2 - y1) / 2);
         ctx.beginPath();
         ctx.lineWidth = highlighted ? 2.3 : 1.2;
         ctx.strokeStyle = highlighted ? '#bdd7ab' : '#637f65';
@@ -165,10 +168,10 @@ function paintLinks() {
 
 function resizeBoard() {
   if (!layout) return;
-  board.style.width = paperWidth + 'px';
+  board.style.width = layout.width + 'px';
   board.style.height = layout.height + 'px';
   board.style.transform = 'scale(' + scale + ')';
-  el('sheet').style.width = paperWidth * scale + 'px';
+  el('sheet').style.width = layout.width * scale + 'px';
   el('sheet').style.height = layout.height * scale + 'px';
 }
 
@@ -185,9 +188,12 @@ function matches(id) {
   return draft[id].title.toLowerCase().includes(search) || id.toLowerCase().includes(search);
 }
 
-function renderGraph() {
+function renderGraph(rearrange = false) {
   const keptFocus = document.activeElement?.dataset.id;
-  layout = makeLayout();
+  const next = makeLayout();
+  layout = !layout || (rearrange && !next.error)
+    ? next
+    : {...layout, parents: next.parents, error: next.error};
   resizeBoard();
   paintLinks();
   const nodes = el('nodes');
@@ -424,43 +430,56 @@ function renderForm() {
   const bonus = element('div', undefined, 'bonus-list');
   const bonuses = row.bonuses ?? [];
   for (const [index, effect] of bonuses.entries()) {
-    const controls = element('div', undefined, 'fields');
-    const source = element('select');
-    for (const [key, label] of [['sugarCollectors', 'Sugar Collectors'], ['scrapsGatherers', 'Scraps Gatherers']]) {
-      source.append(option(key, label, key === effect.source));
+    const kind = bonusKinds.find(kind => kind.id === effect.type);
+    const controls = element('fieldset', undefined, 'fields bonus-fields');
+    const fixedTarget = kind.fields.find(spec => spec.choices?.length === 1)?.choices[0];
+    controls.append(element('legend', fixedTarget ? kind.label + ' · ' + fixedTarget.label : kind.label));
+    for (const spec of kind.fields) {
+      const choices = spec.choices ?? [];
+      const control = choices.length ? element('select') : input('number', effect[spec.key]);
+      if (choices.length) {
+        control.append(...choices.map(choice =>
+          option(choice.value, choice.label, choice.value === effect[spec.key])));
+        if (choices.length === 1) continue;
+      } else {
+        control.min = spec.min;
+        control.max = spec.max;
+        control.step = '1';
+        control.required = true;
+      }
+      control.addEventListener(choices.length ? 'change' : 'input', () => {
+        if (!control.validity.valid) return;
+        effect[spec.key] = choices.length ? control.value : control.valueAsNumber;
+        touch();
+      });
+      controls.append(field(spec.label, control));
     }
-    source.addEventListener('change', () => {
-      effect.source = source.value;
-      touch();
-    });
-    const percent = input('number', effect.percent);
-    percent.min = '1';
-    percent.max = '100';
-    percent.step = '1';
-    percent.required = true;
-    percent.addEventListener('input', () => {
-      if (!percent.validity.valid) return;
-      effect.percent = Number(percent.value);
-      touch();
-    });
-    const remove = element('button', 'Remove bonus');
-    remove.type = 'button';
+    const remove = element('button', '×', 'remove-bonus');
     remove.setAttribute('aria-label', `Remove bonus ${index + 1}`);
     remove.addEventListener('click', () => {
       bonuses.splice(index, 1);
       renderForm();
       touch();
     });
-    controls.append(field('Production source', source), field('Production bonus (%)', percent));
-    bonus.append(controls, remove);
+    controls.append(remove);
+    bonus.append(controls);
   }
-  const addBonus = element('button', 'Add production bonus');
-  addBonus.type = 'button';
-  addBonus.addEventListener('click', () => {
-    row.bonuses = [...bonuses, {type: 'productionPercent', source: 'sugarCollectors', percent: 5}];
+  const addBonus = element('select', undefined, 'add-bonus');
+  addBonus.append(option('', 'Add bonus…'), ...bonusKinds.map(kind => option(kind.id, kind.label)));
+  addBonus.addEventListener('change', () => {
+    const kind = bonusKinds.find(kind => kind.id === addBonus.value);
+    if (!kind) return;
+    if (!form.reportValidity()) {
+      addBonus.value = '';
+      return;
+    }
+    const effect = Object.fromEntries(kind.fields.map(spec => [spec.key, spec.defaultValue]));
+    row.bonuses = [...bonuses, {type: kind.id, ...effect}];
     renderForm();
     touch();
+    form.querySelector('.add-bonus').focus();
   });
+  addBonus.setAttribute('aria-label', 'Add bonus');
   bonus.append(addBonus);
 
   const neighbours = element('div', undefined, 'connections');
@@ -471,16 +490,22 @@ function renderForm() {
 }
 
 function loadCatalog(catalog) {
+  if (!Array.isArray(catalog.bonusKinds)) {
+    throw new Error('Rebuild balance/fastOptJS to load the current bonus editor.');
+  }
   unit = catalog.unit;
   discoveries = catalog.discoveries;
   icons = catalog.icons;
+  bonusKinds = catalog.bonusKinds;
   savedRevision = catalog.revision;
   ids = catalog.upgrades.map(entry => entry.id);
   defaults = Object.fromEntries(catalog.upgrades.map(entry => [entry.id, entry.base]));
   saved = Object.fromEntries(catalog.upgrades.map(entry => [entry.id, entry.current]));
   draft = structuredClone(saved);
   selected = ids.includes(selected) ? selected : ids[0];
-  renderGraph();
+  renderGraph(true);
+  columns.disabled = false;
+  el('search').disabled = false;
   renderForm();
 }
 
@@ -518,7 +543,7 @@ el('save').addEventListener('click', async () => {
 
 el('revert').addEventListener('click', () => {
   draft = structuredClone(saved);
-  renderGraph();
+  renderGraph(true);
   renderForm();
   updateButtons();
 });
@@ -530,7 +555,14 @@ el('search').addEventListener('keydown', event => {
 });
 el('zoom-in').addEventListener('click', () => zoom(scale * 1.18));
 el('zoom-out').addEventListener('click', () => zoom(scale / 1.18));
-el('fit').addEventListener('click', () => zoom(viewport.clientWidth / paperWidth));
+el('fit').addEventListener('click', () => { if (layout) zoom(viewport.clientWidth / layout.width); });
+function rearrangeTree() {
+  if (!layout || layout.error) return;
+  renderGraph(true);
+  centerNode(selected);
+}
+columns.addEventListener('change', rearrangeTree);
+el('rearrange').addEventListener('click', rearrangeTree);
 form.addEventListener('submit', event => event.preventDefault());
 window.addEventListener('beforeunload', event => {
   if (!saved || equal(saved, draft)) return;
@@ -540,7 +572,7 @@ window.addEventListener('beforeunload', event => {
 
 api().then(data => {
   loadCatalog(data);
-  scale = Math.max(.73, Math.min(1, viewport.clientWidth / paperWidth));
+  scale = Math.max(.73, Math.min(1, viewport.clientWidth / layout.width));
   resizeBoard();
   centerNode(selected, false);
   updateButtons();

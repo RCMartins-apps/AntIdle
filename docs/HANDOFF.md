@@ -2,16 +2,20 @@
 
 ## 2026-11-26
 
-Colony Workshop edits all chamber costs, Nest tunneling space, Food Storage
-sugar and researched protein capacity, and Nursery brood, nurse and carcass
-slots. The [shared catalog](BALANCING.md#chamber-costs-and-capacities) controls
-rules in both the game and simulator. The shipped defaults and save format are
-unchanged. Reduced storage caps preserve existing stock.
+Colony Workshop renders upgrade bonus controls from the game catalog's field
+definitions. Production and expedition slot effects can be combined on owned
+upgrades. The two existing expedition upgrades still grant one slot each.
+The tree wraps at a selectable one to eight cards per row. Dependency edits
+update links immediately, with placement refreshed via Rearrange tree.
 
-Remaining catalog candidates include Queen Chamber laying speed, replete and
-aphid housing, and population capacity. Population capacity needs care because
+Chamber prices and selected capacities are already editable. Remaining
+catalog candidates include Queen Chamber laying speed, replete and aphid
+housing, and population capacity. Population capacity needs care because
 the saved total also includes upgrades and outpost effects.
 
-Verification passed: 346 game tests, three simulator tests, Scalafmt, and
-a 390px Chromium save/reload of edited Food Storage and Nursery capacities
-using a temporary catalog.
+See [Colony Workshop](BALANCING.md#colony-workshop) for the shared catalogs and
+how to add another effect.
+
+Verification passed: 347 game tests, three simulator tests, Scalafmt, and the
+desktop and mobile Workshop browser smoke covering tree controls and catalog
+save/reload.

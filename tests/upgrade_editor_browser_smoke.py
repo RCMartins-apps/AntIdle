@@ -71,7 +71,12 @@ def check(browser, origin, tuning, output):
     expect(page.get_by_label('Sugar', exact=True)).to_have_value('82.25')
     expect(page.get_by_label('Early research access')).to_be_checked()
     page.get_by_label('Discovery', exact=True).select_option('resin-seep')
+    standard = page.locator('[data-id="StandardWorkers"]')
+    original_top = standard.evaluate('(node) => node.offsetTop')
     page.get_by_label('Add prerequisite upgrade').select_option('UnlockQueensChamber')
+    assert standard.evaluate('(node) => node.offsetTop') == original_top
+    page.get_by_role('button', name='Rearrange tree').click()
+    assert standard.evaluate('(node) => node.offsetTop') > original_top
     expect(page.get_by_role('button', name="Remove prerequisite Unlock Queen's Chamber")).to_be_visible()
     page.get_by_role('button', name='Save changes').click()
     expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
@@ -87,17 +92,17 @@ def check(browser, origin, tuning, output):
 
     page.get_by_label('Find an upgrade').fill('Foraging Techniques 1')
     page.get_by_label('Find an upgrade').press('Enter')
-    expect(page.get_by_label('Production bonus (%)')).to_have_value('15')
+    expect(page.get_by_label('Bonus (%)')).to_have_value('15')
     page.get_by_label('Production source').select_option('scrapsGatherers')
-    page.get_by_label('Production bonus (%)').fill('5')
+    page.get_by_label('Bonus (%)').fill('5')
     page.get_by_role('button', name='Save changes').click()
     expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
     assert json.loads(tuning.read_text())['ImproveSugarCollectorTask1']['bonuses'] == [
         {'type': 'productionPercent', 'source': 'scrapsGatherers', 'percent': 5}
     ]
-    page.get_by_role('button', name='Add production bonus').click()
+    page.get_by_label('Add bonus', exact=True).select_option('productionPercent')
     expect(page.get_by_label('Production source')).to_have_count(2)
-    page.get_by_label('Production bonus (%)').nth(1).fill('10')
+    page.get_by_label('Bonus (%)').nth(1).fill('10')
     page.get_by_role('button', name='Save changes').click()
     expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
     assert len(json.loads(tuning.read_text())['ImproveSugarCollectorTask1']['bonuses']) == 2
@@ -109,6 +114,17 @@ def check(browser, origin, tuning, output):
     page.get_by_role('button', name='Save changes').click()
     expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
     assert 'bonuses' not in json.loads(tuning.read_text())['ImproveSugarCollectorTask1']
+    page.get_by_label('Add bonus', exact=True).select_option('slotCapacity')
+    page.get_by_label('Slots added').fill('3')
+    page.get_by_role('button', name='Save changes').click()
+    expect(page.get_by_role('status')).to_contain_text('Saved to src/main/balance/upgrades.json')
+    assert json.loads(tuning.read_text())['ImproveSugarCollectorTask1']['bonuses'] == [
+        {'type': 'slotCapacity', 'slot': 'expedition', 'count': 3}
+    ]
+    page.reload()
+    page.get_by_label('Find an upgrade').fill('Foraging Techniques 1')
+    page.get_by_label('Find an upgrade').press('Enter')
+    expect(page.get_by_label('Slots added')).to_have_value('3')
     assert not errors, errors
     assert not unexpected_requests, unexpected_requests
     context.close()
@@ -117,7 +133,14 @@ def check(browser, origin, tuning, output):
     phone.goto(origin)
     expect(phone.get_by_label('Sugar', exact=True)).to_have_value('75')
     assert phone.evaluate('document.documentElement.scrollWidth') == 390
+    phone.get_by_label('Upgrades per row').select_option('2')
+    row_counts = phone.locator('.node').evaluate_all(
+        '(nodes) => Object.values(nodes.reduce((rows, node) => { rows[node.offsetTop] = (rows[node.offsetTop] || 0) + 1; return rows; }, {}))'
+    )
+    assert max(row_counts) == 2
     phone.get_by_role('button', name='Fit', exact=True).click()
+    if output:
+        phone.locator('.workspace').screenshot(path=str(output / 'upgrade-layout-mobile.png'))
     phone.get_by_label('Find an upgrade').fill('Brood Care')
     phone.get_by_label('Find an upgrade').press('Enter')
     expect(phone.locator('#record-title')).to_have_text('Brood Care')
@@ -126,6 +149,9 @@ def check(browser, origin, tuning, output):
     expect(phone.get_by_label('Local Exploration available')).to_have_count(0)
     if output:
         phone.locator('.inspector').screenshot(path=str(output / 'upgrade-inspector-mobile.png'))
+        phone.get_by_label('Find an upgrade').fill('Foraging Techniques 1')
+        phone.get_by_label('Find an upgrade').press('Enter')
+        phone.locator('.bonus-list').screenshot(path=str(output / 'upgrade-bonuses-mobile.png'))
     phone.close()
 
 
@@ -150,7 +176,7 @@ def main():
                         check(browser, server.origin, tuning, output)
                         page = browser.new_page(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
                         page.goto(server.origin + '/chambers')
-                        page.get_by_label('Chamber', exact=True).select_option('Nursery')
+                        page.locator('#chamber').select_option('Nursery')
                         protein = page.get_by_role('group', name='Protein', exact=True)
                         expect(protein.get_by_label('Base', exact=True)).to_have_value('3')
                         protein.get_by_label('Base', exact=True).fill('4.5')
@@ -159,20 +185,21 @@ def main():
                         rule = json.loads(chambers.read_text())['Nursery']['costs']['protein']
                         assert rule == {'base': 45000, 'perLevel': 30000}
                         page.reload()
-                        page.get_by_label('Chamber', exact=True).select_option('Nursery')
+                        page.locator('#chamber').select_option('Nursery')
                         expect(protein.get_by_label('Base', exact=True)).to_have_value('4.5')
                         assert page.evaluate('document.documentElement.scrollWidth') == 390
-                        page.get_by_label('Chamber', exact=True).select_option('FoodStorage')
-                        capacity = page.get_by_label('Sugar capacity per added level')
+                        page.locator('#chamber').select_option('FoodStorage')
+                        capacity = page.locator('#capacity').get_by_label('Sugar', exact=True)
                         expect(capacity).to_have_value('1000')
                         capacity.fill('750')
                         page.get_by_role('button', name='Save changes').click()
                         expect(page.get_by_role('status')).to_contain_text('Saved chamber settings')
                         assert json.loads(chambers.read_text())['FoodStorage']['bonuses'] == [
-                            {'type': 'storageCapacity', 'resource': 'sugar', 'amount': 7500000}
+                            {'type': 'storageCapacity', 'resource': 'sugar', 'amount': 7500000},
+                            {'type': 'storageCapacity', 'resource': 'protein', 'amount': 1000000}
                         ]
                         page.reload()
-                        page.get_by_label('Chamber', exact=True).select_option('FoodStorage')
+                        page.locator('#chamber').select_option('FoodStorage')
                         expect(capacity).to_have_value('750')
                         if output:
                             page.locator('#capacity').screenshot(path=str(output / 'chamber-capacity.png'))
@@ -181,7 +208,7 @@ def main():
                         browser.close()
             finally:
                 server.shutdown()
-    print('PASS offline upgrade editor: tree, pricing, gates, saving, stale tabs, reload and phone layout')
+    print('PASS offline upgrade editor: tree width and rearrangement, typed bonuses, pricing, gates, stale tabs and reload')
 
 
 if __name__ == '__main__':
