@@ -278,6 +278,8 @@ def check_game(page, width, url):
     if width <= 767:
         expect(page.locator('.build-queue-panel')).not_to_be_visible()
         select_tab(page, 'Nest')
+        expect(page.locator('.build-queue-panel')).not_to_be_visible()
+        select_tab(page, 'Chambers')
         expect(page.locator('.build-queue-panel')).to_be_visible()
         select_tab(page, 'Tasks')
     else:
