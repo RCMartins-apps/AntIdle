@@ -85,6 +85,21 @@ class AphidRelocationSuite extends FunSuite {
     assert(!canStart(arrived))
   }
 
+  test("housing reductions preserve established aphids and returning shipments") {
+    val sent = start(colony)
+    val reduced = sent.copy(nestAttributes =
+      sent.nestAttributes.copy(chambers =
+        sent.nestAttributes.chambers.copy(aphidChamber = Chamber.AphidChamber(1))
+      )
+    )
+    val restored = load(reduced)
+    val arrived = finish(restored, restored.exploration.explorationParties.head)
+    assertEquals(load(arrived).nestAttributes.aphids, 20L)
+    assertEquals(AphidHusbandry.capacity(arrived.nestAttributes), u)
+    assertEquals(free(arrived.nestAttributes, arrived.exploration), 0L)
+    assert(!canStart(arrived))
+  }
+
   test(
     "relocation validates research, discovery, housing, workers, scouts, supplies and mission slots"
   ) {

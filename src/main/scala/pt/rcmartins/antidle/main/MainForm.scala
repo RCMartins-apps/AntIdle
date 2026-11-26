@@ -1020,7 +1020,7 @@ object MainForm {
         child.maybe <-- createResourceDiv(
           name = "Repletes",
           resourceSignal = antsSignal.combineWith(nestSignal).map { case (ants, nest) =>
-            BasicResource(ants.repletes, nest.chambers.repleteChamber.level.toLong * u)
+            BasicResource(ants.repletes, RepleteProgression.housing(nest) * u)
           },
           resourceEstimationSignal = Val(div()),
           showSignal = unlocksSignal.map(_.resources.showRepletes),
@@ -1766,7 +1766,8 @@ object MainForm {
               name = "Promote Replete",
               enabledSignal = antsSignal.combineWith(nestSignal, resourcesSignal).map {
                 case (ants, nest, resources) =>
-                  ants.availableWorkersCount >= u && ants.repletes / u < nest.chambers.repleteChamber.level && resources
+                  ants.availableWorkersCount >= u && ants.repletes / u < RepleteProgression
+                    .housing(nest) && resources
                     .hasResources(RepleteProgression.cost)
               },
               costSignal = Val(RepleteProgression.cost),
@@ -1777,7 +1778,7 @@ object MainForm {
                 List(
                   ActionRequirement(
                     "replete slots",
-                    Math.max(0L, nest.chambers.repleteChamber.level.toLong * u - ants.repletes)
+                    Math.max(0L, RepleteProgression.housing(nest) * u - ants.repletes)
                   )
                 )
               },

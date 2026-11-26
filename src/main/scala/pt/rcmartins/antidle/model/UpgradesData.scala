@@ -1,6 +1,7 @@
 package pt.rcmartins.antidle.model
 
 import pt.rcmartins.antidle.game.UINumbersUtils.prettyNumberStr
+import pt.rcmartins.antidle.game.AphidHusbandry
 import pt.rcmartins.antidle.game.balance.{ChamberPricing, UpgradeBalance, UpgradeDefinition}
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import zio.json._
@@ -40,6 +41,10 @@ object UpgradesData {
       if (this == UpgradeType.ProteinStorage) {
         val capacity = ChamberPricing.capacityBonus(Chamber.ChamberType.FoodStorage, "protein")
         s"+${prettyNumberStr(capacity)} protein capacity per Food Storage level. ${definition.help}".trim
+      } else if (this == UpgradeType.AphidShelters) {
+        val base = AphidHusbandry.BasePlacesPerLevel
+        val sheltered = AphidHusbandry.ShelteredPlacesPerLevel
+        s"Aphid Chamber: $base → $sheltered aphid places per level. ${definition.help}".trim
       } else definition.help
 
     final def shouldShow(data: AllData): Boolean = definition.requirements.met(data)
