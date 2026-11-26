@@ -212,12 +212,12 @@ make it live. For docs-only/fork PRs explain that no preview is generated; after
 merge/closure explain that the preview is removed rather than presenting it as
 live. This link requirement supplements screenshots for visual changes.
 
-Once GitHub confirms auto-merge is queued with enforced checks, finish the turn
-without polling CI. Report “auto-merge enabled; pending CI,” not “merged.” GitHub
-performs the merge after requirements pass; failures remain on the PR and are not
-a promise of background Codex monitoring. If checks already passed, a confirmed
-immediate merge may be reported as merged. This changes waiting behavior, not the
-existing requirement for owner authorization to open/merge a PR.
+Once GitHub confirms auto-merge is queued with enforced checks, schedule a
+one-time follow-up about 15 minutes later when scheduling is available. Check
+whether the PR merged or passed CI. If it failed, inspect the failed job and
+report the cause. If checks are still running, report them as pending. Finish
+the original turn after scheduling and report whether the check was scheduled.
+Report an immediate merge only once GitHub confirms it.
 
 ## Branch and push by default
 
@@ -227,6 +227,9 @@ project changes to `origin`, including documentation-only design decisions.
 - Start each distinct development task or lasting design decision on a new,
   descriptive branch from up-to-date `origin/main`. Continue its existing branch
   for related follow-ups; do not create a branch per message, file or tool call.
+- Keep diffs scoped to the request. Avoid unrelated formatting and refactors.
+  Branch independent changes from main so a failed check blocks only its PR
+  and changes that depend on it.
 - Discussion that establishes or changes a lasting decision is work: record it
   in the appropriate context file, even when no gameplay code changes. Casual
   conversation and unadopted suggestions do not require empty commits or branches.
