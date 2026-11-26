@@ -719,10 +719,7 @@ object MainForm {
                               f"${percent}%02d%%"
                             }.distinct),
                           ResourceIcons.icon(ResourceIcons.forBrood(antBlood)),
-                          b(antBlood.name, antBlood match {
-                            case brood: AntBrood.Developing if brood.laying => " · Laying"
-                            case _ => ""
-                          }),
+                          b(antBlood.name),
                         )
                       }
                     )
