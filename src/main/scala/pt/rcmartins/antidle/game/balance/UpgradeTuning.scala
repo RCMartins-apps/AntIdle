@@ -88,12 +88,21 @@ object UpgradeTuning {
       case (Json.Obj(actual), Json.Obj(required)) =>
         val known = required.toMap
         unique(actual, path).flatMap { _ =>
-          if (actual.map(_._1).toSet != known.keySet)
+          val requiredKeys = known.filterNot { case (key, value) =>
+            key == "bonuses" && value == Json.Arr()
+          }.keySet
+          val actualKeys = actual.map(_._1).toSet
+          if (!requiredKeys.subsetOf(actualKeys) || !actualKeys.subsetOf(known.keySet))
             Left(s"$path: missing or unknown fields")
           else
             actual.foldLeft[Either[String, Unit]](Right(())) { case (result, (key, value)) =>
               result.flatMap(_ => checkFields(value, known(key), s"$path.$key"))
             }
+        }
+      case (Json.Arr(actual), Json.Arr(required)) =>
+        actual.zip(required).zipWithIndex.foldLeft[Either[String, Unit]](Right(())) {
+          case (result, ((value, schema), index)) =>
+            result.flatMap(_ => checkFields(value, schema, s"$path[$index]"))
         }
       case _ => Right(())
     }
@@ -117,11 +126,11 @@ object UpgradeTuning {
     else if (required.discovery.exists(id => !DiscoveryProgression.all.exists(_.id == id)))
       Left(s"$name: unknown discovery")
     else if (
-      definition.productionBonus.exists(bonus =>
-        !Set("sugar", "protein")
-          .contains(bonus.resource) || bonus.percent < 1 || bonus.percent > 100
-      )
-    ) Left(s"$name: production bonus must be sugar or protein and between 1 and 100 percent")
+      definition.bonuses.exists { case bonus: UpgradeBonus.ProductionPercent =>
+        !Set("sugarCollectors", "scrapsGatherers").contains(bonus.source) ||
+          bonus.percent < 1 || bonus.percent > 100
+      }
+    ) Left(s"$name: production bonus needs a supported source and 1 to 100 percent")
     else Right(definition)
   }
 

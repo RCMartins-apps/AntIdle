@@ -24,7 +24,7 @@ class UpgradeTuningSuite extends FunSuite {
     val owned = UpgradesData.initial.unlock(ImproveSugarCollectorTask1)
     val edited = change(ImproveSugarCollectorTask1)(
       _.copy(
-        productionBonus = Some(ProductionBonus("protein", 5))
+        bonuses = List(UpgradeBonus.ProductionPercent("scrapsGatherers", 5))
       )
     ).fold(error => fail(error), identity)
     assertEquals(UpgradeBalance.production(100L, "sugar", owned, edited), 100L)
@@ -36,6 +36,22 @@ class UpgradeTuningSuite extends FunSuite {
     val editor = UpgradeTuning.catalog(encode(catalog)).fold(error => fail(error), identity)
     assertEquals(editor.icons.keySet, ActionCost.empty.productElementNames.toSet)
     assert(editor.icons.values.forall(_.path.nonEmpty))
+  }
+
+  test("one upgrade can grant multiple effects in catalog order") {
+    val owned = UpgradesData.initial.unlock(ImproveSugarCollectorTask1)
+    val edited = change(ImproveSugarCollectorTask1)(
+      _.copy(bonuses =
+        List(
+          UpgradeBonus.ProductionPercent("scrapsGatherers", 5),
+          UpgradeBonus.ProductionPercent("sugarCollectors", 20),
+          UpgradeBonus.ProductionPercent("scrapsGatherers", 10)
+        )
+      )
+    ).fold(error => fail(error), identity)
+    assertEquals(UpgradeBalance.production(100L, "sugar", owned, edited), 120L)
+    assertEquals(UpgradeBalance.production(100L, "protein", owned, edited), 115L)
+    assert(UpgradeTuning.load(encode(edited).replace("productionPercent", "unknownEffect")).isLeft)
   }
 
   test("invalid fields, gates, and production bonuses are rejected") {
@@ -52,11 +68,13 @@ class UpgradeTuningSuite extends FunSuite {
       ).isLeft
     )
     assert(
-      change(StandardWorkers)(_.copy(productionBonus = Some(ProductionBonus("water", 5)))).isLeft
+      change(StandardWorkers)(
+        _.copy(bonuses = List(UpgradeBonus.ProductionPercent("water", 5)))
+      ).isLeft
     )
     assert(
       change(StandardWorkers)(
-        _.copy(productionBonus = Some(ProductionBonus("protein", 101)))
+        _.copy(bonuses = List(UpgradeBonus.ProductionPercent("scrapsGatherers", 101)))
       ).isLeft
     )
   }

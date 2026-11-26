@@ -5,6 +5,8 @@
 - The upgrade editor saves a complete catalog to `src/main/balance/upgrades.json`.
   The game and simulator share that file. Production bonuses are editable for
   sugar collectors and protein scraps gatherers and derive from upgrade ownership.
+- Upgrades use a typed `bonuses` list with add and remove controls. The
+  first supported type is `productionPercent`.
 - Chamber costs and bonuses still need their own catalog and editor controls.
 
 ## 2026-11-26 — presentation-only CI

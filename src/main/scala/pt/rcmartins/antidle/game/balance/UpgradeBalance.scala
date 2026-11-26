@@ -60,13 +60,22 @@ object UpgradeRequirements {
   implicit val jsonCodec: JsonCodec[UpgradeRequirements] = DeriveJsonCodec.gen[UpgradeRequirements]
 }
 
-@jsonNoExtraFields
-case class ProductionBonus(resource: String, percent: Int) {
-  def description: String = s"+$percent% $resource production."
+@jsonDiscriminator("type")
+sealed trait UpgradeBonus {
+  def description: String
 }
 
-object ProductionBonus {
-  implicit val jsonCodec: JsonCodec[ProductionBonus] = DeriveJsonCodec.gen[ProductionBonus]
+object UpgradeBonus {
+  @jsonHint("productionPercent")
+  case class ProductionPercent(source: String, percent: Int) extends UpgradeBonus {
+    def resource: String = if (source == "sugarCollectors") "sugar" else "protein"
+    def description: String =
+      s"+$percent% ${if (source == "sugarCollectors") "sugar collection"
+        else "protein from Scraps Gatherers"}."
+
+  }
+
+  implicit val jsonCodec: JsonCodec[UpgradeBonus] = DeriveJsonCodec.gen[UpgradeBonus]
 }
 
 @jsonExplicitNull
@@ -75,10 +84,10 @@ case class UpgradeDefinition(
     cost: ActionCost,
     requirements: UpgradeRequirements,
     description: String,
-    productionBonus: Option[ProductionBonus] = None
+    bonuses: List[UpgradeBonus] = Nil
 ) {
   def help: String =
-    (productionBonus.map(_.description).toList :+ description).filter(_.nonEmpty).mkString(" ")
+    (bonuses.map(_.description) :+ description).filter(_.nonEmpty).mkString(" ")
 
 }
 
@@ -102,11 +111,13 @@ object UpgradeBalance {
       resource: String,
       upgrades: UpgradesData,
       catalog: Map[UpgradeType, UpgradeDefinition]
-  ): List[(UpgradeType, ProductionBonus)] =
+  ): List[UpgradeBonus.ProductionPercent] =
     UpgradeType.all.iterator
       .filter(upgrades(_).unlocked)
       .flatMap { id =>
-        catalog(id).productionBonus.filter(_.resource == resource).map(id -> _)
+        catalog(id).bonuses.collect {
+          case bonus: UpgradeBonus.ProductionPercent if bonus.resource == resource => bonus
+        }
       }
       .toList
 
@@ -119,7 +130,7 @@ object UpgradeBalance {
       upgrades: UpgradesData,
       catalog: Map[UpgradeType, UpgradeDefinition]
   ): Long =
-    productionBonuses(resource, upgrades, catalog).foldLeft(amount) { case (value, (_, bonus)) =>
+    productionBonuses(resource, upgrades, catalog).foldLeft(amount) { (value, bonus) =>
       (BigDecimal(value) * (100 + bonus.percent) / 100).toLong
     }
 

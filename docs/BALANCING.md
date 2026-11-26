@@ -26,9 +26,9 @@ inputs use the game's resource icons.
 Select an upgrade to edit its prices, required purchases, discovery and
 other reveal gates. Add or remove links in **Prerequisites**.
 Search by title or stable ID and press Enter to jump to the matching node.
-**Title and help** edits player-facing copy. **Production bonus** can target
-sugar collection or protein scraps gathering. Edited percentages appear in
-the upgrade's game help automatically.
+**Title and help** edits player-facing copy. **Bonuses** lets you add, edit,
+or remove multiple typed effects. Production percentages target Sugar
+Collectors or Scraps Gatherers. The game generates effect help from the catalog.
 
 **Save changes** writes the edited fields to
 [`src/main/balance/upgrades.json`](../src/main/balance/upgrades.json).
@@ -46,7 +46,11 @@ reveal thresholds. The game and simulator load the same catalog by stable
 upgrade ID. Saves keep ownership, so rebuilding after an edit applies the
 new value to existing colonies. Cost values use the engine's fixed-point units.
 
-Production bonuses stack multiplicatively in stable upgrade declaration order, rounding down
+The `bonuses` list can be omitted for upgrades with no catalog-driven effects.
+Each production entry uses type `productionPercent`, a source
+(`sugarCollectors` or `scrapsGatherers`), and a whole percentage from 1 to 100.
+Production bonuses stack multiplicatively in stable upgrade declaration order,
+then in list order within each upgrade, rounding down
 to a fixed-point unit after each multiplier. Sugar bonuses apply to collectors
 before inherited production and milestones. Protein bonuses apply to scraps
 gatherers before storage limits. Other kinds of ongoing output and expedition

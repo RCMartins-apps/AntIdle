@@ -25,8 +25,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Future worker eggs: full-sized workers (2× small-worker output). Brood requires protein. Unlocks Scraps Gatherers. Existing ants and brood keep their caste.",
-    "productionBonus": null
+    "description": "Future worker eggs: full-sized workers (2× small-worker output). Brood requires protein. Unlocks Scraps Gatherers. Existing ants and brood keep their caste."
   },
   "UnlockQueensChamber": {
     "title": "Unlock Queen's Chamber",
@@ -54,8 +53,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Chamber upgrades: more brood places and faster laying.",
-    "productionBonus": null
+    "description": "Chamber upgrades: more brood places and faster laying."
   },
   "ImproveSugarCollectorTask1": {
     "title": "Foraging Techniques 1",
@@ -84,10 +82,13 @@
       "territoryContests": 0
     },
     "description": "",
-    "productionBonus": {
-      "resource": "sugar",
-      "percent": 15
-    }
+    "bonuses": [
+      {
+        "type": "productionPercent",
+        "source": "sugarCollectors",
+        "percent": 15
+      }
+    ]
   },
   "ImproveSugarCollectorTask2": {
     "title": "Foraging Techniques 2",
@@ -119,10 +120,13 @@
       "territoryContests": 0
     },
     "description": "",
-    "productionBonus": {
-      "resource": "sugar",
-      "percent": 15
-    }
+    "bonuses": [
+      {
+        "type": "productionPercent",
+        "source": "sugarCollectors",
+        "percent": 15
+      }
+    ]
   },
   "ImproveSugarCollectorTask3": {
     "title": "Foraging Techniques 3",
@@ -153,10 +157,13 @@
       "territoryContests": 0
     },
     "description": "",
-    "productionBonus": {
-      "resource": "sugar",
-      "percent": 15
-    }
+    "bonuses": [
+      {
+        "type": "productionPercent",
+        "source": "sugarCollectors",
+        "percent": 15
+      }
+    ]
   },
   "UnlockFoodStorageChamber": {
     "title": "Unlock Food Storage Chamber",
@@ -186,8 +193,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Food Storage Chamber: +1000 sugar capacity per level.",
-    "productionBonus": null
+    "description": "Food Storage Chamber: +1000 sugar capacity per level."
   },
   "UnlockExplorerTask": {
     "title": "Local Exploration",
@@ -217,8 +223,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Unlocks the map: scouts reveal and study sites; workers collect resources.",
-    "productionBonus": null
+    "description": "Unlocks the map: scouts reveal and study sites; workers collect resources."
   },
   "DefaultWorkers": {
     "title": "Default Workers",
@@ -248,8 +253,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Idle workers join a chosen default task and remain available for colony actions.",
-    "productionBonus": null
+    "description": "Idle workers join a chosen default task and remain available for colony actions."
   },
   "AdditionalExpeditionSlot": {
     "title": "Expedition Coordination",
@@ -279,8 +283,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+1 expedition slot.",
-    "productionBonus": null
+    "description": "+1 expedition slot."
   },
   "ExpeditionSupplies1": {
     "title": "Expedition Supplies 1",
@@ -310,8 +313,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+20% base expedition haul capacity.",
-    "productionBonus": null
+    "description": "+20% base expedition haul capacity."
   },
   "ExpeditionSupplies2": {
     "title": "Expedition Supplies 2",
@@ -341,8 +343,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+20% base expedition haul capacity (40% total).",
-    "productionBonus": null
+    "description": "+20% base expedition haul capacity (40% total)."
   },
   "ExpeditionSupplies3": {
     "title": "Expedition Supplies 3",
@@ -372,8 +373,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+20% base expedition haul capacity (60% total).",
-    "productionBonus": null
+    "description": "+20% base expedition haul capacity (60% total)."
   },
   "EstablishedTrails": {
     "title": "Established Trails",
@@ -403,8 +403,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "−20% sugar-yield loss per added collector.",
-    "productionBonus": null
+    "description": "−20% sugar-yield loss per added collector."
   },
   "ReinforcedMandibles": {
     "title": "Reinforced Mandibles",
@@ -434,8 +433,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+50% Tunneler output.",
-    "productionBonus": null
+    "description": "+50% Tunneler output."
   },
   "BroodCare": {
     "title": "Brood Care",
@@ -465,8 +463,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "−20% worker/scout development time; includes growing brood.",
-    "productionBonus": null
+    "description": "−20% worker/scout development time; includes growing brood."
   },
   "AphidTending": {
     "title": "Aphid Tending",
@@ -496,8 +493,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Unlocks Aphid Chamber: +10 aphid places per level. One tender per 10 aphids: +0.8 sugar/s · −0.01 protein/s.",
-    "productionBonus": null
+    "description": "Unlocks Aphid Chamber: +10 aphid places per level. One tender per 10 aphids: +0.8 sugar/s · −0.01 protein/s."
   },
   "ProteinStorage": {
     "title": "Protein Storage",
@@ -528,8 +524,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+100 protein capacity per Food Storage Chamber level; includes existing levels.",
-    "productionBonus": null
+    "description": "+100 protein capacity per Food Storage Chamber level; includes existing levels."
   },
   "QueensRoutine": {
     "title": "Queen's Routine",
@@ -559,8 +554,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Automatic worker eggs and aging-job replacements. Set a population target and sugar reserve in Brood.",
-    "productionBonus": null
+    "description": "Automatic worker eggs and aging-job replacements. Set a population target and sugar reserve in Brood."
   },
   "ConstructionPlanning": {
     "title": "Construction Planning",
@@ -590,8 +584,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+2 construction queue slots (3 total).",
-    "productionBonus": null
+    "description": "+2 construction queue slots (3 total)."
   },
   "ColonyNutrition": {
     "title": "Colony Nutrition",
@@ -621,8 +614,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "New workers and scouts: +20% lifespan.",
-    "productionBonus": null
+    "description": "New workers and scouts: +20% lifespan."
   },
   "RepleteStorage": {
     "title": "Replete Storage",
@@ -652,8 +644,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Unlocks Replete Chamber and worker promotion for water storage.",
-    "productionBonus": null
+    "description": "Unlocks Replete Chamber and worker promotion for water storage."
   },
   "CoveredTrails": {
     "title": "Covered Trails",
@@ -683,8 +674,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "−25% Seed Forager water use.",
-    "productionBonus": null
+    "description": "−25% Seed Forager water use."
   },
   "SeedProcessing": {
     "title": "Seed Processing",
@@ -714,8 +704,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+50% Seed Forager protein output (0.06 protein/s each).",
-    "productionBonus": null
+    "description": "+50% Seed Forager protein output (0.06 protein/s each)."
   },
   "RoyalNurseryPlanning": {
     "title": "Royal Nursery Planning",
@@ -745,8 +734,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Unlocks Royal Nursery construction.",
-    "productionBonus": null
+    "description": "Unlocks Royal Nursery construction."
   },
   "AphidShelters": {
     "title": "Aphid Shelters",
@@ -776,8 +764,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Aphid Chamber: 10 → 20 aphid places per level.",
-    "productionBonus": null
+    "description": "Aphid Chamber: 10 → 20 aphid places per level."
   },
   "TrailLogistics": {
     "title": "Trail Logistics",
@@ -807,8 +794,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "Collection trails: 60% → 75% of manual haul rate; +25% supply use.",
-    "productionBonus": null
+    "description": "Collection trails: 60% → 75% of manual haul rate; +25% supply use."
   },
   "CoordinatedExpeditions": {
     "title": "Coordinated Expeditions",
@@ -838,8 +824,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "+1 expedition slot.",
-    "productionBonus": null
+    "description": "+1 expedition slot."
   },
   "ScoutWayfinding": {
     "title": "Scout Wayfinding",
@@ -869,8 +854,7 @@
       "matureWorkers": 0,
       "territoryContests": 0
     },
-    "description": "−20% scout reveal/study time. Applies to new departures.",
-    "productionBonus": null
+    "description": "−20% scout reveal/study time. Applies to new departures."
   },
   "NurseTraining": {
     "title": "Nurse Training",
@@ -900,8 +884,7 @@
       "matureWorkers": 25,
       "territoryContests": 0
     },
-    "description": "+50% Brood Nurse care.",
-    "productionBonus": null
+    "description": "+50% Brood Nurse care."
   },
   "QueensRhythm": {
     "title": "Queen's Rhythm",
@@ -931,8 +914,7 @@
       "matureWorkers": 50,
       "territoryContests": 0
     },
-    "description": "−20% laying time for new worker and scout eggs.",
-    "productionBonus": null
+    "description": "−20% laying time for new worker and scout eggs."
   },
   "TerritoryGuards": {
     "title": "Territory Guards",
@@ -962,7 +944,6 @@
       "matureWorkers": 0,
       "territoryContests": 1
     },
-    "description": "Assign up to 5 holders to guard for a full contest. Each guard reduces the combat loss range by 1 and gives up their protein haul. At least 1 combat loss remains.",
-    "productionBonus": null
+    "description": "Assign up to 5 holders to guard for a full contest. Each guard reduces the combat loss range by 1 and gives up their protein haul. At least 1 combat loss remains."
   }
 }

@@ -172,3 +172,5 @@ main {
   white-space: nowrap;
 }
 .node.related:not([aria-pressed="true"]) { border-color: #79947c; }
+.bonus-list { display: grid; gap: .5rem; }
+.bonus-list > button { justify-self: start; }
