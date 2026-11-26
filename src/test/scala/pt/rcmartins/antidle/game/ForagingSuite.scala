@@ -13,6 +13,18 @@ class ForagingSuite extends FunSuite {
   val advanced: UpgradesData =
     plain.unlock(ImproveSugarCollectorTask1, ImproveSugarCollectorTask2, ImproveSugarCollectorTask3)
 
+  test(
+    "standard collectors take the highest yields and small workers take half the remaining yield"
+  ) {
+    val ants = AntsData(
+      workers = 40L * u,
+      smallWorkers = 40L * u,
+      tasks = Seq(AntTask.SugarCollector -> (40L * u))
+    )
+    assertEquals(Foraging.mixedBasePerTick(ants, plain) * TicksPerSecond, 141500L)
+    assertEquals(Foraging.nextStandardPerSecond(ants, plain), 1000L)
+  }
+
   test("linear marginal yields produce diminishing returns and plateau without becoming negative") {
     assertEquals(Foraging.ProductiveCollectors, 80L)
     assertEquals(Foraging.basePerTick(0L), 0L)

@@ -13,6 +13,16 @@ object ActionBlockers {
       isCost: Boolean = false
   )
 
+  def isBasicResourceShortage(reason: String): Boolean =
+    Set(
+      "Needs sugar",
+      "Needs protein",
+      "Needs water",
+      "Needs resin",
+      "Needs knowledge",
+      "Needs tunneling space"
+    ).contains(reason)
+
   def missing(requirement: Requirement): Option[String] =
     Option.when(requirement.available < requirement.required) {
       requirement.label match {

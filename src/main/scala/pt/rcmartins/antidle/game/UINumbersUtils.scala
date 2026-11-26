@@ -48,10 +48,34 @@ object UINumbersUtils {
 
   def signedRateStr(amount: Long, compact: Boolean = true): String = {
     val value = if (compact) resourceRateStr(amount) else preciseRateStr(amount)
-    if (amount >= 100L) "+" + value else value
+    if (amount >= 100L) "+" + value
+    else if (value == ">−0.01") "−<0.01"
+    else value
   }
 
   def prettyNumberStr(num: Long): String = compact(num)
+  def resourceAmountStr(num: Long): String = {
+    val magnitude = BigInt(num).abs
+    val sign = if (num < 0) "-" else ""
+    val rounded = hundredths(magnitude, BigInt(u))
+    if (rounded < 10000) sign + f"${(rounded / 100).toInt}%d.${(rounded % 100).toInt}%02d"
+    else if (rounded < 99950) sign + ((rounded + 50) / 100).toString
+    else {
+      var suffix = 1
+      var units = BigInt(u) * 1000
+      while (suffix < Suffixes.size - 1 && hundredths(magnitude, units) >= 99950) {
+        units *= 1000
+        suffix += 1
+      }
+      val scaled = hundredths(magnitude, units)
+      val digits = if (scaled >= 10000) 0 else if (scaled >= 1000) 1 else 2
+      val divisor = BigInt(10).pow(2 - digits)
+      val roundedScaled = (scaled + divisor / 2) / divisor
+      val decimal = BigDecimal(roundedScaled, digits).bigDecimal.stripTrailingZeros.toPlainString
+      sign + decimal + Suffixes(suffix)
+    }
+  }
+
   def prettyNumberStr(prefix: String, num: Long, suffix: Int): String =
     prefix + compact(num, suffix)
 

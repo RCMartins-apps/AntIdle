@@ -83,3 +83,13 @@ and an unattended colony returning with a full buffer. The second should see a
 reason to choose between a chamber and more carriers. The third should recover
 through reassignment without abandoning brood or rebuilding the nest. Thresholds,
 costs and throughput are tuning proposals.
+## Stable resource readouts
+
+- Reserve a fixed-width decimal display so changing precision does not move
+  neighboring labels or controls. Check transitions such as 9.9 to 9.99 on
+  phones, including resource rates and action costs.
+- Show a stable net rate through routine brood feeding. The current forecast
+  reports the next tick's affordable care, which varies as the nursery rotates
+  among brood and rationing changes with available sugar and protein. Preserve
+  actual stores and feeding behavior. Distinguish a sustained shortage from
+  tick-level variation and keep depletion estimates consistent with the rate.

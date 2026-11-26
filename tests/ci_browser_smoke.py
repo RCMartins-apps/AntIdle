@@ -150,6 +150,8 @@ def check_brood_icons(page, width, base):
     expect(entries.locator('.resource-icon-larva')).to_have_count(3)
     expect(entries.locator('.resource-icon-pupa')).to_have_count(2)
     expect(entries.first).to_contain_text('Worker egg')
+    expect(entries.nth(3).locator('.brood-entry-progress')).to_have_text('00%')
+    expect(entries.first.locator(':scope > :first-child')).to_have_class('brood-entry-progress')
     expect(entries.first.locator('.resource-icon')).to_have_attribute('aria-hidden', 'true')
     paths = entries.locator('.resource-icon svg path').evaluate_all('(nodes) => nodes.map(n => n.getAttribute("d"))')
     assert len(set(paths)) == 3, paths

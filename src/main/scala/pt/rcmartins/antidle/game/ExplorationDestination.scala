@@ -19,7 +19,7 @@ sealed abstract class ExplorationDestination(
 ) {
   def actionName: String = id match {
     case "woodland-edge"  => "Collect Insects"
-    case "rotten-log"     => "Search Deadwood"
+    case "rotten-log"     => "Collect Protein"
     case "nectar-meadow"  => "Collect Nectar"
     case "seed-gathering" => "Gather Seeds"
     case "scavenge-water" => "Collect Water"

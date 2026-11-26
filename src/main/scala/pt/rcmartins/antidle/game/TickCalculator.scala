@@ -288,22 +288,39 @@ object TickCalculator {
         }
     )
 
+  private def smoothNet(rate: Signal[Long]): Signal[Long] =
+    currentTickSignal
+      .combineWith(rate)
+      .scanLeft(sample => Vector(sample)) { case (history, (tick, net)) =>
+        val recent = if (history.lastOption.exists(_._1 > tick)) Vector.empty else history
+        recent.filter { case (previous, _) =>
+          previous < tick && tick - previous < 2L * TicksPerSecond
+        } :+ (tick -> net)
+      }
+      .map(samples =>
+        if (samples.isEmpty) 0L
+        else math.round(samples.iterator.map(_._2.toDouble).sum / samples.size)
+      )
+      .distinct
+
+  val displayedSugarRate: Signal[Long] = smoothNet(sugarTickGain.sum)
+  val displayedProteinRate: Signal[Long] = smoothNet(proteinTickGain.sum)
+
   def prettyResourceEstDiv(
       bonusGroup: BonusOriginGroup,
       resource: Signal[BasicResource],
+      displayedRate: Option[Signal[Long]] = None,
   ): ReactiveHtmlElement[HTMLDivElement] = {
     div(
       child <--
-        bonusGroup.sum.combineWith(resource).map { case (production, current) =>
-          val sumU = if (current.atCapacity && production > 0) 0L else production
-          val useMinutes: Boolean = sumU != 0 && Math.abs(sumU) < 20
-          val minutesMultiplier: Int = if (useMinutes) 60 else 1
-
-          span(
-            className := (if (sumU < 0L) "text-danger" else ""),
-            UINumbersUtils.signedRateStr(minutesMultiplier * sumU * TicksPerSecond),
-            if (useMinutes) "/m" else "/s",
-          )
+        displayedRate.getOrElse(bonusGroup.sum).combineWith(resource).map {
+          case (production, current) =>
+            val sumU = if (current.atCapacity && production > 0) 0L else production
+            span(
+              className := (if (sumU < 0L) "text-danger" else ""),
+              UINumbersUtils.signedRateStr(sumU * TicksPerSecond),
+              "/s",
+            )
         }
     ).amendThis(elem =>
       setTooltip(elem, prettyResourceTooltip(bonusGroup, bonusGroup.sum, resource))
