@@ -2,20 +2,12 @@
 
 ## 2026-11-26
 
-Colony Workshop renders upgrade bonus controls from the game catalog's field
-definitions. Production and expedition slot effects can be combined on owned
-upgrades. The two existing expedition upgrades still grant one slot each.
-The tree wraps at a selectable one to eight cards per row. Dependency edits
-update links immediately, with placement refreshed via Rearrange tree.
+Colony Workshop exposes population capacity per purchased Nest, Queen Chamber
+and Nursery level. The catalog drives displayed and applied effects. Saves
+retain non-chamber housing when rates differ from the shipped defaults, allowing
+capacity to be recalculated while preserving existing ants and brood.
 
-Chamber prices and selected capacities are already editable. Remaining
-catalog candidates include Queen Chamber laying speed, replete and aphid
-housing, and population capacity. Population capacity needs care because
-the saved total also includes upgrades and outpost effects.
+See [Workshop issue #132](https://github.com/RCMartins-apps/AntIdle/issues/132).
 
-See [Colony Workshop](BALANCING.md#colony-workshop) for the shared catalogs and
-how to add another effect.
-
-Verification passed: 347 game tests, three simulator tests, Scalafmt, and the
-desktop and mobile Workshop browser smoke covering tree controls and catalog
-save/reload.
+Verification passed: 348 game tests, three simulator tests, and a 390px
+Workshop save and reload covering the three housing fields.
