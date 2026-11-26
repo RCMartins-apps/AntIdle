@@ -2559,52 +2559,51 @@ object MainForm {
         .map(_.lineage)
         .distinct
         .combineWith(selected.signal)
-        .map {
-          case (lineage, ids) =>
-            val available = lineage.copy(foundings =
-              if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue
+        .map { case (lineage, ids) =>
+          val available = lineage.copy(foundings =
+            if (lineage.foundings < Int.MaxValue) lineage.foundings + 1 else Int.MaxValue
+          )
+          val projected = Prestige.projectedPrerequisites(available, ids)
+          val options =
+            Prestige.understandings.filter(u => !u.owned(lineage) && u.available(projected))
+          if (options.isEmpty)
+            Seq(
+              div(className := "small my-2", "No new Understandings available for this founding.")
             )
-            val projected = Prestige.projectedPrerequisites(available, ids)
-            val options =
-              Prestige.understandings.filter(u => !u.owned(lineage) && u.available(projected))
-            if (options.isEmpty)
-              Seq(
-                div(className := "small my-2", "No new Understandings available for this founding.")
-              )
-            else
-              options.map { understanding =>
-                div(
-                  className := "understanding-choice border rounded p-2 my-2",
-                  dataAttr("understanding") := understanding.id,
-                  label(
-                    className := "d-flex align-items-center gap-2",
-                    minHeight.px := 44,
-                    input(
-                      typ := "checkbox",
-                      className := "form-check-input",
-                      aria.label := s"Select ${understanding.title}",
-                      checked := ids(understanding.id),
-                      onChange.mapToChecked --> { checked =>
-                        selected.update { old =>
-                          if (checked) old + understanding.id
-                          else {
-                            val remaining = old - understanding.id
-                            val projected = Prestige.projectedPrerequisites(available, remaining)
-                            remaining.filter(id =>
-                              Prestige.understandings
-                                .exists(u => u.id == id && u.available(projected))
-                            )
-                          }
+          else
+            options.map { understanding =>
+              div(
+                className := "understanding-choice border rounded p-2 my-2",
+                dataAttr("understanding") := understanding.id,
+                label(
+                  className := "d-flex align-items-center gap-2",
+                  minHeight.px := 44,
+                  input(
+                    typ := "checkbox",
+                    className := "form-check-input",
+                    aria.label := s"Select ${understanding.title}",
+                    checked := ids(understanding.id),
+                    onChange.mapToChecked --> { checked =>
+                      selected.update { old =>
+                        if (checked) old + understanding.id
+                        else {
+                          val remaining = old - understanding.id
+                          val projected = Prestige.projectedPrerequisites(available, remaining)
+                          remaining.filter(id =>
+                            Prestige.understandings
+                              .exists(u => u.id == id && u.available(projected))
+                          )
                         }
                       }
-                    ),
-                    b(understanding.title),
-                    span(s"${understanding.cost} DNA")
+                    }
                   ),
-                  div(className := "small", understanding.effect),
-                  if (understanding.id == Prestige.BeyondWoodland.id) newResearch else emptyNode
-                )
-              }
+                  b(understanding.title),
+                  span(s"${understanding.cost} DNA")
+                ),
+                div(className := "small", understanding.effect),
+                if (understanding.id == Prestige.BeyondWoodland.id) newResearch else emptyNode
+              )
+            }
         },
       div(
         className := "small text-body-secondary",
