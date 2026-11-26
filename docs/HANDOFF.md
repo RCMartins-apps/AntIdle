@@ -10,6 +10,7 @@
 - Explore places resource and scout icons beside the corresponding counts.
   Study and Collect use the same remaining-amount layout.
 - Compact phone spacing keeps all four manual crew controls on one row.
+- The milestone browser test reads the scout duration from the new crew row.
 
 ## 2026-11-25 — offline upgrade balance editor
 
