@@ -184,10 +184,12 @@ def check_trails(page, width, base):
     expect(crew).to_have_value('5')
     crew_controls = page.locator('.site-worker-controls')
     maximum = crew_controls.get_by_role('button', name='Max', exact=True)
-    duration = crew_controls.locator('.explore-duration')
-    max_bounds, time_bounds = maximum.bounding_box(), duration.bounding_box()
-    assert time_bounds['x'] >= max_bounds['x'] + max_bounds['width']
-    assert max_bounds['y'] <= time_bounds['y'] < max_bounds['y'] + max_bounds['height']
+    # Read both boxes together while the phone finishes scrolling the focused input.
+    assert maximum.evaluate("""button => {
+        const controls = button.getBoundingClientRect();
+        const time = button.nextElementSibling.getBoundingClientRect();
+        return time.left >= controls.right && time.top >= controls.top && time.top < controls.bottom;
+    }""")
     expect(page.get_by_role('button', name='Fit crew', exact=False)).to_have_count(0)
     maximum.click()
     expect(crew).to_have_value('50')
