@@ -1,5 +1,14 @@
 # Handoff
 
+## 2026-11-26 — resource and collector polish
+
+- Resource totals use two decimal places below 100 and fewer digits at larger
+  scales. Standard collectors get the higher-yield positions in mixed crews.
+- Sugar and protein display a two-second net-rate average. Resource countdowns
+  use that rate, while the tick engine continues to apply actual feeding.
+- Upgrades show an affordability estimate when current rates can reach the
+  price. Basic cost shortages remain in the accessible action description.
+
 ## 2026-11-25 — compact Explore layout
 
 - The hex map opens directly above the selected site's actions. Study groups

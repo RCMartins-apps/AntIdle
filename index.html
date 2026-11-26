@@ -99,7 +99,7 @@
             .antidle-app .action-cell,
             .antidle-app #settingsContent .col-6 { width: 100%; padding: .5rem .75rem !important; }
             .antidle-app #settingsContent .justify-content-between { flex-wrap: wrap; gap: .5rem; }
-            .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
+            .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 6ch auto; align-items: baseline; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
             .antidle-app .resource-row > div { width: auto; padding: 0; }
             .antidle-app .resource-row > div:first-child { grid-column: 1; grid-row: 1 / span 2; align-self: start; white-space: normal !important; overflow-wrap: anywhere; }
             .antidle-app .resource-row > div:last-child { grid-column: 2 / -1; grid-row: 2; font-size: .875rem; color: var(--bs-secondary-color); }
@@ -335,6 +335,9 @@
   .jobs-panel .task-controls .btn {margin-block:0!important}
   .jobs-panel .task-row + .task-row {margin-top:.25rem}
 }
+.collector-rates {display:flex;align-items:baseline;flex-wrap:wrap;gap:0 .4rem}
+.collector-next {margin-inline-start:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+#task-sugarcollector .task-controls {margin-inline-start:auto;width:auto;padding-inline-end:0}
 </style>
 </head>
 <body>
