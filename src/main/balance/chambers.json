@@ -1,0 +1,30 @@
+{
+  "Nest": {
+    "tunnelingSpace": {"base": 200000, "multiplier": 1.5, "cap": {"base": 5000000, "perLevel": 2500000}}
+  },
+  "Queen": {
+    "tunnelingSpace": {"base": 250000, "multiplier": 1.5}
+  },
+  "FoodStorage": {
+    "tunnelingSpace": {"base": 500000, "multiplier": 1.14}
+  },
+  "Nursery": {
+    "tunnelingSpace": {"base": 1000000, "multiplier": 1.5},
+    "protein": {"base": 30000, "perLevel": 30000}
+  },
+  "Aphid": {
+    "tunnelingSpace": {"base": 750000, "multiplier": 1.14},
+    "protein": {"base": 20000, "perLevel": 20000}
+  },
+  "Replete": {
+    "tunnelingSpace": {"base": 1000000, "multiplier": 1.25},
+    "protein": {"base": 50000, "perLevel": 50000}
+  },
+  "RoyalNursery": {
+    "sugar": {"base": 30000000},
+    "protein": {"base": 500000},
+    "water": {"base": 1000000},
+    "tunnelingSpace": {"base": 15000000},
+    "resin": {"base": 800000}
+  }
+}

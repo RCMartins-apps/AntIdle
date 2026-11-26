@@ -135,8 +135,11 @@ def main():
         output.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory() as directory:
         tuning = Path(directory) / 'upgrades.json'
-        shutil.copyfile(Path(__file__).resolve().parents[1] / 'src/main/balance/upgrades.json', tuning)
-        with EditorServer(0, balance_bundle(), tuning) as server:
+        chambers = Path(directory) / 'chambers.json'
+        balance_dir = Path(__file__).resolve().parents[1] / 'src/main/balance'
+        shutil.copyfile(balance_dir / 'upgrades.json', tuning)
+        shutil.copyfile(balance_dir / 'chambers.json', chambers)
+        with EditorServer(0, balance_bundle(), tuning, chambers) as server:
             Thread(target=server.serve_forever, daemon=True).start()
             try:
                 with sync_playwright() as playwright:
@@ -145,6 +148,23 @@ def main():
                     browser = playwright.chromium.launch(**launch)
                     try:
                         check(browser, server.origin, tuning, output)
+                        page = browser.new_page(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
+                        page.goto(server.origin + '/chambers')
+                        page.get_by_label('Chamber', exact=True).select_option('Nursery')
+                        protein = page.get_by_role('group', name='Protein', exact=True)
+                        expect(protein.get_by_label('Base', exact=True)).to_have_value('3')
+                        protein.get_by_label('Base', exact=True).fill('4.5')
+                        page.get_by_role('button', name='Save changes').click()
+                        expect(page.get_by_role('status')).to_contain_text('Saved chamber costs')
+                        rule = json.loads(chambers.read_text())['Nursery']['protein']
+                        assert rule == {'base': 45000, 'perLevel': 30000}
+                        page.reload()
+                        page.get_by_label('Chamber', exact=True).select_option('Nursery')
+                        expect(protein.get_by_label('Base', exact=True)).to_have_value('4.5')
+                        assert page.evaluate('document.documentElement.scrollWidth') == 390
+                        if output:
+                            protein.screenshot(path=str(output / 'chamber-protein-price.png'))
+                        page.close()
                     finally:
                         browser.close()
             finally:

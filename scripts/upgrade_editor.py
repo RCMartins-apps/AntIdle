@@ -15,15 +15,19 @@ from balance import ROOT, balance_bundle, executable_command
 ASSETS = ROOT / 'tools/balance/editor'
 TUNING = ROOT / 'src/main/balance/upgrades.json'
 CATALOG = '/api/catalog'
+CHAMBERS = '/api/chambers'
+CHAMBER_TUNING = ROOT / 'src/main/balance/chambers.json'
 FILES = {
     '/': ('index.html', 'text/html'),
     '/editor.css': ('editor.css', 'text/css'),
     '/editor.js': ('editor.js', 'text/javascript'),
+    '/chambers': ('chambers.html', 'text/html'),
+    '/chambers.js': ('chambers.js', 'text/javascript'),
 }
 
 
-def read_catalog(bundle, source):
-    result = subprocess.run(['node', str(bundle), '--upgrade-catalog'], input=source,
+def read_catalog(bundle, source, command='--upgrade-catalog'):
+    result = subprocess.run(['node', str(bundle), command], input=source,
                             capture_output=True, text=True, encoding='utf-8', timeout=20)
     try:
         data = json.loads(result.stdout)
@@ -50,17 +54,25 @@ def atomic_write(path, contents):
 
 
 class EditorServer(ThreadingHTTPServer):
-    def __init__(self, port, bundle, tuning=TUNING):
+    def __init__(self, port, bundle, tuning=TUNING, chambers=CHAMBER_TUNING):
         super().__init__(('127.0.0.1', port), EditorHandler)
         self.bundle = bundle
         self.tuning = tuning
+        self.chambers = chambers
         self.write_lock = Lock()
         self.host = f'127.0.0.1:{self.server_port}'
         self.origin = 'http://' + self.host
 
-    def catalog(self):
-        current = self.tuning.read_bytes()
-        return self.response(read_catalog(self.bundle, current.decode('utf-8')), current)
+    def catalog_path(self, route):
+        return self.chambers if route == CHAMBERS else self.tuning
+
+    def catalog(self, route, source):
+        if route == CHAMBERS:
+            metadata = read_catalog(self.bundle, source.decode('utf-8'), '--validate-chambers')
+            data = {**metadata, 'catalog': json.loads(source)}
+        else:
+            data = read_catalog(self.bundle, source.decode('utf-8'))
+        return self.response(data, source)
 
     @staticmethod
     def response(data, source):
@@ -88,9 +100,10 @@ class EditorHandler(BaseHTTPRequestHandler):
         elif self.path in FILES:
             name, mime = FILES[self.path]
             self.send(HTTPStatus.OK, (ASSETS / name).read_bytes(), mime)
-        elif self.path == CATALOG:
+        elif self.path in (CATALOG, CHAMBERS):
             try:
-                self.send_json(HTTPStatus.OK, self.server.catalog())
+                self.send_json(HTTPStatus.OK, self.server.catalog(
+                    self.path, self.server.catalog_path(self.path).read_bytes()))
             except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired) as error:
                 self.send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {'error': str(error)})
         else:
@@ -100,7 +113,7 @@ class EditorHandler(BaseHTTPRequestHandler):
         if self.headers.get('Host') != self.server.host or self.headers.get('Origin') != self.server.origin:
             self.send_json(HTTPStatus.FORBIDDEN, {'error': 'Save from the local editor tab.'})
             return
-        if self.path != CATALOG:
+        if self.path not in (CATALOG, CHAMBERS):
             self.send_json(HTTPStatus.NOT_FOUND, {'error': 'Unknown route.'})
             return
         try:
@@ -109,15 +122,16 @@ class EditorHandler(BaseHTTPRequestHandler):
                 raise ValueError('Expected a JSON save request of at most 256 KiB.')
             request = json.loads(self.rfile.read(size))
             if not isinstance(request, dict) or not isinstance(request.get('catalog'), dict):
-                raise ValueError('Expected a complete upgrade catalog keyed by ID.')
-            encoded = json.dumps(request['catalog'], indent=2, ensure_ascii=False, allow_nan=False) + '\n'
-            validated = read_catalog(self.server.bundle, encoded)
+                raise ValueError('Expected a complete catalog keyed by ID.')
+            encoded = (json.dumps(request['catalog'], indent=2, ensure_ascii=False, allow_nan=False) + '\n').encode('utf-8')
+            validated = self.server.catalog(self.path, encoded)
+            path = self.server.catalog_path(self.path)
             with self.server.write_lock:
-                if request.get('revision') != revision(self.server.tuning.read_bytes()):
+                if request.get('revision') != revision(path.read_bytes()):
                     self.send_json(HTTPStatus.CONFLICT, {'error': 'The balance file changed on disk. Reload before saving.'})
                     return
-                atomic_write(self.server.tuning, encoded.encode('utf-8'))
-            self.send_json(HTTPStatus.OK, self.server.response(validated, encoded.encode('utf-8')))
+                atomic_write(path, encoded)
+            self.send_json(HTTPStatus.OK, validated)
         except (ValueError, RuntimeError, OSError, subprocess.TimeoutExpired) as error:
             self.send_json(HTTPStatus.UNPROCESSABLE_ENTITY, {'error': str(error)})
 

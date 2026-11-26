@@ -1,5 +1,12 @@
 # Handoff
 
+## 2026-11-26 — Workshop chamber costs
+
+- All construction prices live in `src/main/balance/chambers.json`. The
+  workshop, game and simulator use the same definitions. The workshop validates
+  changes through the engine and saves them with a revision check.
+- Chamber bonuses still use their existing rules and saved-capacity behavior.
+
 ## 2026-11-26 — Colony Workshop
 
 - The upgrade editor saves a complete catalog to `src/main/balance/upgrades.json`.

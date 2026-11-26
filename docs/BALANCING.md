@@ -56,8 +56,20 @@ before inherited production and milestones. Protein bonuses apply to scraps
 gatherers before storage limits. Other kinds of ongoing output and expedition
 rewards retain their existing rules.
 
-Chamber prices and effects still live in Scala. Move those to the workshop
-next while preserving chamber levels and avoiding duplicate bonuses in saves.
+### Chamber costs
+
+Open **Chamber costs** in Colony Workshop to edit the construction catalog
+in [chambers.json](../src/main/balance/chambers.json). The editor shows ordinary
+game units. The file stores fixed-point amounts like the upgrade catalog.
+Each resource's price is its base multiplied by the multiplier raised to
+the current level (up to exponent 100), plus the per-level amount times that
+level. An optional cap limits the result to its base plus its own per-level
+amount. Level zero is the first purchase.
+
+Rebuild the game or simulator to apply edits. The game recalculates prices
+for existing queue entries when loading the colony. Chamber levels and already
+applied capacity bonuses remain saved. Moving chamber effects to the shared
+bonus model is a separate migration.
 
 ## Where to edit
 
