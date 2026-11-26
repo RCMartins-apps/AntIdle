@@ -1,5 +1,6 @@
 package pt.rcmartins.antidle.game.balance
 
+import pt.rcmartins.antidle.game.Constants.u
 import pt.rcmartins.antidle.model.ActionCost
 import pt.rcmartins.antidle.model.Chamber.ChamberType
 import zio.json._
@@ -40,7 +41,37 @@ object ChamberPricing {
 
   private val resources = Set("sugar", "protein", "water", "tunnelingSpace", "knowledge", "resin")
   private val MaxBase = 9007199254740991L
-  private val capacityResources = Map("Nest" -> "tunnelingSpace", "FoodStorage" -> "sugar")
+  private val MaxSlots = 1000
+
+  case class BonusField(
+      kind: String,
+      targetKey: String,
+      target: String,
+      valueKey: String,
+      label: String,
+      scale: Long,
+      max: Long
+  )
+
+  object BonusField {
+    implicit val encoder: JsonEncoder[BonusField] = DeriveJsonEncoder.gen[BonusField]
+  }
+
+  private def storage(resource: String, label: String): BonusField =
+    BonusField("storageCapacity", "resource", resource, "amount", label, u, MaxBase)
+
+  private def slots(slot: String, label: String): BonusField =
+    BonusField("slotCapacity", "slot", slot, "count", label, 1L, MaxSlots.toLong)
+
+  val bonusFields: Map[String, List[BonusField]] = Map(
+    "Nest" -> List(storage("tunnelingSpace", "Tunneling Space")),
+    "FoodStorage" -> List(storage("sugar", "Sugar"), storage("protein", "Protein (with research)")),
+    "Nursery" -> List(
+      slots("brood", "Brood places"),
+      slots("broodNurse", "Brood Nurse jobs"),
+      slots("carcass", "Carcass slots")
+    )
+  )
 
   @jsonNoExtraFields
   case class Definition(costs: Map[String, Price], bonuses: List[UpgradeBonus] = Nil)
@@ -56,9 +87,18 @@ object ChamberPricing {
         val invalid = catalog.iterator
           .flatMap { case (chamber, definition) =>
             val bonuses = definition.bonuses
-            val invalidBonus = bonuses.size > 1 || bonuses.exists {
+            val targets = bonuses.collect {
+              case UpgradeBonus.StorageCapacity(resource, _) => resource
+              case UpgradeBonus.SlotCapacity(slot, _)        => slot
+            }
+            def supports(kind: String, target: String): Boolean =
+              bonusFields.getOrElse(chamber, Nil).exists(f => f.kind == kind && f.target == target)
+
+            val invalidBonus = targets.distinct.size != bonuses.size || bonuses.exists {
               case UpgradeBonus.StorageCapacity(resource, amount) =>
-                !capacityResources.get(chamber).contains(resource) || !validAmount(amount)
+                !supports("storageCapacity", resource) || !validAmount(amount)
+              case UpgradeBonus.SlotCapacity(slot, count) =>
+                !supports("slotCapacity", slot) || count < 0 || count > MaxSlots
               case _ => true
             }
             if (invalidBonus) Some(s"Invalid capacity bonus for $chamber")
@@ -101,11 +141,18 @@ object ChamberPricing {
     )
   }
 
-  def capacityBonus(kind: ChamberType): Long =
+  def capacityBonus(kind: ChamberType, resource: String): Long =
     prices(kind.toString).bonuses
-      .collectFirst { case UpgradeBonus.StorageCapacity(_, amount) =>
+      .collectFirst { case UpgradeBonus.StorageCapacity(`resource`, amount) =>
         amount
       }
       .getOrElse(0L)
+
+  def nurserySlotsPerLevel(slot: String): Int =
+    prices("Nursery").bonuses
+      .collectFirst { case UpgradeBonus.SlotCapacity(`slot`, count) =>
+        count
+      }
+      .getOrElse(0)
 
 }

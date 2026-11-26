@@ -1,6 +1,7 @@
 package pt.rcmartins.antidle.model
 
 import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.game.balance.ChamberPricing
 import zio.json._
 
 case class NestAttributes(
@@ -22,7 +23,10 @@ case class NestAttributes(
     aphidsInitialized: Boolean = false, // Missing in legacy saves; populate existing chambers once.
 ) {
 
-  def maxCarcasses: Int = InitialCarcassSlots + chambers.nurseryChamber.level
+  def maxCarcasses: Int =
+    InitialCarcassSlots + chambers.nurseryChamber.level * ChamberPricing.nurserySlotsPerLevel(
+      "carcass"
+    )
 
   def maxEggsCount: Int = (maxEggs / u).toInt
   def maxAntsCount: Int = (maxAnts / u).toInt

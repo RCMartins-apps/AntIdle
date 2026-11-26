@@ -130,7 +130,7 @@ object UpgradeTuning {
         case bonus: UpgradeBonus.ProductionPercent =>
           !Set("sugarCollectors", "scrapsGatherers").contains(bonus.source) ||
             bonus.percent < 1 || bonus.percent > 100
-        case _: UpgradeBonus.StorageCapacity => true
+        case _: UpgradeBonus.StorageCapacity | _: UpgradeBonus.SlotCapacity => true
       }
     ) Left(s"$name: production bonus needs a supported source and 1 to 100 percent")
     else Right(definition)

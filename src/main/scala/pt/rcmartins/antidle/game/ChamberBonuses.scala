@@ -41,8 +41,17 @@ object ChamberBonuses {
   private def total(base: Long, rate: Long, levels: Int): Long =
     (BigInt(base) + contribution(rate, levels)).max(BigInt(0L)).min(BigInt(Long.MaxValue)).toLong
 
-  private def storage = ChamberPricing.capacityBonus(ChamberType.FoodStorage)
-  private def space = ChamberPricing.capacityBonus(ChamberType.Nest)
+  private def storage = ChamberPricing.capacityBonus(ChamberType.FoodStorage, "sugar")
+  private def space = ChamberPricing.capacityBonus(ChamberType.Nest, "tunnelingSpace")
+  private def protein = ChamberPricing.capacityBonus(ChamberType.FoodStorage, "protein")
+
+  def nurseryBroodPlaces(nest: NestAttributes): Int =
+    Math.max(0, nest.chambers.nurseryChamber.level) * ChamberPricing.nurserySlotsPerLevel("brood")
+
+  def nurseryNurseCapacity(nest: NestAttributes): Long =
+    Math.max(0, nest.chambers.nurseryChamber.level).toLong * ChamberPricing.nurserySlotsPerLevel(
+      "broodNurse"
+    ) * Constants.u
 
   def savedCapacityBase(data: AllData): Option[CapacityBase] =
     Option.when(storage != legacySugar || space != legacySpace)(base(data, storage, space))
@@ -80,7 +89,7 @@ object ChamberBonuses {
       case ChamberType.FoodStorage =>
         ActionBonus(
           maxSugar = storage,
-          maxProtein = if (upgrades(ProteinStorage).unlocked) 100L * Constants.u else 0L
+          maxProtein = if (upgrades(ProteinStorage).unlocked) protein else 0L
         )
       case ChamberType.Replete =>
         ActionBonus(repleteSlots = 1)
@@ -91,7 +100,10 @@ object ChamberBonuses {
           else AphidHusbandry.BasePlacesPerLevel
         )
       case ChamberType.Nursery =>
-        ActionBonus(maxAnts = Constants.NurseryBonusMaxAnts, maxCarcasses = 1)
+        ActionBonus(
+          maxAnts = Constants.NurseryBonusMaxAnts,
+          maxCarcasses = ChamberPricing.nurserySlotsPerLevel("carcass")
+        )
       case ChamberType.RoyalNursery =>
         ActionBonus(royalBroodSlots = 1)
     }
@@ -108,8 +120,8 @@ object ChamberBonuses {
       case ChamberType.Nursery =>
         val opensRefuse = nest.chambers.nurseryChamber.level == Midden.RequiredNurseryLevel - 1
         bonus.copy(
-          maxEggs = 3L * Constants.u,
-          broodNurseSlots = 5,
+          maxEggs = ChamberPricing.nurserySlotsPerLevel("brood").toLong * Constants.u,
+          broodNurseSlots = ChamberPricing.nurserySlotsPerLevel("broodNurse"),
           maxRefuse = if (opensRefuse) Midden.BaseCapacity else 0L
         )
       case ChamberType.Queen =>
@@ -136,9 +148,11 @@ object ChamberBonuses {
       data
         .modify(_.basicResources.protein.maxAmount)
         .setTo(
-          BasicResources.initial.protein.maxAmount + Math
-            .max(0, data.nestAttributes.chambers.foodStorageChamber.level)
-            .toLong * 100L * Constants.u
+          total(
+            BasicResources.initial.protein.maxAmount,
+            protein,
+            Math.max(0, data.nestAttributes.chambers.foodStorageChamber.level)
+          )
         )
 
   def completeUpgrade(allData: AllData, chamberType: ChamberType): AllData = {

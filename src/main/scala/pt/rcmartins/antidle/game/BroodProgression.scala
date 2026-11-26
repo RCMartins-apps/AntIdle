@@ -6,7 +6,7 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 
 object BroodProgression {
   def capacity(nest: NestAttributes): Int =
-    nest.maxEggsCount + Math.max(0, nest.chambers.nurseryChamber.level) * 3
+    nest.maxEggsCount + ChamberBonuses.nurseryBroodPlaces(nest)
 
   def occupiedPlaces(ants: AntsData): Int =
     ants.eggsAndLarvae.size - EmergencyRecovery.broodCount(ants)
@@ -143,7 +143,7 @@ object BroodProgression {
       case AntTask.BroodNurse =>
         Math.max(
           0L,
-          data.nestAttributes.chambers.nurseryChamber.level.toLong * 5L * u - a.taskWorkers(task)
+          ChamberBonuses.nurseryNurseCapacity(data.nestAttributes) - a.taskWorkers(task)
         )
       case _ => 0L
     }
@@ -181,7 +181,7 @@ object BroodProgression {
         a.smallWorkers - tunnelers - scavengers,
         Math.max(
           0L,
-          initial.nestAttributes.chambers.nurseryChamber.level.toLong * 5L * u - a.taskWorkers(
+          ChamberBonuses.nurseryNurseCapacity(initial.nestAttributes) - a.taskWorkers(
             AntTask.BroodNurse
           )
         )
