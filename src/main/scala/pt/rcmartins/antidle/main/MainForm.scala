@@ -831,9 +831,39 @@ object MainForm {
   }
 
   private def buildQueueDiv: ReactiveHtmlElement[HTMLDivElement] = {
-    def buildTaskName(buildTask: BuildTask, index: Int): ReactiveHtmlElement[HTMLDivElement] =
+    def buildTaskName(
+        buildTask: BuildTask,
+        index: Int,
+        size: Int
+    ): ReactiveHtmlElement[HTMLDivElement] = {
+      def moveButton(direction: String, arrow: String, offset: Int) = {
+        val to = index + offset
+        val label = s"Move ${buildTask.chamberType.name} $direction"
+        button(
+          className := s"btn btn-outline-secondary build-move move-$direction",
+          typ := "button",
+          disabled := (to < 0 || to >= size),
+          aria.label := label,
+          title := label,
+          span(aria.hidden := true, arrow),
+          onClick --> { _ =>
+            Actions.moveBuildTask(index, to)
+            // The queue is rendered again with the new level prices.
+            queue.execute(() => {
+              val row = dom.document.querySelector(s".queued-building[data-queue-index='$to']")
+              Option(row).foreach { entry =>
+                Option(entry.querySelector(s".move-$direction:enabled"))
+                  .orElse(Option(entry.querySelector(".build-move:enabled")))
+                  .foreach(_.asInstanceOf[HTMLButtonElement].focus())
+              }
+            })
+          }
+        )
+      }
+
       div(
         className := "queued-building border-bottom pb-2 mb-2",
+        dataAttr("queue-index") := index.toString,
         span(
           className := "build-task",
           buildTask.chamberType.name,
@@ -851,13 +881,18 @@ object MainForm {
             bonusSignal = Actions.getActionBonus(buildTask.chamberType),
           )
         ),
-        button(
-          className := "btn btn-outline-danger build-cancel",
-          typ := "button",
-          aria.label := s"Cancel ${buildTask.chamberType.name}",
-          title := s"Cancel ${buildTask.chamberType.name}",
-          span(aria.hidden := true, "×"),
-          onClick --> (_ => Actions.removeBuildTask(index))
+        div(
+          className := "build-controls",
+          Option.when(size > 1)(moveButton("up", "↑", -1)),
+          Option.when(size > 1)(moveButton("down", "↓", 1)),
+          button(
+            className := "btn btn-outline-danger build-cancel",
+            typ := "button",
+            aria.label := s"Cancel ${buildTask.chamberType.name}",
+            title := s"Cancel ${buildTask.chamberType.name}",
+            span(aria.hidden := true, "×"),
+            onClick --> (_ => Actions.removeBuildTask(index))
+          ),
         ),
         span(
           className := "build-estimate small",
@@ -896,6 +931,7 @@ object MainForm {
         ),
         actionCosts(Val(buildTask.actionCost), Val(Nil)),
       )
+    }
 
     div(
       className := "m-1",
@@ -924,7 +960,7 @@ object MainForm {
               span(className := "queue-empty small text-body-secondary", "No construction queued.")
             case seq =>
               div(seq.zipWithIndex.map { case (buildTask, index) =>
-                buildTaskName(buildTask, index)
+                buildTaskName(buildTask, index, seq.size)
               })
           }
         )

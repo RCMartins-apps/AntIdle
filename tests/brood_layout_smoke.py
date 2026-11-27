@@ -268,8 +268,38 @@ def check(page, width, url):
         page.locator('.nest-chambers').screenshot(path=str(artifacts / 'chamber-order.png'))
     page.get_by_role('button', name='Royal Nursery', exact=True).click()
     page.get_by_role('button', name='Expand Nest', exact=True).click()
-    queue = save_game(page)['nestAttributes']['buildQueue']
-    assert [next(iter(task['chamberType'])) for task in queue] == ['RoyalNursery', 'Nest']
+    page.get_by_role('button', name='Expand Nest', exact=True).click()
+    queued = save_game(page)
+    queue = queued['nestAttributes']['buildQueue']
+    kind = lambda task: next(iter(task['chamberType']))
+    assert [kind(task) for task in queue] == ['RoyalNursery', 'Nest', 'Nest']
+    select_tab(page, 'Chambers')
+    rows = page.locator('.queued-building')
+    first = rows.nth(0)
+    expect(first.locator('.build-estimate')).to_have_text('Needs resources')
+    expect(rows.nth(1).locator('.build-estimate')).to_have_text('Needs resources')
+    expect(first.get_by_role('button', name='Move Royal Nursery up')).to_be_disabled()
+    raise_nest = rows.nth(1).get_by_role('button', name='Move Expand Nest up')
+    raise_nest.focus()
+    page.keyboard.press('Enter')
+    expect(first.get_by_role('button', name='Move Expand Nest down')).to_be_focused()
+    expect(first.locator('.build-estimate')).to_have_text('')
+    rows.nth(2).get_by_role('button', name='Move Expand Nest up').click()
+    expect(rows.nth(1).locator('.build-estimate')).to_have_text('')
+    if width == 390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        page.locator('.build-queue-panel').screenshot(path=str(artifacts / 'reordered-queue.png'))
+    assert_fits(page, width)
+    reordered = save_game(page)
+    assert reordered['nestAttributes']['buildQueue'] == [queue[1], queue[2], queue[0]]
+    load_game(page, reordered)
+    select_tab(page, 'Chambers')
+    start_level = reordered['nestAttributes']['chambers']['nestChamber']['level']
+    expect(rows.nth(0).locator('.build-task')).to_have_text(f'Expand Nest · {start_level} → {start_level + 1}')
+    expect(rows.nth(1).locator('.build-task')).to_have_text(f'Expand Nest · {start_level + 1} → {start_level + 2}')
+    page.clock.run_for(400)
+    completed = save_game(page)
+    assert completed['nestAttributes']['chambers']['nestChamber']['level'] == start_level + 2
+    assert completed['nestAttributes']['buildQueue'] == [queue[0]]
     assert not errors,errors
     print(f'PASS brood layout {width}px: stable counters/status/cancel, visible raise actions, scoped feeding help, independent disclosures, saved brood priority, waste capacity and chamber order',flush=True)
 
