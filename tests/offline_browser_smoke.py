@@ -75,6 +75,12 @@ def check_playtest_slot(page, width, regular):
     expect(page.get_by_text('Playtest colony', exact=True)).to_be_visible()
     assert save_playtest()['basicResources']['sugar']['amount'] == 3 * UNIT
     assert page.evaluate("localStorage.getItem('save')") == regular_raw
+    page.evaluate("""localStorage.setItem('save:playtest:backup', localStorage.getItem('save:playtest'))""")
+    page.get_by_role('button', name='Hard Reset', exact=True).click()
+    page.get_by_role('button', name='Confirm', exact=True).click()
+    expect(page.get_by_text('New Game Started!', exact=True)).to_be_visible()
+    assert page.evaluate("localStorage.getItem('save:playtest:backup')") is None
+    assert page.evaluate("localStorage.getItem('save')") == regular_raw
     page.get_by_role('button', name='Return to regular colony', exact=True).click()
     expect(page.get_by_text('Playtest colony', exact=True)).to_have_count(0)
     assert page.evaluate("localStorage.getItem('save')") == regular_raw
