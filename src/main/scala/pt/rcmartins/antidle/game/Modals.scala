@@ -49,11 +49,9 @@ object Modals {
               DataBSDismissAttr("modal"),
               onClick --> { _ =>
                 SaveLoad
-                  .loadString(dataVar.now())
-                  .foreach { allData =>
-                    SaveLoad.reloadDataFromLoadedSave(allData)
-                    SaveLoad.saveToLocalStorage(allData)
-                  }
+                  .decode(dataVar.now())
+                  .flatMap(data => SaveLoad.saveToLocalStorage(data).map(_ => data))
+                  .fold(SaveLoad.showError, data => SaveLoad.reloadDataFromLoadedSave(data))
                 dataVar.set("")
               },
               "Import",
@@ -98,8 +96,12 @@ object Modals {
               onClick --> { _ =>
                 val newAllData: AllData =
                   AllData.initial.copy(world = WorldData.initial(System.currentTimeMillis()))
-                SaveLoad.reloadDataFromLoadedSave(newAllData, Some("New Game Started!"))
-                SaveLoad.saveToLocalStorage(newAllData)
+                SaveLoad
+                  .saveToLocalStorage(newAllData)
+                  .fold(
+                    SaveLoad.showError,
+                    _ => SaveLoad.reloadDataFromLoadedSave(newAllData, Some("New Game Started!"))
+                  )
                 dataVar.set("")
               },
               "Confirm",

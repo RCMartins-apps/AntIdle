@@ -639,7 +639,7 @@ object MainForm {
             _.tap(
               SaveLoad
                 .saveToLocalStorage(_)
-                .foreach(_ => currentGlobalAlert.set(Some("Game Saved!")))
+                .fold(SaveLoad.showError, _ => currentGlobalAlert.set(Some("Game Saved!")))
             )
           )
       ),
@@ -672,7 +672,7 @@ object MainForm {
         () =>
           SaveLoad
             .loadFromLocalStorage()
-            .foreach(SaveLoad.reloadDataFromLoadedSave(_))
+            .fold(SaveLoad.showError, SaveLoad.restore(_, manual = true))
       ),
       settingsButton(
         "Export",

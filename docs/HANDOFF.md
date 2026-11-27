@@ -1,13 +1,11 @@
 # Handoff
 
-## 2026-11-26
+## 2026-11-27
 
-Production effects target a job's output. The Workshop now offers Aphid
-Tenders' sugar and Dew Gatherers' water alongside the existing jobs. Bonuses
-apply to the chosen job alone and neither add upkeep nor change shipped output.
-The tick, resource forecasts, and task detail rates share the effective rates.
+Local saves retain the previous valid save in a backup key. Startup and manual
+load can recover that colony if the primary save is missing or invalid. Import
+validates and writes the save before changing the running colony. Storage
+failures and malformed or incompatible saves produce visible feedback.
 
-See [Workshop issue #133](https://github.com/RCMartins-apps/AntIdle/issues/133).
-
-Verified 39 focused engine tests, the bonus schema tests after final labels,
-and a 390px Workshop save and reload of both new production targets.
+Verified three focused recovery tests and 23 existing save and exploration
+tests. See [issue #135](https://github.com/RCMartins-apps/AntIdle/issues/135).

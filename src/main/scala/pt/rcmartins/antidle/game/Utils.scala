@@ -147,8 +147,10 @@ object Utils {
       _.tap(allData => lastSavedTick.set(allData.world.currentTick))
     )
     SaveLoad.loadFromLocalStorage() match {
-      case Some(allData) => SaveLoad.reloadDataFromLoadedSave(allData, messageAlert = None)
-      case None          => pause = false
+      case Right(loaded) => SaveLoad.restore(loaded, manual = false)
+      case Left(error) =>
+        pause = false
+        if (error != SaveLoad.Missing) SaveLoad.showError(error)
     }
   }
 
