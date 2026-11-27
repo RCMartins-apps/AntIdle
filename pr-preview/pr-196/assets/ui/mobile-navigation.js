@@ -3,7 +3,7 @@
   'use strict';
   const media = matchMedia('(max-width: 767px)');
   const groups = {
-    nest: { label: 'Nest', tabs: ['nest', 'tasks', 'chambers'], path: 'M2 21 9 7h6l7 14H2ZM9 21v-3a3 3 0 0 1 6 0v3M10 7V3h4v4M8 12h3M15 12h1' },
+    nest: { label: 'Nest', tabs: ['nest', 'tasks', 'chambers'] },
     explore: { label: 'Explore', tabs: ['explore', 'discoveries', 'territory'], path: 'm12 2 9 5v10l-9 5-9-5V7ZM12 8l4 4-4 4-4-4Z' },
     upgrades: { label: 'Upgrades', tabs: ['upgrades', 'purchased'], path: 'm12 3 8 8h-5v10H9V11H4Z' },
     lineage: { label: 'Lineage', tabs: ['lineage', 'milestones'], path: 'm3 7 5 4 4-7 4 7 5-4-2 13H5ZM6 16h12' },
@@ -50,7 +50,7 @@
     for (const [key, spec] of Object.entries(groups)) {
       const button = document.createElement('button');
       button.type = 'button'; button.dataset.destination = key;
-      button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${spec.path}"/></svg><span>${spec.label}</span>`;
+      button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${key === 'nest' ? app.dataset.nestIconPath : spec.path}"/></svg><span>${spec.label}</span>`;
       button.addEventListener('click', () => select(available(last[key]) ? last[key] : spec.tabs.find(available)));
       nav.append(button);
     }
