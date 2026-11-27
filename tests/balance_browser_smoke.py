@@ -49,6 +49,7 @@ def main():
                         page.locator('#run').select_option(str(i))
                         expect(page.locator('#summary')).to_contain_text(run['status'])
                         assert page.locator('#milestones tr').count() == len(run['milestones'])
+                        expect(page.locator('#scenarios tr')).to_have_count(3)
                     page.locator('#metric').select_option('careWorkers')
                     expect(page.locator('#extent')).to_contain_text('careWorkers')
                     assert page.locator('#chart polyline').get_attribute('points')

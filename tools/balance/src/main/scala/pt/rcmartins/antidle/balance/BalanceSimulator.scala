@@ -49,6 +49,10 @@ object BalanceSimulator {
       milestone("first-standard-worker", data.ants.workers > 0L)
       milestone("exploration", data.unlocks.tabs.exploreTabUnlocked)
       milestone("first-hexagon", data.exploration.revealedSites > 0)
+      milestone(
+        "first-safe-search",
+        ExplorationMap.studies(data.exploration, "woodland-edge") > 0
+      )
       milestone("ring-mapped", data.exploration.revealedSites == 6)
       milestone(
         "ring-studied",
@@ -94,6 +98,7 @@ object BalanceSimulator {
         a.sugarCumulativeDebt > 0L
       )
     }
+    milestone("founding-start", true)
     sample()
     while (data.currentTick < config.maxTicks && data.ants.lineage.foundings < config.foundings) {
       if (data.currentTick % config.decisionTicks == 0L) {

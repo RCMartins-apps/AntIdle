@@ -59,6 +59,39 @@ pursue safe exploration/discoveries, the outpost and royal brood; they don't
 model voluntary raids/territory or every possible upgrade/expansion. Targets
 and these rules are policy assumptions, not changes to game rules.
 
+## Reproducible pacing scenarios
+
+Run the balanced policy with seed 42 and stop at the first founding:
+
+```sh
+python3 scripts/balance.py --out /tmp/pacing-before --policy balanced --seed 42 --foundings 1
+# After a balance change:
+python3 scripts/balance.py --out /tmp/pacing-after --policy balanced --seed 42 --foundings 1 \
+  --baseline /tmp/pacing-before/report.json
+```
+
+The report highlights three intervals: colony start to the first small worker,
+the first revealed hex to the first completed Woodland Edge search, and Royal
+Nursery completion to the first daughter ready to found. Each row links to a
+normal save at the start of that interval. Replay it in the playtest slot
+at normal speed. The longest recorded wait describes that policy's missing
+prerequisites during the interval. An unfinished interval stays visible with
+any available checkpoint. The baseline column compares exact simulated time
+and has no pass threshold.
+
+### Initial baseline
+
+Balanced policy, seed 42, current engine at `d04a5cd` with scenario
+instrumentation. The colony founded at 1h 32m 50s.
+
+| Scenario | Elapsed | Longest policy wait | Replay from |
+| --- | ---: | --- | --- |
+| First worker | 20.4s | Brood development or housing · 15.4s | `colony-0-founding-start.save.txt` |
+| First safe search | 1m 30.0s | Scouts, supplies or storage · 25.0s | `colony-0-first-hexagon.save.txt` |
+| Raise first daughter queen | 10m 24.8s | Scouts, supplies or storage · 1m 15.0s | `colony-0-royal-nursery.save.txt` |
+
+All three saves are under `checkpoints/balanced-42/` in the generated report.
+
 ## Reading results
 
 - Milestones report both total time and time since that colony's founding.
