@@ -2671,18 +2671,25 @@ object MainForm {
   private def requirementLabel(
       requirement: ActionRequirement,
       compact: Boolean = false
-  ): ReactiveHtmlElement[HTMLSpanElement] =
+  ): ReactiveHtmlElement[HTMLSpanElement] = {
+    val resource = Set("sugar", "protein", "water", "resin", "knowledge", "tunneling space")
+      .contains(requirement.label)
+    val available =
+      if (resource) availableCostStr(requirement.available)
+      else prettyNumberStr(requirement.available)
+    val required =
+      if (resource && requirement.required % u != 0L) availableCostStr(requirement.required)
+      else prettyNumberStr(requirement.required)
     span(
       className := "action-cost",
-      title := s"${requirement.label}: ${prettyNumberStr(requirement.available)} available, ${prettyNumberStr(requirement.required)} required",
       aria.label := s"${requirement.label}: ${preciseRateStr(requirement.available)} available, ${preciseRateStr(requirement.required)} required",
-      title := s"${preciseRateStr(requirement.available)} / ${preciseRateStr(requirement.required)} ${requirement.label}",
+      title := s"$available / $required ${requirement.label}",
       role := "img",
       ResourceIcons.forLabel(requirement.label).filter(_ => compact).map(ResourceIcons.icon),
       span(
         className := (if (requirement.available < requirement.required) "text-danger"
                       else "text-success"),
-        prettyNumberStr(requirement.available),
+        available,
       ),
       "/",
       span(
@@ -2691,7 +2698,7 @@ object MainForm {
         title := requirement.maximum
           .map(max => s"Storage capacity: ${prettyNumberStr(max)}")
           .getOrElse(""),
-        prettyNumberStr(requirement.required),
+        required,
       ),
       span(
         className := (if (compact && ResourceIcons.forLabel(requirement.label).nonEmpty)
@@ -2700,6 +2707,7 @@ object MainForm {
         s" ${requirement.label}",
       ),
     )
+  }
 
   private[main] def actionCosts(
       costSignal: Signal[ActionCost],

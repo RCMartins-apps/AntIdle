@@ -2,10 +2,9 @@
 
 ## 2026-11-27
 
-PR validation publishes one compiled bundle for the colony UI, progression,
-and offline browser groups. Preview deployment and the required test check
-wait for those groups. The sequential baseline is recorded in CI-WORKFLOW.
+Live resource amounts in action costs retain two decimal places below 1K.
+Fractional costs use the same format, while whole prices stay compact.
 
-Verified YAML parsing, suite command preservation, and the gate script with
-successful, failed browser, failed preview, fork, and docs-only inputs.
-The live timing comparison is pending the first successful parallel run.
+Verified four number-presentation tests and the 317.79 to 317.80 transition
+in the game at 390px and 1280px. Follow-up to
+[PR #120](https://github.com/RCMartins-apps/AntIdle/pull/120).

@@ -13,6 +13,15 @@ class NumberPresentationSuite extends FunSuite {
     assertEquals(UINumbersUtils.resourceAmountStr(999500L * u), "1M")
   }
 
+  test("live resource cost amounts keep decimal places across trailing-zero boundaries") {
+    assertEquals(UINumbersUtils.availableCostStr(3177900L), "317.79")
+    assertEquals(UINumbersUtils.availableCostStr(3178000L), "317.80")
+    assertEquals(UINumbersUtils.availableCostStr(318 * u), "318.00")
+    assertEquals(UINumbersUtils.availableCostStr(0), "0.00")
+    assertEquals(UINumbersUtils.availableCostStr(1), "<0.01")
+    assertEquals(UINumbersUtils.availableCostStr(1000 * u - 1L), "1K")
+  }
+
   test("compact values consistently use K, M, B and preserve signs at boundaries") {
     assertEquals(UINumbersUtils.prettyNumberStr(999 * u), "999")
     assertEquals(UINumbersUtils.prettyNumberStr(1000 * u), "1K")
