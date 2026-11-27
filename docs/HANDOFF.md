@@ -2,11 +2,11 @@
 
 ## 2026-11-27
 
-The game loads layout, navigation, resources, and gameplay styles from
-local stylesheets in the original cascade order. The production package
-includes and precaches every stylesheet.
+Waste unlocks at Nursery level 2. Waste Chamber builds through the normal
+queue, adding 150 storage per level. Level 1 keeps the old sealed chamber's
+price. Each further level adds 300 sugar and 150 tunneling space to the price.
+Old sealed chamber saves become level 1 and retain the backlog and carriers.
 
-Verified package and classification tests, precache membership, resource
-layout at 320px, 390px, and 1280px, and packaged offline browser checks.
-Local browser checks reused the game bundle because this change moves CSS.
-See [issue #177](https://github.com/RCMartins-apps/AntIdle/issues/177).
+Verified nine waste and chamber pricing unit tests, the development build,
+and Brood layout at 320px, 390px, and 1280px, including recovery after the
+queued chamber completes. See [issue #191](https://github.com/RCMartins-apps/AntIdle/issues/191).

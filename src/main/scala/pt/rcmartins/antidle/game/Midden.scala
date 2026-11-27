@@ -5,7 +5,6 @@ import pt.rcmartins.antidle.model._
 
 object Midden {
   val RequiredNurseryLevel = 2
-  val Cost: ActionCost = ActionCost(sugar = 1200L * u, tunnelingSpace = 750L * u)
   val BaseCapacity: Long = 100L * u
   val AddedCapacity: Long = 150L * u
   val Places = 5
@@ -19,23 +18,10 @@ object Midden {
     nest.chambers.nurseryChamber.level >= RequiredNurseryLevel
 
   def capacity(nest: NestAttributes): Long =
-    if (!visible(nest)) 0L else BaseCapacity + (if (nest.middenBuilt) AddedCapacity else 0L)
+    if (!visible(nest)) 0L else BaseCapacity + Math.max(0, nest.chambers.wasteChamber.level) * AddedCapacity
 
   def stored(nest: NestAttributes): Long =
     Math.max(0L, Math.min(capacity(nest), nest.nurseryRefuse))
-
-  def canBuild(data: AllData): Boolean =
-    visible(data.nestAttributes) && !data.nestAttributes.middenBuilt && data.hasResources(Cost)
-
-  def build(data: AllData): AllData =
-    if (!canBuild(data)) data
-    else {
-      val paid = data.spendResources(Cost)
-      paid.copy(
-        nestAttributes = paid.nestAttributes.copy(middenBuilt = true),
-        ants = paid.ants.unlockTask(AntTask.RefuseCarrier)
-      )
-    }
 
   def carriers(ants: AntsData): Long =
     Math.max(0L, Math.min(Places.toLong, ants.taskWorkers(AntTask.RefuseCarrier) / u))

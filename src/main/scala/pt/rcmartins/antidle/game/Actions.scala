@@ -46,8 +46,6 @@ object Actions {
 
   def promoteReplete(): Unit = actionUpdater.writer.onNext(RepleteProgression.promote)
 
-  def buildMidden(): Unit = actionUpdater.writer.onNext(Midden.build)
-
   def establishDryClearingOutpost(): Unit =
     actionUpdater.writer.onNext(OutpostProgression.establish)
 
@@ -144,6 +142,7 @@ object Actions {
         case ChamberType.Nursery      => chambers.nurseryChamber
         case ChamberType.Aphid        => chambers.aphidChamber
         case ChamberType.Replete      => chambers.repleteChamber
+        case ChamberType.Waste        => chambers.wasteChamber
         case ChamberType.RoyalNursery => chambers.royalNurseryChamber
       }
     }

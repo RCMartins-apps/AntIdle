@@ -37,7 +37,7 @@ object ChamberPricing {
   }
 
   private val chambers =
-    Set("Nest", "Queen", "FoodStorage", "Nursery", "Aphid", "Replete", "RoyalNursery")
+    Set("Nest", "Queen", "FoodStorage", "Nursery", "Aphid", "Replete", "RoyalNursery", "Waste")
 
   private val resources = Set("sugar", "protein", "water", "tunnelingSpace", "knowledge", "resin")
   private val MaxBase = 9007199254740991L

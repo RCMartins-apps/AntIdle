@@ -45,6 +45,7 @@ object Strategy {
       BroodProgression.nurseryAvailable(d.ants, d.nestAttributes, d.exploration)
     case ChamberType.Aphid        => d.upgrades(AphidTending).unlocked
     case ChamberType.Replete      => d.upgrades(RepleteStorage).unlocked
+    case ChamberType.Waste        => Midden.visible(d.nestAttributes)
     case ChamberType.RoyalNursery => d.upgrades(RoyalNurseryPlanning).unlocked
   }
 

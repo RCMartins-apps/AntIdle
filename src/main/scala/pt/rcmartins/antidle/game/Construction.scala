@@ -17,6 +17,7 @@ object Construction {
     case ChamberType.Nursery      => chambers.nurseryChamber.level
     case ChamberType.Aphid        => chambers.aphidChamber.level
     case ChamberType.Replete      => chambers.repleteChamber.level
+    case ChamberType.Waste        => chambers.wasteChamber.level
     case ChamberType.RoyalNursery => chambers.royalNurseryChamber.level
   }
 
@@ -37,6 +38,8 @@ object Construction {
     else if (nest.buildQueue.size >= nest.maxBuildQueue) Some("Build queue full")
     else if (kind == ChamberType.RoyalNursery && !RoyalNurseryProgression.canPlan(nest, upgrades))
       Some("Requires Royal Nursery Planning")
+    else if (kind == ChamberType.Waste && !Midden.visible(nest))
+      Some(s"Requires Nursery Chamber level ${Midden.RequiredNurseryLevel}")
     else None
   }
 
@@ -49,9 +52,13 @@ object Construction {
       nest.buildQueue.foldLeft((Map.empty[ChamberType, Int], List.empty[BuildTask])) {
         case ((planned, queue), task) =>
           val count = planned.getOrElse(task.chamberType, 0)
-          val allowed = task.chamberType != ChamberType.RoyalNursery ||
-            (data.upgrades(RoyalNurseryPlanning).unlocked &&
-              nest.chambers.royalNurseryChamber.level == 0 && count == 0)
+          val allowed = task.chamberType match {
+            case ChamberType.RoyalNursery =>
+              data.upgrades(RoyalNurseryPlanning).unlocked &&
+                nest.chambers.royalNurseryChamber.level == 0 && count == 0
+            case ChamberType.Waste => Midden.visible(nest)
+            case _ => true
+          }
           if (!allowed) (planned, queue)
           else
             (
