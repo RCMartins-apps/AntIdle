@@ -42,7 +42,8 @@
       });
     }
     const tab = id => app.querySelector('#' + id + '-tab');
-    const available = id => !!tab(id) && !tab(id).parentElement.hidden;
+    let availableTabs = new Set(['nest', 'settings', 'milestones']);
+    const available = id => availableTabs.has(id);
     const groupFor = id => id === 'milestones' && !available('lineage') ? 'settings' : Object.keys(groups).find(key => groups[key].tabs.includes(id)) || 'settings';
     const nav = document.createElement('nav');
     nav.className = 'mobile-bottom-nav'; nav.setAttribute('aria-label', 'Main navigation');
@@ -70,9 +71,10 @@
       li.append(a); tabs.append(li);
     }
     secondary('chambers', 'Chambers', 'nest'); secondary('purchased', 'Purchased', 'upgrades');
+    let renderedView = current;
     function refresh() {
-      const chambers = app.querySelector('.nest-chambers');
-      tab('chambers').parentElement.hidden = chambers?.style.display === 'none';
+      tab('chambers').parentElement.hidden = !available('chambers');
+      tab('purchased').parentElement.hidden = !available('purchased');
       group = groupFor(current);
       if (!available(current)) { select('nest'); return; }
       for (const a of tabs.querySelectorAll('a[role=tab]')) {
@@ -87,6 +89,10 @@
       }
       app.dataset.mobileGroup = group;
       app.dataset.mobileView = current;
+      if (renderedView !== current) {
+        renderedView = current;
+        app.dispatchEvent(new Event('antidle-view-changed'));
+      }
       app.dataset.mobileSubtabs = String([...tabs.children].filter(li => !li.hidden && li.dataset.mobileGroup === group).length);
       for (const button of nav.children) {
         const key = button.dataset.destination;
@@ -138,7 +144,7 @@
     });
     tabs.addEventListener('keydown', event => {
       if (!media.matches || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-      const visible = [...tabs.querySelectorAll('a[role=tab]')].filter(a => a.getClientRects().length);
+      const visible = [...tabs.querySelectorAll('a[role=tab]')].filter(a => available(a.id.replace(/-tab$/, '')) && groupFor(a.id.replace(/-tab$/, '')) === group);
       const index = visible.indexOf(document.activeElement);
       if (index < 0) return;
       event.preventDefault(); event.stopPropagation();
@@ -146,9 +152,11 @@
         (index + (event.key === 'ArrowRight' ? 1 : -1) + visible.length) % visible.length;
       select(visible[next].id.replace(/-tab$/, '')); visible[next].focus({preventScroll: true});
     }, true);
-    new MutationObserver(refresh).observe(tabs, { childList: true });
-    const chambers = app.querySelector('.nest-chambers');
-    if (chambers) new MutationObserver(refresh).observe(chambers, { attributes: true, attributeFilter: ['style'] });
+    app.addEventListener('antidle-tabs-changed', event => {
+      availableTabs = new Set(event.detail);
+      queueMicrotask(refresh);
+    });
+    app.dispatchEvent(new Event('antidle-navigation-ready'));
     refresh();
   }
   const root = document.getElementById('root');

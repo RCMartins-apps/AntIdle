@@ -23,6 +23,11 @@ def check(page, width, url):
     expect(nav).to_be_visible()
     expect(nav.get_by_role('button', name='Explore', exact=True)).not_to_be_visible()
     expect(nav.get_by_role('button', name='Lineage', exact=True)).not_to_be_visible()
+    # Milestones belongs to Settings before Lineage unlocks.
+    select_tab(page, 'Milestones')
+    expect(nav.get_by_role('button', name='Settings', exact=True)).to_have_attribute('aria-current', 'page')
+    expect(page.get_by_role('tab', name='Milestones', exact=True)).to_be_visible()
+    expect(page.locator('#milestonesContent')).to_be_visible()
     base = save_game(page)
     game = progressed_game(base)
     game['nestAttributes']['chambers']['royalNurseryChamber']['level'] = 1
@@ -113,15 +118,6 @@ def check(page, width, url):
     select_tab(page, 'Lineage')
     select_tab(page, 'Milestones')
     expect(page.locator('#milestonesContent')).to_be_visible()
-    # Simulate the pre-Lineage navigation structure: Milestones belongs to Settings.
-    page.locator('#lineage-tab').locator('..').evaluate('el => el.remove()')
-    expect(nav.get_by_role('button',name='Lineage',exact=True)).not_to_be_visible()
-    expect(settings).to_have_attribute('aria-current','page')
-    expect(page.get_by_role('tab',name='Milestones',exact=True)).to_be_visible()
-    select_tab(page,'Milestones')
-    expect(page.locator('#milestonesContent')).to_be_visible()
-    select_tab(page, 'Settings')
-    expect(page.get_by_role('button', name='Manual Save', exact=True)).to_be_visible()
     select_tab(page, 'Nest')
     previous, reselected, restored = page.evaluate("""() => {
         window.scrollTo({top: 160, behavior: 'instant'});
