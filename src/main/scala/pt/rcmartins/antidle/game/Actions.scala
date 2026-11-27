@@ -62,16 +62,22 @@ object Actions {
     actionUpdater.writer.onNext(Prestige.purchase(_, id))
 
   def foundDaughterColony(selected: Seq[String] = Nil, drySeason: Boolean = false): Unit =
-    actionUpdater.writer.onNext { data =>
-      val next = Prestige.found(data, selected, drySeason)
-      if (next != data) {
-        Utils.pause = true
-        scala.scalajs.js.timers.setTimeout(0) {
-          saves.SaveLoad.reloadDataFromLoadedSave(next, messageAlert = None)
-          saves.SaveLoad.saveToLocalStorage(next).left.foreach(saves.SaveLoad.showError)
-        }
+    saves.SaveLoad.withWriteLock {
+      actionUpdater.writer.onNext { data =>
+        val next = Prestige.found(data, selected, drySeason)
+        if (next == data) data
+        else
+          saves.SaveLoad.saveToLocalStorage(next) match {
+            case Left(saves.SaveLoad.Conflict) => data
+            case result =>
+              Utils.pause = true
+              scala.scalajs.js.timers.setTimeout(0) {
+                saves.SaveLoad.reloadDataFromLoadedSave(next, messageAlert = None)
+                result.left.foreach(saves.SaveLoad.showError)
+              }
+              next
+          }
       }
-      next
     }
 
   def claimTerritory(workers: Int, guards: Int): Unit =

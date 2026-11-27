@@ -2,11 +2,10 @@
 
 ## 2026-11-27
 
-BroodView owns egg actions, the laying queue, brood priority, Queen’s Routine,
-and related warnings and help. It shares the existing action and disclosure
-helpers. MainForm keeps the chamber and royal brood screens.
+Each tab remembers the save revision it loaded. A stale tab can export its
+colony or load the newer save. Web Locks serialize simultaneous writes where
+available. Older browsers still compare the stored revision before writing.
 
-Verified formatting, the development build, and the maintained Brood browser
-checks at 320px, 390px, and 1280px.
-
-See [issue #160](https://github.com/RCMartins-apps/AntIdle/issues/160).
+Verified the production build, concurrent and stale save checks at 390px,
+preview-slot isolation, and offline round trips at 390px and 1280px. See
+[issue #158](https://github.com/RCMartins-apps/AntIdle/issues/158).

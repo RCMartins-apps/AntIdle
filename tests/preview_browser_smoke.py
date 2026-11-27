@@ -10,7 +10,7 @@ import tempfile
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, select_tab
+from browser_smoke import read_saved_slot, ROOT, select_tab
 
 spec = importlib.util.spec_from_file_location('package_site', ROOT / 'scripts/package_site.py')
 site = importlib.util.module_from_spec(spec)
@@ -23,7 +23,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
 def save(page, key):
     select_tab(page, 'Settings')
     page.get_by_role('button', name='Manual Save', exact=True).click()
-    return page.evaluate('(key) => localStorage.getItem(key)', key)
+    return read_saved_slot(page, key)
 
 with tempfile.TemporaryDirectory() as temp:
     temp = Path(temp)
