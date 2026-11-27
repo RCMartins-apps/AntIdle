@@ -340,10 +340,10 @@ def check_game(page, width, url):
     assert 'experience' not in sent['exploration']
     select_tab(page, 'Explore')
     page.clock.run_for(31000)
-    woodland = map_region.get_by_role('button', name='Ring 1 · (0, -1), Study', exact=True)
+    woodland = map_region.get_by_role('button', name='Ring 1 · (0, -1), Search', exact=True)
     expect(woodland).to_be_enabled()
     woodland.click()
-    expect(page.get_by_role('button', name='Study Site', exact=True)).to_be_enabled()
+    expect(page.get_by_role('button', name='Search Site', exact=True)).to_be_enabled()
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_have_count(0)
     assert_fits(page, width)
     select_tab(page, 'Lineage')

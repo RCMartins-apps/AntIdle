@@ -17,7 +17,7 @@ class MapFeedbackSuite extends FunSuite {
     )
     assertEquals(
       MapFeedback.state(data, "woodland-edge", 60),
-      MapFeedback.State("studying", "Studying 50%", Some(50))
+      MapFeedback.State("studying", "Searching 50%", Some(50))
     )
     assertEquals(MapFeedback.state(data, "woodland-edge", 200).percent, Some(100))
     assertEquals(MapFeedback.state(data, "woodland-edge", 0).percent, Some(0))

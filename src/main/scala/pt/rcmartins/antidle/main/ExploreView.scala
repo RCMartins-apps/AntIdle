@@ -59,7 +59,7 @@ private[main] object ExploreView {
         if (!ExplorationMap.revealed(data.exploration, site.id)) List("fog" -> "Unexplored")
         else {
           val study = Option.when(ExplorationMap.studyReward(data.exploration, site.id) > 0L)(
-            "study" -> "Study"
+            "study" -> "Search"
           )
           val collect = Option.when(routes.exists(route => routeAvailable(route, data)))(
             "collect" -> "Collect"
@@ -139,7 +139,7 @@ private[main] object ExploreView {
         ),
         actionButton(
           descriptionSignal = Val(None),
-          name = if (id == "surroundings") "Explore Surroundings" else "Study Site",
+          name = if (id == "surroundings") "Explore Surroundings" else "Search Site",
           buttonContent = Option.when(id != "surroundings")(
             span(
               className := "explore-launch-label",
@@ -150,7 +150,7 @@ private[main] object ExploreView {
               )
             )
           ),
-          accessibleName = Option.when(id != "surroundings")("Study Site"),
+          accessibleName = Option.when(id != "surroundings")("Search Site"),
           showDetails = false,
           enabledSignal = snapshotSignal.combineWith(scoutCrew.signal).map { case (data, count) =>
             ExplorationMap.canScout(data, id, count)
@@ -158,7 +158,7 @@ private[main] object ExploreView {
           blockedReasonSignal = explorationSignal.map(data =>
             Option.when(
               ExplorationMap.busy(data, id, if (id == "surroundings") "reveal" else "study")
-            )(if (id == "surroundings") "Scouting in progress" else "Study in progress")
+            )(if (id == "surroundings") "Scouting in progress" else "Search in progress")
           ),
           costSignal = scoutCrew.signal.combineWith(supported).map { case (count, stationSupport) =>
             ExplorationMap.scoutCost(count, stationSupport)
@@ -194,9 +194,9 @@ private[main] object ExploreView {
           e.surveyOrder match {
             case Some(order) if order.site == id =>
               val status =
-                if (ExplorationMap.busy(e, id, "study")) "Studying"
+                if (ExplorationMap.busy(e, id, "study")) "Searching"
                 else "Waiting for scouts, supplies or a mission slot"
-              Some((s"$status · $completed/${order.target} studies", true, false))
+              Some((s"$status · $completed/${order.target} searches", true, false))
             case None =>
               SurveyOrders.nextDiscovery(e, id).filter(_.trips - completed >= 2).map { discovery =>
                 val trips = discovery.trips - completed
@@ -205,7 +205,7 @@ private[main] object ExploreView {
                 val water =
                   if (cost.water > 0L) s" · ${prettyNumberStr(cost.water * trips)} water" else ""
                 (
-                  s"${discovery.title} · $completed/${discovery.trips} studies · ${prettyNumberStr(cost.sugar * trips)} sugar$water",
+                  s"${discovery.title} · $completed/${discovery.trips} searches · ${prettyNumberStr(cost.sugar * trips)} sugar$water",
                   false,
                   ExplorationMap.canScout(data, id, count)
                 )
@@ -223,7 +223,7 @@ private[main] object ExploreView {
                 typ := "button",
                 className := "btn btn-outline-secondary",
                 minHeight.px := 44,
-                "Stop survey order",
+                "Stop searching",
                 onClick --> (_ => Actions.cancelSurveys())
               )
             else
@@ -231,7 +231,7 @@ private[main] object ExploreView {
                 typ := "button",
                 className := "btn btn-outline-primary",
                 minHeight.px := 44,
-                "Study until discovery",
+                "Search until discovery",
                 disabled := !canStart,
                 onClick --> (_ => Actions.orderSurveys(id, scoutCrew.now()))
               )
@@ -482,7 +482,11 @@ private[main] object ExploreView {
         className := "site-haul explore-action-card",
         div(
           className := "explore-control-row justify-content-between",
-          b(if (RaidProgression.isRaid(route)) "Raid" else "Collect"),
+          b(
+            className := "map-action-title",
+            MapIcons("collect"),
+            if (RaidProgression.isRaid(route)) "Raid" else "Collect"
+          ),
           span(
             className := "explore-remaining",
             exploreAmount(
@@ -653,7 +657,7 @@ private[main] object ExploreView {
         val site = ExplorationMap.site(id)
         val unlockLabel: String = DiscoveryProgression.all
           .find(_.destination == id)
-          .map(d => s"3 studies: ${d.title} research")
+          .map(d => s"3 searches: ${d.title} research")
           .getOrElse("")
         div(
           className := "map-site-card",
@@ -665,7 +669,7 @@ private[main] object ExploreView {
             className := "explore-action-card",
             div(
               className := "explore-control-row justify-content-between",
-              b("Study"),
+              b(className := "map-action-title", MapIcons("study"), "Search"),
               span(
                 className := "site-knowledge explore-remaining",
                 exploreAmount(
@@ -744,10 +748,7 @@ private[main] object ExploreView {
             top.percent <-- antsSignal.map(a => if (a.lineage.beyondWoodland) 62 else 50),
             aria.label := "Nest surroundings",
             aria.pressed <-- selected.signal.map(id => (id == "surroundings").toString),
-            child <-- feedback("surroundings")
-              .map(f => if (f.percent.isDefined) "scouting" else "surroundings")
-              .distinct
-              .map(MapIcons.apply),
+            MapIcons("nest"),
             span("Nest"),
             small(
               className := "map-state",
@@ -819,7 +820,7 @@ private[main] object ExploreView {
         div(
           className := "map-action-legend small mb-3",
           List(
-            "study" -> "Study",
+            "study" -> "Search",
             "collect" -> "Collect",
             "fog" -> "Unexplored",
             "exhausted" -> "Exhausted"
@@ -840,7 +841,7 @@ private[main] object ExploreView {
                   if (party.mission == "aphids") s"Relocating ${party.aphids} aphids"
                   else if (party.mission == "reveal") "Exploring surroundings"
                   else if (party.mission == "study")
-                    s"Studying ${hexLabel(ExplorationMap.site(party.destination))}"
+                    s"Searching ${hexLabel(ExplorationMap.site(party.destination))}"
                   else ExplorationDestination.forParty(party).name
                 ),
                 s" · ${party.scouts / u} scouts · ${party.amountWorkers / u} workers · ",

@@ -133,7 +133,8 @@
 .map-hex-actions {display:flex;align-items:center;justify-content:center;gap:4px}
 .map-action-legend {display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem .8rem}
 .map-action-legend > span {display:inline-flex;align-items:center;gap:.3rem}
-.map-action-legend .map-terrain-icon {width:1rem;height:1rem}
+.map-action-title {display:inline-flex;align-items:center;gap:.3rem}
+.map-action-legend .map-terrain-icon, .map-action-title .map-terrain-icon {width:1rem;height:1rem}
 .hex-map .map-hex[aria-pressed="true"] {background:#c3e3ff;color:#08477b;box-shadow:none}
 @media (prefers-reduced-motion:no-preference) {.map-hex {transition:background-color .15s,color .15s}}
 

@@ -51,7 +51,7 @@ object Prestige {
     "Satellite Nests",
     1L,
     3,
-    "Dry Clearing: half the sugar and Knowledge to establish. Choose Seed Station (+50% protein, +25% water use) or Scout Station (40% shorter studies with 2–3 scouts, 5 water per study).",
+    "Dry Clearing: half the sugar and Knowledge to establish. Choose Seed Station (+50% protein, +25% water use) or Scout Station (40% shorter searches with 2–3 scouts, 5 water per search).",
     _.satelliteNests,
     _.copy(satelliteNests = true),
     _.beyondWoodland

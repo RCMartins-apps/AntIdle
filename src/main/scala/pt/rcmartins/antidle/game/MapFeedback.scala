@@ -19,7 +19,7 @@ object MapFeedback {
           )).min(BigInt(100)).toInt
           val (kind, title) = p.mission match {
             case "reveal" => "scouting" -> "Exploring"
-            case "study"  => "studying" -> "Studying"
+            case "study"  => "studying" -> "Searching"
             case "aphids" => "collecting" -> "Relocating"
             case _        => "collecting" -> "Collecting"
           }
@@ -34,7 +34,7 @@ object MapFeedback {
             if data.collectionTrails
               .exists(t => routes.contains(t.destination) && t.workers > 0L) =>
           State("trail", "Trail assigned")
-        case None if ExplorationMap.knowledgeRemaining(data, id) > 0L => State("study", "Study")
+        case None if ExplorationMap.knowledgeRemaining(data, id) > 0L => State("study", "Search")
         case None if id == "woodland-edge" && ExplorationMap.remaining(data, id) == 0L =>
           State("aphids", "Aphids")
         case _ => State("collect", "Collect")
