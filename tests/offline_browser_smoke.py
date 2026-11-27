@@ -11,7 +11,7 @@ import tempfile
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, assert_fits, save_game, select_tab
+from browser_smoke import read_saved_slot, ROOT, UNIT, assert_fits, save_game, select_tab
 
 spec = importlib.util.spec_from_file_location('package_site', ROOT / 'scripts/package_site.py')
 site = importlib.util.module_from_spec(spec)
@@ -67,7 +67,7 @@ def check_playtest_slot(page, width, regular):
     def save_playtest():
         select_tab(page, 'Settings')
         page.get_by_role('button', name='Manual Save', exact=True).click()
-        return json.loads(base64.b64decode(page.evaluate("localStorage.getItem('save:playtest')")))
+        return json.loads(base64.b64decode(read_saved_slot(page, "save:playtest")))
 
     playtest = save_playtest()
     assert playtest['basicResources']['sugar']['amount'] == 3 * UNIT

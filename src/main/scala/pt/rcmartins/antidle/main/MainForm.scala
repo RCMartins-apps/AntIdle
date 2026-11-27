@@ -195,6 +195,35 @@ object MainForm {
     var currentTabs = Set("nest", "settings", "milestones")
     div(
       className := "antidle-app",
+      child.maybe <-- SaveLoad.conflict.signal.map(_.map { _ =>
+        div(
+          className := "mx-2 my-2 p-2 rounded border bg-body-tertiary",
+          role := "alert",
+          b("A newer colony save exists"),
+          div("Another tab saved this slot. This tab’s progress is still in memory."),
+          div(
+            className := "d-flex flex-wrap gap-2 mt-2",
+            button(
+              typ := "button",
+              className := "btn btn-outline-primary",
+              "Export this colony",
+              onClick --> (_ => exportColony())
+            ),
+            button(
+              typ := "button",
+              className := "btn btn-outline-primary",
+              "Load newer save",
+              onClick --> (_ => SaveLoad.loadConflictingSave())
+            ),
+            button(
+              typ := "button",
+              className := "btn btn-outline-secondary",
+              "Keep playing",
+              onClick --> (_ => SaveLoad.conflict.set(None))
+            ),
+          ),
+        )
+      }),
       Option.when(SaveLoad.inPlaytest)(
         div(
           className := "mx-2 my-2 p-2 rounded border bg-body-tertiary d-flex align-items-center justify-content-between flex-wrap gap-2",
@@ -206,7 +235,10 @@ object MainForm {
             onClick --> { _ =>
               useSignalValue[AllData](
                 snapshotSignal,
-                current => SaveLoad.returnToRegularColony(current).left.foreach(SaveLoad.showError)
+                current =>
+                  SaveLoad.withWriteLock {
+                    SaveLoad.returnToRegularColony(current).left.foreach(SaveLoad.showError)
+                  }
               )
             },
           ),
@@ -669,6 +701,18 @@ object MainForm {
         ),
     )
 
+  private def exportColony(): Unit =
+    actionUpdater.writer.onNext {
+      _.tap { allData =>
+        val dataStr = SaveLoad.saveString(allData)
+        Option(dom.window.navigator.clipboard).foreach(
+          _.writeText(dataStr).toFuture.map(_ =>
+            currentGlobalAlert.set(Some("Exported to clipboard!"))
+          )(queue)
+        )
+      }
+    }
+
   private def settingsDiv: ReactiveHtmlElement[HTMLDivElement] = {
     def settingsButton(
         name: String,
@@ -693,13 +737,15 @@ object MainForm {
       settingsButton(
         "Manual Save",
         () =>
-          actionUpdater.writer.onNext(
-            _.tap(
-              SaveLoad
-                .saveToLocalStorage(_)
-                .fold(SaveLoad.showError, _ => currentGlobalAlert.set(Some("Game Saved!")))
+          SaveLoad.withWriteLock {
+            actionUpdater.writer.onNext(
+              _.tap(
+                SaveLoad
+                  .saveToLocalStorage(_)
+                  .fold(SaveLoad.showError, _ => currentGlobalAlert.set(Some("Game Saved!")))
+              )
             )
-          )
+          }
       ),
       div(
         className := "col-6 px-3 py-2 d-grid",
@@ -732,21 +778,7 @@ object MainForm {
             .loadFromLocalStorage()
             .fold(SaveLoad.showError, SaveLoad.restore(_, manual = true))
       ),
-      settingsButton(
-        "Export",
-        () =>
-          actionUpdater.writer.onNext {
-            _.tap { allData =>
-              val dataStr = SaveLoad.saveString(allData)
-              Option(dom.window.navigator.clipboard)
-                .foreach(
-                  _.writeText(dataStr).toFuture.map(_ =>
-                    currentGlobalAlert.set(Some("Exported to clipboard!"))
-                  )(queue)
-                )
-            }
-          },
-      ),
+      settingsButton("Export", () => exportColony()),
       settingsButton(
         "Import",
         () => {

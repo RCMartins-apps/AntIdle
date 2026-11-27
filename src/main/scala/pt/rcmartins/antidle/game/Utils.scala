@@ -146,6 +146,7 @@ object Utils {
     actionUpdater.writer.onNext(
       _.tap(allData => lastSavedTick.set(allData.world.currentTick))
     )
+    SaveLoad.initializeSlots()
     SaveLoad.loadFromLocalStorage() match {
       case Right(loaded) => SaveLoad.restore(loaded, manual = false)
       case Left(error) =>

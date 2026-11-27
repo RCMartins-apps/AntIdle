@@ -48,10 +48,13 @@ object Modals {
               className := "btn btn-secondary",
               DataBSDismissAttr("modal"),
               onClick --> { _ =>
-                SaveLoad
-                  .decode(dataVar.now())
-                  .flatMap(data => SaveLoad.saveToLocalStorage(data).map(_ => data))
-                  .fold(SaveLoad.showError, data => SaveLoad.reloadDataFromLoadedSave(data))
+                val raw = dataVar.now()
+                SaveLoad.withWriteLock {
+                  SaveLoad
+                    .decode(raw)
+                    .flatMap(data => SaveLoad.saveToLocalStorage(data).map(_ => data))
+                    .fold(SaveLoad.showError, data => SaveLoad.reloadDataFromLoadedSave(data))
+                }
                 dataVar.set("")
               },
               "Import",
@@ -64,7 +67,10 @@ object Modals {
                 val raw = dataVar.now()
                 Utils.useSignalValue[AllData](
                   Utils.snapshotSignal,
-                  current => SaveLoad.openCheckpoint(raw, current).left.foreach(SaveLoad.showError)
+                  current =>
+                    SaveLoad.withWriteLock {
+                      SaveLoad.openCheckpoint(raw, current).left.foreach(SaveLoad.showError)
+                    }
                 )
                 dataVar.set("")
               },
@@ -110,12 +116,14 @@ object Modals {
               onClick --> { _ =>
                 val newAllData: AllData =
                   AllData.initial.copy(world = WorldData.initial(System.currentTimeMillis()))
-                SaveLoad
-                  .resetLocalStorage(newAllData)
-                  .fold(
-                    SaveLoad.showError,
-                    _ => SaveLoad.reloadDataFromLoadedSave(newAllData, Some("New Game Started!"))
-                  )
+                SaveLoad.withWriteLock {
+                  SaveLoad
+                    .resetLocalStorage(newAllData)
+                    .fold(
+                      SaveLoad.showError,
+                      _ => SaveLoad.reloadDataFromLoadedSave(newAllData, Some("New Game Started!"))
+                    )
+                }
                 dataVar.set("")
               },
               "Confirm",

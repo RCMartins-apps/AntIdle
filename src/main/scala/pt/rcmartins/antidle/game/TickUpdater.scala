@@ -175,11 +175,12 @@ object TickUpdater {
         // This is the last step to save data if necessary
         allData => {
           nextSaveTickOpt.foreach {
-            case nextSaveTick if allData.currentTick >= nextSaveTick =>
-              val stored = SaveLoad.loadFromLocalStorage()
-              if (stored.forall(_.data.world.currentTick < allData.currentTick)) {
+            case nextSaveTick
+                if allData.currentTick >= nextSaveTick && Utils.lastSavedTick
+                  .now() < nextSaveTick =>
+              Utils.lastSavedTick.set(allData.currentTick)
+              SaveLoad.withWriteLock {
                 SaveLoad.saveToLocalStorage(allData).left.foreach(SaveLoad.showError)
-                Utils.lastSavedTick.set(allData.currentTick)
               }
             case _ =>
           }
