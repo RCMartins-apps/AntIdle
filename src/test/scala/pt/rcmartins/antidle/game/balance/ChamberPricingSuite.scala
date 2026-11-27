@@ -5,7 +5,7 @@ import zio.json._
 
 class ChamberPricingSuite extends FunSuite {
   private def withBonuses(chamber: String, bonuses: List[UpgradeBonus]): String =
-    List("Nest", "Queen", "FoodStorage", "Nursery", "Aphid", "Replete", "RoyalNursery")
+    List("Nest", "Queen", "FoodStorage", "Nursery", "Aphid", "Replete", "RoyalNursery", "Waste")
       .map { id =>
         val effects = if (id == chamber) bonuses else Nil
         s""" "$id": {"costs": {}, "bonuses": ${effects.toJson}} """

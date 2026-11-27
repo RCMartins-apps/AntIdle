@@ -758,20 +758,21 @@ finite lifespans, type transition, staged nutrition, care capacity, shared job
 caps, queued laying, saves and phone/desktop controls. Existing lifecycle,
 raid/territory replacement and batch UI tests now expect the paced pipeline.
 
-### Nest refuse
+### Nest waste
 
-Nursery level 2 opens a 100-refuse buffer and five Refuse Carrier jobs. Every
-sugar spent feeding worker or scout larvae creates two refuse, for 40 over a
-larva's development. Each carrier clears three refuse per second. Founding
+Nursery level 2 opens a 100-unit waste buffer and five Waste Carrier jobs.
+Every sugar spent feeding worker or scout larvae creates two waste, for 40 over
+a larva’s development. Each carrier clears three waste per second. Founding
 workers, recovery brood and daughter queens use separate care.
 
-At 80% full, refuse closes one brood place. As it builds up, it can close up to
+At 80% full, waste closes one brood place. As waste builds up, it can close up to
 one-third of ordinary brood places. Egg orders wait for a place and existing
 brood continues developing. Clearing the backlog reopens places.
 
-The Sealed Refuse Chamber costs 1,200 sugar and 750 tunnelling space and adds
-150 refuse capacity. Existing Refuse Midden purchases become sealed chambers
-and keep their stored refuse. A new founding starts with no chamber or refuse.
+Queue a Waste Chamber from Chambers. The first level costs 1,200 sugar and 750
+tunneling space. Each level adds 150 waste capacity. Prior Sealed Refuse Chamber
+purchases count as level 1 and retain stored waste and assigned carriers.
+A new founding starts with no chamber or waste.
 
 ### Emergency colony recovery
 

@@ -130,6 +130,8 @@ object ChamberBonuses {
           maxAnts = housing.nursery.toLong * Constants.u,
           maxCarcasses = ChamberPricing.nurserySlotsPerLevel("carcass")
         )
+      case ChamberType.Waste =>
+        ActionBonus(maxRefuse = Midden.AddedCapacity)
       case ChamberType.RoyalNursery =>
         ActionBonus(royalBroodSlots = 1)
     }
@@ -195,6 +197,8 @@ object ChamberBonuses {
         allData.modify(_.nestAttributes.chambers.aphidChamber.level).using(_ + 1)
       case ChamberType.Nursery =>
         allData.modify(_.nestAttributes.chambers.nurseryChamber.level).using(_ + 1)
+      case ChamberType.Waste =>
+        allData.modify(_.nestAttributes.chambers.wasteChamber.level).using(_ + 1)
       case ChamberType.RoyalNursery =>
         allData.modify(_.nestAttributes.chambers.royalNurseryChamber.level).setTo(1)
     }

@@ -1,7 +1,10 @@
 package pt.rcmartins.antidle.game
 
 import munit.FunSuite
+import zio.json._
+import pt.rcmartins.antidle.model.Chamber.ChamberType
 import pt.rcmartins.antidle.game.Constants._
+import pt.rcmartins.antidle.game.saves.AllDataForSave
 import pt.rcmartins.antidle.model._
 import pt.rcmartins.antidle.model.BasicResources.BasicResource
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType.QueensRoutine
@@ -112,18 +115,48 @@ class MiddenSuite extends FunSuite {
     assert(AutomaticBrood.tick(routine.copy(nestAttributes = clean)).ants.layingCooldown > 0L)
   }
 
-  test("sealed capacity preserves the backlog and is paid for once") {
-    val crowded = nursery.copy(nurseryRefuse = Midden.BaseCapacity)
-    val start = fresh.copy(basicResources = stocked, nestAttributes = crowded)
-    val built = Midden.build(start)
-    assertEquals(built.basicResources, stocked.spendResources(Midden.Cost))
-    assertEquals(Midden.capacity(built.nestAttributes), 250L * u)
-    assertEquals(Midden.stored(built.nestAttributes), Midden.BaseCapacity)
-    assertEquals(
-      BroodProgression.usablePlaces(built.nestAttributes),
-      BroodProgression.capacity(nursery)
+  test("legacy sealed storage becomes level one and keeps the backlog and carriers") {
+    val previous = nursery.copy(middenBuilt = true, nurseryRefuse = 200L * u)
+    val carrier = AntTask.RefuseCarrier
+    val original = fresh.copy(
+      nestAttributes = previous,
+      ants = fresh.ants.copy(tasks = Seq(carrier -> u))
     )
-    assertEquals(Midden.build(built), built)
+    val legacyJson = AllDataForSave.fromAllData(original).toJson
+    val restored = legacyJson.fromJson[AllDataForSave].toOption.get
+    assertEquals(restored.nestAttributes.chambers.wasteChamber.level, 1)
+    assertEquals(Midden.capacity(restored.nestAttributes), 250L * u)
+    assertEquals(Midden.stored(restored.nestAttributes), 200L * u)
+    assertEquals(restored.ants.taskWorkers(carrier), u)
+    assertEquals(restored.toJson.fromJson[AllDataForSave], Right(restored))
+  }
+
+  test("waste construction requires Nursery level two and completes repeatable queued levels") {
+    val kind = ChamberType.Waste
+    assertEquals(Construction.enqueue(fresh, kind), fresh)
+    val start = fresh.copy(nestAttributes =
+      nursery.copy(
+        maxBuildQueue = 2,
+        nurseryRefuse = Midden.BaseCapacity
+      )
+    )
+    val queued = Construction.enqueue(Construction.enqueue(start, kind), kind)
+    val first = Construction.cost(kind, 0)
+    val second = Construction.cost(kind, 1)
+    assertEquals(queued.nestAttributes.buildQueue.map(_.actionCost), List(first, second))
+    val funded = queued.copy(basicResources =
+      stocked.copy(
+        sugar = BasicResource(first.sugar + second.sugar, 5000L * u),
+        tunnelingSpace = BasicResource(first.tunnelingSpace + second.tunnelingSpace, 2000L * u)
+      )
+    )
+    val built = Construction.tick(Construction.tick(funded))
+    assertEquals(built.nestAttributes.chambers.wasteChamber.level, 2)
+    assertEquals(built.nestAttributes.buildQueue, Nil)
+    assertEquals(built.basicResources.sugar.amount, 0L)
+    assertEquals(built.basicResources.tunnelingSpace.amount, 0L)
+    assertEquals(Midden.capacity(built.nestAttributes), 400L * u)
+    assertEquals(Midden.stored(built.nestAttributes), Midden.BaseCapacity)
   }
 
 }

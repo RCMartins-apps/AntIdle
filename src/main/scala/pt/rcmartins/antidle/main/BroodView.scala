@@ -354,7 +354,7 @@ private[main] object BroodView {
                 case (stored, capacity, rate, closed) =>
                   val places = if (closed == 1) "place" else "places"
                   val crowded = if (closed > 0) s" · $closed $places blocked" else ""
-                  s"Refuse ${prettyNumberStr(stored)}/${prettyNumberStr(capacity)} · ${signedRateStr(rate)}/s$crowded"
+                  s"Waste ${prettyNumberStr(stored)}/${prettyNumberStr(capacity)} · ${signedRateStr(rate)}/s$crowded"
               }
             )
           }
@@ -577,7 +577,7 @@ private[main] object BroodView {
               .map(show =>
                 Option.when(show)(
                   p(
-                    "Larval feeding creates refuse. High refuse closes brood places to new eggs. Refuse Carriers clear it."
+                    "Larval feeding creates waste. High waste closes brood places to new eggs. Waste Carriers clear it."
                   )
                 )
               ),

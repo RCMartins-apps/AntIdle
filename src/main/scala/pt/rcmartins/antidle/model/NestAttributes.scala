@@ -14,7 +14,7 @@ case class NestAttributes(
     maxAnts: Long = InitialColonyPlaces,
     maxBuildQueue: Int = 1,
     dryClearingOutpost: Boolean = false,
-    middenBuilt: Boolean = false,
+    middenBuilt: Boolean = false, // Legacy purchase flag, cleared on decode.
     nurseryRefuse: Long = 0L,
     dryClearingExtensions: Int = 0,
     dryClearingSpecialization: String = "",
@@ -37,7 +37,18 @@ case class NestAttributes(
 
 object NestAttributes {
 
-  implicit val decoder: JsonDecoder[NestAttributes] = DeriveJsonDecoder.gen[NestAttributes]
+  implicit val decoder: JsonDecoder[NestAttributes] =
+    DeriveJsonDecoder.gen[NestAttributes].map { nest =>
+      if (!nest.middenBuilt) nest
+      else
+        nest.copy(
+          middenBuilt = false,
+          chambers = nest.chambers.copy(
+            wasteChamber = Chamber.WasteChamber(Math.max(1, nest.chambers.wasteChamber.level))
+          )
+        )
+    }
+
   implicit val encoder: JsonEncoder[NestAttributes] = DeriveJsonEncoder.gen[NestAttributes]
 
   val initial: NestAttributes = NestAttributes(aphidsInitialized = true)
