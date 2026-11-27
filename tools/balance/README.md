@@ -16,9 +16,11 @@ Requires Java/sbt, Node and Python 3 (standard library only). Use `--sbt PATH`
 when sbt isn't on PATH. Output directories must be new. Open `index.html` directly
 in a browser: it has no server or external assets. `report.json` contains the
 complete machine-readable results, `milestones.csv` supports spreadsheets and
-`checkpoints/**/*.save.txt` can be pasted into the game's Load control. Importing
-replaces your current game; export your own save first. JSON checkpoints use the
-normal game save schema. They contain the actual simulated colony, not a staged
+`checkpoints/**/*.save.txt` can be pasted into the game's **Settings → Import**
+dialog. Choose **Open in playtest slot** to load the checkpoint in a separate
+colony. Autosaves, manual saves, and reloads use the playtest slot until you
+choose **Return to regular colony**. JSON checkpoints use the normal game save
+schema. They contain the actual simulated colony, not a staged
 approximation. Saves are stamped at export; importing days later can store offline
 time as usual, which you can choose not to spend during a pacing check.
 

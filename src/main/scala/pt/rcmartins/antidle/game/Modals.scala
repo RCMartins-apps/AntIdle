@@ -9,7 +9,7 @@ import pt.rcmartins.antidle.model.{AllData, WorldData}
 
 object Modals {
 
-  def importModal(): ReactiveHtmlElement[HTMLDivElement] = {
+  def importModal()(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val dataVar: Var[String] = Var("")
     div(
       className := "modal fade",
@@ -30,7 +30,7 @@ object Modals {
           ),
           div(
             className := "modal-body",
-            p("Paste your save data here:"),
+            p("Paste a colony save or simulator checkpoint."),
             textArea(
               className := "form-control",
               placeholder := "Save data",
@@ -55,6 +55,20 @@ object Modals {
                 dataVar.set("")
               },
               "Import",
+            ),
+            button(
+              typ := "button",
+              className := "btn btn-primary",
+              DataBSDismissAttr("modal"),
+              onClick --> { _ =>
+                val raw = dataVar.now()
+                Utils.useSignalValue[AllData](
+                  Utils.snapshotSignal,
+                  current => SaveLoad.openCheckpoint(raw, current).left.foreach(SaveLoad.showError)
+                )
+                dataVar.set("")
+              },
+              "Open in playtest slot",
             )
           )
         )

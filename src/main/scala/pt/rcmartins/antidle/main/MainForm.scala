@@ -163,6 +163,23 @@ object MainForm {
 
     div(
       className := "antidle-app",
+      Option.when(SaveLoad.inPlaytest)(
+        div(
+          className := "mx-2 my-2 p-2 rounded border bg-body-tertiary d-flex align-items-center justify-content-between flex-wrap gap-2",
+          span("Playtest colony"),
+          button(
+            typ := "button",
+            className := "btn btn-outline-primary",
+            "Return to regular colony",
+            onClick --> { _ =>
+              useSignalValue[AllData](
+                snapshotSignal,
+                current => SaveLoad.returnToRegularColony(current).left.foreach(SaveLoad.showError)
+              )
+            },
+          ),
+        )
+      ),
       div(
         className := "m-2 game-layout",
         className := "d-flex justify-content-start",
