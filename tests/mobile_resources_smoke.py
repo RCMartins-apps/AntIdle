@@ -1,4 +1,5 @@
 """Compact resource projection: reveal rules, live amounts, warnings and disclosure memory."""
+import copy
 from functools import partial
 from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer
@@ -14,7 +15,7 @@ def check(page, width, url):
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(url, wait_until='networkidle')
-    panel = page.locator('[data-mobile-resources=ready]')
+    panel = page.locator('.resources-column .game-panel')
     expect(panel).to_be_attached()
     summary = page.locator('.compact-resources')
     sugar = summary.locator('[data-resource="Sugar"]')
@@ -99,45 +100,44 @@ def check_timing_layout(page, width, url):
     page.goto(url, wait_until='networkidle')
     game = progressed_game(save_game(page))
     game['ants']['queenRoutine']['enabled'] = False
-    load_game(page, game)
-    panel = page.locator('[data-mobile-resources=ready]')
+    game['exploration'].update(explorationParties=[], collectionTrails=[])
+    game['ants'].update(smallWorkers=0, scouts=0, repletes=0, daughterQueens=0,
+                        defaultTask=None, eggsAndLarvae=[], eggOrders=0, scoutEggOrders=[])
+    panel = page.locator('.resources-column .game-panel')
     summary = page.locator('.compact-resources')
+    sugar_row = page.locator('.resource-row').filter(has=page.get_by_text('Sugar', exact=True))
+    variants = [
+        ('', 0, 0, []),
+        ('Full', 999_990, 0, []),
+        ('Full in ~', 1160, 20, [[{'SugarCollector': {}}, 20 * UNIT]]),
+        ('Empty in ~', 604.20, 20, []),
+        ('Empty in ~', 22.35, 20, []),
+        ('', 0, 0, []),
+    ]
     for expanded in ([False, True] if width <= 767 else [True]):
-        if width <= 767:
-            button = page.get_by_role('button', name=('Expand' if expanded else 'Collapse') + ' resource details', exact=True)
-            if button.is_visible():
-                button.click()
-        if width<=767:
-            expect(summary).not_to_be_visible() if expanded else expect(summary).to_be_visible()
         measurements = []
-        # Drive the live DOM projection through intermittent timing labels. Freeze
-        # simulation so the source fixtures are not overwritten between assertions.
-        variants = [('', '0'), ('Full', '999.99K'), ('Full in ~48m 21s', '1.16K'),
-                    ('Empty in ~1h 24m', '604.20'), ('Empty in ~14m 54s', '22.35'), ('', '0')]
-        for timing, amount in variants * 2:
-            page.evaluate("""({timing, amount}) => {
-                for (const row of document.querySelectorAll('#resource-details .resource-row')) {
-                    const name = row.querySelector('.resource-label')?.textContent.trim();
-                    if (!['Sugar', 'Protein'].includes(name)) continue;
-                    const value = row.querySelector('.resource-amount');
-                    value.textContent = amount;
-                    value.classList.toggle('text-primary', timing === 'Full');
-                    const target = row.querySelector('.resource-timing');
-                    target.replaceChildren();
-                    if (timing) {
-                        const span = document.createElement('span');
-                        span.className = timing.startsWith('Empty') ? 'text-danger' : 'text-body-secondary';
-                        span.textContent = timing; target.append(span);
-                    }
-                }
-            }""", {'timing': timing, 'amount': amount})
+        for prefix, amount, workers, tasks in variants:
+            fixture = copy.deepcopy(game)
+            fixture['ants'].update(workers=workers * UNIT, tasks=tasks)
+            for resource in ('sugar', 'protein'):
+                fixture['basicResources'][resource].update(
+                    amount=round(amount * UNIT), maxAmount=999_990 * UNIT)
+            load_game(page, fixture)
+            if width <= 767 and not expanded:
+                page.get_by_role('button', name='Collapse resource details', exact=True).click()
+                expect(summary).to_be_visible()
+            elif width <= 767:
+                expect(summary).not_to_be_visible()
+            timing = sugar_row.locator('.resource-timing').text_content().strip()
+            assert timing.startswith(prefix) if prefix.endswith('~') else timing == prefix
             if width <= 767 and not expanded:
                 sugar = summary.locator('[data-resource="Sugar"]')
                 expected = timing.replace('Empty in ~', '~').replace('Full in ~', 'Full ~')
                 if timing.startswith('Empty in ~'):
                     expected += ' left'
                 expect(sugar.locator('.compact-resource-warning')).to_have_text(expected)
-                expect(sugar).to_have_attribute('title', 'Sugar: ' + amount + (', ' + timing if timing else ''))
+                value = sugar_row.locator('.resource-amount').text_content().strip()
+                expect(sugar).to_have_attribute('title', 'Sugar: ' + value + (', ' + timing if timing else ''))
                 values = summary.locator('.compact-resource-value').evaluate_all("""nodes => nodes.map(el => ({
                     value: el.textContent, width: el.clientWidth, contentWidth: el.scrollWidth,
                     height: el.getBoundingClientRect().height, lineHeight: parseFloat(getComputedStyle(el).lineHeight)

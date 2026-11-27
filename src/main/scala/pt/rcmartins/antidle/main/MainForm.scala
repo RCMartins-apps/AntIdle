@@ -133,6 +133,14 @@ object MainForm {
   private val windowWidthLimit: Long =
     ResourcesWidth + NestWidth + MessagesWidth
 
+  private val chambersVisible = unlocksSignal
+    .combineWith(nurseryUnlockedSignal)
+    .map { case (unlocks, nursery) =>
+      val actions = unlocks.actions
+      actions.canBuildNestUpgrade || actions.canBuildQueenChamber || actions.canBuildFoodStorageChamber || nursery
+    }
+    .distinct
+
   def apply(): ReactiveHtmlElement[HTMLDivElement] = {
     implicit val owner: Owner = new OneTimeOwner(() =>
       println("MainForm owner is being called after dispose")
@@ -158,8 +166,44 @@ object MainForm {
       if (!e.shiftKey) shiftPressedVar.set(false)
     }
 
+    val viewChanged = new EventBus[dom.Event]
+    val availableTabs = Signal
+      .sequence(
+        List(
+          "tasks" -> antTasksUnlockedSignal,
+          "upgrades" -> upgradesTabUnlockedSignal,
+          "purchased" -> upgradesTabUnlockedSignal,
+          "explore" -> exploreTabUnlockedSignal,
+          "territory" -> territoryVisibleSignal,
+          "discoveries" -> discoveriesVisibleSignal,
+          "lineage" -> lineageVisibleSignal,
+          "chambers" -> chambersVisible,
+        ).map { case (id, visible) => visible.map(value => Option.when(value)(id)) }
+      )
+      .map(_.flatten.toSet ++ Set("nest", "settings", "milestones"))
+      .distinct
+    def publishTabs(element: HTMLElement, tabs: Set[String]): Unit = {
+      val event = new dom.CustomEvent(
+        "antidle-tabs-changed",
+        new dom.CustomEventInit {
+          detail = js.Array(tabs.toSeq: _*)
+        }
+      )
+      element.dispatchEvent(event)
+    }
+    val application = Var(Option.empty[HTMLDivElement])
+    var currentTabs = Set("nest", "settings", "milestones")
     div(
       className := "antidle-app",
+      onMountCallback(ctx => application.set(Some(ctx.thisNode.ref))),
+      availableTabs.combineWith(application.signal) --> { case (tabs, element) =>
+        currentTabs = tabs
+        element.foreach(publishTabs(_, tabs))
+      },
+      eventProp[dom.Event]("antidle-navigation-ready") --> { _ =>
+        application.now().foreach(publishTabs(_, currentTabs))
+      },
+      eventProp[dom.Event]("antidle-view-changed") --> viewChanged.writer,
       div(
         className := "m-2 game-layout",
         className := "d-flex justify-content-start",
@@ -167,7 +211,7 @@ object MainForm {
         className("flex-column") <-- windowWidthVar.signal.map(_ < windowWidthLimit),
         div(
           className := "resources-column",
-          resourcesDiv,
+          resourcesDiv(viewChanged.events),
         ),
         mainTabsDiv,
         div(
@@ -859,8 +903,28 @@ object MainForm {
     )
   }
 
-  private def resourcesDiv: Modifier[ReactiveHtmlElement[HTMLDivElement]] =
+  private def resourcesDiv(
+      viewChanged: EventStream[dom.Event]
+  ): Modifier[ReactiveHtmlElement[HTMLDivElement]] = {
+    val expanded = Var(UiPreferences.get("resources.expanded").contains("true"))
+    val toggle = Var(Option.empty[HTMLButtonElement])
+    val details = Var(Option.empty[HTMLDivElement])
+    def restoreResourceFocus(): Unit =
+      if (details.now().exists(_.contains(document.activeElement)))
+        toggle.now().foreach(_.focus())
+
+    def setExpanded(value: Boolean): Unit = {
+      if (!value && windowWidthVar.now() <= 767) restoreResourceFocus()
+      expanded.set(value)
+      UiPreferences.set("resources.expanded", value.toString)
+    }
+
     div(
+      className("resources-expanded") <-- expanded.signal,
+      viewChanged --> (_ => if (windowWidthVar.now() <= 767 && expanded.now()) setExpanded(false)),
+      windowWidthVar.signal.map(_ <= 767).distinct.changes --> { mobile =>
+        if (mobile && !expanded.now()) restoreResourceFocus()
+      },
       className := "m-1",
       className := "card game-panel",
       className := "fs-5",
@@ -868,11 +932,78 @@ object MainForm {
       maxWidth.px := ResourcesWidth,
       div(
         className := "card-header",
-        "Resources",
+        span(className := "desktop-resource-heading", "Resources"),
+        button(
+          typ := "button",
+          className := "mobile-resource-toggle",
+          aria.controls := "resource-details",
+          aria.expanded <-- expanded.signal,
+          aria.label <-- expanded.signal.map(
+            if (_) "Collapse resource details" else "Expand resource details"
+          ),
+          onMountCallback(ctx => toggle.set(Some(ctx.thisNode.ref))),
+          expanded.signal.combineWith(toggle.signal) --> { case (open, button) =>
+            button.foreach { element =>
+              if (open) element.removeAttribute("aria-describedby")
+              else element.setAttribute("aria-describedby", "compact-resource-summary")
+            }
+          },
+          onClick --> (_ => setExpanded(!expanded.now())),
+          span(
+            className := "resource-summary-heading",
+            span("Resources"),
+            span(aria.hidden := true, child.text <-- expanded.signal.map(if (_) "▴" else "▾")),
+          ),
+          span(
+            className := "compact-resources",
+            idAttr := "compact-resource-summary",
+            compactResource("Sugar", sugarSignal, TickCalculator.displayedSugarRate),
+            compactResource(
+              "Tunneling Space",
+              tunnelingSpaceSignal,
+              TickCalculator.tunnelingSpaceTickGain.sum,
+              unlocksSignal.map(_.resources.showTunnelingSpace)
+            ),
+            compactResource(
+              "Protein",
+              proteinSignal,
+              TickCalculator.displayedProteinRate,
+              proteinVisibleSignal
+            ),
+            compactResource(
+              "Water",
+              waterSignal,
+              TickCalculator.waterTickGain.sum,
+              unlocksSignal.map(_.resources.showWater)
+            ),
+            compactResource(
+              "Resin",
+              resinSignal,
+              TickCalculator.resinTickGain.sum,
+              unlocksSignal.map(_.resources.showResin)
+            ),
+            compactResource(
+              "Knowledge",
+              knowledgeSignal,
+              Val(0L),
+              unlocksSignal.map(_.resources.showKnowledge),
+              hasTiming = false
+            ),
+            compactResource(
+              "Ants",
+              populationResourceSignal,
+              Val(0L),
+              unlocksSignal.map(_.resources.showWorkers),
+              hasTiming = false
+            ),
+          ),
+        ),
       ),
       catchUpDiv,
       div(
         className := "card-body",
+        idAttr := "resource-details",
+        onMountCallback(ctx => details.set(Some(ctx.thisNode.ref))),
         child.maybe <-- createResourceDiv(
           name = "Sugar",
           netRateSignal = Some(TickCalculator.displayedSugarRate),
@@ -1044,6 +1175,56 @@ object MainForm {
         ),
       )
     )
+  }
+
+  private def compactResource(
+      name: String,
+      resource: Signal[BasicResource],
+      rate: Signal[Long],
+      visible: Signal[Boolean] = Val(true),
+      hasTiming: Boolean = true,
+  ): Modifier[ReactiveHtmlElement[HTMLSpanElement]] =
+    child.maybe <-- visible.distinct.map { show =>
+      Option.when(show) {
+        val amounts = resource
+          .map(r =>
+            if (hasTiming || name == "Knowledge") resourceAmountStr(r.amount)
+            else prettyNumberStr(r.amount)
+          )
+          .distinct
+        val timing = resource
+          .combineWith(rate)
+          .map { case (r, net) =>
+            Option.when(hasTiming)(ResourceTiming.estimate(r, net)).flatten
+          }
+          .distinct
+        val description = amounts.combineWith(timing).map { case (amount, estimate) =>
+          s"$name: $amount${estimate.fold("")(e => s", ${e.text}")}"
+        }
+        span(
+          className := "compact-resource",
+          dataAttr("resource") := name,
+          className("at-capacity") <-- resource.map(_.atCapacity).distinct,
+          className("running-low") <-- timing.map(_.exists(_.toEmpty)),
+          aria.label <-- description,
+          title <-- description,
+          ResourceIcons.forLabel(name).map(ResourceIcons.icon),
+          span(className := "visually-hidden", s"$name: "),
+          span(className := "compact-resource-value", child.text <-- amounts),
+          small(
+            className := "compact-resource-warning",
+            child.text <-- timing.map {
+              case Some(ResourceTiming.Estimate(true, ticks)) if ticks > 0L =>
+                s"~${prettyTimeFromTicks(ticks)} left"
+              case Some(ResourceTiming.Estimate(false, ticks)) if ticks > 0L =>
+                s"Full ~${prettyTimeFromTicks(ticks)}"
+              case Some(estimate) => estimate.text
+              case None           => ""
+            },
+          ),
+        )
+      }
+    }
 
   private def createResourceDiv(
       name: String,
@@ -1917,14 +2098,7 @@ object MainForm {
         }),
       div(
         className := "col-12 nest-chambers",
-        display <-- unlocksSignal.combineWith(nurseryUnlockedSignal).map {
-          case (unlocks, nursery) =>
-            val actions = unlocks.actions
-            if (
-              actions.canBuildNestUpgrade || actions.canBuildQueenChamber || actions.canBuildFoodStorageChamber || nursery
-            ) "block"
-            else "none"
-        },
+        display <-- chambersVisible.map(if (_) "block" else "none"),
         h5(className := "mt-3", "Chambers"),
         child.maybe <-- nestSignal.map(n => (Midden.visible(n), n.middenBuilt)).distinct.map {
           case (_, true) =>

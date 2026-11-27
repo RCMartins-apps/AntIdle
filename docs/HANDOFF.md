@@ -2,10 +2,11 @@
 
 ## 2026-11-27
 
-Explore map selection, scouting, hauling, trails, relocation and mission displays
-now live in ExploreView. The component uses the existing action builders and
-game signals. MainForm still owns the surrounding tab layout.
+Mobile resource chips and disclosure now render from the game's reactive
+resource state. Navigation publishes view changes directly and receives tab
+availability from the same unlock signals as the desktop controls. The mobile
+checks exercise real colony states for timing and unlock changes.
 
-Verified the development build and map browser gate at 320px, 390px and 1280px,
-including trails, aphid relocation and territory scenarios. See
-[issue #141](https://github.com/RCMartins-apps/AntIdle/issues/141).
+Verified the development build, mobile navigation at 320px and 390px, and
+resource layout, timing, catch-up, and resize checks at 320px, 390px and 1280px.
+See [issue #140](https://github.com/RCMartins-apps/AntIdle/issues/140).
