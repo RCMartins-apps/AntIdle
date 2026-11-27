@@ -61,7 +61,7 @@ def check(page, width, url):
     ants_icon=page.locator('.resource-row').filter(has=page.get_by_text('Ants',exact=True)).locator('.resource-icon-colony path')
     assert page.locator('.mobile-bottom-nav [data-destination=nest] svg path').get_attribute('d') == ants_icon.get_attribute('d')
     expect(idle).to_have_text('Idle 2')
-    assert page.locator('.idle-worker-summary').evaluate("el => !!(el.compareDocumentPosition(document.querySelector('.small-worker-tasks')) & Node.DOCUMENT_POSITION_PRECEDING)")
+    assert idle.evaluate("el => !!(el.compareDocumentPosition(document.querySelector('.small-worker-tasks')) & Node.DOCUMENT_POSITION_PRECEDING)")
     heading.click()
     expect(page.get_by_role('button',name='Assign small Tunneler',exact=True)).not_to_be_visible()
     page.clock.run_for(600)

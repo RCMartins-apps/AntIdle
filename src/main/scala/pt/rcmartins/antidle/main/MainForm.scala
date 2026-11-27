@@ -2990,9 +2990,11 @@ object MainForm {
                     .map(task => taskDiv(task))
                 )
               ),
+              StaffingView.workers,
             )
           )
         ),
+      StaffingView.otherCastes,
     )
 
   private def smallWorkerTasks: ReactiveHtmlElement[HTMLDivElement] = div(
