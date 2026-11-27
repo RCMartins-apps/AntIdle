@@ -2,10 +2,10 @@
 
 ## 2026-11-27
 
-Each tab remembers the save revision it loaded. A stale tab can export its
-colony or load the newer save. Web Locks serialize simultaneous writes where
-available. Older browsers still compare the stored revision before writing.
+The Workshop lists direct and indirect dependent research for the selected
+upgrade. The list follows draft prerequisite edits and opens the selected
+dependent's editor.
 
-Verified the production build, concurrent and stale save checks at 390px,
-preview-slot isolation, and offline round trips at 390px and 1280px. See
-[issue #158](https://github.com/RCMartins-apps/AntIdle/issues/158).
+Verified the real-catalog Workshop browser suite, including an empty list,
+live edge removal and reversion, and mobile layout at 390px. The catalog
+bundle was reused because the changes are in the Workshop UI.
