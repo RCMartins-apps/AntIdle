@@ -24,7 +24,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 def expand_resources(page):
     """Open the full panel when a regression inspects rates or resource details."""
-    expect(page.locator('[data-mobile-resources=ready]')).to_be_attached()
+    expect(page.locator('.resources-column .game-panel')).to_be_attached()
     toggle = page.get_by_role('button', name='Expand resource details', exact=True)
     if toggle.is_visible():
         toggle.click()
