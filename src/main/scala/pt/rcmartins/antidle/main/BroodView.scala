@@ -533,17 +533,21 @@ private[main] object BroodView {
             queenRoutineControls
           },
         ),
-        child.maybe <-- antsSignal.map(_.ages.active).distinct.map(active =>
-          Option.when(active)(
-            div(
-              className := "colony-aging small mb-2",
-              child.text <-- antsSignal.combineWith(currentTickSignal).map {
-                case (ants, tick) => PopulationAging.forecast(ants, tick)
-              }
+        child.maybe <-- antsSignal
+          .map(_.ages.active)
+          .distinct
+          .map(active =>
+            Option.when(active)(
+              div(
+                className := "colony-aging small mb-2",
+                child.text <-- antsSignal.combineWith(currentTickSignal).map { case (ants, tick) =>
+                  PopulationAging.forecast(ants, tick)
+                }
+              )
             )
-          )
-        ),
+          ),
       ),
     )
   }
+
 }

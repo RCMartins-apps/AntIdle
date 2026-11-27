@@ -14,7 +14,9 @@ private[main] object WikiView {
       sectionTag(
         h5("Brood"),
         h6("Egg orders"),
-        p("Egg orders share the queen’s laying queue. Supplies are paid when laying starts. All development stages occupy brood places."),
+        p(
+          "Egg orders share the queen’s laying queue. Supplies are paid when laying starts. All development stages occupy brood places."
+        ),
         h6("Larval care"),
         p(
           className := "brood-feeding",
@@ -27,31 +29,46 @@ private[main] object WikiView {
         child.maybe <-- ifUnlockedOpt(nestSignal.map(BroodProgression.priorityAvailable).distinct)(
           div(
             h6("Brood priority"),
-            p("When care is limited, the chosen brood gets a larger share. Other brood still gets care. Egg orders keep their place.")
+            p(
+              "When care is limited, the chosen brood gets a larger share. Other brood still gets care. Egg orders keep their place."
+            )
           )
         ),
-        child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked).distinct)(
+        child.maybe <-- ifUnlockedOpt(
+          upgradesSignal.map(_(UpgradeType.QueensRoutine).unlocked).distinct
+        )(
           div(
             h6("Queen’s Routine"),
-            p("The routine keeps your worker target while respecting the sugar reserve. Adults, developing workers, and manual worker orders count toward the target. Scout orders stay manual."),
-            p("Aging vacancies are refilled from the idle or default pool. If the colony runs out of workers, the queen can gather supplies to raise one emergency worker without an open brood place.")
+            p(
+              "The routine keeps your worker target while respecting the sugar reserve. Adults, developing workers, and manual worker orders count toward the target. Scout orders stay manual."
+            ),
+            p(
+              "Aging vacancies are refilled from the idle or default pool. If the colony runs out of workers, the queen can gather supplies to raise one emergency worker without an open brood place."
+            )
           )
         )
       ),
       child.maybe <-- ifUnlockedOpt(antsSignal.map(_.ages.active).distinct)(
         sectionTag(
           h5("Aging"),
-          p(child.text <-- upgradesSignal.map(upgrades =>
-            s"New adults live ${PopulationAging.lifespanText(upgrades)} minutes of simulated time. Aging continues during expeditions and carcass retrievals. Overdue ants die on return."
-          )),
-          p("Stored-time multipliers advance aging with the colony. Deaths are summarized once per minute.")
+          p(
+            child.text <-- upgradesSignal.map(upgrades =>
+              s"New adults live ${PopulationAging.lifespanText(upgrades)} minutes of simulated time. Aging continues during expeditions and carcass retrievals. Overdue ants die on return."
+            )
+          ),
+          p(
+            "Stored-time multipliers advance aging with the colony. Deaths are summarized once per minute."
+          )
         )
       ),
       child.maybe <-- ifUnlockedOpt(nestSignal.map(Midden.visible).distinct)(
         sectionTag(
           h5("Waste"),
-          p("Larval feeding creates waste. High waste closes brood places to new eggs. Waste Carriers clear it.")
+          p(
+            "Larval feeding creates waste. High waste closes brood places to new eggs. Waste Carriers clear it."
+          )
         )
       )
     )
+
 }
