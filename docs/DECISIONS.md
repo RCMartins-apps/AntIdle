@@ -62,6 +62,7 @@ the game's direction and [Ideas](IDEAS.md) for proposals.
 - **D64 · Purchased upgrades.** A purchased sub-tab shows its list directly. Expanded details span the row without moving the label or button.
 - **Egg-order counts.** Use caste icon then count, including on the next-egg timer. Raise actions show queued, developing, and adult counts. Show the accessible cancel control only when there are outstanding orders.
 - **Build queue.** Keep cancel separate from entry names. Show level transitions and sequential affordability estimates where feasible. Affordable entries build on the next tick. On phones the queue belongs on Chambers, and automation controls need usable touch targets.
+- **Chamber order.** List founding infrastructure first, then Nursery and Waste, then Aphid, Replete, and Royal Nursery construction. Use the same relative order as choices unlock. Queue entries follow the player's build choices.
 
 ## Development workflow
 

@@ -1422,43 +1422,18 @@ object MainForm {
     div(
       className := "row",
       BroodView.render,
-      child.maybe <-- nestSignal
-        .combineWith(upgradesSignal)
-        .map { case (nest, upgrades) =>
-          Option.when(
-            upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0
-          )(nest.royalBroodSlots > 0)
-        }
-        .distinct
-        .map(_.map { built =>
-          div(
-            className := "col-12 nest-royal-nursery border-top my-2 py-2",
-            infoHeading(
-              "Royal brood",
-              div(
-                "Up to five Royal Nurses tend one daughter queen. Full staffing takes about 10 minutes. Care pauses when supplies run out; progress is kept."
-              )
-            ),
-            if (built) royalRearingDiv
-            else
-              div(
-                className := "row",
-                actionButton(
-                  name = "Royal Nursery",
-                  enabledSignal =
-                    constructionBlockedSignal(ChamberType.RoyalNursery).map(_.isEmpty),
-                  blockedReasonSignal = constructionBlockedSignal(ChamberType.RoyalNursery),
-                  costSignal = Val(RoyalNurseryProgression.buildCost),
-                  bonusSignal = Val(ChamberBonuses.forChamber(ChamberType.RoyalNursery)),
-                  descriptionSignal = Val(None),
-                  onClickAction = _ =>
-                    Actions.addBuildTask(
-                      BuildTask(ChamberType.RoyalNursery, RoyalNurseryProgression.buildCost)
-                    ),
-                ),
-              ),
-          )
-        }),
+      child.maybe <-- ifUnlockedOpt(nestSignal.map(_.royalBroodSlots > 0).distinct) {
+        div(
+          className := "col-12 nest-royal-nursery border-top my-2 py-2",
+          infoHeading(
+            "Royal brood",
+            div(
+              "Up to five Royal Nurses tend one daughter queen. Full staffing takes about 10 minutes. Care pauses when supplies run out; progress is kept."
+            )
+          ),
+          royalRearingDiv,
+        )
+      },
       child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)) {
         div(
           className := "col-12 nest-repletes border-top my-2 py-2",
@@ -1627,6 +1602,7 @@ object MainForm {
         h5(className := "mt-3", "Chambers"),
         div(
           className := "row",
+          // Progression order: founding infrastructure, brood maintenance, then specializations.
           child.maybe <-- standardBuyChamber(
             name = ChamberType.Nest.name,
             chamberType = ChamberType.Nest,
@@ -1642,46 +1618,6 @@ object MainForm {
             chamberType = ChamberType.FoodStorage,
             visible = unlocksSignal.map(_.actions.canBuildFoodStorageChamber).distinct,
           ),
-          child.maybe <-- ifUnlockedOpt(
-            upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)
-          ) {
-            val cost = Actions.buildChamberCost(ChamberType.Replete)
-            actionButton(
-              name = ChamberType.Replete.name,
-              enabledSignal = constructionBlockedSignal(ChamberType.Replete).map(_.isEmpty),
-              blockedReasonSignal = constructionBlockedSignal(ChamberType.Replete),
-              descriptionSignal = Val(None),
-              costSignal = cost,
-              bonusSignal = Actions.getActionBonus(ChamberType.Replete),
-              topRightBadgeSignal = chambersSignal.map(c =>
-                Option.when(c.repleteChamber.level > 0)(span(c.repleteChamber.level))
-              ),
-              onClickAction = _ =>
-                useSignalValue[ActionCost](
-                  cost,
-                  c => Actions.addBuildTask(BuildTask(ChamberType.Replete, c))
-                ),
-            )
-          },
-          child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.AphidTending).unlocked)) {
-            val cost = Actions.buildChamberCost(ChamberType.Aphid)
-            actionButton(
-              name = ChamberType.Aphid.name,
-              enabledSignal = constructionBlockedSignal(ChamberType.Aphid).map(_.isEmpty),
-              blockedReasonSignal = constructionBlockedSignal(ChamberType.Aphid),
-              descriptionSignal = Val(None),
-              costSignal = cost,
-              bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
-              topRightBadgeSignal = chambersSignal.map(chambers =>
-                Option.when(chambers.aphidChamber.level > 0)(span(chambers.aphidChamber.level))
-              ),
-              onClickAction = _ =>
-                useSignalValue[ActionCost](
-                  cost,
-                  cost => Actions.addBuildTask(BuildTask(ChamberType.Aphid, cost))
-                ),
-            )
-          },
           child.maybe <-- standardBuyChamber(
             name = ChamberType.Nursery.name,
             chamberType = ChamberType.Nursery,
@@ -1691,6 +1627,27 @@ object MainForm {
             name = ChamberType.Waste.name,
             chamberType = ChamberType.Waste,
             visible = nestSignal.map(Midden.visible).distinct,
+          ),
+          // Aphid research is reached through earlier exploration than living water storage.
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Aphid.name,
+            chamberType = ChamberType.Aphid,
+            visible = upgradesSignal.map(_(UpgradeType.AphidTending).unlocked).distinct,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Replete.name,
+            chamberType = ChamberType.Replete,
+            visible = upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked).distinct,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.RoyalNursery.name,
+            chamberType = ChamberType.RoyalNursery,
+            visible = nestSignal
+              .combineWith(upgradesSignal)
+              .map { case (nest, upgrades) =>
+                nest.royalBroodSlots == 0 && upgrades(UpgradeType.RoyalNurseryPlanning).unlocked
+              }
+              .distinct,
           ),
         ),
       ),
