@@ -206,6 +206,13 @@ See [CI handoff setup](docs/CI-WORKFLOW.md). Do not change protection requiremen
 or bypass checks merely to queue a merge. If setup is missing, report it and use
 normal checked merging for an explicitly authorized merge request.
 
+Check the label on every issue addressed by a PR. If any issue or the PR
+itself carries `needs-manual-testing`, leave auto-merge disabled and wait for
+the owner's explicit approval of the latest revision before merging. Share
+the playable preview when available. If the branch changes after approval,
+ask the owner to approve the new revision. For other PRs with no hold, use
+the checked auto-merge process above.
+
 Whenever creating or handing off a PR, include both its GitHub link and its
 playable preview link: https://rcmartins-apps.github.io/AntIdle/pr-preview/pr-N/.
 The first line of every PR description must be its Markdown preview link, using
