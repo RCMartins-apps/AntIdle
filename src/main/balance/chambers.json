@@ -139,6 +139,12 @@
       }
     ]
   },
+  "Waste": {
+    "costs": {
+      "sugar": { "base": 12000000, "perLevel": 3000000 },
+      "tunnelingSpace": { "base": 7500000, "perLevel": 1500000 }
+    }
+  },
   "RoyalNursery": {
     "costs": {
       "sugar": {

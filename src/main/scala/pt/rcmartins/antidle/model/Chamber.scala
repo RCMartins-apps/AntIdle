@@ -50,6 +50,10 @@ object Chamber {
       val name: String = "Nursery Chamber"
     }
 
+    case object Waste extends ChamberType {
+      val name: String = "Waste Chamber"
+    }
+
     case object RoyalNursery extends ChamberType {
       val name: String = "Royal Nursery"
     }
@@ -120,6 +124,15 @@ object Chamber {
   object RepleteChamber {
     implicit val decoder: JsonDecoder[RepleteChamber] = DeriveJsonDecoder.gen[RepleteChamber]
     implicit val encoder: JsonEncoder[RepleteChamber] = DeriveJsonEncoder.gen[RepleteChamber]
+  }
+
+  case class WasteChamber(level: Int) extends Chamber {
+    val chamberType: ChamberType = ChamberType.Waste
+  }
+
+  object WasteChamber {
+    implicit val decoder: JsonDecoder[WasteChamber] = DeriveJsonDecoder.gen[WasteChamber]
+    implicit val encoder: JsonEncoder[WasteChamber] = DeriveJsonEncoder.gen[WasteChamber]
   }
 
   case class RoyalNurseryChamber(level: Int) extends Chamber {

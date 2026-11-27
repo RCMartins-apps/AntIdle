@@ -2,7 +2,7 @@
 
 ## Waste and colony maintenance
 
-The [current refuse loop](../README.md#nest-refuse) links larval feeding to
+The [current refuse loop](../README.md#nest-waste) links larval feeding to
 temporary brood-place pressure. Test it with an occasional breeder, a colony
 running at full brood throughput, and a player returning to a full buffer.
 Look for a meaningful choice between extra buffer space, carrier staffing,

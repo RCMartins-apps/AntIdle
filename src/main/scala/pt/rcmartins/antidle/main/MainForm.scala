@@ -17,7 +17,6 @@ import pt.rcmartins.antidle.game._
 import pt.rcmartins.antidle.game.saves.SaveLoad
 import pt.rcmartins.antidle.model.BasicResources.BasicResource
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.Unlocks.ActionUnlocks
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import pt.rcmartins.antidle.model._
 
@@ -1398,9 +1397,9 @@ object MainForm {
     def standardBuyChamber(
         name: String,
         chamberType: ChamberType,
-        unlockF: ActionUnlocks => Boolean,
+        visible: Signal[Boolean],
     ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] =
-      ifUnlockedOpt(unlocks => unlockF(unlocks.actions)) {
+      ifUnlockedOpt(visible) {
         val chamberSignal = Actions.getChamber(chamberType)
         val actionCost = Actions.buildChamberCost(chamberType)
         actionButton(
@@ -1626,50 +1625,22 @@ object MainForm {
         className := "col-12 nest-chambers",
         display <-- chambersVisible.map(if (_) "block" else "none"),
         h5(className := "mt-3", "Chambers"),
-        child.maybe <-- nestSignal.map(n => (Midden.visible(n), n.middenBuilt)).distinct.map {
-          case (_, true) =>
-            Some(
-              div(
-                className := "midden-status border rounded p-2 my-2",
-                b("Sealed Refuse Chamber"),
-                div(
-                  className := "small",
-                  prettyNumberSimple("+", Midden.AddedCapacity, " refuse capacity")
-                )
-              )
-            )
-          case (true, false) =>
-            Some(
-              div(
-                className := "row",
-                actionButton(
-                  name = "Build Sealed Refuse Chamber",
-                  enabledSignal = snapshotSignal.map(Midden.canBuild),
-                  costSignal = Val(Midden.Cost),
-                  bonusSignal = Val(ActionBonus(maxRefuse = Midden.AddedCapacity)),
-                  descriptionSignal = Val(None),
-                  onClickAction = _ => Actions.buildMidden()
-                )
-              )
-            )
-          case _ => None
-        },
         div(
           className := "row",
           child.maybe <-- standardBuyChamber(
             name = ChamberType.Nest.name,
             chamberType = ChamberType.Nest,
-            unlockF = _.canBuildNestUpgrade,
+            visible = unlocksSignal.map(_.actions.canBuildNestUpgrade).distinct,
           ),
           child.maybe <-- standardBuyChamber(
             name = ChamberType.Queen.name,
             chamberType = ChamberType.Queen,
-            unlockF = _.canBuildQueenChamber,
+            visible = unlocksSignal.map(_.actions.canBuildQueenChamber).distinct,
           ),
           child.maybe <-- standardBuyChamber(
             name = ChamberType.FoodStorage.name,
             chamberType = ChamberType.FoodStorage,
-            unlockF = _.canBuildFoodStorageChamber,
+            visible = unlocksSignal.map(_.actions.canBuildFoodStorageChamber).distinct,
           ),
           child.maybe <-- ifUnlockedOpt(
             upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)
@@ -1711,25 +1682,16 @@ object MainForm {
                 ),
             )
           },
-          child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
-            val cost = Actions.buildChamberCost(ChamberType.Nursery)
-            actionButton(
-              name = "Nursery Chamber",
-              enabledSignal = constructionBlockedSignal(ChamberType.Nursery).map(_.isEmpty),
-              blockedReasonSignal = constructionBlockedSignal(ChamberType.Nursery),
-              descriptionSignal = Val(None),
-              costSignal = cost,
-              bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
-              topRightBadgeSignal = chambersSignal.map(chambers =>
-                Option.when(chambers.nurseryChamber.level > 0)(span(chambers.nurseryChamber.level))
-              ),
-              onClickAction = _ =>
-                useSignalValue[ActionCost](
-                  cost,
-                  cost => Actions.addBuildTask(BuildTask(ChamberType.Nursery, cost))
-                ),
-            )
-          },
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Nursery.name,
+            chamberType = ChamberType.Nursery,
+            visible = nurseryUnlockedSignal,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Waste.name,
+            chamberType = ChamberType.Waste,
+            visible = nestSignal.map(Midden.visible).distinct,
+          ),
         ),
       ),
     )
@@ -2921,7 +2883,7 @@ object MainForm {
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " sugar capacity")),
           ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " protein capacity")),
           ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " water capacity")),
-          ifGreater0(bonus.maxRefuse)(prettyNumberSimple("+", _, " refuse capacity")),
+          ifGreater0(bonus.maxRefuse)(prettyNumberSimple("+", _, " waste capacity")),
           ifGreater0(bonus.repleteSlots.toLong)(value =>
             s"+$value replete ${if (value == 1) "slot" else "slots"}"
           ),
@@ -3320,7 +3282,7 @@ object MainForm {
           )
         )
       case AntTask.RefuseCarrier =>
-        small(className := "job-rate", s"−${Midden.ClearPerSecond / u} refuse/s")
+        small(className := "job-rate", s"−${Midden.ClearPerSecond / u} waste/s")
       case _ => emptyNode
     }
 
