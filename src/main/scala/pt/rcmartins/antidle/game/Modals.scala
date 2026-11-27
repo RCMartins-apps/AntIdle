@@ -11,6 +11,25 @@ object Modals {
 
   def importModal()(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val dataVar: Var[String] = Var("")
+    val fileSource = Var(Option.empty[(String, String)])
+    val reading = Var(false)
+    val fileError = Var(Option.empty[String])
+    def readFile(file: File): Unit = {
+      val reader = new FileReader()
+      reading.set(true)
+      fileError.set(None)
+      fileSource.set(None)
+      dataVar.set("")
+      reader.onload = _ => {
+        fileSource.set(Some(file.name -> reader.result.asInstanceOf[String]))
+        reading.set(false)
+      }
+      reader.onerror = _ => {
+        fileError.set(Some("The backup file could not be read."))
+        reading.set(false)
+      }
+      reader.readAsText(file)
+    }
     div(
       className := "modal fade",
       idAttr := Constants.ImportModalId,
@@ -25,20 +44,54 @@ object Modals {
             button(
               typ("button"),
               className("btn-close"),
+              aria.label := "Close import",
               DataBSDismissAttr("modal"),
+              minHeight.px := 44,
+              minWidth.px := 44,
             ),
           ),
           div(
             className := "modal-body",
-            p("Paste a colony save or simulator checkpoint."),
+            label(forId := "colony-backup-file", className := "form-label", "Import file"),
+            input(
+              idAttr := "colony-backup-file",
+              typ := "file",
+              className := "form-control mb-2",
+              disabled <-- reading.signal,
+              inContext { element =>
+                onChange --> { _ =>
+                  val files = element.ref.files
+                  if (files != null && files.length > 0) readFile(files(0))
+                  element.ref.value = ""
+                }
+              }
+            ),
+            child.maybe <-- fileError.signal.map(
+              _.map(message => p(className := "text-danger", role := "alert", message))
+            ),
+            child.maybe <-- fileSource.signal.map(
+              _.map { case (name, _) =>
+                p(
+                  className := "small text-body-secondary text-break",
+                  role := "status",
+                  s"Selected: $name"
+                )
+              }
+            ),
+            p("Or paste a colony save or simulator checkpoint."),
             textArea(
               className := "form-control",
               placeholder := "Save data",
               rows := 10,
               cols := 50,
               value <-- dataVar.signal,
+              disabled <-- reading.signal,
             ).amendThis { elem =>
-              onInput.mapTo(elem.ref.value) --> dataVar.writer
+              onInput --> { _ =>
+                fileSource.set(None)
+                fileError.set(None)
+                dataVar.set(elem.ref.value)
+              }
             }
           ),
           div(
@@ -47,14 +100,17 @@ object Modals {
               typ := "button",
               className := "btn btn-secondary",
               DataBSDismissAttr("modal"),
+              minHeight.px := 44,
+              disabled <-- reading.signal,
               onClick --> { _ =>
-                val raw = dataVar.now()
+                val raw = fileSource.now().fold(dataVar.now())(_._2)
                 SaveLoad.withWriteLock {
                   SaveLoad
                     .decode(raw)
                     .flatMap(data => SaveLoad.saveToLocalStorage(data).map(_ => data))
                     .fold(SaveLoad.showError, data => SaveLoad.reloadDataFromLoadedSave(data))
                 }
+                fileSource.set(None)
                 dataVar.set("")
               },
               "Import",
@@ -63,8 +119,10 @@ object Modals {
               typ := "button",
               className := "btn btn-primary",
               DataBSDismissAttr("modal"),
+              minHeight.px := 44,
+              disabled <-- reading.signal,
               onClick --> { _ =>
-                val raw = dataVar.now()
+                val raw = fileSource.now().fold(dataVar.now())(_._2)
                 Utils.useSignalValue[AllData](
                   Utils.snapshotSignal,
                   current =>
@@ -72,6 +130,7 @@ object Modals {
                       SaveLoad.openCheckpoint(raw, current).left.foreach(SaveLoad.showError)
                     }
                 )
+                fileSource.set(None)
                 dataVar.set("")
               },
               "Open in playtest slot",

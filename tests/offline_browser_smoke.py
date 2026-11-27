@@ -52,6 +52,61 @@ def founding_workers(page):
     return ants['smallWorkers'] // UNIT + ants['eggOrders'] + len(ants['eggsAndLarvae'])
 
 
+def check_backup_file(page, width, regular):
+    select_tab(page, 'Settings')
+    with page.expect_download() as event:
+        page.get_by_role('button', name='Download backup', exact=True).click()
+    backup = event.value
+    assert backup.suggested_filename == 'antidle-colony.save.txt'
+    downloaded = json.loads(base64.b64decode(backup.path().read_bytes()))
+    assert downloaded['world']['saveSeed'] == regular['world']['saveSeed']
+    assert downloaded['basicResources']['sugar']['amount'] == regular['basicResources']['sugar']['amount']
+
+    def open_import():
+        page.locator('#settingsContent').get_by_role('button', name='Import', exact=True).click()
+        modal = page.get_by_role('dialog')
+        expect(modal).to_be_visible()
+        assert page.evaluate('document.documentElement.scrollWidth') <= width
+        if width <= 767:
+            for button in modal.get_by_role('button').all():
+                assert round(button.bounding_box()['height'], 2) >= 44, (button.bounding_box(), button.evaluate('element => element.outerHTML'))
+        return modal
+
+    prior = read_saved_slot(page)
+    modal = open_import()
+    source = modal.get_by_placeholder('Save data')
+    source.fill('retained after cancel')
+    modal.get_by_label('Import file', exact=True).dispatch_event('cancel')
+    expect(source).to_have_value('retained after cancel')
+    assert read_saved_slot(page) == prior
+    modal.get_by_label('Import file', exact=True).set_input_files(
+        {'name': 'malformed.txt', 'mimeType': 'text/plain', 'buffer': b'not a colony save!'}
+    )
+    expect(modal.get_by_role('status')).to_have_text('Selected: malformed.txt')
+    expect(source).to_have_value('')
+    modal.get_by_role('button', name='Import', exact=True).click()
+    expect(page.get_by_text('The colony save is malformed.', exact=True)).to_be_visible()
+    expect(modal).not_to_be_visible()
+    assert read_saved_slot(page) == prior
+
+    modal = open_import()
+    modal.get_by_label('Import file', exact=True).set_input_files(
+        {'name': backup.suggested_filename, 'mimeType': 'text/plain', 'buffer': backup.path().read_bytes()}
+    )
+    expect(modal.get_by_role('status')).to_have_text('Selected: antidle-colony.save.txt')
+    if width == 390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        output = Path(os.environ['ANTIDLE_ARTIFACTS'])
+        output.mkdir(parents=True, exist_ok=True)
+        modal.screenshot(path=str(output / 'backup-import-390.png'))
+    expect(modal.get_by_placeholder('Save data')).to_have_value('')
+    modal.get_by_role('button', name='Import', exact=True).click()
+    expect(page.get_by_text('Game Loaded!', exact=True)).to_be_visible()
+    expect(modal).not_to_be_visible()
+    restored = json.loads(base64.b64decode(read_saved_slot(page)))
+    assert restored['ants'] == downloaded['ants']
+    assert restored['world']['saveSeed'] == downloaded['world']['saveSeed']
+
+
 def check_playtest_slot(page, width, regular):
     checkpoint = copy.deepcopy(regular)
     checkpoint['basicResources']['sugar']['amount'] = 3 * UNIT
@@ -59,7 +114,10 @@ def check_playtest_slot(page, width, regular):
     # Both slot switches and the reload must work through the release cache.
     select_tab(page, 'Settings')
     page.get_by_role('button', name='Import', exact=True).click()
-    page.get_by_placeholder('Save data').fill(json.dumps(checkpoint))
+    page.get_by_label('Import file', exact=True).set_input_files(
+        {'name': 'checkpoint.json', 'mimeType': 'application/json', 'buffer': json.dumps(checkpoint).encode()}
+    )
+    expect(page.get_by_role('dialog').get_by_role('status')).to_have_text('Selected: checkpoint.json')
     page.get_by_role('button', name='Open in playtest slot', exact=True).click()
     expect(page.get_by_text('Playtest colony', exact=True)).to_be_visible()
     assert_fits(page, width)
@@ -162,7 +220,9 @@ def check(context, width, server, root):
         expect(small).to_have_css('background-color', 'rgb(13, 110, 253)')
         small.click()
         assert founding_workers(page) == 2
-        check_playtest_slot(page, width, save_game(page))
+        regular = save_game(page)
+        check_backup_file(page, width, regular)
+        check_playtest_slot(page, width, regular)
         # Updating must not reload an open game or mix its HTML and JS releases.
         context.set_offline(False)
         server.release = b

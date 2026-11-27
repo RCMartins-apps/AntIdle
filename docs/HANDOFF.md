@@ -2,12 +2,12 @@
 
 ## 2026-11-27
 
-The Build Queue has keyboard- and touch-accessible move controls. Reordering
-uses the existing queue repricing and estimates, and focus follows the moved
-entry. Cancel remains available.
+Settings downloads the current colony as a save file. The existing Import
+dialog accepts a file or pasted save data and preserves the active-slot and
+playtest destinations. Selecting a file shows its name before confirmation.
 
-Verified formatting, the development build, and browser runs at 320px,
-390px, and 1280px. Two repeated Nest expansions moved ahead of an
-unaffordable Royal Nursery, kept valid prices after reload, and built in order.
+Verified formatting, the production build, and packaged browser tests at
+390px and 1280px. The tests downloaded and restored a backup offline,
+checked cancel and malformed-file handling, and imported into playtest.
 
-See [issue #170](https://github.com/RCMartins-apps/AntIdle/issues/170).
+See [issue #171](https://github.com/RCMartins-apps/AntIdle/issues/171).

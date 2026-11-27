@@ -732,6 +732,21 @@ object MainForm {
       }
     }
 
+  private def downloadColonyBackup(): Unit =
+    actionUpdater.writer.onNext {
+      _.tap { allData =>
+        val blob = new dom.Blob(js.Array(SaveLoad.saveString(allData)))
+        val url = dom.URL.createObjectURL(blob)
+        val link = dom.document.createElement("a").asInstanceOf[HTMLAnchorElement]
+        link.href = url
+        link.download = "antidle-colony.save.txt"
+        dom.document.body.appendChild(link)
+        link.click()
+        link.remove()
+        scala.scalajs.js.timers.setTimeout(1000)(dom.URL.revokeObjectURL(url))
+      }
+    }
+
   private def settingsDiv: ReactiveHtmlElement[HTMLDivElement] = {
     def settingsButton(
         name: String,
@@ -798,6 +813,7 @@ object MainForm {
             .fold(SaveLoad.showError, SaveLoad.restore(_, manual = true))
       ),
       settingsButton("Export", () => exportColony()),
+      settingsButton("Download backup", () => downloadColonyBackup()),
       settingsButton(
         "Import",
         () => {
