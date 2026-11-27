@@ -2930,7 +2930,6 @@ object MainForm {
                     )
                   )
               ),
-              StaffingView.workers,
               div(
                 className := "standard-worker-jobs",
                 children <-- unlockedAntTasks.map(
@@ -2938,6 +2937,7 @@ object MainForm {
                     .map(task => taskDiv(task))
                 )
               ),
+              StaffingView.workers,
             )
           )
         ),
