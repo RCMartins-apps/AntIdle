@@ -2,13 +2,12 @@
 
 ## 2026-11-27
 
-The simulation tick no longer schedules or writes browser saves. The browser
-controller saves the first snapshot at the deadline after completing the
-batch, with one write attempt per batch and retry at the next interval.
+The Build Queue has keyboard- and touch-accessible move controls. Reordering
+uses the existing queue repricing and estimates, and focus follows the moved
+entry. Cancel remains available.
 
-Verified formatting, game and balance builds, and 40 focused Scala tests.
-A 30-minute balanced run at seed 42 produced identical run data before and
-after. Browser coverage verified normal autosave, a write failure and retry,
-and the saved snapshot at the first tick of a two-tick catch-up batch.
+Verified formatting, the development build, and browser runs at 320px,
+390px, and 1280px. Two repeated Nest expansions moved ahead of an
+unaffordable Royal Nursery, kept valid prices after reload, and built in order.
 
-See [issue #161](https://github.com/RCMartins-apps/AntIdle/issues/161).
+See [issue #170](https://github.com/RCMartins-apps/AntIdle/issues/170).

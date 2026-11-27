@@ -95,6 +95,15 @@ object Construction {
     if (index < 0 || index >= data.nestAttributes.buildQueue.size) data
     else reconcile(data.modify(_.nestAttributes.buildQueue).using(_.patch(index, Nil, 1)))
 
+  def move(data: AllData, from: Int, to: Int): AllData = {
+    val queue = data.nestAttributes.buildQueue
+    if (from == to || !queue.isDefinedAt(from) || !queue.isDefinedAt(to)) data
+    else {
+      val reordered = queue.patch(from, Nil, 1).patch(to, List(queue(from)), 0)
+      reconcile(data.modify(_.nestAttributes.buildQueue).setTo(reordered))
+    }
+  }
+
   def tick(data: AllData): AllData = {
     val ready = reconcile(data)
     ready.nestAttributes.buildQueue match {
