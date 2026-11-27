@@ -2,9 +2,11 @@
 
 ## 2026-11-27
 
-The GitHub web issue form asks for Why, Scope, and Acceptance on every
-submission. Mockup and References provide space for UI sketches and supporting
-context. The issue chooser uses the shared form.
+BroodView owns egg actions, the laying queue, brood priority, Queen’s Routine,
+and related warnings and help. It shares the existing action and disclosure
+helpers. MainForm keeps the chamber and royal brood screens.
 
-Verified both YAML files parse, the required sections match the backlog
-structure, and the diff has no whitespace errors.
+Verified formatting, the development build, and the maintained Brood browser
+checks at 320px, 390px, and 1280px.
+
+See [issue #160](https://github.com/RCMartins-apps/AntIdle/issues/160).
