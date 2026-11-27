@@ -240,7 +240,7 @@ class TerritorySuite extends FunSuite {
         held.exploration.territory.copy(ages = List(AgeCohort(1000L, 1L)))
       )
     )
-    val result = TickUpdater.updateAllData(alone, None)
+    val result = TickUpdater.updateAllData(alone)
     assertEquals(result.ants.workers, 0L)
     assertEquals(result.statistics.starvationDeaths.thisRun, 1)
     assert(!result.exploration.territory.held)
@@ -256,8 +256,7 @@ class TerritorySuite extends FunSuite {
       unlocks = held.unlocks.copy(actions = held.unlocks.actions.copy(canLayEggs = true))
     )
     val returned = TickUpdater.updateAllData(
-      d.copy(world = d.world.copy(currentTick = d.exploration.territory.nextContestTick - 1L)),
-      None
+      d.copy(world = d.world.copy(currentTick = d.exploration.territory.nextContestTick - 1L))
     )
     assertEquals(returned.ants.eggsAndLarvae.size, 1)
     assert(returned.ants.layingCooldown > 0L)

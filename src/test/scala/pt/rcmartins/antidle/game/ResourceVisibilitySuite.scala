@@ -49,7 +49,7 @@ class ResourceVisibilitySuite extends FunSuite {
       .toAllData
     assert(loaded.exploration.proteinDiscovered)
     val spent =
-      TickUpdater.updateAllData(loaded.copy(basicResources = initial.basicResources), None)
+      TickUpdater.updateAllData(loaded.copy(basicResources = initial.basicResources))
     assert(spent.exploration.proteinDiscovered)
   }
 
@@ -84,7 +84,7 @@ class ResourceVisibilitySuite extends FunSuite {
     val loaded = AllDataForSave.fromAllData(next).toAllData
     assertEquals(loaded.unlocks.resources, Unlocks.initial.resources)
     assert(!loaded.exploration.proteinDiscovered)
-    val ticked = TickUpdater.updateAllData(loaded, None)
+    val ticked = TickUpdater.updateAllData(loaded)
     assertEquals(ticked.unlocks.resources, Unlocks.initial.resources)
     assert(!ticked.exploration.proteinDiscovered)
     val protein = loaded.giveResources(protein = u)

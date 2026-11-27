@@ -66,7 +66,7 @@ class ColonyMilestonesSuite extends FunSuite {
       d.basicResources,
       d.statistics
     )
-    val next = TickUpdater.updateAllData(d, None)
+    val next = TickUpdater.updateAllData(d)
     assertEquals(next.basicResources.sugar.amount, forecast.sugar.amount)
     val gross = ColonyMilestones.sugar(Foraging.production(d.ants, d.upgrades), stats)
     assertEquals(

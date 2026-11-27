@@ -114,11 +114,11 @@ class RepleteSuite extends FunSuite {
       world = promoted.world.copy(currentTick = 299L),
       basicResources = promoted.basicResources.copy(water = BasicResource(180 * u, 200 * u))
     )
-    val lost = TickUpdater.updateAllData(dying, None)
+    val lost = TickUpdater.updateAllData(dying)
     assertEquals(lost.ants.repletes, 0L)
     assertEquals(lost.basicResources.water, BasicResource(180 * u, 100 * u))
     assertEquals(lost.statistics.repletesLostToAging.thisRun, 1)
-    val waiting = TickUpdater.updateAllData(lost, None).giveResources(water = 20 * u, sugar = u)
+    val waiting = TickUpdater.updateAllData(lost).giveResources(water = 20 * u, sugar = u)
     assertEquals(waiting.basicResources.water, lost.basicResources.water)
     assertEquals(waiting.statistics.waterU.thisRun, 0L)
     val loaded =
@@ -158,7 +158,7 @@ class RepleteSuite extends FunSuite {
         ages = ColonyAges(active = true, repletes = List(AgeCohort(18000L, 1L)))
       )
     )
-    val ticked = TickUpdater.updateAllData(isolated, None)
+    val ticked = TickUpdater.updateAllData(isolated)
     assertEquals(
       ticked.basicResources.sugar.amount,
       isolated.basicResources.sugar.amount - antsSugarUpkeepTick

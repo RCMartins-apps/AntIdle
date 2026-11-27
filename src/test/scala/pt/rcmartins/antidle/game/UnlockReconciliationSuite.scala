@@ -9,7 +9,7 @@ class UnlockReconciliationSuite extends FunSuite {
   test("browser action and headless ticks share persistent resource and action unlocks") {
     val fresh = AllData.initial.giveResources(sugar = 5L * u)
     val action = GameTransition.afterAction(fresh)
-    val tick = TickUpdater.updateAllData(fresh, None)
+    val tick = TickUpdater.updateAllData(fresh)
     assert(action.unlocks.actions.canLayEggs)
     assert(tick.unlocks.actions.canLayEggs)
     assert(

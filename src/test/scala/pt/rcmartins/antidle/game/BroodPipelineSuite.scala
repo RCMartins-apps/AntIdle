@@ -62,11 +62,10 @@ class BroodPipelineSuite extends FunSuite {
       ScoutProgression.upkeepPerTick(standard.ants, standard.exploration)
     )
     val tunneled = TickUpdater.updateAllData(
-      standard.copy(ants = standard.ants.copy(tasks = Seq(AntTask.Tunneler -> (4 * u)))),
-      None
+      standard.copy(ants = standard.ants.copy(tasks = Seq(AntTask.Tunneler -> (4 * u))))
     )
     val tinyTunnels =
-      TickUpdater.updateAllData(small.copy(ants = small.ants.copy(smallTunnelers = 4 * u)), None)
+      TickUpdater.updateAllData(small.copy(ants = small.ants.copy(smallTunnelers = 4 * u)))
     assertEquals(
       tinyTunnels.basicResources.tunnelingSpace.amount * 2L,
       tunneled.basicResources.tunnelingSpace.amount
@@ -314,7 +313,7 @@ class BroodPipelineSuite extends FunSuite {
         d.ants.standardWorkersUnlocked && d.ants.eggOrders == 0 && d.ants.eggsAndLarvae.isEmpty && d.ants.workers == 0L
       )
         d = BroodProgression.order(d, 1)
-      d = TickUpdater.updateAllData(d, None)
+      d = TickUpdater.updateAllData(d)
       if (d.ants.workers > 0L) firstStandardAt = d.currentTick
     }
     assert(
@@ -357,7 +356,7 @@ class BroodPipelineSuite extends FunSuite {
       d.exploration,
       d.basicResources
     )
-    val next = TickUpdater.updateAllData(d, None)
+    val next = TickUpdater.updateAllData(d)
     assertEquals(next.basicResources.sugar.amount, d.basicResources.sugar.amount)
     assertEquals(next.statistics.sugarU.thisRun - d.statistics.sugarU.thisRun, 2100L)
     assertEquals(

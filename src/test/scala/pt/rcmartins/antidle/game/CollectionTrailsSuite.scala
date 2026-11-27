@@ -342,7 +342,7 @@ class CollectionTrailsSuite extends FunSuite {
       d.exploration,
       d.basicResources
     )
-    val next = TickUpdater.updateAllData(d, None)
+    val next = TickUpdater.updateAllData(d)
     assertEquals(next.ants.royalBrood.get.careUnits, predicted.units)
     assert(predicted.units > 0L)
   }

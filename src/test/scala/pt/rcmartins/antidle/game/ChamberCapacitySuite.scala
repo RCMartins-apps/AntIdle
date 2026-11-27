@@ -25,7 +25,7 @@ class ChamberCapacitySuite extends FunSuite {
     val edited = ChamberBonuses.restoreCapacity(old, None, 750 * u, 350 * u)
     assertEquals(edited.basicResources.sugar, BasicResource(2900 * u, 2500 * u))
     assertEquals(edited.basicResources.tunnelingSpace, BasicResource(1900 * u, 1700 * u))
-    val ticked = TickUpdater.updateAllData(edited, None)
+    val ticked = TickUpdater.updateAllData(edited)
     assertEquals(ticked.basicResources.sugar, edited.basicResources.sugar)
     assertEquals(ticked.basicResources.tunnelingSpace, edited.basicResources.tunnelingSpace)
     val base = Some(ChamberBonuses.CapacityBase(1000 * u, 1000 * u))

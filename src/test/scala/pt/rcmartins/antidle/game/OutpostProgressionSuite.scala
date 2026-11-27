@@ -129,14 +129,14 @@ class OutpostProgressionSuite extends FunSuite {
   test("research improves actual tick yields and water use, stacking with expanded staffing") {
     val expanded = OutpostProgression.expand(levelEight(OutpostProgression.expand(colony)))
     val staffed = DefaultWorkerAssignment.assign(expanded, AntTask.SeedForager, 15 * u)
-    val baseline = TickUpdater.updateAllData(staffed, None)
+    val baseline = TickUpdater.updateAllData(staffed)
     assertEquals(
       baseline.basicResources.protein.amount - staffed.basicResources.protein.amount,
       1200L
     )
     assertEquals(staffed.basicResources.water.amount - baseline.basicResources.water.amount, 600L)
     val improved = staffed.copy(upgrades = staffed.upgrades.unlock(CoveredTrails, SeedProcessing))
-    val result = TickUpdater.updateAllData(improved, None)
+    val result = TickUpdater.updateAllData(improved)
     assertEquals(
       result.basicResources.protein.amount - improved.basicResources.protein.amount,
       1800L
@@ -179,11 +179,11 @@ class OutpostProgressionSuite extends FunSuite {
     val dry = expanded.copy(basicResources =
       expanded.basicResources.copy(water = BasicResource(0L, 200 * u))
     )
-    val paused = TickUpdater.updateAllData(dry, None)
+    val paused = TickUpdater.updateAllData(dry)
     assertEquals(paused.basicResources.protein.amount, dry.basicResources.protein.amount)
     assertEquals(paused.nestAttributes.maxAnts, expanded.nestAttributes.maxAnts)
     assertEquals(paused.ants.taskWorkers(AntTask.SeedForager), 10L * u)
-    val resumed = TickUpdater.updateAllData(paused.giveResources(water = u), None)
+    val resumed = TickUpdater.updateAllData(paused.giveResources(water = u))
     assertEquals(resumed.basicResources.protein.amount, paused.basicResources.protein.amount + 800L)
     assertEquals(resumed.nestAttributes.maxAnts, paused.nestAttributes.maxAnts)
   }

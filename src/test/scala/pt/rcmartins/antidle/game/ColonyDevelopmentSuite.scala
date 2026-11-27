@@ -57,7 +57,7 @@ class ColonyDevelopmentSuite extends FunSuite {
       basicResources = sent.basicResources.copy(sugar = BasicResource(2900 * u, 3000 * u)),
       world = sent.world.copy(currentTick = NectarMeadow.duration - 1L)
     )
-    val result = TickUpdater.updateAllData(capped, None)
+    val result = TickUpdater.updateAllData(capped)
     assert(result.exploration.explorationParties.isEmpty)
     assertEquals(ScoutProgression.available(result.ants, result.exploration), u)
     assert(result.basicResources.sugar.amount <= 3000L * u)
@@ -68,10 +68,9 @@ class ColonyDevelopmentSuite extends FunSuite {
   test("Reinforced Mandibles changes actual tunneling output by fifty percent") {
     val initial =
       colony().copy(ants = AntsData(workers = 5 * u, tasks = Seq(AntTask.Tunneler -> (5 * u))))
-    val plain = TickUpdater.updateAllData(initial, None)
+    val plain = TickUpdater.updateAllData(initial)
     val upgraded = TickUpdater.updateAllData(
-      initial.copy(upgrades = initial.upgrades.unlock(ReinforcedMandibles)),
-      None
+      initial.copy(upgrades = initial.upgrades.unlock(ReinforcedMandibles))
     )
     assertEquals(ColonyDevelopment.tunnelingPerWorkerTick(initial.upgrades) * TicksPerSecond, u)
     assertEquals(

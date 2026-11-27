@@ -64,8 +64,8 @@ class PrestigeSuite extends FunSuite {
   ) {
     val base = colony
     val improved = base.copy(ants = base.ants.copy(lineage = Lineage(1)))
-    val normal = TickUpdater.updateAllData(base, None)
-    val boosted = TickUpdater.updateAllData(improved, None)
+    val normal = TickUpdater.updateAllData(base)
+    val boosted = TickUpdater.updateAllData(improved)
     val production = Foraging.productionPerTick(20L, base.upgrades)
     assertEquals(
       boosted.basicResources.sugar.amount - normal.basicResources.sugar.amount,

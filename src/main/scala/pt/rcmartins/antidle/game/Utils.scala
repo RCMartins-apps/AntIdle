@@ -216,11 +216,19 @@ object Utils {
               )
 
             @tailrec
-            def loop(ticksLeft: Long, allData: AllData): AllData =
-              if (ticksLeft <= 0)
-                allData
-              else
-                loop(ticksLeft - 1, TickUpdater.updateAllData(allData, nextSaveTick))
+            def loop(
+                ticksLeft: Long,
+                data: AllData,
+                scheduledSave: Option[AllData]
+            ): (AllData, Option[AllData]) =
+              if (ticksLeft <= 0) (data, scheduledSave)
+              else {
+                val ticked = TickUpdater.updateAllData(data)
+                val save = scheduledSave.orElse(
+                  Option.when(nextSaveTick.exists(ticked.currentTick >= _))(ticked)
+                )
+                loop(ticksLeft - 1, ticked, save)
+              }
 
             val ticksToCatchUp: Long =
               if (useCatchupTicks)
@@ -228,7 +236,14 @@ object Utils {
               else
                 1
 
-            loop(ticksToCatchUp, allData).updateVars()
+            val (updated, scheduledSave) = loop(ticksToCatchUp, allData, None)
+            updated.updateVars()
+            scheduledSave.foreach { snapshot =>
+              lastSavedTick.set(snapshot.currentTick)
+              SaveLoad.withWriteLock {
+                SaveLoad.saveToLocalStorage(snapshot).left.foreach(SaveLoad.showError)
+              }
+            }
           }
       }
   }

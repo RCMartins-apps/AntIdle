@@ -127,7 +127,7 @@ class ColonyLifecycleSuite extends FunSuite {
       sent.exploration.explorationParties.head.ages
     )
     val returned =
-      TickUpdater.updateAllData(loaded.copy(world = loaded.world.copy(currentTick = 449L)), None)
+      TickUpdater.updateAllData(loaded.copy(world = loaded.world.copy(currentTick = 449L)))
     assert(returned.exploration.explorationParties.isEmpty)
     assertEquals(returned.ants.workers, 0L)
     assertEquals(returned.ants.scouts, 0L)
@@ -147,7 +147,7 @@ class ColonyLifecycleSuite extends FunSuite {
     val first = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.WoodlandEdge)
     val second = ExplorationHelper.start(first, 5 * u, ExplorationDestination.WoodlandEdge)
     val returned =
-      TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = 224L)), None)
+      TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = 224L)))
     assertEquals(returned.ants.ages.workers.map(_.expiresAt), List(Minute, 2L * Minute))
     assertEquals(returned.ants.ages.scouts.map(_.expiresAt), List(Minute, 2L * Minute))
     assertEquals(returned.ants.ages.scouts.map(_.count).sum, 2L)
@@ -160,7 +160,7 @@ class ColonyLifecycleSuite extends FunSuite {
       setAge(colony(5, 1), List(AgeCohort(Minute + 17L, 5)), List(AgeCohort(Minute + 17L, 1)))
     val first = ExplorationHelper.start(initial, 5 * u, ExplorationDestination.WoodlandEdge)
     val returned =
-      TickUpdater.updateAllData(first.copy(world = first.world.copy(currentTick = 224L)), None)
+      TickUpdater.updateAllData(first.copy(world = first.world.copy(currentTick = 224L)))
     assertEquals(returned.ants.ages.workers, List(AgeCohort(Minute + 17L, 5)))
     assertEquals(returned.ants.ages.scouts, List(AgeCohort(Minute + 17L, 1)))
     val second = ExplorationHelper.start(returned, 5 * u, ExplorationDestination.WoodlandEdge)
@@ -169,7 +169,7 @@ class ColonyLifecycleSuite extends FunSuite {
       List(AgeCohort(Minute + 17L, 5))
     )
     val expired =
-      TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = 449L)), None)
+      TickUpdater.updateAllData(second.copy(world = second.world.copy(currentTick = 449L)))
     assertEquals(expired.ants.workers, 0L)
     assertEquals(expired.ants.scouts, 0L)
     assertEquals(
@@ -187,7 +187,7 @@ class ColonyLifecycleSuite extends FunSuite {
         sent.exploration.explorationParties.map(_.copy(targetTick = Minute))
       )
     )
-    val returned = TickUpdater.updateAllData(due, None)
+    val returned = TickUpdater.updateAllData(due)
     assertEquals(returned.ants.workers, 0L)
     assertEquals(returned.messages.count(_.startsWith("Aging:")), 1)
     assertEquals(returned.ants.ages.pendingWorkers, 5L)
@@ -208,7 +208,7 @@ class ColonyLifecycleSuite extends FunSuite {
     val during = PopulationAging.tick(sent.copy(world = sent.world.copy(currentTick = Minute)))
     assertEquals(during.ants.workers, 5L * u)
     val returned =
-      TickUpdater.updateAllData(during.copy(world = during.world.copy(currentTick = 449L)), None)
+      TickUpdater.updateAllData(during.copy(world = during.world.copy(currentTick = 449L)))
     assertEquals(returned.ants.workers, 0L)
     assert(returned.ants.ages.workers.isEmpty)
     assertEquals(returned.exploration.carcasses.size, 1)
@@ -292,13 +292,12 @@ class ColonyLifecycleSuite extends FunSuite {
       100 * u
     )
     val first = TickUpdater.updateAllData(
-      configured.copy(world = configured.world.copy(currentTick = Minute - 1L)),
-      None
+      configured.copy(world = configured.world.copy(currentTick = Minute - 1L))
     )
     assertEquals(first.ants.workers, 2L * u)
     assertEquals(first.ants.eggsAndLarvae.size, 1)
     val grown = (1L to (600L + first.ants.layingCooldown)).foldLeft(first)((data, _) =>
-      TickUpdater.updateAllData(data, None)
+      TickUpdater.updateAllData(data)
     )
     assertEquals(grown.ants.workers, 3L * u)
     assertEquals(grown.ants.taskWorkers(AntTask.SugarCollector), 3L * u)

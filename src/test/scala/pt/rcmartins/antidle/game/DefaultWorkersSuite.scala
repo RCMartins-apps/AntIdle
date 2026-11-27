@@ -132,7 +132,7 @@ class DefaultWorkersSuite extends FunSuite {
       ants = tunneling.ants.copy(sugarCumulativeDebt = 1000 * AntDeathRiskThreshold),
       basicResources = pooled.basicResources.copy(sugar = BasicResource(0L, 1000 * u)),
     )
-    val result = TickUpdater.updateAllData(starving, None)
+    val result = TickUpdater.updateAllData(starving)
     assertEquals(result.ants.workers, 19L * u)
     assertBalanced(result.ants)
   }
