@@ -2,14 +2,13 @@
 
 ## 2026-11-27
 
-Settings groups Wiki in the same mobile sub-tab bar used by Nest and Explore.
-The Wiki is a reference for the shared egg queue, larval care, brood priority,
-Queen's Routine, aging, and waste. Topics follow the current colony's
-unlocks. Brood options keeps its controls and live aging forecast. Action
-details and Royal brood help remain local because they describe the current
-action. The Raise details cleanup is tracked in #190.
+The simulation tick no longer schedules or writes browser saves. The browser
+controller saves the first snapshot at the deadline after completing the
+batch, with one write attempt per batch and retry at the next interval.
 
-Verified the Scala.js development build, the mobile navigation and Wiki
-keyboard flow, and the Brood layout suite. The older compact, pipeline,
-management, and lifecycle scripts still use obsolete mobile top-tab locators.
-See [issue #189](https://github.com/RCMartins-apps/AntIdle/issues/189).
+Verified formatting, game and balance builds, and 40 focused Scala tests.
+A 30-minute balanced run at seed 42 produced identical run data before and
+after. Browser coverage verified normal autosave, a write failure and retry,
+and the saved snapshot at the first tick of a two-tick catch-up batch.
+
+See [issue #161](https://github.com/RCMartins-apps/AntIdle/issues/161).

@@ -40,7 +40,7 @@ class WaterStatisticsSuite extends FunSuite {
     assert(studied.unlocks.resources.showWater)
     assertEquals(studied.basicResources.water.amount, 0L)
     val staffed = DefaultWorkerAssignment.assign(studied, AntTask.WaterCollector, u)
-    assertEquals(TickUpdater.updateAllData(staffed, None).basicResources.water.amount, 300L)
+    assertEquals(TickUpdater.updateAllData(staffed).basicResources.water.amount, 300L)
   }
 
   test(
@@ -102,12 +102,12 @@ class WaterStatisticsSuite extends FunSuite {
       basicResources =
         AllData.initial.basicResources.copy(sugar = BasicResource(1000 * u, 1000 * u))
     )
-    val result = TickUpdater.updateAllData(initial, None)
+    val result = TickUpdater.updateAllData(initial)
     assertEquals(result.statistics.sugarU.thisRun, antsSugarUpkeepTick)
     val reserves = initial.copy(exploration =
       ExplorationData(carcasses = List(Carcass(120 * u, 120 * u, 0L, u, 50L)))
     )
-    assertEquals(TickUpdater.updateAllData(reserves, None).statistics.sugarU.thisRun, 0L)
+    assertEquals(TickUpdater.updateAllData(reserves).statistics.sugarU.thisRun, 0L)
   }
 
   test(
@@ -175,10 +175,10 @@ class WaterStatisticsSuite extends FunSuite {
       basicResources = BasicResources.initial,
       ants = AntsData(workers = u, sugarCumulativeDebt = AntDeathRiskThreshold * 100L)
     )
-    val lost = TickUpdater.updateAllData(starving, None)
+    val lost = TickUpdater.updateAllData(starving)
     assertEquals(lost.statistics.starvationDeaths.thisRun, 1)
     assertEquals(lost.statistics.workersLostToAging.thisRun, 0)
-    assertEquals(TickUpdater.updateAllData(lost, None).statistics.starvationDeaths.thisRun, 1)
+    assertEquals(TickUpdater.updateAllData(lost).statistics.starvationDeaths.thisRun, 1)
   }
 
   test("long-lived milestone counters saturate instead of wrapping or decreasing") {

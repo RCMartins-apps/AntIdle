@@ -36,8 +36,8 @@ the simulator's rebuild.
 
 ## What is simulated
 
-`BalanceSimulator` calls `TickUpdater.updateAllData(..., None)` at the real five
-ticks per simulated second. `None` disables browser local-storage autosaves only.
+`BalanceSimulator` calls `TickUpdater.updateAllData(data)` at the real five
+ticks per simulated second. The browser controller schedules autosaves separately.
 The browser and runner share pure unlock reconciliation and the same post-action
 normalization. Actions use the normal engine's cost/eligibility helpers. The
 world seed drives discoveries, aging and other random outcomes. Offline time

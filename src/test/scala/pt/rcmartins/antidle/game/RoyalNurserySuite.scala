@@ -232,16 +232,15 @@ class RoyalNurserySuite extends FunSuite {
     val sent = ExplorationHelper.start(queued, 10 * u, CollectResin)
     val party = sent.exploration.explorationParties.head
     val returning = TickUpdater.updateAllData(
-      sent.copy(world = sent.world.copy(currentTick = party.targetTick - 1L)),
-      None
+      sent.copy(world = sent.world.copy(currentTick = party.targetTick - 1L))
     )
     assertEquals(returning.nestAttributes.royalBroodSlots, 0)
     assert(returning.basicResources.resin.amount >= 80 * u)
-    val built = TickUpdater.updateAllData(returning, None)
+    val built = TickUpdater.updateAllData(returning)
     assertEquals(built.nestAttributes.royalBroodSlots, 1)
     assertEquals(built.basicResources.resin.amount, returning.basicResources.resin.amount - 80 * u)
     assertEquals(
-      TickUpdater.updateAllData(built, None).basicResources.resin.amount,
+      TickUpdater.updateAllData(built).basicResources.resin.amount,
       built.basicResources.resin.amount
     )
   }

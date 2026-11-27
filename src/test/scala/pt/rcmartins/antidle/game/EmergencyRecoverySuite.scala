@@ -25,7 +25,7 @@ class EmergencyRecoverySuite extends FunSuite {
     )
   )
 
-  def tick(d: AllData): AllData = TickUpdater.updateAllData(d, None)
+  def tick(d: AllData): AllData = TickUpdater.updateAllData(d)
   def load(d: AllData): AllData =
     AllDataForSave.fromAllData(d).toJson.fromJson[AllDataForSave].toOption.get.toAllData
 

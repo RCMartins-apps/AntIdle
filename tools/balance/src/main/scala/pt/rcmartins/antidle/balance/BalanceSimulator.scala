@@ -135,9 +135,7 @@ object BalanceSimulator {
       }
       if (data.ants.lineage.foundings < config.foundings) {
         data = TickUpdater.updateAllData(
-          data.copy(world = data.world.copy(targetTick = data.currentTick + 1L)),
-          None
-        )
+          data.copy(world = data.world.copy(targetTick = data.currentTick + 1L)))
         val r = data.basicResources
         List(
           "sugar" -> r.sugar,

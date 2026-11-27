@@ -99,7 +99,7 @@ class OutpostSuite extends FunSuite {
 
   test("real ticks collect protein, drink water and count actual gathering") {
     val initial = staffed
-    val next = TickUpdater.updateAllData(initial, None)
+    val next = TickUpdater.updateAllData(initial)
     assertEquals(next.basicResources.protein.amount - initial.basicResources.protein.amount, 400L)
     assertEquals(initial.basicResources.water.amount - next.basicResources.water.amount, 200L)
     assertEquals(next.statistics.proteinU.thisRun - initial.statistics.proteinU.thisRun, 400L)
@@ -111,15 +111,15 @@ class OutpostSuite extends FunSuite {
   test("partial and absent water never produce debt, and replenishment resumes foraging") {
     val dry =
       staffed.copy(basicResources = staffed.basicResources.copy(water = BasicResource(1L, 200 * u)))
-    val lastDrop = TickUpdater.updateAllData(dry, None)
+    val lastDrop = TickUpdater.updateAllData(dry)
     assertEquals(lastDrop.basicResources.water.amount, 0L)
     assertEquals(lastDrop.basicResources.protein.amount, dry.basicResources.protein.amount + 2L)
-    val paused = TickUpdater.updateAllData(lastDrop, None)
+    val paused = TickUpdater.updateAllData(lastDrop)
     assertEquals(paused.basicResources.protein.amount, lastDrop.basicResources.protein.amount)
     assertEquals(paused.nestAttributes.maxAnts, dry.nestAttributes.maxAnts)
     assertEquals(paused.ants.populationCount, dry.ants.populationCount)
     assertEquals(paused.messages, lastDrop.messages)
-    val resumed = TickUpdater.updateAllData(paused.giveResources(water = u), None)
+    val resumed = TickUpdater.updateAllData(paused.giveResources(water = u))
     assertEquals(resumed.basicResources.protein.amount, paused.basicResources.protein.amount + 400L)
   }
 
@@ -127,13 +127,13 @@ class OutpostSuite extends FunSuite {
     val full = staffed.copy(basicResources =
       staffed.basicResources.copy(protein = BasicResource(100 * u, 100 * u))
     )
-    val paused = TickUpdater.updateAllData(full, None)
+    val paused = TickUpdater.updateAllData(full)
     assertEquals(paused.basicResources.water, full.basicResources.water)
     assertEquals(paused.statistics.proteinU, full.statistics.proteinU)
     val almost = full.copy(basicResources =
       full.basicResources.copy(protein = BasicResource(100 * u - 3L, 100 * u))
     )
-    val filled = TickUpdater.updateAllData(almost, None)
+    val filled = TickUpdater.updateAllData(almost)
     assertEquals(filled.basicResources.protein.amount, 100L * u)
     assertEquals(almost.basicResources.water.amount - filled.basicResources.water.amount, 2L)
     assertEquals(filled.statistics.proteinU.thisRun - almost.statistics.proteinU.thisRun, 3L)
@@ -150,7 +150,7 @@ class OutpostSuite extends FunSuite {
       basicResources = initial.basicResources.copy(protein = BasicResource(100 * u, 100 * u)),
       upgrades = initial.upgrades.unlock(AphidTending)
     )
-    val next = TickUpdater.updateAllData(feeding, None)
+    val next = TickUpdater.updateAllData(feeding)
     assertEquals(next.basicResources.protein.amount, 100L * u)
     assertEquals(feeding.basicResources.water.amount - next.basicResources.water.amount, 10L)
     assertEquals(next.statistics.proteinU.thisRun - feeding.statistics.proteinU.thisRun, 20L)

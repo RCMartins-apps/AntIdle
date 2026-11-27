@@ -228,17 +228,16 @@ class RaidSuite extends FunSuite {
     val sent = start(prepared)
     val party = sent.exploration.explorationParties.head
     val returned = TickUpdater.updateAllData(
-      sent.copy(world = sent.world.copy(currentTick = party.targetTick - 1L)),
-      None
+      sent.copy(world = sent.world.copy(currentTick = party.targetTick - 1L))
     )
     val losses = party.raidOutcome.get.workerLosses
     assertEquals(returned.ants.workers, (40L - losses) * u)
     assertEquals(returned.ants.eggsAndLarvae.size, 1)
     assert(returned.ants.layingCooldown > 0L)
     assertEquals(returned.statistics.raidDeaths.thisRun, losses)
-    assertEquals(TickUpdater.updateAllData(returned, None).statistics.raidDeaths.thisRun, losses)
+    assertEquals(TickUpdater.updateAllData(returned).statistics.raidDeaths.thisRun, losses)
     assertEquals(
-      TickUpdater.updateAllData(loaded(returned), None).statistics.raidDeaths.thisRun,
+      TickUpdater.updateAllData(loaded(returned)).statistics.raidDeaths.thisRun,
       losses
     )
   }

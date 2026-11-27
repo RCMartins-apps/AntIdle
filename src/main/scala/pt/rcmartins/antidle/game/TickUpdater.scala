@@ -2,14 +2,13 @@ package pt.rcmartins.antidle.game
 
 import com.softwaremill.quicklens.ModifyPimp
 import pt.rcmartins.antidle.game.Constants.u
-import pt.rcmartins.antidle.game.saves.SaveLoad
 import pt.rcmartins.antidle.model.{AllData, AntTask, BuildTask}
 
 import scala.util.chaining.scalaUtilChainingOps
 
 object TickUpdater {
 
-  def updateAllData(initial: AllData, nextSaveTickOpt: Option[Long]): AllData = {
+  def updateAllData(initial: AllData): AllData = {
     var surplusSugarU = 0L
 
     val updates: Seq[AllData => AllData] =
@@ -170,20 +169,6 @@ object TickUpdater {
         DefaultWorkerAssignment.normalize,
         UnlockUtils.reconcile,
         ResourceVisibility.reconcile,
-        // This is the last step to save data if necessary
-        allData => {
-          nextSaveTickOpt.foreach {
-            case nextSaveTick
-                if allData.currentTick >= nextSaveTick && Utils.lastSavedTick
-                  .now() < nextSaveTick =>
-              Utils.lastSavedTick.set(allData.currentTick)
-              SaveLoad.withWriteLock {
-                SaveLoad.saveToLocalStorage(allData).left.foreach(SaveLoad.showError)
-              }
-            case _ =>
-          }
-          allData
-        },
       )
 
     updates.foldLeft(initial) { case (allData, update) => update(allData) }

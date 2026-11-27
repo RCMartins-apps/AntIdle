@@ -1,4 +1,6 @@
 """Exercise stale tabs and concurrent save attempts against shared browser storage."""
+import base64
+import json
 from datetime import datetime, timedelta, timezone
 import os
 import shutil
@@ -71,6 +73,66 @@ def check(context, url):
     print("PASS concurrent and stale saves, reset, and playtest isolation")
 
 
+def check_autosave(context, url):
+    page = context.new_page()
+    now = datetime(2026, 11, 27, tzinfo=timezone.utc)
+    page.clock.install(time=now)
+    page.clock.pause_at(now + timedelta(seconds=1))
+    page.add_init_script("""
+        window.autosaveWrites = [];
+        window.rejectAutosave = false;
+        const write = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, raw) {
+            if (this === localStorage && key === 'save') {
+                window.autosaveWrites.push(JSON.parse(atob(raw)).world.currentTick);
+                if (window.rejectAutosave) throw new DOMException('Test write failure', 'QuotaExceededError');
+            }
+            return write.call(this, key, raw);
+        };
+    """)
+    def flush_writes():
+        page.evaluate("navigator.locks.request('antidle:save', () => {})")
+
+    page.goto(url, wait_until="networkidle")
+    page.clock.run_for(29400)
+    flush_writes()
+    assert page.evaluate("window.autosaveWrites") == []
+    page.clock.run_for(1000)
+    flush_writes()
+    assert page.evaluate("window.autosaveWrites") == [150]
+    original = storage(page)
+
+    page.evaluate("window.rejectAutosave = true")
+    page.clock.run_for(30000)
+    expect(page.get_by_text("The colony could not be written to local storage.", exact=True)).to_be_visible()
+    assert page.evaluate("window.autosaveWrites") == [150, 300]
+    assert storage(page) == original
+
+    page.evaluate("window.rejectAutosave = false")
+    page.clock.run_for(30000)
+    flush_writes()
+    assert page.evaluate("window.autosaveWrites") == [150, 300, 450]
+    assert storage(page) != original
+
+    saved = json.loads(base64.b64decode(storage(page)))
+    saved["world"]["targetTick"] = saved["world"]["currentTick"] + 500
+    page.evaluate("(save) => localStorage.setItem('save', save)",
+                  base64.b64encode(json.dumps(saved).encode()).decode())
+    page.reload(wait_until="networkidle")
+    page.clock.run_for(29800)
+    assert page.evaluate("window.autosaveWrites") == []
+    page.get_by_role("button", name="Use stored catch-up time").click()
+    page.clock.run_for(200)
+    flush_writes()
+    assert page.evaluate("window.autosaveWrites") == [600]
+    assert page.evaluate("JSON.parse(atob(localStorage.getItem('save'))).world.currentTick") == 600
+    select_tab(page, "Settings")
+    page.get_by_role("button", name="Manual Save", exact=True).click()
+    flush_writes()
+    assert page.evaluate("window.autosaveWrites") == [600, 601]
+    print("PASS autosave deadline, failed write and retry, and catch-up snapshot")
+
+
 if __name__ == "__main__":
     handler = ProductionHandler if os.environ.get("ANTIDLE_PRODUCTION") else QuietHandler
     server = ThreadingHTTPServer(("127.0.0.1", 0), partial(handler, directory=str(ROOT)))
@@ -80,6 +142,8 @@ if __name__ == "__main__":
             browser = playwright.chromium.launch(executable_path=os.environ.get("CHROMIUM_PATH") or shutil.which("chromium"))
             with browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True) as context:
                 check(context, f"http://127.0.0.1:{server.server_port}")
+            with browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True) as context:
+                check_autosave(context, f"http://127.0.0.1:{server.server_port}")
     finally:
         server.shutdown()
         server.server_close()

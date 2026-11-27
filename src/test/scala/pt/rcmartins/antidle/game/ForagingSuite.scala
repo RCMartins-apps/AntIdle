@@ -78,7 +78,7 @@ class ForagingSuite extends FunSuite {
           basicResources =
             AllData.initial.basicResources.copy(sugar = BasicResource(500 * u, 10000 * u)),
         )
-        val ticked = TickUpdater.updateAllData(initial, None)
+        val ticked = TickUpdater.updateAllData(initial)
         val expected = initial.basicResources.sugar.amount + Foraging.productionPerTick(
           count,
           upgrades
@@ -197,8 +197,7 @@ class ForagingSuite extends FunSuite {
     val returned = TickUpdater.updateAllData(
       three.copy(world =
         three.world.copy(currentTick = ExplorationDestination.WoodlandEdge.duration - 1L)
-      ),
-      None
+      )
     )
     assert(returned.exploration.explorationParties.isEmpty)
     assertEquals(returned.ants.idleWorkersCount, 20L * u)

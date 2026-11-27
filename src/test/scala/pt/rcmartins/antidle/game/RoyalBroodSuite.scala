@@ -106,7 +106,7 @@ class RoyalBroodSuite extends FunSuite {
         data.basicResources
       )
       assert(predicted.units > 0L)
-      val next = TickUpdater.updateAllData(data, None)
+      val next = TickUpdater.updateAllData(data)
       assertEquals(
         next.ants.royalBrood.get.careUnits - data.ants.royalBrood.get.careUnits,
         predicted.units
@@ -236,7 +236,7 @@ class RoyalBroodSuite extends FunSuite {
         ages = ColonyAges(active = true, workers = List(AgeCohort(1L, 5L)))
       )
     )
-    val aged = TickUpdater.updateAllData(data, None)
+    val aged = TickUpdater.updateAllData(data)
     assertEquals(aged.ants.workers, 0L)
     assertEquals(aged.ants.royalBrood.get.careUnits, 0L)
     assertEquals(aged.statistics.workersLostToAging.thisRun, 5)
@@ -257,7 +257,7 @@ class RoyalBroodSuite extends FunSuite {
       initial.exploration,
       initial.basicResources
     )
-    val next = TickUpdater.updateAllData(initial, None)
+    val next = TickUpdater.updateAllData(initial)
     val production = Foraging.productionPerTick(30L, initial.upgrades)
     val upkeep =
       ScoutProgression.upkeepCount(initial.ants, initial.exploration) * antsSugarUpkeepTick
@@ -282,11 +282,11 @@ class RoyalBroodSuite extends FunSuite {
       upgrades = initial.upgrades.unlock(QueensRoutine),
       unlocks = initial.unlocks.copy(actions = initial.unlocks.actions.copy(canLayEggs = true))
     )
-    val step = TickUpdater.updateAllData(routine, None)
+    val step = TickUpdater.updateAllData(routine)
     assertEquals(step.ants.royalBrood.get.careUnits, EggCare + 5L)
     assert(step.ants.eggsAndLarvae.isEmpty)
     assertEquals(
-      TickUpdater.updateAllData(setPaused(routine, true), None).ants.eggsAndLarvae.size,
+      TickUpdater.updateAllData(setPaused(routine, true)).ants.eggsAndLarvae.size,
       1
     )
   }
@@ -297,7 +297,7 @@ class RoyalBroodSuite extends FunSuite {
     val initial = rearing(EggCare).copy(basicResources =
       colony.basicResources.copy(sugar = BasicResource(40000 * u, 40000 * u))
     )
-    val next = TickUpdater.updateAllData(initial, None)
+    val next = TickUpdater.updateAllData(initial)
     assertEquals(next.basicResources.sugar.amount, initial.basicResources.sugar.amount)
     assertEquals(
       next.statistics.sugarU.thisRun,
@@ -318,7 +318,7 @@ class RoyalBroodSuite extends FunSuite {
       initial.basicResources
     )
     assertEquals(predicted.units, 5L)
-    val next = TickUpdater.updateAllData(initial, None)
+    val next = TickUpdater.updateAllData(initial)
     assertEquals(next.ants.royalBrood.get.careUnits, EggCare + predicted.units)
     assertEquals(next.basicResources.sugar.amount, 650L)
     val fewer = initial.copy(ants =
@@ -336,7 +336,7 @@ class RoyalBroodSuite extends FunSuite {
       fewer.basicResources
     )
     assertEquals(limited.units, 0L)
-    assertEquals(TickUpdater.updateAllData(fewer, None).ants.royalBrood.get.careUnits, EggCare)
+    assertEquals(TickUpdater.updateAllData(fewer).ants.royalBrood.get.careUnits, EggCare)
   }
 
   test(

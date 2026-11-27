@@ -134,7 +134,7 @@ class UpgradeVisibilitySuite extends FunSuite {
       ),
       basicResources = initial.basicResources.copy(sugar = BasicResource(100 * u, 1000 * u)),
     )
-    val ticked = TickUpdater.updateAllData(colony, None)
+    val ticked = TickUpdater.updateAllData(colony)
     assertEquals(ticked.basicResources.knowledge.amount, 0L)
     assert(ticked.upgrades(UnlockQueensChamber).show)
     assert(ticked.upgrades(ImproveSugarCollectorTask1).show)

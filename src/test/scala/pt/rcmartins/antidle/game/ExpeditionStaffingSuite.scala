@@ -75,9 +75,9 @@ class ExpeditionStaffingSuite extends FunSuite {
     assertEquals(loaded.exploration.explorationParties.head.extraScouts, 3)
     assertEquals(loaded.exploration.explorationParties.head.targetTick, 129L)
     val waiting =
-      TickUpdater.updateAllData(loaded.copy(world = loaded.world.copy(currentTick = 127L)), None)
+      TickUpdater.updateAllData(loaded.copy(world = loaded.world.copy(currentTick = 127L)))
     assertEquals(waiting.exploration.explorationParties.size, 1)
-    val returned = TickUpdater.updateAllData(waiting, None)
+    val returned = TickUpdater.updateAllData(waiting)
     assert(returned.exploration.explorationParties.isEmpty)
     assertEquals(returned.ants.idleWorkersCount, 100L * u)
     assertEquals(ScoutProgression.available(returned.ants, returned.exploration), 5L * u)

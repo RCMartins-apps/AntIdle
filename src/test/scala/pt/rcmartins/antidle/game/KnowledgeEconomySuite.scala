@@ -67,7 +67,7 @@ class KnowledgeEconomySuite extends FunSuite {
     )
     assertEquals(upgraded.basicResources.knowledge, initial.basicResources.knowledge)
     assertEquals(ChamberBonuses.forChamber(ChamberType.Nest).maxTunnelingSpace, 500L * u)
-    val ticked = TickUpdater.updateAllData(upgraded, None)
+    val ticked = TickUpdater.updateAllData(upgraded)
     assertEquals(ticked.basicResources.knowledge.amount, 0L)
   }
 

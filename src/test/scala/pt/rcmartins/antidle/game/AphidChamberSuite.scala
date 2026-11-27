@@ -81,7 +81,7 @@ class AphidChamberSuite extends FunSuite {
 
   test("fed tenders produce constant sugar and consume minor protein in actual ticks") {
     val initial = DefaultWorkerAssignment.assign(colony(), AntTask.AphidTender, 3 * u)
-    val next = TickUpdater.updateAllData(initial, None)
+    val next = TickUpdater.updateAllData(initial)
     assertEquals(next.basicResources.protein.amount - initial.basicResources.protein.amount, -60L)
     assertEquals(
       next.basicResources.sugar.amount - initial.basicResources.sugar.amount,
@@ -135,7 +135,7 @@ class AphidChamberSuite extends FunSuite {
     assert(production.aphids > 0L)
     assert(feeding.sugar > 0L)
     assertEquals(production.total, production.aphids)
-    val next = TickUpdater.updateAllData(initial, None)
+    val next = TickUpdater.updateAllData(initial)
     assertEquals(
       next.basicResources.sugar.amount,
       Math.min(resources.sugar.maxAmount, forecast.sugar.amount - feeding.sugar)
@@ -149,13 +149,13 @@ class AphidChamberSuite extends FunSuite {
     val fed = DefaultWorkerAssignment.assign(colony(), AntTask.AphidTender, 3 * u)
     val partial =
       fed.copy(basicResources = fed.basicResources.copy(protein = BasicResource(10L, 100 * u)))
-    val next = TickUpdater.updateAllData(partial, None)
+    val next = TickUpdater.updateAllData(partial)
     assertEquals(next.basicResources.protein.amount, 0L)
     assertEquals(
       next.basicResources.sugar.amount - partial.basicResources.sugar.amount,
       800L - 20L * antsSugarUpkeepTick
     )
-    val paused = TickUpdater.updateAllData(next, None)
+    val paused = TickUpdater.updateAllData(next)
     assertEquals(paused.basicResources.protein.amount, 0L)
     assertEquals(
       paused.basicResources.sugar.amount - next.basicResources.sugar.amount,
