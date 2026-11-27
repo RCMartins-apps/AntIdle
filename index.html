@@ -8,7 +8,7 @@
     <link rel="icon" href="assets/icons/ant.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <meta name="theme-color" content="#193a2b">
-    <meta name="antidle-build" content="2567869113df80d9663f33cd">
+    <meta name="antidle-build" content="2a36845c2a1fe501b04ab1a2">
     <title>Ant Idle</title>
     <style>
         .antidle-app .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5ch 6ch 7ch; align-items: center; column-gap: .35rem; row-gap: .125rem; margin: 0 0 .5rem; }
@@ -362,6 +362,9 @@
 .jobs-panel .task-controls {padding-inline-end:0}
 .brood-entry {display:grid;grid-template-columns:4ch auto minmax(0,1fr);align-items:baseline;gap:.25rem}
 .brood-entry-progress {font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width: 767px) {
+    #offline-status:not([hidden]) { padding-bottom: calc(132px + env(safe-area-inset-bottom)); }
+}
 </style>
 </head>
 <body>
@@ -370,7 +373,7 @@
 <script src="assets/vendor/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 <script src="assets/vendor/bootstrap-5.3.2.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
-<script type="text/javascript" src="game.809b3a20cc78aa9a.js"></script>
+<script type="text/javascript" src="game.cc035d25a0446275.js"></script>
 
 <p id="offline-status" class="small text-body-secondary text-center px-2" role="status" hidden></p>
 <script src="assets/ui/mobile-navigation.js" defer></script>
