@@ -22,7 +22,10 @@ def check(page, width, url):
     errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(url,wait_until='networkidle')
-    game=progressed_game(save_game(page))
+    initial = save_game(page)
+    select_tab(page, 'Nest')
+    expect(page.locator('.nest-chambers')).not_to_be_visible()
+    game=progressed_game(initial)
     game['ants'].update(workers=10*UNIT,smallWorkers=0,scouts=0,tasks=[[{'SugarCollector':{}},10*UNIT]],
         eggsAndLarvae=[],eggOrders=0,scoutEggOrders=[],layingCooldown=0,royalBrood=None,daughterQueens=0)
     game['ants']['queenRoutine']['enabled']=False
@@ -236,8 +239,42 @@ def check(page, width, url):
         select_tab(page, 'Chambers')
         expect(chamber.locator('.badge')).to_have_text('1')
         chamber.locator('..').screenshot(path=str(artifacts / 'waste-chamber.png'))
+    def chamber_order(state, expected):
+        load_game(page, state)
+        select_tab(page, 'Chambers')
+        buttons = page.locator('.nest-chambers .action-cell > button')
+        labels = buttons.evaluate_all("buttons => buttons.map(button => button.getAttribute('aria-label'))")
+        assert labels == expected, (labels, expected)
+        assert_fits(page, width)
+
+    early = copy.deepcopy(initial)
+    early['ants']['smallWorkers'] = 5 * UNIT
+    early['unlocks']['actions']['canBuildNestUpgrade'] = True
+    chamber_order(early, ['Expand Nest'])
+    maintenance = copy.deepcopy(crowded)
+    maintenance['unlocks']['actions'].update(canBuildQueenChamber=False, canBuildFoodStorageChamber=False)
+    chamber_order(maintenance, ['Expand Nest', 'Nursery Chamber', 'Waste Chamber'])
+
+    late = copy.deepcopy(maintenance)
+    for upgrade in late['upgrades']['upgrades']:
+        if upgrade['name'] in {
+            'UnlockQueensChamber', 'UnlockFoodStorageChamber', 'AphidTending',
+            'RepleteStorage', 'RoyalNurseryPlanning', 'ConstructionPlanning',
+        }:
+            upgrade['unlocked'] = True
+    late['basicResources']['sugar']['amount'] = 0
+    chamber_order(late, [
+        'Expand Nest', "Queen's Chamber", 'Food Storage Chamber', 'Nursery Chamber',
+        'Waste Chamber', 'Aphid Chamber', 'Replete Chamber', 'Royal Nursery',
+    ])
+    if width == 390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        page.locator('.nest-chambers').screenshot(path=str(artifacts / 'chamber-order.png'))
+    page.get_by_role('button', name='Royal Nursery', exact=True).click()
+    page.get_by_role('button', name='Expand Nest', exact=True).click()
+    queue = save_game(page)['nestAttributes']['buildQueue']
+    assert [next(iter(task['chamberType'])) for task in queue] == ['RoyalNursery', 'Nest']
     assert not errors,errors
-    print(f'PASS brood layout {width}px: stable counters/status/cancel, visible raise actions, scoped feeding help, independent disclosures, saved brood priority and refuse capacity',flush=True)
+    print(f'PASS brood layout {width}px: stable counters/status/cancel, visible raise actions, scoped feeding help, independent disclosures, saved brood priority, waste capacity and chamber order',flush=True)
 
 
 if __name__=='__main__':
