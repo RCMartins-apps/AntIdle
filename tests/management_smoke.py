@@ -98,7 +98,7 @@ def check_management(page, width, url):
     page.get_by_role("tab", name="Settings", exact=True).click()
     page.get_by_role("tab", name="Wiki", exact=True).click()
     expect(page.get_by_role("tabpanel", name="Wiki")).to_contain_text("54–72 minutes")
-    page.get_by_role("tab", name="Preferences").click()
+    page.get_by_role("tab", name="Settings").click()
     researched["ants"]["eggsAndLarvae"] = [{"Egg": {"initialTick": researched["world"]["currentTick"]}}]
     load_game(page, researched)
     page.clock.run_for(10000)

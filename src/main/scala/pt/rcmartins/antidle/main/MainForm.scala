@@ -179,7 +179,7 @@ object MainForm {
           "chambers" -> chambersVisible,
         ).map { case (id, visible) => visible.map(value => Option.when(value)(id)) }
       )
-      .map(_.flatten.toSet ++ Set("nest", "settings", "milestones"))
+      .map(_.flatten.toSet ++ Set("nest", "settings", "wiki", "milestones"))
       .distinct
     def publishTabs(element: HTMLElement, tabs: Set[String]): Unit = {
       val event = new dom.CustomEvent(
@@ -191,7 +191,7 @@ object MainForm {
       element.dispatchEvent(event)
     }
     val application = Var(Option.empty[HTMLDivElement])
-    var currentTabs = Set("nest", "settings", "milestones")
+    var currentTabs = Set("nest", "settings", "wiki", "milestones")
     div(
       className := "antidle-app",
       child.maybe <-- SaveLoad.conflict.signal.map(_.map { _ =>
@@ -466,6 +466,17 @@ object MainForm {
               "Settings"
             )
           ),
+          li(
+            className := "nav-item",
+            a(
+              className := "nav-link",
+              idAttr := "wiki-tab",
+              dataAttr("bs-toggle") := "tab",
+              href := "#wikiContent",
+              role := "tab",
+              "Wiki"
+            )
+          ),
         )
       ),
       div(
@@ -536,7 +547,15 @@ object MainForm {
             className := "tab-pane",
             idAttr := "settingsContent",
             role := "tabpanel",
-            settingsTabs,
+            settingsDiv,
+          ),
+          div(
+            className := "tab-pane",
+            idAttr := "wikiContent",
+            role := "tabpanel",
+            aria.labelledBy := "wiki-tab",
+            tabIndex := 0,
+            WikiView.render,
           ),
         )
       )
@@ -711,59 +730,6 @@ object MainForm {
         )
       }
     }
-
-  private def settingsTabs: ReactiveHtmlElement[HTMLDivElement] =
-    div(
-      div(
-        className := "nav nav-tabs mb-3",
-        role := "tablist",
-        aria.label := "Settings sections",
-        button(
-          onMountCallback(ctx => {
-            js.Dynamic.global.bootstrap.Tab.getOrCreateInstance(ctx.thisNode.ref)
-            ()
-          }),
-          idAttr := "settings-preferences-tab",
-          className := "nav-link active",
-          `type` := "button",
-          role := "tab",
-          aria.selected := true,
-          aria.controls := "settings-preferences",
-          dataAttr("bs-toggle") := "tab",
-          dataAttr("bs-target") := "#settings-preferences",
-          "Preferences"
-        ),
-        button(
-          idAttr := "settings-wiki-tab",
-          className := "nav-link",
-          `type` := "button",
-          role := "tab",
-          aria.selected := false,
-          aria.controls := "settings-wiki",
-          dataAttr("bs-toggle") := "tab",
-          dataAttr("bs-target") := "#settings-wiki",
-          "Wiki"
-        )
-      ),
-      div(
-        className := "tab-content",
-        div(
-          idAttr := "settings-preferences",
-          className := "tab-pane show active",
-          role := "tabpanel",
-          aria.labelledBy := "settings-preferences-tab",
-          settingsDiv
-        ),
-        div(
-          idAttr := "settings-wiki",
-          className := "tab-pane",
-          role := "tabpanel",
-          aria.labelledBy := "settings-wiki-tab",
-          tabIndex := 0,
-          WikiView.render
-        )
-      )
-    )
 
   private def settingsDiv: ReactiveHtmlElement[HTMLDivElement] = {
     def settingsButton(
