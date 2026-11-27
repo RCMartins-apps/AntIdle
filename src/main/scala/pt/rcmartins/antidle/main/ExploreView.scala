@@ -46,6 +46,37 @@ private[main] object ExploreView {
         width.percent <-- feedback(id).map(_.percent.getOrElse(0).toDouble)
       )
     )
+    def hexLabel(site: ExplorationMap.Site): String =
+      s"Ring ${site.distance} · (${site.q}, ${site.r})"
+
+    def routeAvailable(route: ExplorationDestination, data: AllData): Boolean =
+      route.isUnlocked(data.exploration, data.ants, data.nestAttributes) &&
+        ExplorationMap.remaining(data.exploration, route.id) > 0L
+
+    def hexActions(site: ExplorationMap.Site): Signal[List[(String, String)]] = {
+      val routes = ExplorationDestination.all.filter(route => site.routes.contains(route.id))
+      snapshotSignal.map { data =>
+        if (!ExplorationMap.revealed(data.exploration, site.id)) List("fog" -> "Unexplored")
+        else {
+          val study = Option.when(ExplorationMap.studyReward(data.exploration, site.id) > 0L)(
+            "study" -> "Study"
+          )
+          val collect = Option.when(routes.exists(route => routeAvailable(route, data)))(
+            "collect" -> "Collect"
+          )
+          val relocate =
+            Option.when(site.id == "woodland-edge" && AphidRelocation.visible(data))(
+              "collect" -> "Relocate aphids"
+            )
+          val actions = study.toList ++ collect.orElse(relocate).toList
+          if (actions.nonEmpty) actions
+          else if (ExplorationMap.exhausted(data.exploration, site.id))
+            List("exhausted" -> "Exhausted")
+          else List("idle" -> "No available actions")
+        }
+      }.distinct
+    }
+
     val scoutCrew = Var(1)
     def exploreAmount(
         icon: Option[ResourceIcons.ResourceIcon],
@@ -626,7 +657,7 @@ private[main] object ExploreView {
           .getOrElse("")
         div(
           className := "map-site-card",
-          h5(site.name),
+          h5(hexLabel(site)),
           if (ExplorationMap.outerSites.exists(_.id == id))
             div(className := "site-unlock small mb-2", unlockLabel)
           else emptyNode,
@@ -653,12 +684,8 @@ private[main] object ExploreView {
           ),
           site.routes.flatMap(route => ExplorationDestination.all.find(_.id == route)).map {
             route =>
-              child.maybe <-- explorationSignal
-                .combineWith(antsSignal, nestSignal)
-                .map { case (data, ants, nest) =>
-                  route.isUnlocked(data, ants, nest) && ExplorationMap
-                    .remaining(data, route.id) > 0L
-                }
+              child.maybe <-- snapshotSignal
+                .map(data => routeAvailable(route, data))
                 .distinct
                 .map(available => Option.when(available)(haul(route)))
           },
@@ -736,6 +763,7 @@ private[main] object ExploreView {
             ExplorationMap
               .availableSites(AntsData(lineage = Lineage(beyondWoodland = expanded)))
               .map { site =>
+                val actions = hexActions(site)
                 button(
                   className := "map-hex",
                   typ := "button",
@@ -748,9 +776,14 @@ private[main] object ExploreView {
                   ) * (site.r + site.q / 2.0),
                   disabled <-- explorationSignal
                     .map(data => !ExplorationMap.revealed(data, site.id)),
-                  aria.label <-- feedback(site.id).map(f =>
-                    if (f.kind == "unknown") "Unexplored hexagon" else s"${site.name}: ${f.label}"
-                  ),
+                  aria.label <-- actions.combineWith(feedback(site.id)).map {
+                    case (_, state) if state.kind == "unknown" => "Unexplored hexagon"
+                    case (items, state) =>
+                      val status = Option.when(state.percent.isDefined || state.kind == "trail")(
+                        state.label
+                      )
+                      (hexLabel(site) :: (items.map(_._2) ++ status)).mkString(", ")
+                  }.distinct,
                   dataAttr("activity") <-- feedback(site.id).map(_.kind),
                   aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
                   className <-- explorationSignal.map(data =>
@@ -758,32 +791,17 @@ private[main] object ExploreView {
                     else if (ExplorationMap.exhausted(data, site.id)) "exhausted"
                     else "revealed"
                   ),
-                  child <-- feedback(site.id)
-                    .map(f =>
-                      if (f.kind == "unknown") "fog"
-                      else if (f.percent.isDefined) f.kind
-                      else site.id
-                    )
-                    .distinct
-                    .map(MapIcons.apply),
                   span(
-                    className := "map-terrain-name",
-                    child.text <-- explorationSignal
-                      .map(data => if (ExplorationMap.revealed(data, site.id)) site.name else "")
+                    className := "map-hex-actions",
+                    children <-- actions.map(items => items.map { case (icon, _) => MapIcons(icon) })
                   ),
                   small(
                     className := "map-state",
                     title <-- feedback(site.id).map(_.label),
                     child.text <-- feedback(site.id).map(f =>
-                      if (f.kind == "unknown") ""
-                      else
-                        f.percent
-                          .map(p => s"$p%")
-                          .getOrElse(
-                            if (f.kind == "trail") "Trail"
-                            else if (f.kind == "exhausted") "✓"
-                            else f.label
-                          )
+                      f.percent.map(p => s"$p%").getOrElse(
+                        if (f.kind == "trail") "Trail" else ""
+                      )
                     )
                   ),
                   mapProgress(site.id),
@@ -791,6 +809,15 @@ private[main] object ExploreView {
                 )
               }
           },
+        ),
+        div(
+          className := "map-action-legend small mb-3",
+          List(
+            "study" -> "Study",
+            "collect" -> "Collect",
+            "fog" -> "Unexplored",
+            "exhausted" -> "Exhausted"
+          ).map { case (icon, label) => span(MapIcons(icon), label) }
         ),
         child <-- selected.signal.map(sitePanel),
         div(
@@ -807,7 +834,7 @@ private[main] object ExploreView {
                   if (party.mission == "aphids") s"Relocating ${party.aphids} aphids"
                   else if (party.mission == "reveal") "Exploring surroundings"
                   else if (party.mission == "study")
-                    s"Studying ${ExplorationMap.site(party.destination).name}"
+                    s"Studying ${hexLabel(ExplorationMap.site(party.destination))}"
                   else ExplorationDestination.forParty(party).name
                 ),
                 s" · ${party.scouts / u} scouts · ${party.amountWorkers / u} workers · ",
