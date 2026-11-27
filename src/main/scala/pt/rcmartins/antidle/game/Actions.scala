@@ -127,6 +127,9 @@ object Actions {
   def addBuildTask(buildTask: BuildTask): Unit =
     actionUpdater.writer.onNext(Construction.enqueue(_, buildTask.chamberType))
 
+  def moveBuildTask(from: Int, to: Int): Unit =
+    actionUpdater.writer.onNext(Construction.move(_, from, to))
+
   def removeBuildTask(index: Int): Unit =
     actionUpdater.writer.onNext(Construction.cancel(_, index))
 
