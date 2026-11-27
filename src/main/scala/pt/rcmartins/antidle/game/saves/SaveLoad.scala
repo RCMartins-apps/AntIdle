@@ -1,5 +1,6 @@
 package pt.rcmartins.antidle.game.saves
 
+import com.raquo.laminar.api.L.Var
 import org.scalajs.dom.window.localStorage
 import pt.rcmartins.antidle.game.Utils.{actionUpdater, lastSavedTick}
 import pt.rcmartins.antidle.game.Utils
@@ -7,6 +8,8 @@ import pt.rcmartins.antidle.main.MainForm.currentGlobalAlert
 import pt.rcmartins.antidle.model.AllData
 import zio.json._
 
+import scala.scalajs.js
+import scala.scalajs.concurrent.JSExecutionContext.queue
 import scala.util.Try
 
 object SaveLoad {
@@ -37,16 +40,58 @@ object SaveLoad {
   case object Unreadable extends SaveError("Local storage could not be read.")
   case object Unwritable extends SaveError("The colony could not be written to local storage.")
 
+  case object Conflict extends SaveError("Another tab changed this colony save.")
+
+  val conflict = Var(Option.empty[String])
+  private var observed = Map.empty[String, Option[String]]
+
+  private def observe(key: String): Unit =
+    observed += key -> Option(localStorage.getItem(key))
+
+  def initializeSlots(): Unit =
+    List(false, true).foreach(playtest => {
+      Try(observe(saveKey(playtest)))
+      ()
+    })
+
+  def withWriteLock(action: => Unit): Unit = {
+    val locks = org.scalajs.dom.window.navigator.asInstanceOf[js.Dynamic].locks
+    if (js.isUndefined(locks) || locks == null) action
+    else {
+      val run: js.Function1[js.Any, Unit] = _ => action
+      locks
+        .request("antidle:" + saveKey(playtest = false), run)
+        .asInstanceOf[js.Promise[Unit]]
+        .toFuture
+        .failed
+        .foreach(_ => showError(Unwritable))(queue)
+    }
+  }
+
+  private def guardedWrite(key: String)(write: => Unit): Either[SaveError, Unit] =
+    Try {
+      val current = Option(localStorage.getItem(key))
+      if (!observed.get(key).contains(current)) {
+        conflict.set(Some(key))
+        Left(Conflict)
+      } else {
+        write
+        observe(key)
+        Right(())
+      }
+    }.toEither.left.map(_ => Unwritable).flatten
+
   final case class Loaded(data: AllData, recovered: Boolean)
 
   def saveToLocalStorage(allData: AllData): Either[SaveError, Unit] =
     saveToSlot(allData, inPlaytest)
 
-  private def saveToSlot(allData: AllData, playtest: Boolean): Either[SaveError, Unit] =
-    Try {
-      val key = saveKey(playtest)
+  private def saveToSlot(allData: AllData, playtest: Boolean): Either[SaveError, Unit] = {
+    val key = saveKey(playtest)
+    guardedWrite(key) {
       writeSave(allData, key, s"$key:backup", localStorage.getItem(_), localStorage.setItem(_, _))
-    }.toEither.left.map(_ => Unwritable)
+    }
+  }
 
   def openCheckpoint(raw: String, current: AllData): Either[SaveError, Unit] =
     decode(raw).flatMap { checkpoint =>
@@ -60,13 +105,13 @@ object SaveLoad {
   def returnToRegularColony(current: AllData): Either[SaveError, Unit] =
     saveToLocalStorage(current).map(_ => navigateToSlot(playtest = false))
 
-  def resetLocalStorage(allData: AllData): Either[SaveError, Unit] =
-    Try {
-      val storage = localStorage
-      val key = saveKey(inPlaytest)
-      storage.setItem(key, saveString(allData))
-      storage.removeItem(s"$key:backup")
-    }.toEither.left.map(_ => Unwritable)
+  def resetLocalStorage(allData: AllData): Either[SaveError, Unit] = {
+    val key = saveKey(inPlaytest)
+    guardedWrite(key) {
+      localStorage.setItem(key, saveString(allData))
+      localStorage.removeItem(s"$key:backup")
+    }
+  }
 
   private[saves] def writeSave(
       allData: AllData,
@@ -104,7 +149,13 @@ object SaveLoad {
 
   def loadFromLocalStorage(): Either[SaveError, Loaded] = {
     val key = saveKey(inPlaytest)
-    readSave(key, s"$key:backup", localStorage.getItem(_))
+    Try {
+      val storage = localStorage
+      val primary = storage.getItem(key)
+      val result = readSave(key, s"$key:backup", k => if (k == key) primary else storage.getItem(k))
+      if (result.isRight || result == Left(Missing)) observed += key -> Option(primary)
+      result
+    }.toEither.left.map(_ => Unreadable).flatten
   }
 
   def loadString(str: String): Option[AllData] = decode(str).toOption
@@ -133,9 +184,25 @@ object SaveLoad {
     }
   }
 
-  def showError(error: SaveError): Unit = currentGlobalAlert.set(Some(error.message))
+  def showError(error: SaveError): Unit =
+    if (error != Conflict) currentGlobalAlert.set(Some(error.message))
+
+  def loadConflictingSave(): Unit = conflict.now().foreach { key =>
+    if (key == saveKey(inPlaytest))
+      loadFromLocalStorage().fold(
+        showError,
+        loaded => {
+          conflict.set(None)
+          restore(loaded, manual = true)
+        }
+      )
+    else {
+      Try(observe(key)).fold(_ => showError(Unreadable), _ => navigateToSlot(!inPlaytest))
+    }
+  }
 
   def restore(loaded: Loaded, manual: Boolean): Unit = {
+    conflict.set(None)
     val message =
       if (loaded.recovered) Some("Recovered the last known-good colony save.")
       else Option.when(manual)("Game Loaded!")

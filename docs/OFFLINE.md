@@ -16,6 +16,12 @@ Stored offline time and its multiplier work as before. Clearing site data can
 remove saves/cache, and browsers can evict cached files; keep using save exports
 for backups. Installing isn't a substitute for backing up a colony.
 
+Each tab remembers the saved revision it loaded. If another tab saves the same
+slot, the older tab displays a conflict when it tries to save. You can export
+its colony or load the newer save. Browsers with Web Locks also serialize
+simultaneous writes. Other browsers still check for a changed revision before
+writing. Regular, playtest, and PR preview saves have separate revision checks.
+
 ## Identifying the running build
 
 Settings and the page footer show **Build abcdef12**, using the first eight

@@ -58,10 +58,18 @@ def open_brood_options(page):
         options.locator(':scope > summary').click()
 
 
+def read_saved_slot(page, key='save'):
+    return page.evaluate("""key => {
+        const preview = key.match(/:pr-preview:[0-9]+$/)?.[0] ?? '';
+        const read = () => localStorage.getItem(key);
+        return navigator.locks?.request('antidle:save' + preview, read) ?? read();
+    }""", key)
+
+
 def save_game(page):
     select_tab(page, "Settings")
     page.get_by_role("button", name="Manual Save", exact=True).click()
-    return json.loads(base64.b64decode(page.evaluate("localStorage.getItem('save')")))
+    return json.loads(base64.b64decode(read_saved_slot(page)))
 
 
 def load_game(page, game):
