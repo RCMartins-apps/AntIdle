@@ -5,8 +5,7 @@
 .queued-building .build-estimate {grid-column:1 / -1;min-height:1.5em;color:var(--bs-secondary-color)}
 .queen-routine-toggle {display:flex;align-items:center;min-height:44px;width:fit-content;cursor:pointer}
 .queen-routine .form-control {min-height:44px}
-.brood-summary {padding-right:52px;line-height:44px}
-.brood-options > .info-details > .info-summary {position:absolute;top:.25rem;right:0}
+.brood-summary {line-height:44px}
 .brood-counts {min-height:44px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:end;gap:.5rem}
 .brood-counts > div {display:flex;flex-direction:column;gap:.1rem;min-width:0}
 .brood-order-types {display:flex;align-items:center;gap:1rem;min-height:1.5em}

@@ -7,7 +7,7 @@
     explore: { label: 'Explore', tabs: ['explore', 'discoveries', 'territory'], path: 'm12 2 9 5v10l-9 5-9-5V7ZM12 8l4 4-4 4-4-4Z' },
     upgrades: { label: 'Upgrades', tabs: ['upgrades', 'purchased'], path: 'm12 3 8 8h-5v10H9V11H4Z' },
     lineage: { label: 'Lineage', tabs: ['lineage', 'milestones'], path: 'm3 7 5 4 4-7 4 7 5-4-2 13H5ZM6 16h12' },
-    settings: { label: 'Settings', tabs: ['settings'], path: 'M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1 1-3ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' }
+    settings: { label: 'Settings', tabs: ['settings', 'wiki'], path: 'M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1 1-3ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' }
   };
   const nestIcons = {
     nest: 'M20 14c0 5-3.6 8-8 8s-8-3-8-8S8 2 12 2s8 7 8 12ZM9 7l-2 4',
@@ -42,7 +42,7 @@
       });
     }
     const tab = id => app.querySelector('#' + id + '-tab');
-    let availableTabs = new Set(['nest', 'settings', 'milestones']);
+    let availableTabs = new Set(['nest', 'settings', 'wiki', 'milestones']);
     const available = id => availableTabs.has(id);
     const groupFor = id => id === 'milestones' && !available('lineage') ? 'settings' : Object.keys(groups).find(key => groups[key].tabs.includes(id)) || 'settings';
     const nav = document.createElement('nav');
