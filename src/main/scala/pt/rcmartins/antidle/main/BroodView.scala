@@ -338,7 +338,7 @@ private[main] object BroodView {
                 case (stored, capacity, rate, closed) =>
                   val places = if (closed == 1) "place" else "places"
                   val crowded = if (closed > 0) s" · $closed $places blocked" else ""
-                  s"Refuse ${prettyNumberStr(stored)}/${prettyNumberStr(capacity)} · ${signedRateStr(rate)}/s$crowded"
+                  s"Waste ${prettyNumberStr(stored)}/${prettyNumberStr(capacity)} · ${signedRateStr(rate)}/s$crowded"
               }
             )
           }

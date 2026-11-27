@@ -17,7 +17,6 @@ import pt.rcmartins.antidle.game._
 import pt.rcmartins.antidle.game.saves.SaveLoad
 import pt.rcmartins.antidle.model.BasicResources.BasicResource
 import pt.rcmartins.antidle.model.Chamber.ChamberType
-import pt.rcmartins.antidle.model.Unlocks.ActionUnlocks
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType
 import pt.rcmartins.antidle.model._
 
@@ -1451,9 +1450,9 @@ object MainForm {
     def standardBuyChamber(
         name: String,
         chamberType: ChamberType,
-        unlockF: ActionUnlocks => Boolean,
+        visible: Signal[Boolean],
     ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] =
-      ifUnlockedOpt(unlocks => unlockF(unlocks.actions)) {
+      ifUnlockedOpt(visible) {
         val chamberSignal = Actions.getChamber(chamberType)
         val actionCost = Actions.buildChamberCost(chamberType)
         actionButton(
@@ -1476,43 +1475,18 @@ object MainForm {
     div(
       className := "row",
       BroodView.render,
-      child.maybe <-- nestSignal
-        .combineWith(upgradesSignal)
-        .map { case (nest, upgrades) =>
-          Option.when(
-            upgrades(UpgradeType.RoyalNurseryPlanning).unlocked || nest.royalBroodSlots > 0
-          )(nest.royalBroodSlots > 0)
-        }
-        .distinct
-        .map(_.map { built =>
-          div(
-            className := "col-12 nest-royal-nursery border-top my-2 py-2",
-            infoHeading(
-              "Royal brood",
-              div(
-                "Up to five Royal Nurses tend one daughter queen. Full staffing takes about 10 minutes. Care pauses when supplies run out; progress is kept."
-              )
-            ),
-            if (built) royalRearingDiv
-            else
-              div(
-                className := "row",
-                actionButton(
-                  name = "Royal Nursery",
-                  enabledSignal =
-                    constructionBlockedSignal(ChamberType.RoyalNursery).map(_.isEmpty),
-                  blockedReasonSignal = constructionBlockedSignal(ChamberType.RoyalNursery),
-                  costSignal = Val(RoyalNurseryProgression.buildCost),
-                  bonusSignal = Val(ChamberBonuses.forChamber(ChamberType.RoyalNursery)),
-                  descriptionSignal = Val(None),
-                  onClickAction = _ =>
-                    Actions.addBuildTask(
-                      BuildTask(ChamberType.RoyalNursery, RoyalNurseryProgression.buildCost)
-                    ),
-                ),
-              ),
-          )
-        }),
+      child.maybe <-- ifUnlockedOpt(nestSignal.map(_.royalBroodSlots > 0).distinct) {
+        div(
+          className := "col-12 nest-royal-nursery border-top my-2 py-2",
+          infoHeading(
+            "Royal brood",
+            div(
+              "Up to five Royal Nurses tend one daughter queen. Full staffing takes about 10 minutes. Care pauses when supplies run out; progress is kept."
+            )
+          ),
+          royalRearingDiv,
+        )
+      },
       child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)) {
         div(
           className := "col-12 nest-repletes border-top my-2 py-2",
@@ -1679,110 +1653,55 @@ object MainForm {
         className := "col-12 nest-chambers",
         display <-- chambersVisible.map(if (_) "block" else "none"),
         h5(className := "mt-3", "Chambers"),
-        child.maybe <-- nestSignal.map(n => (Midden.visible(n), n.middenBuilt)).distinct.map {
-          case (_, true) =>
-            Some(
-              div(
-                className := "midden-status border rounded p-2 my-2",
-                b("Sealed Refuse Chamber"),
-                div(
-                  className := "small",
-                  prettyNumberSimple("+", Midden.AddedCapacity, " refuse capacity")
-                )
-              )
-            )
-          case (true, false) =>
-            Some(
-              div(
-                className := "row",
-                actionButton(
-                  name = "Build Sealed Refuse Chamber",
-                  enabledSignal = snapshotSignal.map(Midden.canBuild),
-                  costSignal = Val(Midden.Cost),
-                  bonusSignal = Val(ActionBonus(maxRefuse = Midden.AddedCapacity)),
-                  descriptionSignal = Val(None),
-                  onClickAction = _ => Actions.buildMidden()
-                )
-              )
-            )
-          case _ => None
-        },
         div(
           className := "row",
+          // Progression order: founding infrastructure, brood maintenance, then specializations.
           child.maybe <-- standardBuyChamber(
             name = ChamberType.Nest.name,
             chamberType = ChamberType.Nest,
-            unlockF = _.canBuildNestUpgrade,
+            visible = unlocksSignal.map(_.actions.canBuildNestUpgrade).distinct,
           ),
           child.maybe <-- standardBuyChamber(
             name = ChamberType.Queen.name,
             chamberType = ChamberType.Queen,
-            unlockF = _.canBuildQueenChamber,
+            visible = unlocksSignal.map(_.actions.canBuildQueenChamber).distinct,
           ),
           child.maybe <-- standardBuyChamber(
             name = ChamberType.FoodStorage.name,
             chamberType = ChamberType.FoodStorage,
-            unlockF = _.canBuildFoodStorageChamber,
+            visible = unlocksSignal.map(_.actions.canBuildFoodStorageChamber).distinct,
           ),
-          child.maybe <-- ifUnlockedOpt(
-            upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked)
-          ) {
-            val cost = Actions.buildChamberCost(ChamberType.Replete)
-            actionButton(
-              name = ChamberType.Replete.name,
-              enabledSignal = constructionBlockedSignal(ChamberType.Replete).map(_.isEmpty),
-              blockedReasonSignal = constructionBlockedSignal(ChamberType.Replete),
-              descriptionSignal = Val(None),
-              costSignal = cost,
-              bonusSignal = Actions.getActionBonus(ChamberType.Replete),
-              topRightBadgeSignal = chambersSignal.map(c =>
-                Option.when(c.repleteChamber.level > 0)(span(c.repleteChamber.level))
-              ),
-              onClickAction = _ =>
-                useSignalValue[ActionCost](
-                  cost,
-                  c => Actions.addBuildTask(BuildTask(ChamberType.Replete, c))
-                ),
-            )
-          },
-          child.maybe <-- ifUnlockedOpt(upgradesSignal.map(_(UpgradeType.AphidTending).unlocked)) {
-            val cost = Actions.buildChamberCost(ChamberType.Aphid)
-            actionButton(
-              name = ChamberType.Aphid.name,
-              enabledSignal = constructionBlockedSignal(ChamberType.Aphid).map(_.isEmpty),
-              blockedReasonSignal = constructionBlockedSignal(ChamberType.Aphid),
-              descriptionSignal = Val(None),
-              costSignal = cost,
-              bonusSignal = Actions.getActionBonus(ChamberType.Aphid),
-              topRightBadgeSignal = chambersSignal.map(chambers =>
-                Option.when(chambers.aphidChamber.level > 0)(span(chambers.aphidChamber.level))
-              ),
-              onClickAction = _ =>
-                useSignalValue[ActionCost](
-                  cost,
-                  cost => Actions.addBuildTask(BuildTask(ChamberType.Aphid, cost))
-                ),
-            )
-          },
-          child.maybe <-- ifUnlockedOpt(nurseryUnlockedSignal) {
-            val cost = Actions.buildChamberCost(ChamberType.Nursery)
-            actionButton(
-              name = "Nursery Chamber",
-              enabledSignal = constructionBlockedSignal(ChamberType.Nursery).map(_.isEmpty),
-              blockedReasonSignal = constructionBlockedSignal(ChamberType.Nursery),
-              descriptionSignal = Val(None),
-              costSignal = cost,
-              bonusSignal = Actions.getActionBonus(ChamberType.Nursery),
-              topRightBadgeSignal = chambersSignal.map(chambers =>
-                Option.when(chambers.nurseryChamber.level > 0)(span(chambers.nurseryChamber.level))
-              ),
-              onClickAction = _ =>
-                useSignalValue[ActionCost](
-                  cost,
-                  cost => Actions.addBuildTask(BuildTask(ChamberType.Nursery, cost))
-                ),
-            )
-          },
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Nursery.name,
+            chamberType = ChamberType.Nursery,
+            visible = nurseryUnlockedSignal,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Waste.name,
+            chamberType = ChamberType.Waste,
+            visible = nestSignal.map(Midden.visible).distinct,
+          ),
+          // Aphid research is reached through earlier exploration than living water storage.
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Aphid.name,
+            chamberType = ChamberType.Aphid,
+            visible = upgradesSignal.map(_(UpgradeType.AphidTending).unlocked).distinct,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.Replete.name,
+            chamberType = ChamberType.Replete,
+            visible = upgradesSignal.map(_(UpgradeType.RepleteStorage).unlocked).distinct,
+          ),
+          child.maybe <-- standardBuyChamber(
+            name = ChamberType.RoyalNursery.name,
+            chamberType = ChamberType.RoyalNursery,
+            visible = nestSignal
+              .combineWith(upgradesSignal)
+              .map { case (nest, upgrades) =>
+                nest.royalBroodSlots == 0 && upgrades(UpgradeType.RoyalNurseryPlanning).unlocked
+              }
+              .distinct,
+          ),
         ),
       ),
     )
@@ -2974,7 +2893,7 @@ object MainForm {
           ifGreater0(bonus.maxSugar)(prettyNumberSimple("+", _, " sugar capacity")),
           ifGreater0(bonus.maxProtein)(prettyNumberSimple("+", _, " protein capacity")),
           ifGreater0(bonus.maxWater)(prettyNumberSimple("+", _, " water capacity")),
-          ifGreater0(bonus.maxRefuse)(prettyNumberSimple("+", _, " refuse capacity")),
+          ifGreater0(bonus.maxRefuse)(prettyNumberSimple("+", _, " waste capacity")),
           ifGreater0(bonus.repleteSlots.toLong)(value =>
             s"+$value replete ${if (value == 1) "slot" else "slots"}"
           ),
@@ -3373,7 +3292,7 @@ object MainForm {
           )
         )
       case AntTask.RefuseCarrier =>
-        small(className := "job-rate", s"−${Midden.ClearPerSecond / u} refuse/s")
+        small(className := "job-rate", s"−${Midden.ClearPerSecond / u} waste/s")
       case _ => emptyNode
     }
 

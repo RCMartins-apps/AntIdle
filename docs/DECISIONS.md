@@ -22,7 +22,7 @@ the game's direction and [Ideas](IDEAS.md) for proposals.
 - **D47 · Colony milestones.** Current-run goals reveal optional paid research. These goals and purchases reset on founding.
 - **D48 · Permanent milestones.** Keep lifetime progress and resource peaks across foundings. Each earned achievement multiplies sugar production by 1.01. See [Milestones](MILESTONES.md).
 - **D65 · Satellite Nests.** Give Dry Clearing specializations with distinct benefits, using water and existing castes. See [Prestige](PRESTIGE.md#satellite-nests).
-- **D71 · Refuse.** Larval feeding creates refuse. Nursery level 2 introduces carriers and storage; excess refuse temporarily closes brood places. Existing brood develops and clearing the backlog reopens places.
+- **D71 · Waste.** Larval feeding creates waste. Nursery level 2 introduces carriers, base storage, and repeatable Waste Chambers. Excess waste temporarily closes brood places. Existing brood develops and clearing the backlog reopens places.
 - **D73 · Guard rotations.** Exchange some territorial harvest for protection. Keep the cost and benefit visible and give the player control over staffing.
 
 ## Brood, founding, and saves
@@ -62,6 +62,7 @@ the game's direction and [Ideas](IDEAS.md) for proposals.
 - **D64 · Purchased upgrades.** A purchased sub-tab shows its list directly. Expanded details span the row without moving the label or button.
 - **Egg-order counts.** Use caste icon then count, including on the next-egg timer. Raise actions show queued, developing, and adult counts. Show the accessible cancel control only when there are outstanding orders.
 - **Build queue.** Keep cancel separate from entry names. Show level transitions and sequential affordability estimates where feasible. Affordable entries build on the next tick. On phones the queue belongs on Chambers, and automation controls need usable touch targets.
+- **Chamber order.** List founding infrastructure first, then Nursery and Waste, then Aphid, Replete, and Royal Nursery construction. Use the same relative order as choices unlock. Queue entries follow the player's build choices.
 
 ## Development workflow
 

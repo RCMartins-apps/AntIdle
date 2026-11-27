@@ -35,7 +35,7 @@ def check(page, width, url):
     wiki = page.get_by_role('tabpanel', name='Wiki')
     expect(wiki).to_be_visible()
     expect(wiki).to_contain_text('Small workers develop without food')
-    expect(wiki.get_by_role('heading', name='Refuse')).to_have_count(0)
+    expect(wiki.get_by_role('heading', name='Waste')).to_have_count(0)
     expect(wiki.get_by_role('heading', name='Aging')).to_have_count(0)
     expect(page.get_by_role('button', name='Manual Save')).not_to_be_visible()
     assert_fits(page, width)

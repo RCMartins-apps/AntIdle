@@ -72,7 +72,7 @@ object AntTask {
 
   case object RefuseCarrier extends AntTask {
     val uiOrder: Int = 7
-    val name: String = "Refuse Carrier"
+    val name: String = "Waste Carrier"
   }
 
   case object RoyalNurse extends AntTask {

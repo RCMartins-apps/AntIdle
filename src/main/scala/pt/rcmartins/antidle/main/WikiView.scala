@@ -49,8 +49,8 @@ private[main] object WikiView {
       ),
       child.maybe <-- ifUnlockedOpt(nestSignal.map(Midden.visible).distinct)(
         sectionTag(
-          h5("Refuse"),
-          p("Larval feeding creates refuse. High refuse closes brood places to new eggs. Refuse Carriers clear it.")
+          h5("Waste"),
+          p("Larval feeding creates waste. High waste closes brood places to new eggs. Waste Carriers clear it.")
         )
       )
     )
