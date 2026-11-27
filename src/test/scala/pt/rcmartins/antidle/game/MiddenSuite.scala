@@ -134,18 +134,22 @@ class MiddenSuite extends FunSuite {
   test("waste construction requires Nursery level two and completes repeatable queued levels") {
     val kind = ChamberType.Waste
     assertEquals(Construction.enqueue(fresh, kind), fresh)
-    val start = fresh.copy(nestAttributes = nursery.copy(
-      maxBuildQueue = 2,
-      nurseryRefuse = Midden.BaseCapacity
-    ))
+    val start = fresh.copy(nestAttributes =
+      nursery.copy(
+        maxBuildQueue = 2,
+        nurseryRefuse = Midden.BaseCapacity
+      )
+    )
     val queued = Construction.enqueue(Construction.enqueue(start, kind), kind)
     val first = Construction.cost(kind, 0)
     val second = Construction.cost(kind, 1)
     assertEquals(queued.nestAttributes.buildQueue.map(_.actionCost), List(first, second))
-    val funded = queued.copy(basicResources = stocked.copy(
-      sugar = BasicResource(first.sugar + second.sugar, 5000L * u),
-      tunnelingSpace = BasicResource(first.tunnelingSpace + second.tunnelingSpace, 2000L * u)
-    ))
+    val funded = queued.copy(basicResources =
+      stocked.copy(
+        sugar = BasicResource(first.sugar + second.sugar, 5000L * u),
+        tunnelingSpace = BasicResource(first.tunnelingSpace + second.tunnelingSpace, 2000L * u)
+      )
+    )
     val built = Construction.tick(Construction.tick(funded))
     assertEquals(built.nestAttributes.chambers.wasteChamber.level, 2)
     assertEquals(built.nestAttributes.buildQueue, Nil)

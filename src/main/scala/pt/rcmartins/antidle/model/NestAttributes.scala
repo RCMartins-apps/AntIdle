@@ -40,13 +40,15 @@ object NestAttributes {
   implicit val decoder: JsonDecoder[NestAttributes] =
     DeriveJsonDecoder.gen[NestAttributes].map { nest =>
       if (!nest.middenBuilt) nest
-      else nest.copy(
-        middenBuilt = false,
-        chambers = nest.chambers.copy(
-          wasteChamber = Chamber.WasteChamber(Math.max(1, nest.chambers.wasteChamber.level))
+      else
+        nest.copy(
+          middenBuilt = false,
+          chambers = nest.chambers.copy(
+            wasteChamber = Chamber.WasteChamber(Math.max(1, nest.chambers.wasteChamber.level))
+          )
         )
-      )
     }
+
   implicit val encoder: JsonEncoder[NestAttributes] = DeriveJsonEncoder.gen[NestAttributes]
 
   val initial: NestAttributes = NestAttributes(aphidsInitialized = true)

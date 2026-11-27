@@ -18,7 +18,8 @@ object Midden {
     nest.chambers.nurseryChamber.level >= RequiredNurseryLevel
 
   def capacity(nest: NestAttributes): Long =
-    if (!visible(nest)) 0L else BaseCapacity + Math.max(0, nest.chambers.wasteChamber.level) * AddedCapacity
+    if (!visible(nest)) 0L
+    else BaseCapacity + Math.max(0, nest.chambers.wasteChamber.level) * AddedCapacity
 
   def stored(nest: NestAttributes): Long =
     Math.max(0L, Math.min(capacity(nest), nest.nurseryRefuse))

@@ -57,7 +57,7 @@ object Construction {
               data.upgrades(RoyalNurseryPlanning).unlocked &&
                 nest.chambers.royalNurseryChamber.level == 0 && count == 0
             case ChamberType.Waste => Midden.visible(nest)
-            case _ => true
+            case _                 => true
           }
           if (!allowed) (planned, queue)
           else
