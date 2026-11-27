@@ -6,14 +6,33 @@ const PREFIX = `antidle:${self.registration.scope}:`;
 const CACHE = PREFIX + VERSION;
 const INDEX = new URL('index.html', self.registration.scope).href;
 
+const assetRequests = () => ASSETS.map(asset => new Request(new URL(asset.path, self.registration.scope), {
+  cache: 'reload', integrity: asset.integrity
+}));
+async function cacheIsComplete(cache) {
+  const entries = await Promise.all(assetRequests().map(request => cache.match(request)));
+  return entries.every(Boolean);
+}
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     // addAll commits atomically. Integrity checks reject stale CDN/deploy responses.
-    await cache.addAll(ASSETS.map(asset => new Request(new URL(asset.path, self.registration.scope), {
-      cache: 'reload', integrity: asset.integrity
-    })));
+    await cache.addAll(assetRequests());
     // No skipWaiting: existing game windows keep their coherent, running release.
+  })());
+});
+
+self.addEventListener('message', event => {
+  const port = event.ports[0];
+  if (event.data !== 'antidle-offline-readiness' || !port) return;
+  event.waitUntil((async () => {
+    let complete = false;
+    try {
+      complete = await cacheIsComplete(await caches.open(CACHE));
+    } finally {
+      port.postMessage(complete);
+    }
   })());
 });
 
@@ -33,6 +52,11 @@ self.addEventListener('fetch', event => {
   if (url.pathname.startsWith(new URL('pr-preview/', self.registration.scope).pathname)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
+    if (event.request.mode === 'navigate' && !await cacheIsComplete(cache)) {
+      // Reopen online to restore this release atomically. If deployment changed,
+      // integrity rejects mixed assets and the regular update can install instead.
+      await cache.addAll(assetRequests()).catch(() => {});
+    }
     const response = await cache.match(event.request.mode === 'navigate' ? INDEX : event.request);
     if (response) return response;
     return fetch(event.request); // Never return HTML in place of missing JavaScript.

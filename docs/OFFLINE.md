@@ -22,6 +22,11 @@ its colony or load the newer save. Browsers with Web Locks also serialize
 simultaneous writes. Other browsers still check for a changed revision before
 writing. Regular, playtest, and PR preview saves have separate revision checks.
 
+The offline status checks the active release's required cache entries. If files
+are missing, reopen while online to refill that release's cache. The worker
+checks file integrity during repair. If the deployed files have changed, the
+normal release update can install the new version.
+
 ## Identifying the running build
 
 Settings and the page footer show **Build abcdef12**, using the first eight

@@ -124,6 +124,23 @@ def check(context, width, server, root):
             }''', size)
         installability = cdp.send('Page.getInstallabilityErrors')
         assert not installability['installabilityErrors'], installability
+        save_game(page)
+        before_repair = page.evaluate("localStorage.getItem('save')")
+        assert page.evaluate("""async () => {
+          const names = await caches.keys();
+          const name = names.find(key => key.startsWith('antidle:' + location.href + ':'));
+          const cache = await caches.open(name);
+          return cache.delete(new URL('assets/icons/icon-192.png', location.href));
+        }""")
+        page.evaluate("window.dispatchEvent(new Event('online'))")
+        expect(page.locator('#offline-status')).to_contain_text('Offline files incomplete')
+        if width == 390 and os.environ.get('ANTIDLE_OFFLINE_REPAIR_SCREENSHOT'):
+            page.locator('#offline-status').scroll_into_view_if_needed()
+            page.screenshot(path=os.environ['ANTIDLE_OFFLINE_REPAIR_SCREENSHOT'])
+        page.reload(wait_until='networkidle')
+        expect(page.locator('#offline-status')).to_have_text('Available offline')
+        assert page.evaluate("localStorage.getItem('save')") == before_repair
+        select_tab(page, 'Nest')
         small = page.get_by_role('button', name='Raise Small Worker Egg', exact=True)
         small.click()
         expect(small.locator('.egg-count-brood')).to_have_text('Brood: 1')

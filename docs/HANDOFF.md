@@ -2,10 +2,10 @@
 
 ## 2026-11-27
 
-Each tab remembers the save revision it loaded. A stale tab can export its
-colony or load the newer save. Web Locks serialize simultaneous writes where
-available. Older browsers still compare the stored revision before writing.
+Offline status checks the active release's cached assets. Reopening online
+can repair missing entries with integrity-checked assets from that release.
+The status is visible above the fixed navigation on phones.
 
-Verified the production build, concurrent and stale save checks at 390px,
-preview-slot isolation, and offline round trips at 390px and 1280px. See
-[issue #158](https://github.com/RCMartins-apps/AntIdle/issues/158).
+Verified package tests and packaged browser checks at 390px and 1280px,
+including deleting an asset, displaying the warning, repairing the cache,
+and preserving the save.
