@@ -52,7 +52,13 @@ classifier required so a failure to classify cannot silently waive game checks.
 
 ## Per authorized PR
 
-After local verification, create the PR and choose **Enable auto-merge → Squash**
+Check all linked issues and the PR for `needs-manual-testing`. If present,
+keep auto-merge off. Share the preview once CI deploys it and wait for the
+owner's explicit approval on the latest revision before merging with the
+required checks. A new revision requires fresh approval. Schedule the normal
+CI follow-up to report preview and test status without waiting in the turn.
+
+For eligible PRs, after local verification choose **Enable auto-merge → Squash**
 in GitHub, or use the connector's enable-auto-merge action. GitHub waits for the
 required checks and reviews, if any. Confirm the queued state before ending work.
 If already eligible, GitHub may merge immediately; verify the actual result.
