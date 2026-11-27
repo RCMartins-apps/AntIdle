@@ -26,19 +26,17 @@ object TickUpdater {
           def countWorkers(task: AntTask): Long =
             allData.ants.tasks.find(_._1 == task).map(_._2 / u).getOrElse(0L)
 
-          val sugarWorkers: Long = countWorkers(AntTask.SugarCollector)
           val tunnelerWorkers: Long = countWorkers(AntTask.Tunneler)
 
-          val totalSugarToGain: Long = ColonyMilestones.sugar(
-            Foraging.production(allData.ants, allData.upgrades) +
-              AphidHusbandry.productionPerTick(
-                allData.ants,
-                allData.nestAttributes,
-                allData.upgrades,
-                allData.basicResources.protein.amount
-              ),
-            allData.statistics
-          )
+          val totalSugarToGain = SugarProduction
+            .contributions(
+              allData.ants,
+              allData.nestAttributes,
+              allData.upgrades,
+              allData.basicResources.protein.amount,
+              allData.statistics
+            )
+            .total
 
           val sugarToGive: Long =
             Math.min(allData.basicResources.sugar.freeSpace, totalSugarToGain)

@@ -83,11 +83,9 @@ object RoyalBroodProgression {
   ): BasicResources = {
     val trailResources =
       PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
-    val sugar = ColonyMilestones.sugar(
-      Foraging.production(ants, upgrades) +
-        AphidHusbandry.productionPerTick(ants, nest, upgrades, trailResources.protein.amount),
-      stats
-    )
+    val sugar = SugarProduction
+      .contributions(ants, nest, upgrades, trailResources.protein.amount, stats)
+      .total
     val feeding = AphidHusbandry.proteinPerTick(ants, nest, upgrades, trailResources.protein.amount)
     val harvest = OutpostProgression.harvestPerTick(ants, nest, upgrades, trailResources)
     val upkeep = ScoutProgression.upkeepPerTick(ants, exploration) - CarcassProgression.foodOffset(

@@ -99,6 +99,50 @@ class AphidChamberSuite extends FunSuite {
     )
   }
 
+  test("recurring sugar forecast and tick agree with aphids and larval feeding near capacity") {
+    val staffed = DefaultWorkerAssignment.assign(colony(), AntTask.AphidTender, 3 * u)
+    val larva = AntBrood.Developing(0L, care = 100L * u)
+    val initial = staffed.copy(
+      ants = staffed.ants.copy(eggsAndLarvae = Seq(larva), lineage = Lineage(foundings = 3)),
+      basicResources = staffed.basicResources.copy(sugar = BasicResource(1000 * u - 1L, 1000 * u))
+    )
+    val ants = initial.ants
+    val nest = initial.nestAttributes
+    val resources = initial.basicResources
+    val forecast = RoyalBroodProgression.forecastResources(
+      ants,
+      nest,
+      initial.upgrades,
+      initial.exploration,
+      resources,
+      initial.statistics
+    )
+    val feeding = BroodProgression.forecastCost(
+      ants,
+      nest,
+      initial.upgrades,
+      initial.exploration,
+      resources,
+      initial.statistics
+    )
+    val production = SugarProduction.contributions(
+      ants,
+      nest,
+      initial.upgrades,
+      resources.protein.amount,
+      initial.statistics
+    )
+    assert(production.aphids > 0L)
+    assert(feeding.sugar > 0L)
+    assertEquals(production.total, production.aphids)
+    val next = TickUpdater.updateAllData(initial, None)
+    assertEquals(
+      next.basicResources.sugar.amount,
+      Math.min(resources.sugar.maxAmount, forecast.sugar.amount - feeding.sugar)
+    )
+    assertEquals(next.basicResources.protein.amount, forecast.protein.amount - feeding.protein)
+  }
+
   test(
     "empty protein pauses tending and a partial final feed produces proportional sugar without debt"
   ) {

@@ -4,7 +4,6 @@ import com.raquo.laminar.api.L.{u => _, _}
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.{HTMLDivElement, HTMLElement}
 import pt.rcmartins.antidle.game.Constants._
-import pt.rcmartins.antidle.game.TickCalculator.BonusOrigin.{PercentOrigin, ResourceOrigin}
 import pt.rcmartins.antidle.game.UIUtils.setTooltip
 import pt.rcmartins.antidle.game.UINumbersUtils.signedRateStr
 import pt.rcmartins.antidle.game.Utils._
@@ -14,51 +13,13 @@ import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
 
 object TickCalculator {
 
-  sealed trait BonusOrigin {
-
-    def name: String
-
+  case class ResourceOrigin(name: String, tickResourceU: Long) {
+    def resourceUSec: Long = tickResourceU * TicksPerSecond
   }
 
-  object BonusOrigin {
-
-    case class ResourceOrigin(
-        name: String,
-        tickResourceU: Long,
-    ) extends BonusOrigin {
-
-      def resourceUSec: Long = tickResourceU * TicksPerSecond
-
-    }
-
-    case class PercentOrigin(
-        name: String,
-        percent: Double,
-    ) extends BonusOrigin
-
-  }
-
-  case class BonusOriginGroup(
-      bonusListSignal: Signal[List[BonusOrigin]],
-  ) {
-
-    val contributions: Signal[List[ResourceOrigin]] = bonusListSignal.map { bonuses =>
-      val (_, reversed) = bonuses.foldLeft((0L, List.empty[ResourceOrigin])) {
-        case ((total, entries), origin: ResourceOrigin) =>
-          (total + origin.tickResourceU, origin :: entries)
-        case ((total, entries), PercentOrigin(name, multiplier)) =>
-          val adjusted = (BigDecimal(total) * BigDecimal.decimal(multiplier)).toLong
-          (adjusted, ResourceOrigin(name, adjusted - total) :: entries)
-      }
-      reversed.reverse
-    }
-
+  case class BonusOriginGroup(contributions: Signal[List[ResourceOrigin]]) {
     val sum: Signal[Long] = contributions.map(_.iterator.map(_.tickResourceU).sum)
-
   }
-
-  private def antTaskCountSignal(antTask: AntTask): Signal[Long] =
-    antsSignal.map(_.tasks.find(_._1 == antTask).map(_._2 / u).getOrElse(0L)).distinct
 
   val larvalFeedingCost: Signal[ActionCost] =
     antsSignal
@@ -76,99 +37,38 @@ object TickCalculator {
 
   val sugarTickGain: BonusOriginGroup =
     BonusOriginGroup(
-      antTaskCountSignal(AntTask.SugarCollector)
+      antsSignal
         .combineWith(
           upgradesSignal,
-          antsSignal,
           explorationSignal,
           nestSignal,
           resourcesSignal,
           statisticsData.signal,
-          larvalFeedingCost,
+          larvalFeedingCost
         )
-        .map {
-          case (
-                sugarCollectorAmount,
-                upgrades,
-                ants,
-                exploration,
-                nest,
-                resources,
-                stats,
-                larvalCost,
-              ) =>
-            val afterTrails =
-              PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
-            List(
-              Some(
-                ResourceOrigin(
-                  AntTask.SugarCollector.name,
-                  Foraging.mixedBasePerTick(ants, upgrades),
-                )
-              ),
-              Some(
-                ResourceOrigin(
-                  "Research",
-                  balance.UpgradeBalance.production(
-                    Foraging.mixedBasePerTick(ants, upgrades),
-                    "sugarCollectors",
-                    upgrades
-                  ) - Foraging.mixedBasePerTick(ants, upgrades)
-                )
-              ).filter(_.tickResourceU != 0),
-              Some(PercentOrigin("Inherited production", 1.0 + ants.lineage.foundings * 0.1))
-                .filter(_ => ants.lineage.foundings > 0),
-              Some(
-                ResourceOrigin(
-                  "Collection trails",
-                  PheromoneTrails
-                    .forecastResources(ants, exploration, upgrades, resources, stats)
-                    .sugar
-                    .amount - resources.sugar.amount
-                )
-              ).filter(_.tickResourceU != 0),
-              Some(
-                ResourceOrigin(
-                  "Aphid Tenders",
-                  AphidHusbandry.productionPerTick(ants, nest, upgrades, afterTrails.protein.amount)
-                )
-              )
-                .filter(_.tickResourceU > 0),
-              Some(
-                ResourceOrigin(
-                  "Milestones",
-                  ColonyMilestones.sugar(
-                    Foraging.production(ants, upgrades) + AphidHusbandry
-                      .productionPerTick(ants, nest, upgrades, afterTrails.protein.amount),
-                    stats
-                  ) -
-                    Foraging.production(ants, upgrades) - AphidHusbandry
-                      .productionPerTick(ants, nest, upgrades, afterTrails.protein.amount)
-                )
-              )
-                .filter(_.tickResourceU > 0),
-              Some(
-                ResourceOrigin(
-                  "Ants Demand",
-                  -ScoutProgression.upkeepPerTick(ants, exploration),
-                )
-              ),
-              Some(
-                ResourceOrigin(
-                  "Royal brood",
-                  -RoyalBroodProgression
-                    .forecast(ants, nest, upgrades, exploration, resources, stats)
-                    .cost
-                    .sugar
-                )
-              )
-                .filter(_.tickResourceU < 0),
-              Some(ResourceOrigin("Larval feeding", -larvalCost.sugar)).filter(_.tickResourceU < 0),
-              Some(
-                ResourceOrigin("Carcass sugar", CarcassProgression.foodOffset(exploration, ants))
-              )
-                .filter(_.tickResourceU > 0),
-            ).flatten
+        .map { case (ants, upgrades, exploration, nest, resources, stats, larvalCost) =>
+          val afterTrails =
+            PheromoneTrails.forecastResources(ants, exploration, upgrades, resources, stats)
+          val production =
+            SugarProduction.contributions(ants, nest, upgrades, afterTrails.protein.amount, stats)
+          List(
+            ResourceOrigin(AntTask.SugarCollector.name, production.foraging),
+            ResourceOrigin("Research", production.research),
+            ResourceOrigin("Inherited production", production.inherited),
+            ResourceOrigin("Collection trails", afterTrails.sugar.amount - resources.sugar.amount),
+            ResourceOrigin("Aphid Tenders", production.aphids),
+            ResourceOrigin("Milestones", production.milestones),
+            ResourceOrigin("Ants Demand", -ScoutProgression.upkeepPerTick(ants, exploration)),
+            ResourceOrigin(
+              "Royal brood",
+              -RoyalBroodProgression
+                .forecast(ants, nest, upgrades, exploration, resources, stats)
+                .cost
+                .sugar
+            ),
+            ResourceOrigin("Larval feeding", -larvalCost.sugar),
+            ResourceOrigin("Carcass sugar", CarcassProgression.foodOffset(exploration, ants))
+          ).filter(_.tickResourceU != 0L)
         }
     )
 
@@ -425,7 +325,7 @@ object TickCalculator {
       resource: Signal[BasicResource],
   ): ReactiveHtmlElement[HTMLDivElement] =
     div(
-      children <-- bonusGroup.bonusListSignal.map {
+      children <-- bonusGroup.contributions.map {
         _.map { bonusOrigin =>
           div(
             className := "d-flex justify-content-between",
@@ -434,17 +334,7 @@ object TickCalculator {
               s"${bonusOrigin.name}:",
             ),
             span(
-              // TODO deal this small numbers in minutes
-              bonusOrigin match {
-                case resource: ResourceOrigin =>
-                  s"${UINumbersUtils.signedRateStr(resource.resourceUSec)}/sec"
-                case PercentOrigin(_, percent) if percent > 0 =>
-                  f"+${(percent - 1.0) * 100.0}%.2f%%"
-                case PercentOrigin(_, percent) if percent < 0 =>
-                  f"${(percent - 1.0) * 100.0}%.2f%%"
-                case PercentOrigin(_, _) =>
-                  "0.00%"
-              }
+              s"${signedRateStr(bonusOrigin.resourceUSec)}/sec"
             )
           )
         }
