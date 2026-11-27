@@ -2,10 +2,9 @@
 
 ## 2026-11-27
 
-Each tab remembers the save revision it loaded. A stale tab can export its
-colony or load the newer save. Web Locks serialize simultaneous writes where
-available. Older browsers still compare the stored revision before writing.
+Live resource amounts in action costs retain two decimal places below 1K.
+Fractional costs use the same format, while whole prices stay compact.
 
-Verified the production build, concurrent and stale save checks at 390px,
-preview-slot isolation, and offline round trips at 390px and 1280px. See
-[issue #158](https://github.com/RCMartins-apps/AntIdle/issues/158).
+Verified four number-presentation tests and the 317.79 to 317.80 transition
+in the game at 390px and 1280px. Follow-up to
+[PR #120](https://github.com/RCMartins-apps/AntIdle/pull/120).
