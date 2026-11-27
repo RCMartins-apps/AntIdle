@@ -2,10 +2,11 @@
 
 ## 2026-11-27
 
-Offline status checks the active release's cached assets. Reopening online
-can repair missing entries with integrity-checked assets from that release.
-The status is visible above the fixed navigation on phones.
+ResearchView owns available research, current research goals, and purchase
+history. MainForm still owns the tab layout. The view shares the existing
+action and disclosure helpers.
 
-Verified package tests and packaged browser checks at 390px and 1280px,
-including deleting an asset, displaying the warning, repairing the cache,
-and preserving the save.
+Verified the development build, the mobile navigation suite, and the map
+browser suite at 320px, 390px, and 1280px, including supply purchases and
+purchase-history disclosure behavior. See
+[issue #178](https://github.com/RCMartins-apps/AntIdle/issues/178).
