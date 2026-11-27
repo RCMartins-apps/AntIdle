@@ -70,6 +70,19 @@ changes before auto-merge can complete. This is expected and does not require
 weakening the rule. Auto-merge is ready to use on the next authorized PR; no live
 pending PR was used to exercise a merge during this read-only settings check.
 
+## Parallel browser checks
+
+Validation builds and uploads one production bundle. Three browser jobs use that
+bundle with the same checkout revision. Colony UI covers the production, mobile,
+brood, task, and blocked-action checks. Progression covers map and prestige.
+Offline covers release updates and preview isolation. Each group uploads its own
+failure screenshots. The required `test` check requires all three groups to pass,
+and eligible preview deployment waits for them.
+
+The sequential baseline from [PR #168](https://github.com/RCMartins-apps/AntIdle/actions/runs/45954092960/job/140356495986)
+was 11m 16s for validation, including 7m 44s from browser setup to preview packaging.
+Compare against the new build plus the slowest browser group before preview deployment.
+
 ## Runtime limits and superseded runs
 
 Repository-controlled workflows use explicit job budgets rather than GitHub's
