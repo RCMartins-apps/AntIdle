@@ -68,7 +68,7 @@ object Actions {
         Utils.pause = true
         scala.scalajs.js.timers.setTimeout(0) {
           saves.SaveLoad.reloadDataFromLoadedSave(next, messageAlert = None)
-          saves.SaveLoad.saveToLocalStorage(next)
+          saves.SaveLoad.saveToLocalStorage(next).left.foreach(saves.SaveLoad.showError)
         }
       }
       next

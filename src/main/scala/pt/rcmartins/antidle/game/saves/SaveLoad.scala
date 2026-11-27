@@ -8,50 +8,112 @@ import pt.rcmartins.antidle.model.AllData
 import zio.json._
 
 import scala.util.Try
-import scala.util.chaining.scalaUtilChainingOps
 
-// TODO check for save/load/import/export errors?
 object SaveLoad {
 
   private lazy val SaveGameName =
     BrowserStorage.key("save", org.scalajs.dom.window.location.pathname)
 
-  def saveToLocalStorage(allData: AllData): Either[Throwable, Unit] =
+  sealed abstract class SaveError(val message: String)
+  case object Missing extends SaveError("No local colony save was found.")
+  case object Malformed extends SaveError("The colony save is malformed.")
+  case object Incompatible extends SaveError("The colony save uses an incompatible version.")
+  case object Unreadable extends SaveError("Local storage could not be read.")
+  case object Unwritable extends SaveError("The colony could not be written to local storage.")
+
+  final case class Loaded(data: AllData, recovered: Boolean)
+
+  private lazy val BackupName = s"$SaveGameName:backup"
+
+  def saveToLocalStorage(allData: AllData): Either[SaveError, Unit] =
     Try {
-      localStorage.setItem(SaveGameName, saveString(allData))
-    }.toEither
+      writeSave(
+        allData,
+        SaveGameName,
+        BackupName,
+        localStorage.getItem(_),
+        localStorage.setItem(_, _)
+      )
+    }.toEither.left.map(_ => Unwritable)
 
-  def saveString(allData: AllData): String =
-    jsonToBase64(saveToJson(allData))
+  def resetLocalStorage(allData: AllData): Either[SaveError, Unit] =
+    Try {
+      val storage = localStorage
+      storage.setItem(SaveGameName, saveString(allData))
+      storage.removeItem(BackupName)
+    }.toEither.left.map(_ => Unwritable)
 
-  private def saveToJson(allData: AllData): String =
-    AllDataForSave.fromAllData(allData).toJson
-
-  private def jsonToBase64(str: String): String =
-    java.util.Base64.getEncoder.encodeToString(str.getBytes)
-
-  def loadFromLocalStorage(): Option[AllData] =
-    Option(localStorage.getItem(SaveGameName))
-      .flatMap(loadString)
-      .filter(_.version == AllData.CurrentVersion)
-
-  def loadString(str: String): Option[AllData] = {
-    val strTrimmed = str.trim
-    if (strTrimmed.startsWith("{"))
-      loadFromJson(strTrimmed)
-    else
-      loadFromJson(base64ToJson(strTrimmed))
+  private[saves] def writeSave(
+      allData: AllData,
+      primary: String,
+      backup: String,
+      read: String => String,
+      write: (String, String) => Unit,
+  ): Unit = {
+    val encoded = saveString(allData)
+    Option(read(primary))
+      .filter(decode(_).isRight)
+      .filterNot(_ == encoded)
+      .foreach(write(backup, _))
+    write(primary, encoded)
   }
 
-  private def loadFromJson(str: String): Option[AllData] =
-    str
-      .fromJson[AllDataForSave]
-      .toOption
-      .filter(_.version == AllData.CurrentVersion)
-      .map(_.toAllData)
+  def saveString(allData: AllData): String =
+    java.util.Base64.getEncoder.encodeToString(AllDataForSave.fromAllData(allData).toJson.getBytes)
 
-  private def base64ToJson(str: String): String =
-    new String(java.util.Base64.getDecoder.decode(str.getBytes))
+  private[saves] def readSave(
+      primary: String,
+      backup: String,
+      read: String => String,
+  ): Either[SaveError, Loaded] = {
+    def readData(key: String) =
+      Option(read(key)).toRight(Missing).flatMap(decode)
+
+    Try {
+      readData(primary) match {
+        case Right(data) => Right(Loaded(data, recovered = false))
+        case Left(error) => readData(backup).map(Loaded(_, recovered = true)).left.map(_ => error)
+      }
+    }.toEither.left.map(_ => Unreadable).flatten
+  }
+
+  def loadFromLocalStorage(): Either[SaveError, Loaded] =
+    readSave(SaveGameName, BackupName, localStorage.getItem(_))
+
+  def loadString(str: String): Option[AllData] = decode(str).toOption
+
+  def decode(str: String): Either[SaveError, AllData] = {
+    val trimmed = str.trim
+    val json = Try {
+      if (trimmed.startsWith("{")) trimmed
+      else new String(java.util.Base64.getDecoder.decode(trimmed.getBytes))
+    }.toEither.left.map(_ => Malformed)
+
+    json.flatMap { raw =>
+      import zio.json.ast.Json
+      raw.fromJson[Json.Obj].left.map(_ => Malformed).flatMap { obj =>
+        obj.get("version") match {
+          case Some(Json.Num(version))
+              if version
+                .compareTo(java.math.BigDecimal.valueOf(AllData.CurrentVersion.toLong)) == 0 =>
+            Try(raw.fromJson[AllDataForSave].map(_.toAllData)).toEither.left
+              .map(_ => Malformed)
+              .flatMap(_.left.map(_ => Malformed))
+          case Some(Json.Num(_)) => Left(Incompatible)
+          case _                 => Left(Malformed)
+        }
+      }
+    }
+  }
+
+  def showError(error: SaveError): Unit = currentGlobalAlert.set(Some(error.message))
+
+  def restore(loaded: Loaded, manual: Boolean): Unit = {
+    val message =
+      if (loaded.recovered) Some("Recovered the last known-good colony save.")
+      else Option.when(manual)("Game Loaded!")
+    reloadDataFromLoadedSave(loaded.data, message)
+  }
 
   def reloadDataFromLoadedSave(
       loadedAllData: AllData,
