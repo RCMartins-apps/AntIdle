@@ -884,10 +884,12 @@ object MainForm {
             prettyResourceEstDiv(
               TickCalculator.sugarTickGain,
               sugarSignal,
-              Some(TickCalculator.displayedSugarRate)
+              Some(TickCalculator.displayedSugarRate),
+              showTooltip = false
             )
           ),
           showSignal = Val(true),
+          rateDetails = Some(TickCalculator.sugarRateDetails),
         ),
         child.maybe <-- createResourceDiv(
           name = "Tunneling Space",
@@ -1055,6 +1057,7 @@ object MainForm {
       showSignal: Signal[Boolean],
       tooltipOpt: Option[ReactiveHtmlElement[HTMLDivElement]] = None,
       netRateSignal: Option[Signal[Long]] = None,
+      rateDetails: Option[ReactiveHtmlElement[HTMLDivElement]] = None,
   ): Signal[Option[ReactiveHtmlElement[HTMLDivElement]]] = {
     val amountSignal: Signal[Long] = resourceSignal.map(_.amount).distinct
     val maxAmountSignal: Signal[Long] = resourceSignal.map(_.maxAmount).distinct
@@ -1124,7 +1127,14 @@ object MainForm {
             div(
               className := "col-3 text-end text-nowrap",
               child <-- resourceEstimationSignal
-            )
+            ),
+            rateDetails.map(content =>
+              detailsTag(
+                className := "resource-rate-disclosure",
+                summaryTag(aria.label := s"$name rate details", "Rate details"),
+                content,
+              )
+            ),
           )
         )
     }

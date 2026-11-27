@@ -1,13 +1,11 @@
 # Handoff
 
-## 2026-11-26
+## 2026-11-27
 
-Production effects target a job's output. The Workshop now offers Aphid
-Tenders' sugar and Dew Gatherers' water alongside the existing jobs. Bonuses
-apply to the chosen job alone and neither add upkeep nor change shipped output.
-The tick, resource forecasts, and task detail rates share the effective rates.
+Sugar's resource row has a rate disclosure with signed contributions and the
+same smoothed net rate used by the row and its capacity estimate. Inherited
+production appears as a rate contribution. The disclosure starts closed.
 
-See [Workshop issue #133](https://github.com/RCMartins-apps/AntIdle/issues/133).
-
-Verified 39 focused engine tests, the bonus schema tests after final labels,
-and a 390px Workshop save and reload of both new production targets.
+Verified the development build and a live sugar-rate and timing comparison in
+Chromium at 390px and 1280px. See
+[issue #142](https://github.com/RCMartins-apps/AntIdle/issues/142).
