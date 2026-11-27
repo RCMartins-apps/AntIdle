@@ -296,16 +296,39 @@ function touch() {
 function renderConnections() {
   const list = el('connections');
   list.replaceChildren();
-  const children = ids.filter(id => layout.parents.get(id).some(edge => edge.parent === selected));
-  if (!children.length) return;
-  list.append(element('span', 'Leads to', 'field'));
-  const tags = element('div', undefined, 'tags');
-  for (const id of children) {
-    const button = element('button', draft[id].title);
-    button.addEventListener('click', () => select(id, true));
-    tags.append(button);
+  const children = new Map(ids.map(id => [id, []]));
+  for (const [id, parents] of layout.parents) {
+    for (const {parent} of parents) children.get(parent).push(id);
   }
-  list.append(tags);
+  const direct = children.get(selected);
+  if (!direct.length) {
+    list.append(element('p', 'No research depends on this upgrade.'));
+    return;
+  }
+
+  const seen = new Set([selected, ...direct]);
+  const downstream = [];
+  const queue = [...direct];
+  for (const id of queue) {
+    for (const child of children.get(id)) {
+      if (seen.has(child)) continue;
+      seen.add(child);
+      downstream.push(child);
+      queue.push(child);
+    }
+  }
+
+  for (const [label, group] of [['Direct', direct], ['Indirect', downstream]]) {
+    if (!group.length) continue;
+    const heading = element('h3', label, 'field');
+    const tags = element('div', undefined, 'tags');
+    for (const id of group) {
+      const button = element('button', draft[id].title);
+      button.addEventListener('click', () => select(id, true));
+      tags.append(button);
+    }
+    list.append(heading, tags);
+  }
 }
 
 function renderForm() {
@@ -484,7 +507,7 @@ function renderForm() {
 
   const neighbours = element('div', undefined, 'connections');
   neighbours.id = 'connections';
-  form.replaceChildren(heading, section('Costs', costs), section('Bonuses', bonus), section('Prerequisites', requirements), section('Title and help', copy, false), neighbours);
+  form.replaceChildren(heading, section('Costs', costs), section('Bonuses', bonus), section('Prerequisites', requirements), section('Title and help', copy, false), section('Dependent research', neighbours));
   form.hidden = false;
   if (layout) renderConnections();
 }
