@@ -23,7 +23,10 @@ def check_brood(page, width, url):
     page.get_by_role("tab", name="Nest", exact=True).click()
     raise_egg = page.get_by_role("button", name=re.compile(r"^Raise (?:Small )?Worker Egg"))
     expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_be_enabled()
-    expect(page.locator(".brood-feeding")).to_contain_text("5 sugar")
+    page.get_by_role("tab", name="Settings", exact=True).click()
+    page.get_by_role("tab", name="Wiki", exact=True).click()
+    expect(page.locator(".brood-feeding")).to_contain_text("Small workers develop without food")
+    page.get_by_role("tab", name="Nest", exact=True).click()
     raise_egg.click()
     ordered = save_game(page)
     assert ordered["ants"]["eggOrders"] == 1 and ordered["ants"]["eggsAndLarvae"] == []
@@ -68,7 +71,10 @@ def check_brood(page, width, url):
     assert upgraded["ants"]["ages"]["smallWorkers"] == prepared["ants"]["ages"]["smallWorkers"]
     assert upgraded["ants"]["eggsAndLarvae"] == prepared["ants"]["eggsAndLarvae"]
     page.get_by_role("tab", name="Nest", exact=True).click()
-    expect(page.locator(".brood-feeding")).to_contain_text("20 sugar + 2 protein")
+    page.get_by_role("tab", name="Settings", exact=True).click()
+    page.get_by_role("tab", name="Wiki", exact=True).click()
+    expect(page.locator(".brood-feeding")).to_contain_text("Workers and scouts need food")
+    page.get_by_role("tab", name="Nest", exact=True).click()
     expect(page.get_by_role("button", name="Raise Small Worker Egg", exact=True)).to_have_count(0)
     expect(page.get_by_role("button", name="Raise Worker Egg", exact=True)).to_be_enabled()
     expect(page.get_by_role("button", name="Nursery Chamber", exact=False)).to_be_visible()

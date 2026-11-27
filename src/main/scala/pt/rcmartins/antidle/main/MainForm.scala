@@ -179,7 +179,7 @@ object MainForm {
           "chambers" -> chambersVisible,
         ).map { case (id, visible) => visible.map(value => Option.when(value)(id)) }
       )
-      .map(_.flatten.toSet ++ Set("nest", "settings", "milestones"))
+      .map(_.flatten.toSet ++ Set("nest", "settings", "wiki", "milestones"))
       .distinct
     def publishTabs(element: HTMLElement, tabs: Set[String]): Unit = {
       val event = new dom.CustomEvent(
@@ -191,7 +191,7 @@ object MainForm {
       element.dispatchEvent(event)
     }
     val application = Var(Option.empty[HTMLDivElement])
-    var currentTabs = Set("nest", "settings", "milestones")
+    var currentTabs = Set("nest", "settings", "wiki", "milestones")
     div(
       className := "antidle-app",
       dataAttr("nest-icon-path") := ResourceIcons.Colony.path,
@@ -467,6 +467,17 @@ object MainForm {
               "Settings"
             )
           ),
+          li(
+            className := "nav-item",
+            a(
+              className := "nav-link",
+              idAttr := "wiki-tab",
+              dataAttr("bs-toggle") := "tab",
+              href := "#wikiContent",
+              role := "tab",
+              "Wiki"
+            )
+          ),
         )
       ),
       div(
@@ -538,6 +549,14 @@ object MainForm {
             idAttr := "settingsContent",
             role := "tabpanel",
             settingsDiv,
+          ),
+          div(
+            className := "tab-pane",
+            idAttr := "wikiContent",
+            role := "tabpanel",
+            aria.labelledBy := "wiki-tab",
+            tabIndex := 0,
+            WikiView.render,
           ),
         )
       )
