@@ -2,10 +2,10 @@
 
 ## 2026-11-27
 
-Each tab remembers the save revision it loaded. A stale tab can export its
-colony or load the newer save. Web Locks serialize simultaneous writes where
-available. Older browsers still compare the stored revision before writing.
+PR validation publishes one compiled bundle for the colony UI, progression,
+and offline browser groups. Preview deployment and the required test check
+wait for those groups. The sequential baseline is recorded in CI-WORKFLOW.
 
-Verified the production build, concurrent and stale save checks at 390px,
-preview-slot isolation, and offline round trips at 390px and 1280px. See
-[issue #158](https://github.com/RCMartins-apps/AntIdle/issues/158).
+Verified YAML parsing, suite command preservation, and the gate script with
+successful, failed browser, failed preview, fork, and docs-only inputs.
+The live timing comparison is pending the first successful parallel run.
