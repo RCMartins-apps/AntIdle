@@ -22,6 +22,7 @@ def check(browser, origin, tuning, output):
             if not request.url.startswith(origin + '/') else None)
     page.goto(origin)
     expect(page.locator('#record-title')).to_have_text('Standard Worker Development')
+    expect(page.locator('#connections')).to_have_text('No research depends on this upgrade.')
     expect(page.get_by_label('Sugar', exact=True)).to_have_value('75')
     expect(page.get_by_label('Tunneling Space', exact=True)).to_have_value('10')
     expect(page.locator('#upgrade .resource-icon')).to_have_count(7)
@@ -36,6 +37,18 @@ def check(browser, origin, tuning, output):
     page.get_by_label('Find an upgrade').fill('Local Exploration')
     page.get_by_label('Find an upgrade').press('Enter')
     expect(page.locator('#record-title')).to_have_text('Local Exploration')
+    dependents = page.locator('#connections')
+    expect(dependents.get_by_role('heading', name='Direct', exact=True)).to_be_visible()
+    expect(dependents.get_by_role('heading', name='Indirect', exact=True)).to_be_visible()
+    expect(dependents.get_by_role('button', name='Expedition Supplies 2', exact=True)).to_be_visible()
+    dependents.get_by_role('button', name='Expedition Supplies 1', exact=True).click()
+    expect(page.locator('#record-title')).to_have_text('Expedition Supplies 1')
+    page.get_by_role('button', name='Remove prerequisite Local Exploration', exact=True).click()
+    page.get_by_label('Find an upgrade').fill('Local Exploration')
+    page.get_by_label('Find an upgrade').press('Enter')
+    expect(dependents.get_by_role('button', name='Expedition Supplies 1', exact=True)).to_have_count(0)
+    page.locator('#revert').click()
+    expect(dependents.get_by_role('button', name='Expedition Supplies 1', exact=True)).to_be_visible()
     page.get_by_label('Add prerequisite upgrade').select_option('ExpeditionSupplies1')
     expect(page.get_by_role('status')).to_contain_text('Dependency cycle')
     expect(page.get_by_role('button', name='Save changes')).to_be_disabled()
@@ -152,6 +165,13 @@ def check(browser, origin, tuning, output):
         phone.get_by_label('Find an upgrade').fill('Foraging Techniques 1')
         phone.get_by_label('Find an upgrade').press('Enter')
         phone.locator('.bonus-list').screenshot(path=str(output / 'upgrade-bonuses-mobile.png'))
+    phone.get_by_label('Find an upgrade').fill('Expedition Supplies 1')
+    phone.get_by_label('Find an upgrade').press('Enter')
+    expect(phone.locator('#connections').get_by_role('button', name='Expedition Supplies 2')).to_be_visible()
+    assert phone.evaluate('document.documentElement.scrollWidth') == 390
+    if output:
+        phone.locator('details').filter(has=phone.get_by_text('Dependent research', exact=True)).screenshot(
+            path=str(output / 'dependent-research-mobile.png'))
     phone.close()
 
 
