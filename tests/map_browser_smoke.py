@@ -191,6 +191,28 @@ def check_map(page, width, url):
     print(f'PASS map {width}px: hex geometry, scout reveal/study, finite knowledge, selected-site controls, capacity block, depleted site and save reload', flush=True)
 
 
+def staffing_counts(page, width, saved):
+    select_tab(page, 'Jobs')
+    worker_card = page.locator('.standard-worker-tasks')
+    scout_card = page.locator('.scout-staffing')
+
+    def rows(card):
+        summary = card.locator(':scope > summary')
+        if card.get_attribute('open') is None:
+            summary.click()
+        return {
+            row.locator('dt').inner_text(): int(row.locator('dd').inner_text().replace(',', ''))
+            for row in card.locator('.staffing-breakdown > div').all()
+        }
+
+    workers = rows(worker_card)
+    scouts = rows(scout_card) if saved['ants']['scouts'] else {}
+    assert sum(workers.values()) * UNIT == saved['ants']['workers'], workers
+    assert sum(scouts.values()) * UNIT == saved['ants']['scouts'], scouts
+    assert_fits(page, width)
+    return workers, scouts
+
+
 def check_trails(page, width, base):
     game = copy.deepcopy(base)
     game['ants'].update(workers=100 * UNIT, scouts=5 * UNIT, smallWorkers=0,
@@ -267,6 +289,13 @@ def check_trails(page, width, base):
     page.clock.run_for(1000)
     paused = save_game(page)
     assert paused['exploration']['depleted'] == full['exploration']['depleted']
+    workers, scouts = staffing_counts(page, width, paused)
+    assert workers['Reserved for trails'] == 5 and workers['Away on expeditions'] == 5
+    assert scouts['Guiding trails'] == 1
+    if width == 390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        artifacts = Path(os.environ['ANTIDLE_ARTIFACTS'])
+        artifacts.mkdir(parents=True, exist_ok=True)
+        page.locator('.standard-worker-tasks .staffing-breakdown').screenshot(path=str(artifacts / 'worker-staffing-390.png'))
     one_scout = copy.deepcopy(game)
     one_scout['ants']['scouts'] = UNIT
     load_game(page, one_scout)
@@ -386,6 +415,14 @@ def check_territory_guards(page, width, base):
     saved = save_game(page)
     assert saved['exploration']['territory']['guards'] == 2
     assert saved['exploration']['territory']['nextGuards'] == 1
+    workers, _ = staffing_counts(page, width, saved)
+    assert workers['Holding territory'] == 10
+    select_tab(page, 'Territory')
+    page.get_by_role('button', name='Withdraw', exact=True).click()
+    withdrawn = save_game(page)
+    workers, _ = staffing_counts(page, width, withdrawn)
+    assert 'Holding territory' not in workers
+    assert workers['Default job'] == 40
     saved['exploration']['territory']['nextContestTick'] = saved['world']['currentTick'] + 1
     load_game(page, saved)
     select_tab(page, 'Territory')
