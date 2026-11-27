@@ -57,9 +57,12 @@ in GitHub, or use the connector's enable-auto-merge action. GitHub waits for the
 required checks and reviews, if any. Confirm the queued state before ending work.
 If already eligible, GitHub may merge immediately; verify the actual result.
 
-Schedule one status check about 15 minutes after enabling auto-merge. End the
-original turn after scheduling. The follow-up reports the merge or CI status and
-inspects the failing job when needed.
+Schedule one follow-up about 15 minutes after PR creation, regardless of
+auto-merge status. Include the PR link and any hold or merge instructions.
+Continue independent ready work or end the turn while CI runs. The follow-up
+checks the current head and reports the merge or CI status, diagnoses failures,
+and resumes authorized work when possible. If checks are still running, report
+them as pending.
 No additional bot workflow or write-enabled Actions token is needed.
 
 With strict up-to-date checks enabled, a PR may need its branch updated when main
