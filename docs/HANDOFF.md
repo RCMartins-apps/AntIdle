@@ -1,13 +1,12 @@
 # Handoff
 
-## 2026-11-26
+## 2026-11-27
 
-Production effects target a job's output. The Workshop now offers Aphid
-Tenders' sugar and Dew Gatherers' water alongside the existing jobs. Bonuses
-apply to the chosen job alone and neither add upkeep nor change shipped output.
-The tick, resource forecasts, and task detail rates share the effective rates.
+Mobile resource chips and disclosure now render from the game's reactive
+resource state. Navigation publishes view changes directly and receives tab
+availability from the same unlock signals as the desktop controls. The mobile
+checks exercise real colony states for timing and unlock changes.
 
-See [Workshop issue #133](https://github.com/RCMartins-apps/AntIdle/issues/133).
-
-Verified 39 focused engine tests, the bonus schema tests after final labels,
-and a 390px Workshop save and reload of both new production targets.
+Verified the development build, mobile navigation at 320px and 390px, and
+resource layout, timing, catch-up, and resize checks at 320px, 390px and 1280px.
+See [issue #140](https://github.com/RCMartins-apps/AntIdle/issues/140).
