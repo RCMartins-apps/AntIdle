@@ -65,7 +65,7 @@ def check_prestige(page, width, url):
     found.click()
     page.clock.run_for(1)
     expand_resources(page)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
+    expect(page.locator('.resource-row:visible .resource-label')).to_have_text(fresh_resources)
     first = save_game(page)
     assert first['ants']['lineage'] == {
         'foundings': 1, 'dna': 0, 'sharedPaths': True, 'beyondWoodland': False, 'satelliteNests': False,
@@ -98,7 +98,7 @@ def check_prestige(page, width, url):
     found.click()
     page.clock.run_for(1)
     expand_resources(page)
-    assert page.locator('.resource-row:visible .resource-label').all_text_contents() == fresh_resources, (fresh_resources, page.locator('.resource-row:visible .resource-label').all_text_contents())
+    expect(page.locator('.resource-row:visible .resource-label')).to_have_text(fresh_resources)
     founded = save_game(page)
     assert founded['ants']['lineage']['beyondWoodland']
     assert not founded['ants']['lineage']['satelliteNests']
