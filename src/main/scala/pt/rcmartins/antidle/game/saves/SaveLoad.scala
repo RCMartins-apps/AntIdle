@@ -36,6 +36,13 @@ object SaveLoad {
       )
     }.toEither.left.map(_ => Unwritable)
 
+  def resetLocalStorage(allData: AllData): Either[SaveError, Unit] =
+    Try {
+      val storage = localStorage
+      storage.setItem(SaveGameName, saveString(allData))
+      storage.removeItem(BackupName)
+    }.toEither.left.map(_ => Unwritable)
+
   private[saves] def writeSave(
       allData: AllData,
       primary: String,
