@@ -195,6 +195,23 @@ object MainForm {
     var currentTabs = Set("nest", "settings", "milestones")
     div(
       className := "antidle-app",
+      Option.when(SaveLoad.inPlaytest)(
+        div(
+          className := "mx-2 my-2 p-2 rounded border bg-body-tertiary d-flex align-items-center justify-content-between flex-wrap gap-2",
+          span("Playtest colony"),
+          button(
+            typ := "button",
+            className := "btn btn-outline-primary",
+            "Return to regular colony",
+            onClick --> { _ =>
+              useSignalValue[AllData](
+                snapshotSignal,
+                current => SaveLoad.returnToRegularColony(current).left.foreach(SaveLoad.showError)
+              )
+            },
+          ),
+        )
+      ),
       onMountCallback(ctx => application.set(Some(ctx.thisNode.ref))),
       availableTabs.combineWith(application.signal) --> { case (tabs, element) =>
         currentTabs = tabs

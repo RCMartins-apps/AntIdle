@@ -11,8 +11,24 @@ import scala.util.Try
 
 object SaveLoad {
 
-  private lazy val SaveGameName =
-    BrowserStorage.key("save", org.scalajs.dom.window.location.pathname)
+  private val SlotParameter = "playtest"
+
+  lazy val inPlaytest: Boolean =
+    new org.scalajs.dom.URL(org.scalajs.dom.window.location.href).searchParams
+      .get(SlotParameter) == "1"
+
+  private def saveKey(playtest: Boolean): String =
+    BrowserStorage.key(
+      if (playtest) "save:playtest" else "save",
+      org.scalajs.dom.window.location.pathname
+    )
+
+  private def navigateToSlot(playtest: Boolean): Unit = {
+    val url = new org.scalajs.dom.URL(org.scalajs.dom.window.location.href)
+    if (playtest) url.searchParams.set(SlotParameter, "1")
+    else url.searchParams.delete(SlotParameter)
+    org.scalajs.dom.window.location.assign(url.href)
+  }
 
   sealed abstract class SaveError(val message: String)
   case object Missing extends SaveError("No local colony save was found.")
@@ -23,24 +39,33 @@ object SaveLoad {
 
   final case class Loaded(data: AllData, recovered: Boolean)
 
-  private lazy val BackupName = s"$SaveGameName:backup"
-
   def saveToLocalStorage(allData: AllData): Either[SaveError, Unit] =
+    saveToSlot(allData, inPlaytest)
+
+  private def saveToSlot(allData: AllData, playtest: Boolean): Either[SaveError, Unit] =
     Try {
-      writeSave(
-        allData,
-        SaveGameName,
-        BackupName,
-        localStorage.getItem(_),
-        localStorage.setItem(_, _)
-      )
+      val key = saveKey(playtest)
+      writeSave(allData, key, s"$key:backup", localStorage.getItem(_), localStorage.setItem(_, _))
     }.toEither.left.map(_ => Unwritable)
+
+  def openCheckpoint(raw: String, current: AllData): Either[SaveError, Unit] =
+    decode(raw).flatMap { checkpoint =>
+      val preserve = if (inPlaytest) Right(()) else saveToLocalStorage(current)
+      preserve.flatMap(_ => saveToSlot(checkpoint, playtest = true)).map { _ =>
+        if (inPlaytest) reloadDataFromLoadedSave(checkpoint, Some("Playtest checkpoint loaded."))
+        else navigateToSlot(playtest = true)
+      }
+    }
+
+  def returnToRegularColony(current: AllData): Either[SaveError, Unit] =
+    saveToLocalStorage(current).map(_ => navigateToSlot(playtest = false))
 
   def resetLocalStorage(allData: AllData): Either[SaveError, Unit] =
     Try {
       val storage = localStorage
-      storage.setItem(SaveGameName, saveString(allData))
-      storage.removeItem(BackupName)
+      val key = saveKey(inPlaytest)
+      storage.setItem(key, saveString(allData))
+      storage.removeItem(s"$key:backup")
     }.toEither.left.map(_ => Unwritable)
 
   private[saves] def writeSave(
@@ -77,8 +102,10 @@ object SaveLoad {
     }.toEither.left.map(_ => Unreadable).flatten
   }
 
-  def loadFromLocalStorage(): Either[SaveError, Loaded] =
-    readSave(SaveGameName, BackupName, localStorage.getItem(_))
+  def loadFromLocalStorage(): Either[SaveError, Loaded] = {
+    val key = saveKey(inPlaytest)
+    readSave(key, s"$key:backup", localStorage.getItem(_))
+  }
 
   def loadString(str: String): Option[AllData] = decode(str).toOption
 

@@ -141,7 +141,8 @@ def main():
     report = package_report(output, baseline)
     for run in report['runs']:
         print(f"{run['policy']['name']}/{run['seed']}: {run['status']}, {run['ticks']/5/60:.1f} simulated min, {run['completedFoundings']} foundings, {run['actions']} decisions")
-    print(f"Open {output / 'index.html'} in a browser. Checkpoints/*.save.txt import via the game's Load control.")
+    print(f"Open {output / 'index.html'} in a browser.")
+    print("Paste a .save.txt checkpoint into Settings → Import and choose Open in playtest slot.")
 
 
 if __name__ == '__main__':

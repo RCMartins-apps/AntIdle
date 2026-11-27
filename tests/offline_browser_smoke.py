@@ -1,5 +1,7 @@
 """Real packaged-release checks: installability, offline reopen, saves and atomic updates."""
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import base64
+import copy
 import importlib.util
 import json
 import os
@@ -9,7 +11,7 @@ import tempfile
 from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
-from browser_smoke import ROOT, UNIT, save_game, select_tab
+from browser_smoke import ROOT, UNIT, assert_fits, save_game, select_tab
 
 spec = importlib.util.spec_from_file_location('package_site', ROOT / 'scripts/package_site.py')
 site = importlib.util.module_from_spec(spec)
@@ -48,6 +50,41 @@ def make_release(root, output, label):
 def founding_workers(page):
     ants = save_game(page)['ants']
     return ants['smallWorkers'] // UNIT + ants['eggOrders'] + len(ants['eggsAndLarvae'])
+
+
+def check_playtest_slot(page, width, regular):
+    checkpoint = copy.deepcopy(regular)
+    checkpoint['basicResources']['sugar']['amount'] = 3 * UNIT
+    checkpoint['ants'].update(eggOrders=0, eggsAndLarvae=[])
+    # Both slot switches and the reload must work through the release cache.
+    select_tab(page, 'Settings')
+    page.get_by_role('button', name='Import', exact=True).click()
+    page.get_by_placeholder('Save data').fill(json.dumps(checkpoint))
+    page.get_by_role('button', name='Open in playtest slot', exact=True).click()
+    expect(page.get_by_text('Playtest colony', exact=True)).to_be_visible()
+    assert_fits(page, width)
+    regular_raw = page.evaluate("localStorage.getItem('save')")
+    def save_playtest():
+        select_tab(page, 'Settings')
+        page.get_by_role('button', name='Manual Save', exact=True).click()
+        return json.loads(base64.b64decode(page.evaluate("localStorage.getItem('save:playtest')")))
+
+    playtest = save_playtest()
+    assert playtest['basicResources']['sugar']['amount'] == 3 * UNIT
+    page.reload(wait_until='networkidle')
+    expect(page.get_by_text('Playtest colony', exact=True)).to_be_visible()
+    assert save_playtest()['basicResources']['sugar']['amount'] == 3 * UNIT
+    assert page.evaluate("localStorage.getItem('save')") == regular_raw
+    page.evaluate("""localStorage.setItem('save:playtest:backup', localStorage.getItem('save:playtest'))""")
+    page.get_by_role('button', name='Hard Reset', exact=True).click()
+    page.get_by_role('button', name='Confirm', exact=True).click()
+    expect(page.get_by_text('New Game Started!', exact=True)).to_be_visible()
+    assert page.evaluate("localStorage.getItem('save:playtest:backup')") is None
+    assert page.evaluate("localStorage.getItem('save')") == regular_raw
+    page.get_by_role('button', name='Return to regular colony', exact=True).click()
+    expect(page.get_by_text('Playtest colony', exact=True)).to_have_count(0)
+    assert page.evaluate("localStorage.getItem('save')") == regular_raw
+    assert save_game(page)['basicResources']['sugar']['amount'] == regular['basicResources']['sugar']['amount']
 
 
 def check(context, width, server, root):
@@ -108,6 +145,7 @@ def check(context, width, server, root):
         expect(small).to_have_css('background-color', 'rgb(13, 110, 253)')
         small.click()
         assert founding_workers(page) == 2
+        check_playtest_slot(page, width, save_game(page))
         # Updating must not reload an open game or mix its HTML and JS releases.
         context.set_offline(False)
         server.release = b
@@ -164,7 +202,7 @@ def check(context, width, server, root):
         assert founding_workers(page) == 2
         assert not errors, errors
         assert not external, external
-        print(f'PASS offline {width}px: installable manifest/icons, no CDNs, offline reopen/save/play, deferred coherent update, failed-update recovery', flush=True)
+        print(f'PASS offline {width}px: installable manifest/icons, no CDNs, offline reopen/save/play, checkpoint isolation, deferred coherent update, failed-update recovery', flush=True)
     finally:
         context.close()
 
