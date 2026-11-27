@@ -2,11 +2,11 @@
 
 ## 2026-11-27
 
-ResearchView owns available research, current research goals, and purchase
-history. MainForm still owns the tab layout. The view shares the existing
-action and disclosure helpers.
+The game loads layout, navigation, resources, and gameplay styles from
+local stylesheets in the original cascade order. The production package
+includes and precaches every stylesheet.
 
-Verified the development build, the mobile navigation suite, and the map
-browser suite at 320px, 390px, and 1280px, including supply purchases and
-purchase-history disclosure behavior. See
-[issue #178](https://github.com/RCMartins-apps/AntIdle/issues/178).
+Verified package and classification tests, precache membership, resource
+layout at 320px, 390px, and 1280px, and packaged offline browser checks.
+Local browser checks reused the game bundle because this change moves CSS.
+See [issue #177](https://github.com/RCMartins-apps/AntIdle/issues/177).
