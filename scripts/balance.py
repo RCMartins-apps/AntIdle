@@ -94,6 +94,7 @@ def main():
     parser.add_argument('--out', type=Path, required=True, help='New output directory (never overwritten)')
     parser.add_argument('--baseline', type=Path, help='Previous report.json for informational deltas')
     parser.add_argument('--hours', type=float, help='Override simulation time budget per run')
+    parser.add_argument('--foundings', type=int, help='Stop after this many foundings')
     parser.add_argument('--policy', action='append', help='Select policy name (repeatable)')
     parser.add_argument('--seed', type=int, action='append', help='Override seeds (repeatable)')
     parser.add_argument('--skip-build', action='store_true', help='Reuse existing bundle; rebuild after source changes')
@@ -104,6 +105,10 @@ def main():
         if not 0 < args.hours <= 2000:
             parser.error('--hours must be in (0, 2000]')
         config['maxTicks'] = max(1, int(args.hours * 3600 * 5))
+    if args.foundings is not None:
+        if args.foundings < 1:
+            parser.error('--foundings must be positive')
+        config['foundings'] = args.foundings
     if args.policy:
         known = {p['name'] for p in config['policies']}
         if set(args.policy) - known:

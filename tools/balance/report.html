@@ -3,6 +3,7 @@
 <h1>Ant Idle balance lab</h1><p>Real game ticks at 1× simulated speed. Policies are heuristics, not optimal players. Waiting below means this policy chose no action; it does not prove every player must wait. Fun still needs short human play sessions.</p>
 <section><h2>Strategy comparison</h2><div class="scroll"><table><thead><tr><th>Policy / seed</th><th>Exploration</th><th>First founding</th><th>Second founding</th><th>Status</th></tr></thead><tbody id="overview"></tbody></table></div></section>
 <label>Run <select id="run"></select></label><p id="summary"></p>
+<section><h2>Pacing scenarios</h2><p>First colony, with elapsed time from each scenario’s starting point. The longest recorded policy wait shows what this strategy was missing.</p><div class="scroll"><table><thead><tr><th>Scenario</th><th>Elapsed</th><th>Longest policy wait</th><th>Baseline Δ</th></tr></thead><tbody id="scenarios"></tbody></table></div></section>
 <section><h2>Milestone pacing</h2><p id="comparison"></p><div class="scroll"><table><thead><tr><th>Colony</th><th>Milestone</th><th>Total time</th><th>This colony</th><th>Baseline Δ</th><th>Checkpoint</th></tr></thead><tbody id="milestones"></tbody></table></div></section>
 <section><h2>Stocks and workforce</h2><label>Measure <select id="metric"></select></label><svg id="chart" viewBox="0 0 1000 250" role="img" aria-label="Selected measure over simulated time"></svg><p id="extent"></p><small>Headcounts are adults, not equivalent output. Food workers group aphid tenders, seed foragers and scraps gatherers. Samples can hide brief spikes.</small></section>
 <section><h2>Longest policy waits</h2><div class="scroll"><table><thead><tr><th>Colony</th><th>Goal</th><th>Missing / waiting for</th><th>Duration</th></tr></thead><tbody id="waits"></tbody></table></div></section>
@@ -16,7 +17,56 @@ function row(parent,values){const tr=document.createElement('tr');values.forEach
 report.runs.forEach(r=>{const at=(name,colony)=>{const m=r.milestones.find(m=>m.name===name&&m.colony===colony);return m?time(m.tick):'Not reached'};row(el('overview'),[`${r.policy.name} / ${r.seed}`,at('exploration',0),at('founded',1),at('founded',2),r.status])});
 report.runs.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${r.policy.name} · seed ${r.seed}`;el('run').append(o)});
 ['sugar','protein','knowledge','water','resin','tunneling','workers','smallWorkers','scouts','sugarWorkers','foodWorkers','careWorkers','tunnelers','awayWorkers'].forEach(k=>{let o=document.createElement('option');o.textContent=k;el('metric').append(o)});
+const scenarios = [
+  {label: 'First worker', start: 'founding-start', finish: 'first-small-worker'},
+  {label: 'First safe search', start: 'first-hexagon', finish: 'first-safe-search'},
+  {label: 'Raise first daughter queen', start: 'royal-nursery', finish: 'daughter-ready'},
+];
+const at = (run, name) => run?.milestones.find(m => m.colony === 0 && m.name === name);
+function checkpoint(milestone, label) {
+  if (!milestone) return '—';
+  const link = document.createElement('a');
+  link.href = `checkpoints/${milestone.checkpoint.replace(/\.json$/, '.save.txt')}`;
+  link.textContent = label;
+  link.download = '';
+  return link;
+}
+function scenarioTime(ticks) {
+  const seconds = ticks / report.ticksPerSecond;
+  return `${Math.floor(seconds / 60)}m ${(seconds % 60).toFixed(1)}s`;
+}
+function renderScenarios(run, baseline) {
+  const body = el('scenarios');
+  body.replaceChildren();
+  for (const scenario of scenarios) {
+    const start = at(run, scenario.start), finish = at(run, scenario.finish);
+    const beforeStart = at(baseline, scenario.start), beforeFinish = at(baseline, scenario.finish);
+    const started = !scenario.start || start;
+    const elapsed = finish && started ? finish.tick - (start?.tick ?? 0) : null;
+    const before = beforeFinish && (!scenario.start || beforeStart)
+      ? beforeFinish.tick - (beforeStart?.tick ?? 0) : null;
+    const delta = elapsed !== null && before !== null ? elapsed - before : null;
+    const from = start?.tick ?? 0, to = finish?.tick ?? run.ticks;
+    const longest = started ? run.waits.reduce((best, wait) => {
+      const ticks = Math.min(to, wait.end) - Math.max(from, wait.start);
+      return wait.colony === 0 && ticks > (best?.ticks ?? 0) ? {wait, ticks} : best;
+    }, null) : null;
+    const title = document.createElement('span');
+    title.textContent = scenario.label;
+    if (start || finish) {
+      title.append(document.createElement('br'),
+        checkpoint(start ?? finish, start ? 'Download start save' : 'Download result save'));
+    }
+    row(body, [
+      title,
+      elapsed === null ? 'Not reached' : scenarioTime(elapsed),
+      longest ? `${longest.wait.missing.join(', ') || longest.wait.goal} · ${scenarioTime(longest.ticks)}` : '—',
+      delta === null ? '—' : `${delta >= 0 ? '+' : '−'}${scenarioTime(Math.abs(delta))}`,
+    ]);
+  }
+}
 function render(){const r=report.runs[+el('run').value],base=report.baseline?.runs.find(b=>b.policy.name===r.policy.name&&b.seed===r.seed);
+renderScenarios(r, base);
 el('summary').textContent=`${r.status} · ${time(r.ticks)} · ${r.completedFoundings} foundings · ${r.actions} strategic decisions · ${r.agingDeaths} aging deaths · ${r.starvationDeaths} starvation deaths`;
 el('comparison').textContent=report.baseline?(base?(JSON.stringify(base.policy)!==JSON.stringify(r.policy)||report.baseline.config.decisionTicks!==report.config.decisionTicks||report.baseline.config.openingClicks!==report.config.openingClicks?'Warning: policy, opening or decision assumptions differ. Deltas are not a controlled comparison.':'Matching policy, opening and decision assumptions. Deltas are informational; check complete configurations and observation budgets.'):'No matching baseline run.'):'No baseline supplied.';
 ['milestones','waits','resources'].forEach(id=>el(id).replaceChildren());
