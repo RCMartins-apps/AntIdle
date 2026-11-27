@@ -2,13 +2,12 @@
 
 ## 2026-11-27
 
-The simulation tick no longer schedules or writes browser saves. The browser
-controller saves the first snapshot at the deadline after completing the
-batch, with one write attempt per batch and retry at the next interval.
+Settings downloads the current colony as a save file. The existing Import
+dialog accepts a file or pasted save data and preserves the active-slot and
+playtest destinations. Selecting a file shows its name before confirmation.
 
-Verified formatting, game and balance builds, and 40 focused Scala tests.
-A 30-minute balanced run at seed 42 produced identical run data before and
-after. Browser coverage verified normal autosave, a write failure and retry,
-and the saved snapshot at the first tick of a two-tick catch-up batch.
+Verified formatting, the production build, and packaged browser tests at
+390px and 1280px. The tests downloaded and restored a backup offline,
+checked cancel and malformed-file handling, and imported into playtest.
 
-See [issue #161](https://github.com/RCMartins-apps/AntIdle/issues/161).
+See [issue #171](https://github.com/RCMartins-apps/AntIdle/issues/171).

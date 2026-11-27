@@ -16,6 +16,11 @@ Stored offline time and its multiplier work as before. Clearing site data can
 remove saves/cache, and browsers can evict cached files; keep using save exports
 for backups. Installing isn't a substitute for backing up a colony.
 
+Use **Settings → Download backup** to keep a save file. To restore it, open
+**Settings → Import**, choose the file, then choose **Import** for the active
+slot or **Open in playtest slot** for a separate test colony. The clipboard
+export and paste import remain available.
+
 Each tab remembers the saved revision it loaded. If another tab saves the same
 slot, the older tab displays a conflict when it tries to save. You can export
 its colony or load the newer save. Browsers with Web Locks also serialize

@@ -202,3 +202,6 @@
 .activity-status[data-state="blocked"] {background:#fff0f0;color:#a3212e}
 .activity-status[data-state="paused"], .activity-status[data-state="waiting"] {background:#fff4d8;color:#76530c}
 .activity-status[data-state="idle"] {background:#eef0f2;color:#52606a}
+
+#colony-backup-file {min-height:44px;color:transparent}
+#colony-backup-file::file-selector-button {color:var(--bs-body-color)}
