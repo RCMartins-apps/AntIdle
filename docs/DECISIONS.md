@@ -65,7 +65,7 @@ the game's direction and [Ideas](IDEAS.md) for proposals.
 
 ## Development workflow
 
-- **D9 · Continuity.** Branch, commit, and push substantive work. Switch to the next independent ready issue when blocked, and open a checked auto-merge PR for each finished task. See [AGENTS.md](../AGENTS.md#ready-issues-and-blockers).
+- **D9 · Continuity.** Branch, commit, and push substantive work. Switch to the next independent ready issue when blocked, and open a checked auto-merge PR for each finished task. Schedule one follow-up about 15 minutes after opening each PR and move on while CI runs. See [AGENTS.md](../AGENTS.md#ready-issues-and-blockers).
 - **D30, D32, D41, D44 · CI.** Changes limited to `docs/` or Markdown at any depth skip game validation and deployment. Keep production browser coverage focused, required check names stable, workflow runs bounded, and superseded runs canceled. Prefer checked auto-merge for authorized PRs and avoid repetitive waiting updates. See [CI workflow](CI-WORKFLOW.md).
 - **D33, D34, D35 · Balance.** Use real-engine scenarios to measure pacing and human playtests to assess enjoyment. Make tuning easy to find, share unlock predicates, and keep visibility distinct from affordability.
 - **D37 · Offline.** A complete online visit enables offline reopening. Browser installation is optional. Preserve saves through release updates and show the running build identity. See [Offline play](OFFLINE.md).
