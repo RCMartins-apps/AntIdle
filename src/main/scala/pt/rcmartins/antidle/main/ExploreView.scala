@@ -776,14 +776,17 @@ private[main] object ExploreView {
                   ) * (site.r + site.q / 2.0),
                   disabled <-- explorationSignal
                     .map(data => !ExplorationMap.revealed(data, site.id)),
-                  aria.label <-- actions.combineWith(feedback(site.id)).map {
-                    case (_, state) if state.kind == "unknown" => "Unexplored hexagon"
-                    case (items, state) =>
-                      val status = Option.when(state.percent.isDefined || state.kind == "trail")(
-                        state.label
-                      )
-                      (hexLabel(site) :: (items.map(_._2) ++ status)).mkString(", ")
-                  }.distinct,
+                  aria.label <-- actions
+                    .combineWith(feedback(site.id))
+                    .map {
+                      case (_, state) if state.kind == "unknown" => "Unexplored hexagon"
+                      case (items, state) =>
+                        val status = Option.when(state.percent.isDefined || state.kind == "trail")(
+                          state.label
+                        )
+                        (hexLabel(site) :: (items.map(_._2) ++ status)).mkString(", ")
+                    }
+                    .distinct,
                   dataAttr("activity") <-- feedback(site.id).map(_.kind),
                   aria.pressed <-- selected.signal.map(id => (id == site.id).toString),
                   className <-- explorationSignal.map(data =>
@@ -793,15 +796,18 @@ private[main] object ExploreView {
                   ),
                   span(
                     className := "map-hex-actions",
-                    children <-- actions.map(items => items.map { case (icon, _) => MapIcons(icon) })
+                    children <-- actions
+                      .map(items => items.map { case (icon, _) => MapIcons(icon) })
                   ),
                   small(
                     className := "map-state",
                     title <-- feedback(site.id).map(_.label),
                     child.text <-- feedback(site.id).map(f =>
-                      f.percent.map(p => s"$p%").getOrElse(
-                        if (f.kind == "trail") "Trail" else ""
-                      )
+                      f.percent
+                        .map(p => s"$p%")
+                        .getOrElse(
+                          if (f.kind == "trail") "Trail" else ""
+                        )
                     )
                   ),
                   mapProgress(site.id),
