@@ -54,6 +54,16 @@ object UINumbersUtils {
   }
 
   def prettyNumberStr(num: Long): String = compact(num)
+  def availableCostStr(num: Long): String = {
+    val magnitude = BigInt(num).abs
+    val rounded = hundredths(magnitude, BigInt(u))
+    if (rounded >= 100000 || magnitude > 0 && magnitude * 100 < u) compact(num)
+    else {
+      val sign = if (num < 0) "-" else ""
+      sign + f"${(rounded / 100).toInt}%d.${(rounded % 100).toInt}%02d"
+    }
+  }
+
   def resourceAmountStr(num: Long): String = {
     val magnitude = BigInt(num).abs
     val sign = if (num < 0) "-" else ""
