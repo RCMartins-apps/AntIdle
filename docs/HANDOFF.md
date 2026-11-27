@@ -2,11 +2,10 @@
 
 ## 2026-11-27
 
-Mobile resource chips and disclosure now render from the game's reactive
-resource state. Navigation publishes view changes directly and receives tab
-availability from the same unlock signals as the desktop controls. The mobile
-checks exercise real colony states for timing and unlock changes.
+Sugar's resource row has a rate disclosure with signed contributions and the
+same smoothed net rate used by the row and its capacity estimate. Inherited
+production appears as a rate contribution. The disclosure starts closed.
 
-Verified the development build, mobile navigation at 320px and 390px, and
-resource layout, timing, catch-up, and resize checks at 320px, 390px and 1280px.
-See [issue #140](https://github.com/RCMartins-apps/AntIdle/issues/140).
+Verified the development build and a live sugar-rate and timing comparison in
+Chromium at 390px and 1280px. See
+[issue #142](https://github.com/RCMartins-apps/AntIdle/issues/142).

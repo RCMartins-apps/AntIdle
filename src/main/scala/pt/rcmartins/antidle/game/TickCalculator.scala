@@ -6,12 +6,11 @@ import org.scalajs.dom.{HTMLDivElement, HTMLElement}
 import pt.rcmartins.antidle.game.Constants._
 import pt.rcmartins.antidle.game.TickCalculator.BonusOrigin.{PercentOrigin, ResourceOrigin}
 import pt.rcmartins.antidle.game.UIUtils.setTooltip
+import pt.rcmartins.antidle.game.UINumbersUtils.signedRateStr
 import pt.rcmartins.antidle.game.Utils._
 import pt.rcmartins.antidle.model.{ActionCost, AntTask}
 import pt.rcmartins.antidle.model.BasicResources.BasicResource
 import pt.rcmartins.antidle.model.UpgradesData.UpgradeType._
-
-import scala.annotation.tailrec
 
 object TickCalculator {
 
@@ -43,23 +42,18 @@ object TickCalculator {
       bonusListSignal: Signal[List[BonusOrigin]],
   ) {
 
-    val sum: Signal[Long] = {
-      @tailrec
-      def calcLoop(list: List[BonusOrigin], sum: Long): Long =
-        list match {
-          case Nil =>
-            sum
-          case head :: tail =>
-            head match {
-              case ResourceOrigin(_, resourceTickU) =>
-                calcLoop(tail, sum + resourceTickU)
-              case PercentOrigin(_, percent) =>
-                calcLoop(tail, (BigDecimal(sum) * BigDecimal.decimal(percent)).toLong)
-            }
-        }
-
-      bonusListSignal.map(calcLoop(_, 0L))
+    val contributions: Signal[List[ResourceOrigin]] = bonusListSignal.map { bonuses =>
+      val (_, reversed) = bonuses.foldLeft((0L, List.empty[ResourceOrigin])) {
+        case ((total, entries), origin: ResourceOrigin) =>
+          (total + origin.tickResourceU, origin :: entries)
+        case ((total, entries), PercentOrigin(name, multiplier)) =>
+          val adjusted = (BigDecimal(total) * BigDecimal.decimal(multiplier)).toLong
+          (adjusted, ResourceOrigin(name, adjusted - total) :: entries)
+      }
+      reversed.reverse
     }
+
+    val sum: Signal[Long] = contributions.map(_.iterator.map(_.tickResourceU).sum)
 
   }
 
@@ -293,28 +287,65 @@ object TickCalculator {
         }
     )
 
-  private def smoothNet(rate: Signal[Long]): Signal[Long] =
+  private def recentSamples[A](source: Signal[A]): Signal[Vector[A]] =
     currentTickSignal
-      .combineWith(rate)
-      .scanLeft(sample => Vector(sample)) { case (history, (tick, net)) =>
+      .combineWith(source)
+      .scanLeft(sample => Vector(sample)) { case (history, (tick, value)) =>
         val recent = if (history.lastOption.exists(_._1 > tick)) Vector.empty else history
         recent.filter { case (previous, _) =>
           previous < tick && tick - previous < 2L * TicksPerSecond
-        } :+ (tick -> net)
+        } :+ (tick -> value)
       }
-      .map(samples =>
-        if (samples.isEmpty) 0L
-        else math.round(samples.iterator.map(_._2.toDouble).sum / samples.size)
-      )
-      .distinct
+      .map(_.map(_._2))
 
-  val displayedSugarRate: Signal[Long] = smoothNet(sugarTickGain.sum)
-  val displayedProteinRate: Signal[Long] = smoothNet(proteinTickGain.sum)
+  private val sugarSamples = recentSamples(sugarTickGain.contributions)
+
+  val displayedSugarRate: Signal[Long] = sugarSamples.map { samples =>
+    math.round(
+      samples.iterator.map(_.iterator.map(_.tickResourceU.toDouble).sum).sum / samples.size
+    )
+  }.distinct
+
+  val displayedProteinRate: Signal[Long] = recentSamples(proteinTickGain.sum).map { samples =>
+    math.round(samples.iterator.map(_.toDouble).sum / samples.size)
+  }.distinct
+
+  def sugarRateDetails: ReactiveHtmlElement[HTMLDivElement] =
+    div(
+      className := "resource-rate-details",
+      children <-- sugarSamples.map { samples =>
+        samples.flatten
+          .groupBy(_.name)
+          .iterator
+          .map { case (name, entries) =>
+            name -> math.round(entries.iterator.map(_.resourceUSec.toDouble).sum / samples.size)
+          }
+          .filter(_._2 != 0L)
+          .toList
+          .sortBy { case (name, rate) => (-rate, name) }
+          .map { case (name, rate) =>
+            div(
+              className := "resource-rate-entry",
+              span(name),
+              span(className := (if (rate < 0L) "text-danger" else ""), s"${signedRateStr(rate)}/s")
+            )
+          }
+      },
+      div(
+        className := "resource-rate-net",
+        child.text <-- sugarSignal.combineWith(displayedSugarRate).map { case (resource, rate) =>
+          val estimate = ResourceTiming.estimate(resource, rate).fold("")(e => s" · ${e.text}")
+          val visibleRate = if (resource.atCapacity && rate > 0) 0L else rate
+          s"Net ${signedRateStr(visibleRate * TicksPerSecond)}/s$estimate"
+        },
+      ),
+    )
 
   def prettyResourceEstDiv(
       bonusGroup: BonusOriginGroup,
       resource: Signal[BasicResource],
       displayedRate: Option[Signal[Long]] = None,
+      showTooltip: Boolean = true,
   ): ReactiveHtmlElement[HTMLDivElement] = {
     div(
       child <--
@@ -328,7 +359,12 @@ object TickCalculator {
             )
         }
     ).amendThis(elem =>
-      setTooltip(elem, prettyResourceTooltip(bonusGroup, bonusGroup.sum, resource))
+      Option.when(showTooltip)(
+        setTooltip(
+          elem,
+          prettyResourceTooltip(bonusGroup, displayedRate.getOrElse(bonusGroup.sum), resource)
+        )
+      )
     )
   }
 
