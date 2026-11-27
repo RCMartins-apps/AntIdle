@@ -8,4 +8,4 @@ validates and writes the save before changing the running colony. Storage
 failures and malformed or incompatible saves produce visible feedback.
 
 Verified three focused recovery tests and 23 existing save and exploration
-tests. See [issue #135](https://github.com/RCMartins-apps/AntIdle/issues/135).
+tests, plus recovery, malformed import and failed writes in Chromium at 390px. See [issue #135](https://github.com/RCMartins-apps/AntIdle/issues/135).
