@@ -95,9 +95,10 @@ def check_management(page, width, url):
     for amount, label in ((2500, "sugar"), (60, "protein"), (200, "knowledge")):
         assert researched["basicResources"][label]["amount"] == before["basicResources"][label]["amount"] - amount * UNIT
     page.get_by_role("tab", name="Nest", exact=True).click()
-    page.get_by_label("About Brood", exact=True).click()
-    page.locator(".colony-aging > summary").click()
-    expect(page.locator(".colony-aging")).to_contain_text("54–72 minutes")
+    page.get_by_role("tab", name="Settings", exact=True).click()
+    page.get_by_role("tab", name="Wiki", exact=True).click()
+    expect(page.get_by_role("tabpanel", name="Wiki")).to_contain_text("54–72 minutes")
+    page.get_by_role("tab", name="Preferences").click()
     researched["ants"]["eggsAndLarvae"] = [{"Egg": {"initialTick": researched["world"]["currentTick"]}}]
     load_game(page, researched)
     page.clock.run_for(10000)

@@ -2,11 +2,13 @@
 
 ## 2026-11-27
 
-The game loads layout, navigation, resources, and gameplay styles from
-local stylesheets in the original cascade order. The production package
-includes and precaches every stylesheet.
+Settings has a Wiki for the shared egg queue, larval care, brood priority,
+Queen's Routine, aging, and refuse. Topics follow the current colony's
+unlocks. Brood options keeps its controls and live aging forecast. Action
+details and Royal brood help remain local because they describe the current
+action. The Raise details cleanup is tracked in #190.
 
-Verified package and classification tests, precache membership, resource
-layout at 320px, 390px, and 1280px, and packaged offline browser checks.
-Local browser checks reused the game bundle because this change moves CSS.
-See [issue #177](https://github.com/RCMartins-apps/AntIdle/issues/177).
+Verified the Scala.js development build, the mobile navigation and Wiki
+keyboard flow, and the Brood layout suite. The older compact, pipeline,
+management, and lifecycle scripts still use obsolete mobile top-tab locators.
+See [issue #189](https://github.com/RCMartins-apps/AntIdle/issues/189).
