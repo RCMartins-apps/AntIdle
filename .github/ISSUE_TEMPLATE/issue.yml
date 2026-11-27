@@ -1,0 +1,34 @@
+name: AntIdle issue
+description: Report a bug or propose an improvement to AntIdle.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Why
+      description: Describe the problem, who it affects, and why it matters. For bugs, include what happened, what you expected, and how to reproduce it.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Describe what should change or which part of the game needs investigation.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: Describe what someone can verify when the work is done, including relevant states, devices, or save scenarios.
+    validations:
+      required: true
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup
+      description: For visible UI changes, include a sketch, screenshot with annotations, or text wireframe showing placement and key states. Leave blank when it does not apply.
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Link related issues, source files, or screenshots. For bugs, include the game build and browser if known.
