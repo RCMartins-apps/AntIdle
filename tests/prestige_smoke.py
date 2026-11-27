@@ -124,7 +124,7 @@ def check_prestige(page, width, url):
         tile.click()
         expect(page.locator('.site-unlock')).to_contain_text(title)
         for _ in range(3):
-            page.get_by_role('button', name='Study Site', exact=True).click()
+            page.get_by_role('button', name='Search Site', exact=True).click()
             page.clock.run_for(61000)
         expect(page.locator('.site-knowledge')).to_have_text('0 knowledge remaining')
         select_tab(page, 'Upgrades')

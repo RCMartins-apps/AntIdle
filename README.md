@@ -96,7 +96,7 @@ future colony housing. Save format 6 stores this as `maxAnts`; older save format
 
 ## Exploration missions
 
-Scout-only **Explore Surroundings** reveals one neighboring hexagon. **Study Site**
+Scout-only **Explore Surroundings** reveals one neighboring hexagon. **Search Site**
 extracts Knowledge and makes discoveries; crews of one to three scouts trade
 supplies/upkeep for faster missions. Workers cannot perform these actions.
 Worker collection never grants Knowledge or advances studies. Scout studies and

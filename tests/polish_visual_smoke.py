@@ -36,7 +36,7 @@ def check(page, width, url):
     load_game(page, expanded)
     page.get_by_role('tab', name='Explore', exact=True).click()
     tile = page.locator('.map-hex[data-site="aphid-thicket"]')
-    expect(tile).to_have_attribute('aria-label', re.compile('Studying'))
+    expect(tile).to_have_attribute('aria-label', re.compile('Searching'))
     expect(tile.locator('.map-state')).to_have_text(re.compile(r'\d+%'))
     assert tile.locator('.map-state').bounding_box()['width'] < tile.bounding_box()['width'] * .65
     assert_fits(page, narrow)
