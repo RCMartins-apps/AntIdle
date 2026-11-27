@@ -2,13 +2,14 @@
 
 ## 2026-11-27
 
-Chambers lists founding infrastructure first, followed by Nursery and Waste
-and then Aphid, Replete, and Royal Nursery. Royal Nursery construction is in
-the same list, with daughter-queen rearing still in Brood. The build queue
-follows the player's submission order.
+The Jobs worker card breaks totals down into idle workers, the default job,
+other nest jobs, expeditions, carcass retrieval, trail reservations, and
+territory holders. Scouts show free, away, and guiding counts. Existing
+small-worker job rows account for that caste. Repletes and daughter queens
+show their totals when unlocked.
 
-Verified Scala formatting, the development build, and browser checks at
-320px, 390px, and 1280px covering founding, Nursery level 2, late-game
-visibility, and submission order in the queue.
+Verified formatting, the development build, and browser checks at 320px,
+390px, and 1280px. Worker and scout rows reconcile with saved caste totals
+during an expedition and a paused trail, and after a territory withdrawal.
 
-See [issue #192](https://github.com/RCMartins-apps/AntIdle/issues/192).
+See [issue #155](https://github.com/RCMartins-apps/AntIdle/issues/155).

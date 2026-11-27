@@ -2930,6 +2930,7 @@ object MainForm {
                     )
                   )
               ),
+              StaffingView.workers,
               div(
                 className := "standard-worker-jobs",
                 children <-- unlockedAntTasks.map(
@@ -2940,6 +2941,7 @@ object MainForm {
             )
           )
         ),
+      StaffingView.otherCastes,
     )
 
   private def smallWorkerTasks: ReactiveHtmlElement[HTMLDivElement] = div(
