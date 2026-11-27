@@ -194,6 +194,7 @@ object MainForm {
     var currentTabs = Set("nest", "settings", "wiki", "milestones")
     div(
       className := "antidle-app",
+      dataAttr("nest-icon-path") := ResourceIcons.Colony.path,
       child.maybe <-- SaveLoad.conflict.signal.map(_.map { _ =>
         div(
           className := "mx-2 my-2 p-2 rounded border bg-body-tertiary",
@@ -1569,7 +1570,7 @@ object MainForm {
                               Actions.specializeDryClearingOutpost(OutpostProgression.ScoutStation)
                             )
                           ),
-                          small("−40% study time · 2–3 scouts · 5 water per study"),
+                          small("−40% search time · 2–3 scouts · 5 water per search"),
                         )
                       )
                   },
@@ -2172,7 +2173,7 @@ object MainForm {
       summaryTag(minHeight.px := 44, "New colony research"),
       div(
         className := "small text-body-secondary my-2",
-        "Each needs 3 studies at its outer site. Colony research resets on founding."
+        "Each needs 3 searches at its outer site. Colony research resets on founding."
       ),
       Seq(UpgradeType.AphidShelters, UpgradeType.TrailLogistics, UpgradeType.CoordinatedExpeditions)
         .map { upgrade =>

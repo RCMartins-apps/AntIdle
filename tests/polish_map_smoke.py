@@ -18,11 +18,11 @@ def check(page, width, url):
     expect(hexagon).to_have_attribute('data-activity', 'study')
     expect(page.locator('.map-hex[data-site="nectar-meadow"]')).to_have_attribute('aria-label', 'Unexplored hexagon')
     hexagon.click()
-    page.get_by_role('button', name='Study Site', exact=True).click()
+    page.get_by_role('button', name='Search Site', exact=True).click()
     expect(hexagon).to_have_attribute('data-activity', 'studying')
     page.clock.run_for(10000)
     expect(hexagon.locator('.map-state')).to_have_text(re.compile(r'\d+%'))
-    expect(hexagon).to_have_attribute('aria-label', re.compile('Studying'))
+    expect(hexagon).to_have_attribute('aria-label', re.compile('Searching'))
     assert float(hexagon.locator('[role="progressbar"]').get_attribute('aria-valuenow')) > 0
     page.clock.run_for(180000)
     expect(hexagon).not_to_have_attribute('data-activity', 'studying')

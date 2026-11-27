@@ -8,7 +8,7 @@ Understandings persist, and current-colony resource visibility resets.
 
 - **Explore Surroundings:** reveal one of six neighboring hexagons, in fixed order.
   One scout takes 60 simulated seconds; two/three take 30/20. No workers required.
-- **Study Site:** learn about a revealed site. One scout takes 180 seconds;
+- **Search Site:** learn about a revealed site. One scout takes 180 seconds;
   two/three take 90/60. Three studies claim 50%, 30%, then 20% of its Knowledge.
 - **Guide:** Shared Paths reserves one scout per ten trail workers, rounded up,
   separately for each safe collection route. Rival Cache raids also need a guide.
