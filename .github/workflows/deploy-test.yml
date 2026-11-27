@@ -52,8 +52,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: tests/requirements-browser.txt
 
       - name: Check balance reports
         if: needs.changes.outputs.run_balance_tests != 'false'
@@ -64,72 +62,14 @@ jobs:
         timeout-minutes: 2
         run: python3 -m unittest discover -s tests -p "package_site_test.py"
 
-      - name: Install browser test dependencies
-        timeout-minutes: 8
-        run: |
-          python -m pip install -r tests/requirements-browser.txt
-          python -m playwright install --with-deps chromium
-
-      - name: Check production UI on phone and desktop
-        timeout-minutes: 5
-        env:
-          ANTIDLE_ARTIFACTS: test-results
-        run: python3 tests/ci_browser_smoke.py
-
-      - name: Check mobile navigation and resources
-        timeout-minutes: 3
-        env:
-          ANTIDLE_PRODUCTION: "1"
-        run: |
-          python3 tests/mobile_navigation_smoke.py
-          python3 tests/mobile_resources_smoke.py
-
-      - name: Check stable brood layout
-        timeout-minutes: 3
-        env:
-          ANTIDLE_PRODUCTION: "1"
-        run: python3 tests/brood_layout_smoke.py
-
-      - name: Check task controls
-        timeout-minutes: 3
-        run: python3 tests/task_controls_smoke.py
-
-      - name: Check blocked-action feedback
-        timeout-minutes: 3
-        run: python3 tests/blocked_actions_smoke.py
-
-      - name: Check exploration and trails on phone and desktop
-        timeout-minutes: 5
-        env:
-          ANTIDLE_ARTIFACTS: test-results
-          ANTIDLE_PRODUCTION: "1"
-        run: python3 tests/map_browser_smoke.py
-
-      - name: Check prestige and outer-map progression
-        timeout-minutes: 5
-        env:
-          ANTIDLE_ARTIFACTS: test-results
-          ANTIDLE_PRODUCTION: "1"
-        run: python3 tests/prestige_smoke.py
-
-      - name: Check offline play and updates
-        timeout-minutes: 5
-        env:
-          ANTIDLE_ARTIFACTS: test-results
-        run: python3 tests/offline_browser_smoke.py
-
-      - name: Check preview save and worker isolation
-        timeout-minutes: 3
-        run: python3 tests/preview_browser_smoke.py
-
-      - name: Upload browser failure screenshots
+      - name: Upload verified browser bundle
         timeout-minutes: 2
-        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: production-browser-failures
-          path: test-results/
-          if-no-files-found: ignore
+          name: browser-bundle
+          path: target/scala-2.13/antidle-opt/main.js
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Package PR preview
         timeout-minutes: 2
@@ -151,8 +91,114 @@ jobs:
           include-hidden-files: true
           retention-days: 3
 
-  deploy-preview:
+  browser:
+    name: Browser · ${{ matrix.suite }}
     needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [colony-ui, progression, offline]
+
+    steps:
+      - name: Checkout code
+        timeout-minutes: 3
+        uses: actions/checkout@v4
+
+      - name: Download verified browser bundle
+        timeout-minutes: 2
+        uses: actions/download-artifact@v4
+        with:
+          name: browser-bundle
+          path: target/scala-2.13/antidle-opt
+
+      - name: Setup Python for browser checks
+        timeout-minutes: 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tests/requirements-browser.txt
+
+      - name: Install browser test dependencies
+        timeout-minutes: 8
+        run: |
+          python -m pip install -r tests/requirements-browser.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Check production UI on phone and desktop
+        if: matrix.suite == 'colony-ui'
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+        run: python3 tests/ci_browser_smoke.py
+
+      - name: Check mobile navigation and resources
+        if: matrix.suite == 'colony-ui'
+        timeout-minutes: 3
+        env:
+          ANTIDLE_PRODUCTION: "1"
+        run: |
+          python3 tests/mobile_navigation_smoke.py
+          python3 tests/mobile_resources_smoke.py
+
+      - name: Check stable brood layout
+        if: matrix.suite == 'colony-ui'
+        timeout-minutes: 3
+        env:
+          ANTIDLE_PRODUCTION: "1"
+        run: python3 tests/brood_layout_smoke.py
+
+      - name: Check task controls
+        if: matrix.suite == 'colony-ui'
+        timeout-minutes: 3
+        run: python3 tests/task_controls_smoke.py
+
+      - name: Check blocked-action feedback
+        if: matrix.suite == 'colony-ui'
+        timeout-minutes: 3
+        run: python3 tests/blocked_actions_smoke.py
+
+      - name: Check exploration and trails on phone and desktop
+        if: matrix.suite == 'progression'
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+          ANTIDLE_PRODUCTION: "1"
+        run: python3 tests/map_browser_smoke.py
+
+      - name: Check prestige and outer-map progression
+        if: matrix.suite == 'progression'
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+          ANTIDLE_PRODUCTION: "1"
+        run: python3 tests/prestige_smoke.py
+
+      - name: Check offline play and updates
+        if: matrix.suite == 'offline'
+        timeout-minutes: 5
+        env:
+          ANTIDLE_ARTIFACTS: test-results
+        run: python3 tests/offline_browser_smoke.py
+
+      - name: Check preview save and worker isolation
+        if: matrix.suite == 'offline'
+        timeout-minutes: 3
+        run: python3 tests/preview_browser_smoke.py
+
+      - name: Upload browser failure screenshots
+        timeout-minutes: 2
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-browser-failures-${{ matrix.suite }}
+          path: test-results/
+          if-no-files-found: ignore
+
+  deploy-preview:
+    needs: [validate, browser]
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -221,7 +267,7 @@ jobs:
 
   # Preserve the protected check name, but wait for eligible previews too.
   test:
-    needs: [changes, validate, deploy-preview]
+    needs: [changes, validate, browser, deploy-preview]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -232,16 +278,23 @@ jobs:
           CLASSIFICATION: ${{ needs.changes.result }}
           RUN_GAME: ${{ needs.changes.outputs.run_game_jobs }}
           VALIDATION: ${{ needs.validate.result }}
+          BROWSER: ${{ needs.browser.result }}
           PREVIEW: ${{ needs.deploy-preview.result }}
           EXPECT_PREVIEW: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
+          set -e
           test "$CLASSIFICATION" = success
           if [ "$RUN_GAME" = true ]; then
             test "$VALIDATION" = success
+            if [ "$BROWSER" != success ]; then
+              echo "::error::Browser validation ended with $BROWSER. Check the Browser · colony-ui, progression, and offline jobs for suite results."
+              exit 1
+            fi
             if [ "$EXPECT_PREVIEW" = true ]; then
               test "$PREVIEW" = success
             fi
           else
             test "$VALIDATION" = skipped
+            test "$BROWSER" = skipped
             test "$PREVIEW" = skipped
           fi
