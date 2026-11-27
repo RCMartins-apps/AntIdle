@@ -2,10 +2,11 @@
 
 ## 2026-11-27
 
-Offline status checks the active release's cached assets. Reopening online
-can repair missing entries with integrity-checked assets from that release.
-The status is visible above the fixed navigation on phones.
+The game loads layout, navigation, resources, and gameplay styles from
+local stylesheets in the original cascade order. The production package
+includes and precaches every stylesheet.
 
-Verified package tests and packaged browser checks at 390px and 1280px,
-including deleting an asset, displaying the warning, repairing the cache,
-and preserving the save.
+Verified package and classification tests, precache membership, resource
+layout at 320px, 390px, and 1280px, and packaged offline browser checks.
+Local browser checks reused the game bundle because this change moves CSS.
+See [issue #177](https://github.com/RCMartins-apps/AntIdle/issues/177).

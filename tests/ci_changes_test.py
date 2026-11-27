@@ -12,7 +12,8 @@ spec.loader.exec_module(ci)
 class ChangeClassification(unittest.TestCase):
     def test_presentation_only_paths(self):
         self.assertTrue(ci.presentation_only([
-            "index.html", "assets/ui/mobile-navigation.js", "tests/map_browser_smoke.py",
+            "index.html", "assets/ui/mobile-navigation.js", "assets/styles/resources.css",
+            "tests/map_browser_smoke.py",
             "src/main/scala/pt/rcmartins/antidle/main/MainForm.scala", "docs/HANDOFF.md",
         ]))
         self.assertFalse(ci.presentation_only([]))

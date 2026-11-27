@@ -16,6 +16,7 @@ def presentation_only(paths):
     return bool(paths) and all(
         documentation_only([path])
         or path.startswith("assets/ui/")
+        or (path.startswith("assets/styles/") and path.endswith(".css"))
         or path in {
             "index.html",
             "src/main/scala/pt/rcmartins/antidle/main/MainForm.scala",

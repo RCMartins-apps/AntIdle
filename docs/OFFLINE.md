@@ -68,7 +68,8 @@ that same package automatically on authorized main/debug deployments.
   GitHub fetches are needed. Unchanged metadata is not rewritten.
 - `index.html` uses pinned local Bootstrap CSS/bundle and jQuery, with original
   SRI values. The bundle already includes Popper; unused Font Awesome is removed.
-  No CDN/font connection is needed at runtime. See assets/vendor/README.md/licenses.
+  No CDN/font connection is needed at runtime. The local stylesheets in
+  `assets/styles/` are also packaged and cached. See assets/vendor/README.md/licenses.
 - `manifest.webmanifest` uses relative URLs/id/scope so Pages subpaths work.
   Icons include 192/512px PNGs with maskable-safe padding, authored in ant.svg.
 - `package_site.py` copies only the production game bundle, fingerprints its URL,
