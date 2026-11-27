@@ -2,10 +2,10 @@
 
 ## 2026-11-27
 
-Each tab remembers the save revision it loaded. A stale tab can export its
-colony or load the newer save. Web Locks serialize simultaneous writes where
-available. Older browsers still compare the stored revision before writing.
+The simulation tick, brood forecasts, and sugar-rate display now share the
+same fixed-point sugar production calculation. The display still smooths net
+rates and handles capacity in the resource panel.
 
-Verified the production build, concurrent and stale save checks at 390px,
-preview-slot isolation, and offline round trips at 390px and 1280px. See
-[issue #158](https://github.com/RCMartins-apps/AntIdle/issues/158).
+Verified 58 engine tests covering milestones, trails and their supplies,
+upkeep, aphids, larval care, and full storage. See
+[issue #163](https://github.com/RCMartins-apps/AntIdle/issues/163).

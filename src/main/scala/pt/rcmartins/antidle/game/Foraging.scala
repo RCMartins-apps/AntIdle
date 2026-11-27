@@ -40,11 +40,11 @@ object Foraging {
     standard + (basePerTick(normal + small, upgrades) - standard) / 2L
   }
 
+  private[game] def researchedProduction(base: Long, upgrades: UpgradesData): Long =
+    UpgradeBalance.production(base, "sugarCollectors", upgrades)
+
   def production(ants: AntsData, upgrades: UpgradesData): Long =
-    Prestige.sugar(
-      UpgradeBalance.production(mixedBasePerTick(ants, upgrades), "sugarCollectors", upgrades),
-      ants.lineage
-    )
+    Prestige.sugar(researchedProduction(mixedBasePerTick(ants, upgrades), upgrades), ants.lineage)
 
   def perCollector(ants: AntsData, upgrades: UpgradesData, small: Boolean): Long = {
     val standard = ants.taskWorkers(AntTask.SugarCollector) / u
