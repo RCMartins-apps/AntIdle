@@ -1,13 +1,11 @@
 # Handoff
 
-## 2026-11-26
+## 2026-11-27
 
-Production effects target a job's output. The Workshop now offers Aphid
-Tenders' sugar and Dew Gatherers' water alongside the existing jobs. Bonuses
-apply to the chosen job alone and neither add upkeep nor change shipped output.
-The tick, resource forecasts, and task detail rates share the effective rates.
+Explore map selection, scouting, hauling, trails, relocation and mission displays
+now live in ExploreView. The component uses the existing action builders and
+game signals. MainForm still owns the surrounding tab layout.
 
-See [Workshop issue #133](https://github.com/RCMartins-apps/AntIdle/issues/133).
-
-Verified 39 focused engine tests, the bonus schema tests after final labels,
-and a 390px Workshop save and reload of both new production targets.
+Verified the development build and map browser gate at 320px, 390px and 1280px,
+including trails, aphid relocation and territory scenarios. See
+[issue #141](https://github.com/RCMartins-apps/AntIdle/issues/141).
