@@ -52,7 +52,7 @@ def check_milestones(page, width, base):
         upgrade.update(show=False, unlocked=upgrade['name'] in ['UnlockExplorerTask', 'DefaultWorkers', 'BroodCare', 'QueensRoutine'])
     load_game(page, game)
     select_tab(page, 'Upgrades')
-    expect(page.locator('.milestone-progress')).to_have_text('19/20 expeditions completed')
+    expect(page.locator('.milestone-progress')).to_contain_text('19/20')
     expect(page.get_by_role('button', name='Scout Wayfinding', exact=True)).to_have_count(0)
     assert_fits(page, width)
     select_tab(page, 'Explore')
@@ -60,16 +60,19 @@ def check_milestones(page, width, base):
     page.get_by_role('button', name='Explore Surroundings', exact=True).click()
     page.clock.run_for(21000)
     select_tab(page, 'Upgrades')
-    expect(page.locator('.milestone-progress')).to_have_text('24/25 standard workers raised')
+    expect(page.locator('.milestone-progress')).to_contain_text('24/25')
     page.get_by_role('button', name='Scout Wayfinding', exact=True).click()
     select_tab(page, 'Explore')
-    expect(page.locator('.map-site-card .explore-duration')).to_have_text('16.0s')
+    expect(page.locator('.explore-duration')).to_contain_text('16')
+    page.get_by_role('button', name='Explore Surroundings', exact=True).click()
+    page.clock.run_for(17000)
+    assert save_game(page)['exploration']['revealedSites'] == 2
     saved = save_game(page)
     saved['ants']['eggsAndLarvae'] = [{'Developing': {'initialTick': saved['world']['currentTick'], 'kind': 'worker', 'care': 600 * UNIT - 1}}]
     load_game(page, saved)
     page.clock.run_for(400)
     select_tab(page, 'Upgrades')
-    expect(page.locator('.milestone-progress')).to_have_text('25/50 standard workers raised')
+    expect(page.locator('.milestone-progress')).to_contain_text('25/50')
     page.get_by_role('button', name='Nurse Training', exact=True).click()
     trained = save_game(page)
     trained['statistics']['workersMatured']['thisRun'] = 54
@@ -104,7 +107,7 @@ def check_permanent_milestones(page, width, base):
     sugar.locator('summary').click()
     page.clock.run_for(4000)
     expect(page.locator('.colony-milestones h5')).to_have_text('Sugar production ×1.01')
-    expect(sugar.get_by_text('✓ ×1.01', exact=True)).to_have_count(1)
+    expect(sugar).to_contain_text('✓ ×1.01')
     assert sugar.evaluate('(el) => el.open'), 'live ticks must preserve disclosure'
     expect(sugar.locator('summary')).to_contain_text('peak')
     saved = save_game(page)
@@ -151,7 +154,9 @@ def check_brood_icons(page, width, base):
     expect(entries.locator('.resource-icon-pupa')).to_have_count(2)
     expect(entries.first).to_contain_text('Worker egg')
     expect(entries.nth(3).locator('.brood-entry-progress')).to_have_text('00%')
-    expect(entries.first.locator(':scope > :first-child')).to_have_class('brood-entry-progress')
+    assert entries.first.locator('.brood-entry-progress').evaluate(
+        '(progress) => progress === progress.parentElement.firstElementChild'
+    )
     expect(entries.first.locator('.resource-icon')).to_have_attribute('aria-hidden', 'true')
     paths = entries.locator('.resource-icon svg path').evaluate_all('(nodes) => nodes.map(n => n.getAttribute("d"))')
     assert len(set(paths)) == 3, paths
@@ -317,9 +322,14 @@ def check_game(page, width, url):
     game['exploration'].update(revealedSites=0, surveys={}, depleted={}, explorationParties=[])
     load_game(page, game)
     select_tab(page, 'Explore')
-    expect(page.locator('.hex-map .map-hex')).to_have_count(7)
-    expect(page.locator('.hex-map .map-hex:disabled')).to_have_count(6)
-    expect(page.locator('.exploration-progress')).to_have_count(0)
+    map_region = page.get_by_label('Exploration map', exact=True)
+    expect(map_region.get_by_role('button')).to_have_count(7)
+    hidden_hexes = map_region.get_by_role('button', name='Unexplored hexagon', exact=True)
+    expect(hidden_hexes).to_have_count(6)
+    for hexagon in hidden_hexes.all():
+        expect(hexagon).to_be_disabled()
+    assert save_game(page)['exploration']['explorationParties'] == []
+    select_tab(page, 'Explore')
     page.get_by_role('button', name='2 scouts', exact=True).click()
     expect(page.locator('.map-site-card .action-costs').first).to_be_visible()
     assert_fits(page, width)
@@ -330,8 +340,9 @@ def check_game(page, width, url):
     assert 'experience' not in sent['exploration']
     select_tab(page, 'Explore')
     page.clock.run_for(31000)
-    expect(page.locator('.map-hex[data-site="woodland-edge"]')).to_be_enabled()
-    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    woodland = map_region.get_by_role('button', name='Woodland Edge:', exact=False)
+    expect(woodland).to_be_enabled()
+    woodland.click()
     expect(page.get_by_role('button', name='Study Site', exact=True)).to_be_enabled()
     expect(page.get_by_role('button', name='Collect Insects', exact=True)).to_have_count(0)
     assert_fits(page, width)

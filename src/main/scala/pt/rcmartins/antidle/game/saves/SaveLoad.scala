@@ -60,6 +60,14 @@ object SaveLoad {
   def returnToRegularColony(current: AllData): Either[SaveError, Unit] =
     saveToLocalStorage(current).map(_ => navigateToSlot(playtest = false))
 
+  def resetLocalStorage(allData: AllData): Either[SaveError, Unit] =
+    Try {
+      val storage = localStorage
+      val key = saveKey(inPlaytest)
+      storage.setItem(key, saveString(allData))
+      storage.removeItem(s"$key:backup")
+    }.toEither.left.map(_ => Unwritable)
+
   private[saves] def writeSave(
       allData: AllData,
       primary: String,

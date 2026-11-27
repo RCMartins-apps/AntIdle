@@ -111,7 +111,7 @@ object Modals {
                 val newAllData: AllData =
                   AllData.initial.copy(world = WorldData.initial(System.currentTimeMillis()))
                 SaveLoad
-                  .saveToLocalStorage(newAllData)
+                  .resetLocalStorage(newAllData)
                   .fold(
                     SaveLoad.showError,
                     _ => SaveLoad.reloadDataFromLoadedSave(newAllData, Some("New Game Started!"))
