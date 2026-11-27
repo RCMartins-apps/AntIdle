@@ -218,11 +218,13 @@ make it live. For docs-only/fork PRs explain that no preview is generated; after
 merge/closure explain that the preview is removed rather than presenting it as
 live. This link requirement supplements screenshots for visual changes.
 
-Once GitHub confirms auto-merge is queued with enforced checks, schedule a
-one-time follow-up about 15 minutes later when scheduling is available. Check
-whether the PR merged or passed CI. If it failed, inspect the failed job and
-report the cause. If checks are still running, report them as pending. Move on to the next independent ready task after scheduling. If there is no
-ready work you can advance, report whether the check was scheduled.
+When scheduling is available, schedule a one-time follow-up about 15 minutes
+after creating each PR. Schedule it even if auto-merge is unavailable or the
+PR is on hold. Include the PR link and any merge or hold instructions.
+Use the follow-up to check merge and CI status, diagnose failures, and resume
+authorized work when possible. While CI runs, start the next independent ready
+task or end the turn. Report the PR status and whether the follow-up was
+scheduled. If scheduling is unavailable, report that and continue available work.
 Report an immediate merge only once GitHub confirms it.
 
 ## Ready issues and blockers
@@ -231,7 +233,8 @@ Report an immediate merge only once GitHub confirms it.
   labeled `ready` when choosing backlog work. Rank `priority:high` before
   `priority:normal` before `priority:low`; use issue number to break ties.
   Follow any direct instruction from the owner first.
-- When waiting on CI, a dependency, an approval, or another blocker, record
+- When CI runs, follow the scheduled handoff above. For a dependency, an
+  approval, or another blocker, record
   what is needed to resume and start the highest-priority ready task that can
   proceed independently. Branch it from current main. Return to blocked work
   when it can advance and bring overlapping branches up to date before merge.
