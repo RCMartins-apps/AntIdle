@@ -13,3 +13,13 @@ Settings resets saved disclosures, resource expansion and the selected map site 
 Verified the Scala.js builds, mobile navigation at 320px and 390px, and packaged PR preview isolation for colony, backup, playtest and other preference namespaces.
 
 See [issue #172](https://github.com/RCMartins-apps/AntIdle/issues/172).
+
+## 2026-11-28
+
+The installed app can check for a deployed release from the footer. A staged
+release can be applied after saving the active colony and closing other game
+windows. The game stays open if saving or installing fails.
+
+The production build, packaging tests, and offline browser tests at 390px and
+1280px passed before syncing the interface preference reset from main. The
+browser tests covered offline installation, save failure, and multiple windows.

@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
     const cache = await caches.open(CACHE);
     // addAll commits atomically. Integrity checks reject stale CDN/deploy responses.
     await cache.addAll(assetRequests());
-    // No skipWaiting: existing game windows keep their coherent, running release.
+    // Existing windows keep their running release until an explicit install or exit.
   })());
 });
 
@@ -34,6 +34,30 @@ self.addEventListener('message', event => {
       port.postMessage(complete);
     }
   })());
+});
+
+self.addEventListener('message', event => {
+  if (event.data !== 'antidle-install-update' || !event.source || !event.ports[0]) return;
+  const reply = event.ports[0];
+  event.waitUntil((async () => {
+    const scope = new URL(self.registration.scope);
+    const index = new URL(INDEX);
+    const windows = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
+    const otherGame = windows.some(client => {
+      const path = new URL(client.url).pathname;
+      return client.id !== event.source.id && (path === scope.pathname || path === index.pathname);
+    });
+    if (otherGame) {
+      reply.postMessage("other-windows");
+      return;
+    }
+    if (!await cacheIsComplete(await caches.open(CACHE))) {
+      reply.postMessage('incomplete');
+      return;
+    }
+    await self.skipWaiting();
+    reply.postMessage(true);
+  })().catch(() => reply.postMessage(false)));
 });
 
 self.addEventListener('activate', event => {
