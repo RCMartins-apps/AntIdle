@@ -13,14 +13,19 @@ case class WorldData(
     lastUpdateTime: Long,
 ) {
 
-  def getPassedTicks(currentTime: Long): Long = {
-    val delta = currentTime - lastUpdateTime
-    val passedTicks = delta / millsPerTick
-    passedTicks
-  }
+  def elapsedSinceSave(wallTime: Long): Long =
+    if (wallTime <= lastUpdateTime) 0L
+    else {
+      val elapsed = wallTime - lastUpdateTime
+      if (elapsed < 0L) Long.MaxValue else elapsed
+    }
+
+  def creditElapsed(elapsedMillis: Long, wallTime: Long): WorldData =
+    addToTargetTick(elapsedMillis / millsPerTick)
+      .copy(lastUpdateTime = wallTime - elapsedMillis % millsPerTick)
 
   // Constants.MaxTicksStored + 1 so it considers the current tick that is being processed
-  def addToTargetTick(passedTicks: Long): WorldData =
+  private def addToTargetTick(passedTicks: Long): WorldData =
     copy(targetTick =
       currentTick + Math.min(Constants.MaxTicksStored + 1, (targetTick - currentTick) + passedTicks)
     )

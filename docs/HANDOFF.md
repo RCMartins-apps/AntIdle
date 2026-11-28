@@ -1,13 +1,9 @@
 # Handoff
 
-## 2026-11-27
+## 2026-11-28
 
-Settings downloads the current colony as a save file. The existing Import
-dialog accepts a file or pasted save data and preserves the active-slot and
-playtest destinations. Selecting a file shows its name before confirmation.
+Run live tick accounting on the browser monotonic clock. On reload, clamp backward wall-clock elapsed time to zero and retain the existing cap on forward elapsed time. Preserve partial ticks in the saved wall-time anchor.
 
-Verified formatting, the production build, and packaged browser tests at
-390px and 1280px. The tests downloaded and restored a backup offline,
-checked cancel and malformed-file handling, and imported into playtest.
+Verified the clock model and deterministic balance suites, along with browser coverage for live clock shifts, backward and forward reload, and existing autosave behavior.
 
-See [issue #171](https://github.com/RCMartins-apps/AntIdle/issues/171).
+See [issue #175](https://github.com/RCMartins-apps/AntIdle/issues/175).

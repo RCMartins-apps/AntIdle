@@ -10,7 +10,7 @@ from threading import Thread
 
 from playwright.sync_api import expect, sync_playwright
 
-from browser_smoke import ROOT, QuietHandler, select_tab
+from browser_smoke import ROOT, QuietHandler, save_game, select_tab
 from ci_browser_smoke import ProductionHandler
 
 
@@ -99,7 +99,7 @@ def check_autosave(context, url):
     assert page.evaluate("window.autosaveWrites") == []
     page.clock.run_for(1000)
     flush_writes()
-    assert page.evaluate("window.autosaveWrites") == [150]
+    assert page.evaluate("window.autosaveWrites") == [150], page.evaluate("window.autosaveWrites")
     original = storage(page)
 
     page.evaluate("window.rejectAutosave = true")
@@ -133,6 +133,40 @@ def check_autosave(context, url):
     print("PASS autosave deadline, failed write and retry, and catch-up snapshot")
 
 
+def check_clock_changes(context, url):
+    page = context.new_page()
+    now = datetime(2026, 11, 27, tzinfo=timezone.utc)
+    page.clock.install(time=now)
+    page.clock.pause_at(now + timedelta(seconds=1))
+    page.goto(url, wait_until='networkidle')
+    page.clock.run_for(5000)
+    before = save_game(page)['world']
+    for offset in (-3, 12):
+        page.clock.set_system_time(now + timedelta(hours=offset))
+        page.clock.run_for(200)
+        after = save_game(page)['world']
+        assert after['currentTick'] == before['currentTick'] + 1, (offset, before, after)
+        assert after['targetTick'] == before['targetTick'] + 1
+        before = after
+
+    colony = save_game(page)
+    for offset, expected_credit in ((60_000, 599), (-7_200_000, 18_000)):
+        wall_now = page.evaluate('Date.now()')
+        world = colony['world']
+        world.update(targetTick=world['currentTick'] + 600, lastUpdateTime=wall_now + offset)
+        page.evaluate("(raw) => localStorage.setItem('save', raw)", json.dumps(colony))
+        page.reload(wait_until='networkidle')
+        page.clock.run_for(200)
+        after = save_game(page)['world']
+        assert after['currentTick'] == world['currentTick'] + 1, (offset, world, after)
+        assert after['targetTick'] - after['currentTick'] == expected_credit
+        page.clock.run_for(200)
+        continued = save_game(page)['world']
+        assert continued['currentTick'] == after['currentTick'] + 1
+        assert continued['targetTick'] - continued['currentTick'] == expected_credit
+    print('PASS live clock jumps, backwards reload, and capped forwards reload')
+
+
 if __name__ == "__main__":
     handler = ProductionHandler if os.environ.get("ANTIDLE_PRODUCTION") else QuietHandler
     server = ThreadingHTTPServer(("127.0.0.1", 0), partial(handler, directory=str(ROOT)))
@@ -144,6 +178,8 @@ if __name__ == "__main__":
                 check(context, f"http://127.0.0.1:{server.server_port}")
             with browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True) as context:
                 check_autosave(context, f"http://127.0.0.1:{server.server_port}")
+            with browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True) as context:
+                check_clock_changes(context, f"http://127.0.0.1:{server.server_port}")
     finally:
         server.shutdown()
         server.server_close()
