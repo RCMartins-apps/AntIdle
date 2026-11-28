@@ -300,6 +300,29 @@ def check(page, width, url):
     completed = save_game(page)
     assert completed['nestAttributes']['chambers']['nestChamber']['level'] == start_level + 2
     assert completed['nestAttributes']['buildQueue'] == [queue[0]]
+    aging = copy.deepcopy(game)
+    now_tick = aging['world']['currentTick']
+    aging['ants']['scouts'] = 2 * UNIT
+    aging['ants']['ages'] = {
+        'active': True,
+        'workers': [{'count': 10, 'expiresAt': now_tick + 3000}],
+        'scouts': [{'count': 2, 'expiresAt': now_tick + 100}],
+    }
+    load_game(page, aging)
+    select_tab(page, 'Nest')
+    forecast = panel.locator('.colony-aging')
+    expect(forecast).to_contain_text('Aging · Next 5m')
+    neutral = forecast.get_by_role('img', name='0 workers', exact=True)
+    expect(neutral.locator('.resource-icon-workers')).to_have_count(1)
+    expect(neutral.locator('.text-danger')).to_have_count(0)
+    loss = forecast.get_by_role('img', name='2 scouts', exact=True)
+    expect(loss.locator('.resource-icon-scouts')).to_have_count(1)
+    expect(loss.locator('.text-danger.fw-bold')).to_have_text('2')
+    for prop in ('border-top-width', 'border-bottom-width', 'margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'):
+        expect(panel).to_have_css(prop, '0px')
+    assert_fits(page, width)
+    if width == 390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+        panel.screenshot(path=str(artifacts / 'brood-aging.png'))
     assert not errors,errors
     print(f'PASS brood layout {width}px: stable counters/status/cancel, visible raise actions, scoped feeding help, independent disclosures, saved brood priority, waste capacity and chamber order',flush=True)
 
