@@ -46,7 +46,7 @@ def check_lifecycle(page, width, url):
 
     game["nestAttributes"]["chambers"]["nurseryChamber"]["level"] = 1
     load_game(page, game)
-    expect(page.locator(".colony-aging")).to_contain_text("Next 5m: 0 workers")
+    expect(page.locator(".colony-aging").get_by_role("img", name="0 workers", exact=True)).to_have_count(1)
     started = save_game(page)
     assert started["ants"]["ages"]["active"]
     assert sum(c["count"] for c in started["ants"]["ages"]["workers"]) == 12
@@ -90,7 +90,7 @@ def check_lifecycle(page, width, url):
     aged["ants"]["tasks"][0][1] = 14 * UNIT
     aged["ants"]["defaultTask"] = {"SugarCollector": {}}
     load_game(page, aged)
-    expect(page.locator(".colony-aging")).to_contain_text("Next 5m: 1 workers")
+    expect(page.locator(".colony-aging").get_by_role("img", name="1 worker", exact=True)).to_have_count(1)
     page.clock.run_for(200)
     replaced = save_game(page)
     assert replaced["ants"]["workers"] == 13 * UNIT

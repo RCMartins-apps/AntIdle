@@ -68,10 +68,6 @@
         @media (max-width: 767px) {
             .activity-column .build-queue-panel { display: none; }
             .antidle-app[data-mobile-view=chambers] .activity-column .build-queue-panel { display: block; }
-            .antidle-app[data-mobile-view=nest] .nest-brood {
-                margin-block: 0 !important;
-                padding-block: .5rem !important;
-            }
             .antidle-app { font-size: 1rem; padding-bottom: env(safe-area-inset-bottom); }
             .antidle-app .game-layout { margin: .5rem !important; gap: .5rem; }
             .antidle-app .game-panel,

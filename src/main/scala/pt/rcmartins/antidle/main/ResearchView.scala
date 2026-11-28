@@ -16,27 +16,9 @@ private[main] object ResearchView {
     def createUpgrade(upgradeType: UpgradeType): ReactiveHtmlElement[HTMLDivElement] = {
       val costSignal: Signal[ActionCost] = Val(upgradeType.cost)
       val wait = resourcesSignal
-        .combineWith(
-          TickCalculator.displayedSugarRate,
-          TickCalculator.displayedProteinRate,
-          TickCalculator.waterTickGain.sum,
-          TickCalculator.resinTickGain.sum,
-          TickCalculator.tunnelingSpaceTickGain.sum
-        )
-        .map { case (resources, sugar, protein, water, resin, space) =>
-          ConstructionWait
-            .ticks(
-              Seq(upgradeType.cost),
-              resources,
-              ActionCost(
-                sugar = sugar,
-                protein = protein,
-                water = water,
-                resin = resin,
-                tunnelingSpace = space
-              )
-            )
-            .head
+        .combineWith(TickCalculator.constructionResourceRates)
+        .map { case (resources, rates) =>
+          ConstructionWait.ticks(Seq(upgradeType.cost), resources, rates).head
         }
         .distinct
       actionButton(
@@ -104,10 +86,10 @@ private[main] object ResearchView {
         if (available.isEmpty)
           Seq(
             div(
-              className := "col-12 py-3 upgrades-empty text-body-secondary",
+              className := "col-12 py-3 upgrades-empty text-body-secondary text-center",
               if (UpgradeType.all.forall(t => upgrades(t).unlocked))
                 p(className := "mb-0", "All current upgrades researched.")
-              else div(p(className := "mb-1", "No upgrades available."))
+              else p(className := "mb-0", "No upgrades available.")
             )
           )
         else available.map(t => createUpgrade(t))

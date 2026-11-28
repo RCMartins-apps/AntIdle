@@ -283,14 +283,18 @@ object PopulationAging {
     }
   }
 
-  def forecast(data: AntsData, tick: Long): String = {
+  case class Forecast(workers: Long, smallWorkers: Long, scouts: Long, repletes: Long)
+
+  def forecast(data: AntsData, tick: Long): Forecast = {
     def count(cohorts: List[AgeCohort]): Long =
-      cohorts.filter(_.expiresAt <= tick + 5L * Minute).map(_.count).sum
-    val storage = if (data.repletes > 0L) s" · ${count(data.ages.repletes)} repletes" else ""
-    val scope = if (data.taskWorkers(AntTask.TerritoryForager) > 0L) "Home aging" else "Aging"
-    val small =
-      if (data.smallWorkers > 0L) s" · ${count(data.ages.smallWorkers)} small workers" else ""
-    s"$scope · Next 5m: ${count(data.ages.workers)} workers · ${count(data.ages.scouts)} scouts$small$storage"
+      cohorts.iterator.filter(_.expiresAt <= tick + 5L * Minute).map(_.count).sum
+
+    Forecast(
+      count(data.ages.workers),
+      count(data.ages.smallWorkers),
+      count(data.ages.scouts),
+      count(data.ages.repletes)
+    )
   }
 
 }

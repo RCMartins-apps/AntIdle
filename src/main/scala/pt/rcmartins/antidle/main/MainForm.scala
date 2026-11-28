@@ -922,27 +922,10 @@ object MainForm {
           className := "build-estimate small",
           title := "Estimated simulated time at current net production, including earlier queued costs; future chamber bonuses are not predicted.",
           child <-- resourcesSignal
-            .combineWith(
-              nestSignal,
-              TickCalculator.sugarTickGain.sum,
-              TickCalculator.proteinTickGain.sum,
-              TickCalculator.waterTickGain.sum,
-              TickCalculator.resinTickGain.sum,
-              TickCalculator.tunnelingSpaceTickGain.sum
-            )
-            .map { case (resources, nest, sugar, protein, water, resin, space) =>
+            .combineWith(nestSignal, TickCalculator.constructionResourceRates)
+            .map { case (resources, nest, rates) =>
               ConstructionWait
-                .ticks(
-                  nest.buildQueue.take(index + 1).map(_.actionCost),
-                  resources,
-                  ActionCost(
-                    sugar = sugar,
-                    protein = protein,
-                    water = water,
-                    resin = resin,
-                    tunnelingSpace = space
-                  )
-                )
+                .ticks(nest.buildQueue.take(index + 1).map(_.actionCost), resources, rates)
                 .lastOption
                 .getOrElse(0L)
             }
