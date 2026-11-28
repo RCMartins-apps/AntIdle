@@ -252,6 +252,21 @@ object MainForm {
       eventProp[dom.Event]("antidle-navigation-ready") --> { _ =>
         application.now().foreach(publishTabs(_, currentTabs))
       },
+      eventProp[dom.CustomEvent]("antidle-save-for-update") --> { event =>
+        val finish = event.detail.asInstanceOf[js.Function1[Boolean, Unit]]
+        SaveLoad.withWriteLock(
+          actionUpdater.writer.onNext {
+            _.tap { data =>
+              val saved = SaveLoad.saveToLocalStorage(data)
+              saved.left.foreach(SaveLoad.showError)
+              if (saved.isRight) Utils.pause = true
+              finish(saved.isRight)
+            }
+          },
+          () => finish(false)
+        )
+      },
+      eventProp[dom.Event]("antidle-resume-after-update") --> (_ => Utils.pause = false),
       eventProp[dom.Event]("antidle-view-changed") --> viewChanged.writer,
       div(
         className := "m-2 game-layout",

@@ -47,7 +47,7 @@ class PackagingTests(unittest.TestCase):
                 self.assertEqual(asset['integrity'], 'sha256-' + base64.b64encode(hashlib.sha256(raw).digest()).decode())
             worker = (a / 'sw.js').read_text()
             self.assertNotIn('__ASSETS__', worker)
-            self.assertNotIn('self.skipWaiting(', worker)
+            self.assertNotIn('self.skipWaiting(', worker.split("self.addEventListener('message'", 1)[0])
             self.assertNotIn('localStorage', worker)
             self.assertEqual((a / 'sw.js').read_bytes(), (b / 'sw.js').read_bytes())
 
