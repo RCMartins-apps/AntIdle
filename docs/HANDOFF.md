@@ -1,13 +1,14 @@
 # Handoff
 
-## 2026-11-27
+## 2026-11-28
 
-Settings downloads the current colony as a save file. The existing Import
-dialog accepts a file or pasted save data and preserves the active-slot and
-playtest destinations. Selecting a file shows its name before confirmation.
+Brood removes its outer divider lines and block spacing. A single aging
+forecast uses caste icons with accessible names. Positive upcoming losses
+use bold red counts. The five-minute window, active-aging gate, home
+scope, and Brood options disclosure still apply.
 
-Verified formatting, the production build, and packaged browser tests at
-390px and 1280px. The tests downloaded and restored a backup offline,
-checked cancel and malformed-file handling, and imported into playtest.
+Verified Scala formatting, the development build, and Brood layout at
+320px, 390px, and 1280px, including neutral zero counts, highlighted
+upcoming losses, and removal of the outer spacing and rules.
 
-See [issue #171](https://github.com/RCMartins-apps/AntIdle/issues/171).
+See [issue #186](https://github.com/RCMartins-apps/AntIdle/issues/186).
