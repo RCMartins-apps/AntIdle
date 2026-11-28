@@ -1,13 +1,9 @@
 # Handoff
 
-## 2026-11-27
+## 2026-11-28
 
-Settings downloads the current colony as a save file. The existing Import
-dialog accepts a file or pasted save data and preserves the active-slot and
-playtest destinations. Selecting a file shows its name before confirmation.
+Settings resets saved disclosures, resource expansion and the selected map site in the active browser namespace. It applies defaults immediately and clears only UI preference keys.
 
-Verified formatting, the production build, and packaged browser tests at
-390px and 1280px. The tests downloaded and restored a backup offline,
-checked cancel and malformed-file handling, and imported into playtest.
+Verified the Scala.js builds, mobile navigation at 320px and 390px, and packaged PR preview isolation for colony, backup, playtest and other preference namespaces.
 
-See [issue #171](https://github.com/RCMartins-apps/AntIdle/issues/171).
+See [issue #172](https://github.com/RCMartins-apps/AntIdle/issues/172).

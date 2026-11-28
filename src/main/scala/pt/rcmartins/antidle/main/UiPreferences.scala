@@ -1,5 +1,6 @@
 package pt.rcmartins.antidle.main
 
+import com.raquo.laminar.api.L.EventBus
 import org.scalajs.dom
 import scala.util.Try
 import scala.scalajs.js
@@ -8,6 +9,25 @@ import scala.scalajs.js
 object UiPreferences {
   private val prefix = pt.rcmartins.antidle.game.saves.BrowserStorage
     .key("antidle.ui", dom.window.location.pathname) + "."
+
+  private val resetBus = new EventBus[Unit]
+  val resets = resetBus.events
+  private var mountedDetails = Set.empty[() => Unit]
+
+  def reset(): Unit = {
+    Try {
+      val storage = dom.window.localStorage
+      val keys = (0 until storage.length).flatMap(index => Option(storage.key(index)))
+      keys.filter(_.startsWith(prefix)).foreach(storage.removeItem)
+    }
+    mountedDetails.foreach(restore => restore())
+    resetBus.writer.onNext(())
+  }
+
+  def remove(key: String): Unit = {
+    Try(dom.window.localStorage.removeItem(prefix + key))
+    ()
+  }
 
   def get(key: String): Option[String] = Try(
     Option(dom.window.localStorage.getItem(prefix + key))
@@ -22,7 +42,9 @@ object UiPreferences {
       key: String,
       defaultOpen: Boolean = false
   ): () => Unit = {
-    if (defaultOpen) element.setAttribute("open", "")
+    def restoreDefault(): Unit =
+      if (defaultOpen) element.setAttribute("open", "") else element.removeAttribute("open")
+    restoreDefault()
     get("details." + key).foreach {
       case "open"   => element.setAttribute("open", "")
       case "closed" => element.removeAttribute("open")
@@ -41,7 +63,16 @@ object UiPreferences {
         attributeFilter = js.Array("open")
       }
     )
-    () => observer.disconnect()
+    val restore: () => Unit = () => {
+      restoreDefault()
+      observer.takeRecords()
+      ()
+    }
+    mountedDetails += restore
+    () => {
+      mountedDetails -= restore
+      observer.disconnect()
+    }
   }
 
 }

@@ -81,6 +81,18 @@ with tempfile.TemporaryDirectory() as temp:
             assert page.evaluate('localStorage.getItem("antidle.ui.resources.expanded")') is None
             keys = page.evaluate('Object.keys(localStorage)')
             assert any(key.startswith('antidle.ui:pr-preview:9.') for key in keys), keys
+            preserved = {
+                'antidle.ui:pr-preview:10.explore.site': 'woodland-edge',
+                'antidle.ui.explore.site': 'nectar-meadow',
+                'save:pr-preview:9:backup': 'backup-test-marker',
+                'save:playtest:pr-preview:9': 'playtest-test-marker',
+            }
+            preserved['save:pr-preview:9'] = page.evaluate("localStorage.getItem('save:pr-preview:9')")
+            page.evaluate("(entries) => Object.entries(entries).forEach(([key, value]) => localStorage.setItem(key, value))", preserved)
+            select_tab(page, 'Settings')
+            page.get_by_role('button', name='Reset interface preferences', exact=True).click()
+            assert page.evaluate("Object.keys(localStorage).filter(key => key.startsWith('antidle.ui:pr-preview:9.'))") == []
+            assert page.evaluate("(keys) => Object.fromEntries(keys.map(key => [key, localStorage.getItem(key)]))", list(preserved)) == preserved
             browser.close()
             print('PASS packaged preview paths, production-worker bypass, independent saves and preferences')
     finally:
