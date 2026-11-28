@@ -42,20 +42,21 @@ Local builds with tracked uncommitted changes append -dev; a source archive
 without Git metadata displays development. No manual version bump is required.
 
 The ID changes when a newly compiled commit actually runs, rather than when a
-new version merely exists on GitHub. If an update is waiting, follow the close-all-
-windows message below. Compare the displayed ID with the latest deployed main
+new version merely exists on GitHub. If an update is waiting, use the update control below. Compare the displayed ID with the latest deployed main
 commit when reporting stale content. A merged PR is not itself proof that the
 subsequent Pages deployment has completed successfully.
 
 ## Updates
 
-An online visit checks for a new release in the background. A complete new release
-waits while any existing game window/tab is open. **Update ready · close all game
-windows to apply** appears when ready. Use normal saving and close all instances;
-the next launch uses the new version, even offline. No automatic reload interrupts
-an in-progress colony. A failed download/install leaves the previous working
-release in place. This intentionally favors a coherent running game over switching
-versions underneath it.
+Open **Check for updates** at the bottom of the game while online. Once the
+release has downloaded, select **Save and install update**. The game saves
+the current colony, switches to the downloaded release, and reopens. If
+another Ant Idle window is open, close it and try again. If saving fails,
+the current game stays open.
+
+The background check also downloads complete releases. They can still
+activate when all game windows close. A failed download leaves the
+previous release available, including offline.
 
 ## How the release is built
 
@@ -82,8 +83,8 @@ that same package automatically on authorized main/debug deployments.
   integrity-protected precache list. Missing/external HTML assets fail packaging.
   A non-precached main.js alias supports pre-PWA HTML during the first rollout.
 - The worker atomically precaches the release and uses its own cache for navigation
-  and assets. Integrity checks reject stale/incomplete deploy responses. It doesn't
-  force activation or reload clients. Old release caches are removed only on new
+  and assets. Integrity checks reject stale/incomplete deploy responses. It only
+  activates on request if no other game window is open. Old release caches are removed only on new
   activation, limited to this app's exact scope prefix. Local saves are untouched.
 - `pwa.js` handles registration/readiness/update status. Ordinary source-tree dev
   pages don't register a worker; packaging enables it explicitly. This avoids
@@ -105,6 +106,6 @@ The browser test uses the real packaged production build under /AntIdle/, regula
 isolated temporary Chrome profiles (private contexts cannot install PWAs), no HTTP
 cache, and real service workers. At 390/1280px it checks valid/installable manifest
 and icon sizes, no CDN requests, offline cold reopen/play/save, deferred updates
-with two windows, coherent offline launch of the new release, and recovery from a
+with two windows, explicit save and offline installation, and recovery from a
 new release missing its game bundle. PR CI runs it alongside the production UI/map
 gates. Generated packages and browser profiles stay outside Git.
