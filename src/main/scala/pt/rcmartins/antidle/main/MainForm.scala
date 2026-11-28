@@ -815,6 +815,14 @@ object MainForm {
       settingsButton("Export", () => exportColony()),
       settingsButton("Download backup", () => downloadColonyBackup()),
       settingsButton(
+        "Reset interface preferences",
+        () => {
+          UiPreferences.reset()
+          currentGlobalAlert.set(Some("Interface preferences reset."))
+        },
+        buttonClass = "btn-outline-secondary"
+      ),
+      settingsButton(
         "Import",
         () => {
           jquery.$(s"#${Constants.ImportModalId}").asInstanceOf[js.Dynamic].modal("show")
@@ -1036,11 +1044,13 @@ object MainForm {
     def setExpanded(value: Boolean): Unit = {
       if (!value && windowWidthVar.now() <= 767) restoreResourceFocus()
       expanded.set(value)
-      UiPreferences.set("resources.expanded", value.toString)
+      if (value) UiPreferences.set("resources.expanded", "true")
+      else UiPreferences.remove("resources.expanded")
     }
 
     div(
       className("resources-expanded") <-- expanded.signal,
+      UiPreferences.resets --> (_ => setExpanded(false)),
       viewChanged --> (_ => if (windowWidthVar.now() <= 767 && expanded.now()) setExpanded(false)),
       windowWidthVar.signal.map(_ <= 767).distinct.changes --> { mobile =>
         if (mobile && !expanded.now()) restoreResourceFocus()

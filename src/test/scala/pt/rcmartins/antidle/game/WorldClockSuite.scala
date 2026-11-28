@@ -25,4 +25,5 @@ class WorldClockSuite extends FunSuite {
     assertEquals(credited.targetTick, world.currentTick + Constants.MaxTicksStored + 1L)
     assertEquals(credited.lastUpdateTime, 7201000L)
   }
+
 }
