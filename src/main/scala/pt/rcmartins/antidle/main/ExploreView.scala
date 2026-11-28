@@ -43,6 +43,8 @@ private[main] object ExploreView {
           else
             parties.map { party =>
               val route = ExplorationDestination.forParty(party)
+              val scouts = party.scouts / u
+              val workers = party.amountWorkers / u
               val raid = party.mission == "haul" && RaidProgression.isRaid(route)
               val cargo = List(
                 ("sugar", party.cargo.sugar),
@@ -79,12 +81,15 @@ private[main] object ExploreView {
                 div(
                   className := "d-flex flex-wrap gap-2",
                   Option.when(party.scouts > 0L)(
-                    span(ResourceIcons.icon(ResourceIcons.Scouts), s"${party.scouts / u} scouts")
+                    span(
+                      ResourceIcons.icon(ResourceIcons.Scouts),
+                      s"$scouts scout${plural(scouts)}"
+                    )
                   ),
                   Option.when(party.amountWorkers > 0L)(
                     span(
                       ResourceIcons.icon(ResourceIcons.Workers),
-                      s"${party.amountWorkers / u} workers"
+                      s"$workers worker${plural(workers)}"
                     )
                   ),
                 ),
