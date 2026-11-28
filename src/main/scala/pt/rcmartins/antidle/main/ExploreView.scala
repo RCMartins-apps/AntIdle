@@ -708,7 +708,11 @@ private[main] object ExploreView {
     }
     div(
       className := "row exploration-layout hex-exploration",
-      selected.signal.changes --> (id => UiPreferences.set("explore.site", id)),
+      UiPreferences.resets --> (_ => selected.set("surroundings")),
+      selected.signal.changes --> { id =>
+        if (id == "surroundings") UiPreferences.remove("explore.site")
+        else UiPreferences.set("explore.site", id)
+      },
       onMountCallback { _ =>
         useSignalValue[AllData](
           snapshotSignal,

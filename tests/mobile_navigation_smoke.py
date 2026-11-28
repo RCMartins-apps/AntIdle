@@ -51,6 +51,32 @@ def check(page, width, url):
         if upgrade['name']=='StandardWorkers':upgrade['unlocked']=True
     game['exploration'].update(revealedSites=6, surveys={'woodland-edge':1,'rival-food-cache':1})
     load_game(page, game)
+    select_tab(page, 'Explore')
+    tile = page.locator('.map-hex[data-site="woodland-edge"]')
+    tile.click()
+    expect(tile).to_have_attribute('aria-pressed', 'true')
+    select_tab(page, 'Nest')
+    options = page.locator('.brood-options-details')
+    options.locator('summary').first.click()
+    expect(options).to_have_attribute('open', '')
+    select_tab(page, 'Settings')
+    page.get_by_role('button', name='Expand resource details', exact=True).click()
+    original = page.evaluate("localStorage.getItem('save')")
+    reset = page.get_by_role('button', name='Reset interface preferences', exact=True)
+    if width == 390:
+        reset.screenshot(path='/tmp/antidle-reset-interface-390.png')
+    reset.click()
+    expect(page.get_by_text('Interface preferences reset.', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Expand resource details', exact=True)).to_be_visible()
+    expect(options).not_to_have_attribute('open', '')
+    assert page.evaluate("localStorage.getItem('save')") == original
+    assert page.evaluate("Object.keys(localStorage).filter(key => key.startsWith('antidle.ui.'))") == []
+    select_tab(page, 'Explore')
+    expect(page.locator('.nest-hex')).to_have_attribute('aria-pressed', 'true')
+    page.reload(wait_until='networkidle')
+    select_tab(page, 'Explore')
+    expect(page.locator('.nest-hex')).to_have_attribute('aria-pressed', 'true')
+    expect(page.get_by_role('button', name='Expand resource details', exact=True)).to_be_visible()
     for name in ['Jobs', 'Explore', 'Upgrades', 'Lineage', 'Settings', 'Nest']:
         select_tab(page, name)
         expect(nav.get_by_role('button', name='Nest' if name=='Jobs' else name, exact=True)).to_have_attribute('aria-current', 'page')
