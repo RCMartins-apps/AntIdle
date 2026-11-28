@@ -212,7 +212,7 @@ private[main] object BroodView {
     val broodPriorityVisible = nestSignal.map(BroodProgression.priorityAvailable).distinct
 
     div(
-      className := "col-12 nest-brood border-top border-bottom my-3 py-3",
+      className := "col-12 nest-brood",
       display <-- unlocksSignal.map(u => if (u.actions.canLayEggs) "block" else "none"),
       child.maybe <-- sugarSignal.combineWith(TickCalculator.sugarTickGain.sum).map {
         case (sugar, net) =>
@@ -223,17 +223,6 @@ private[main] object BroodView {
               s" · Sugar deficit: ${resourceRateStr(-net * TicksPerSecond)}/s"
             )
           }
-      },
-      child.maybe <-- antsSignal.combineWith(currentTickSignal).map { case (ants, tick) =>
-        val ages = ants.ages
-        val soon = (ages.workers ++ ages.smallWorkers ++ ages.scouts ++ ages.repletes)
-          .exists(c => c.count > 0L && c.expiresAt <= tick + 5L * PopulationAging.Minute)
-        Option.when(ages.active && soon)(
-          div(
-            className := "aging-warning small text-danger mb-2",
-            PopulationAging.forecast(ants, tick)
-          )
-        )
       },
       div(
         className := "brood-counts mb-2",
@@ -533,19 +522,42 @@ private[main] object BroodView {
             queenRoutineControls
           },
         ),
-        child.maybe <-- antsSignal
-          .map(_.ages.active)
-          .distinct
-          .map(active =>
-            Option.when(active)(
-              div(
-                className := "colony-aging small mb-2",
-                child.text <-- antsSignal.combineWith(currentTickSignal).map { case (ants, tick) =>
-                  PopulationAging.forecast(ants, tick)
-                }
+        child.maybe <-- ifUnlockedOpt(antsSignal.map(_.ages.active).distinct) {
+          val forecast = antsSignal
+            .combineWith(currentTickSignal)
+            .map { case (ants, tick) =>
+              val counts = PopulationAging.forecast(ants, tick)
+              List(
+                (ResourceIcons.Workers, "workers", counts.workers),
+                (ResourceIcons.Scouts, "scouts", counts.scouts)
+              ) ++ Option.when(ants.smallWorkers > 0L)(
+                (ResourceIcons.SmallWorkers, "small workers", counts.smallWorkers)
+              ) ++ Option.when(ants.repletes > 0L)(
+                (ResourceIcons.Repletes, "repletes", counts.repletes)
               )
-            )
-          ),
+            }
+            .distinct
+          div(
+            className := "colony-aging d-flex flex-wrap align-items-center gap-2 small",
+            span(
+              child.text <-- antsSignal.map { ants =>
+                if (ants.taskWorkers(AntTask.TerritoryForager) > 0L) "Home aging · Next 5m"
+                else "Aging · Next 5m"
+              }.distinct
+            ),
+            children <-- forecast.map(_.map { case (icon, caste, count) =>
+              val label = s"$count ${if (count == 1L) caste.stripSuffix("s") else caste}"
+              span(
+                className := "d-inline-flex align-items-center gap-1",
+                role := "img",
+                aria.label := label,
+                title := label,
+                ResourceIcons.icon(icon),
+                span(className := (if (count > 0L) "text-danger fw-bold" else ""), count.toString)
+              )
+            })
+          )
+        },
       ),
     )
   }

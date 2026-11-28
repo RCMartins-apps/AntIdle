@@ -2,6 +2,17 @@
 
 ## 2026-11-28
 
+Brood removes its outer divider lines and block spacing. A single aging
+forecast uses caste icons with accessible names. Positive upcoming losses
+use bold red counts. The five-minute window, active-aging gate, home
+scope, and Brood options disclosure still apply.
+
+Verified Scala formatting, the development build, and Brood layout at
+320px, 390px, and 1280px, including neutral zero counts, highlighted
+upcoming losses, and removal of the outer spacing and rules.
+
+See [issue #186](https://github.com/RCMartins-apps/AntIdle/issues/186).
+
 Run live tick accounting on the browser monotonic clock. On reload, clamp backward wall-clock elapsed time to zero and retain the existing cap on forward elapsed time. Preserve partial ticks in the saved wall-time anchor.
 
 Verified the clock model and deterministic balance suites, along with browser coverage for live clock shifts, backward and forward reload, and existing autosave behavior.
