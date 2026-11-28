@@ -2,7 +2,7 @@ package pt.rcmartins.antidle.game
 
 import com.raquo.airstream.ownership.OneTimeOwner
 import com.raquo.laminar.api.L.{u => _, _}
-import com.softwaremill.quicklens.ModifyPimp
+import org.scalajs.dom
 import pt.rcmartins.antidle.game.Constants.u
 import pt.rcmartins.antidle.game.saves.SaveLoad
 import pt.rcmartins.antidle.model.BasicResources.BasicResource
@@ -15,6 +15,11 @@ import scala.util.chaining.scalaUtilChainingOps
 object Utils {
 
   var pause: Boolean = false
+  // A monotonic sample and the leftover milliseconds below one simulation tick.
+  private var liveClock: Option[(Long, Long)] = None
+
+  private[game] def resetLiveClock(): Unit = liveClock = None
+
   val useCatchupTicksVar: Var[Boolean] = Var(false)
 
   private val defaultMode: Int = 30
@@ -177,12 +182,14 @@ object Utils {
     updateBus.events
       .sample(worldData)
       .foreach { world =>
-        val passedTicks = world.getPassedTicks(System.currentTimeMillis())
-        worldData.update(
-          _.addToTargetTick(passedTicks)
-            .modify(_.lastUpdateTime)
-            .using(_ + Constants.millsPerTick * passedTicks)
-        )
+        val wallTime = System.currentTimeMillis()
+        val monotonicTime = dom.window.performance.now().toLong
+        val elapsed = liveClock match {
+          case Some((previous, remainder)) => Math.max(0L, monotonicTime - previous) + remainder
+          case None                        => world.elapsedSinceSave(wallTime)
+        }
+        liveClock = Some(monotonicTime -> (elapsed % Constants.millsPerTick))
+        worldData.set(world.creditElapsed(elapsed, wallTime))
         ticksBus.writer.onNext(())
       }
 

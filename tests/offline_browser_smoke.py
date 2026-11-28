@@ -227,32 +227,42 @@ def check(context, width, server, root):
         context.set_offline(False)
         server.release = b
         page.evaluate("window.liveGameMarker = 'do-not-reload'")
-        page.evaluate('async () => (await navigator.serviceWorker.getRegistration()).update()')
-        expect(page.locator('#offline-status')).to_contain_text('Update ready', timeout=30000)
+        page.get_by_role('button', name='Check for updates', exact=True).click()
+        expect(page.get_by_role('button', name='Save and install update', exact=True)).to_be_enabled(timeout=30000)
+        if width == 390 and os.environ.get('ANTIDLE_ARTIFACTS'):
+            output = Path(os.environ['ANTIDLE_ARTIFACTS'])
+            output.mkdir(parents=True, exist_ok=True)
+            page.locator('#app-update').screenshot(path=str(output / 'install-update-390.png'))
         assert page.evaluate('window.liveGameMarker') == 'do-not-reload'
         expect(page.locator('.game-build-footer .build-version')).to_have_text(running_build)
         assert page.title() == f'Ant Idle first-{width}'
         page.reload(wait_until='networkidle')
         assert page.title() == f'Ant Idle first-{width}'
         assert page.locator(f'script[src="{first["bundle"]}"]').count() == 1
-        new_worker = workers[-1]
         other_window = context.new_page()
         other_window.goto(url, wait_until='networkidle')
-        context.set_offline(True)
-        page.close()
+        apply_update = page.get_by_role('button', name='Save and install update', exact=True)
+        apply_update.click()
+        expect(page.locator('#offline-status')).to_contain_text('Close other Ant Idle windows')
         assert other_window.title() == f'Ant Idle first-{width}'
-        assert other_window.evaluate('async () => !!(await navigator.serviceWorker.getRegistration()).waiting')
+        assert page.title() == f'Ant Idle first-{width}'
         other_window.close()
-        assert new_worker.evaluate('''async () => {
-          for (let i=0; i<100; i++) {
-            if (self.registration.active?.state === 'activated' && !self.registration.waiting) return true;
-            await new Promise(resolve => setTimeout(resolve,100));
-          }
-          throw new Error('New release never activated after all windows closed');
-        }''')
-        page = context.new_page()
-        page.on('pageerror', lambda error: errors.append(str(error)))
-        page.goto(url, wait_until='networkidle')
+
+        page.evaluate("""() => {
+            const setItem = Storage.prototype.setItem;
+            Storage.prototype.setItem = function (key, value) {
+                if (key === 'save') throw new DOMException('Test save failure', 'QuotaExceededError');
+                return setItem.call(this, key, value);
+            };
+            window.restoreSaveWrites = () => { Storage.prototype.setItem = setItem; };
+        }""")
+        apply_update.click()
+        expect(page.locator('#offline-status')).to_contain_text('Colony save failed')
+        assert page.title() == f'Ant Idle first-{width}'
+        page.evaluate('window.restoreSaveWrites()')
+        context.set_offline(True)
+        with page.expect_navigation(wait_until='networkidle'):
+            apply_update.click()
         assert page.title() == f'Ant Idle second-{width}'
         assert page.locator(f'script[src="{second["bundle"]}"]').count() == 1
         assert founding_workers(page) == 2
@@ -279,7 +289,7 @@ def check(context, width, server, root):
         assert founding_workers(page) == 2
         assert not errors, errors
         assert not external, external
-        print(f'PASS offline {width}px: installable manifest/icons, no CDNs, offline reopen/save/play, checkpoint isolation, deferred coherent update, failed-update recovery', flush=True)
+        print(f'PASS offline {width}px: installable manifest/icons, no CDNs, offline reopen/save/play, checkpoint isolation, explicit coherent update, failed-save and failed-update recovery', flush=True)
     finally:
         context.close()
 

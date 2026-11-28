@@ -54,7 +54,7 @@ object SaveLoad {
       ()
     })
 
-  def withWriteLock(action: => Unit): Unit = {
+  def withWriteLock(action: => Unit, onFailure: () => Unit = () => showError(Unwritable)): Unit = {
     val locks = org.scalajs.dom.window.navigator.asInstanceOf[js.Dynamic].locks
     if (js.isUndefined(locks) || locks == null) action
     else {
@@ -64,7 +64,7 @@ object SaveLoad {
         .asInstanceOf[js.Promise[Unit]]
         .toFuture
         .failed
-        .foreach(_ => showError(Unwritable))(queue)
+        .foreach(_ => onFailure())(queue)
     }
   }
 
@@ -214,6 +214,7 @@ object SaveLoad {
       messageAlert: Option[String] = Some("Game Loaded!"),
   ): Unit = {
     Utils.pause = true
+    Utils.resetLiveClock()
     actionUpdater.writer.onNext(_ => loadedAllData)
     lastSavedTick.set(loadedAllData.world.currentTick)
     Utils.pause = false
