@@ -17,6 +17,89 @@ private[main] object ExploreView {
   private def mapHexWidth(expanded: Boolean): Double = if (expanded) 27.0 else 36.0
   private def mapHexHeight(expanded: Boolean): Double = mapHexWidth(expanded) * Math.sqrt(3.0) / 2.0
 
+  private def hexLabel(site: ExplorationMap.Site): String =
+    s"Ring ${site.distance} · (${site.q}, ${site.r})"
+
+  def missionRoster(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] =
+    div(
+      className := "explore-mission-roster mb-3",
+      MainForm.detailsTag(
+        MainForm.rememberDetails("explore.missions", defaultOpen = true),
+        MainForm.summaryTag(
+          className := "fw-bold py-2",
+          "Active missions ",
+          span(
+            child.text <-- explorationSignal
+              .combineWith(upgradesSignal)
+              .map { case (data, upgrades) =>
+                s"${data.explorationParties.size} / ${ExplorationProgression.maxParties(data, upgrades)}"
+              }
+              .distinct
+          )
+        ),
+        children <-- explorationSignal.map(_.explorationParties).distinct.map { parties =>
+          if (parties.isEmpty)
+            Seq(div(className := "small text-body-secondary pb-2", "No active missions."))
+          else
+            parties.map { party =>
+              val route = ExplorationDestination.forParty(party)
+              val raid = party.mission == "haul" && RaidProgression.isRaid(route)
+              val cargo = List(
+                ("sugar", party.cargo.sugar),
+                ("protein", party.cargo.protein),
+                ("water", party.cargo.water),
+                ("resin", party.cargo.resin)
+              ).collect {
+                case (resource, amount) if amount > 0L =>
+                  span(
+                    ResourceIcons.forLabel(resource).map(ResourceIcons.icon),
+                    s"${prettyNumberStr(amount)} $resource"
+                  )
+              }
+              div(
+                className := "map-mission py-2",
+                div(
+                  className := "d-flex flex-wrap justify-content-between gap-1",
+                  b(
+                    party.mission match {
+                      case "aphids" => s"Relocating ${party.aphids} aphids"
+                      case "reveal" => "Exploring surroundings"
+                      case "study" =>
+                        s"Searching ${hexLabel(ExplorationMap.site(party.destination))}"
+                      case _ => route.name
+                    }
+                  ),
+                  span(
+                    className := "mission-time",
+                    child.text <-- currentTickSignal
+                      .map(tick => prettyTimeFromTicks(Math.max(0L, party.targetTick - tick)))
+                      .distinct
+                  ),
+                ),
+                div(
+                  className := "d-flex flex-wrap gap-2",
+                  Option.when(party.scouts > 0L)(
+                    span(ResourceIcons.icon(ResourceIcons.Scouts), s"${party.scouts / u} scouts")
+                  ),
+                  Option.when(party.amountWorkers > 0L)(
+                    span(
+                      ResourceIcons.icon(ResourceIcons.Workers),
+                      s"${party.amountWorkers / u} workers"
+                    )
+                  ),
+                ),
+                if (raid)
+                  div(className := "text-danger small", RaidProgression.risk(party.amountWorkers))
+                else
+                  Option.when(party.mission == "haul" && cargo.nonEmpty)(
+                    div(className := "d-flex flex-wrap gap-2", "Up to", cargo)
+                  ),
+              )
+            }
+        }
+      )
+    )
+
   def render(implicit owner: Owner): ReactiveHtmlElement[HTMLDivElement] = {
     val selected = Var("surroundings")
     def validSelection(id: String, data: ExplorationData, ants: AntsData): Boolean =
@@ -46,9 +129,6 @@ private[main] object ExploreView {
         width.percent <-- feedback(id).map(_.percent.getOrElse(0).toDouble)
       )
     )
-    def hexLabel(site: ExplorationMap.Site): String =
-      s"Ring ${site.distance} · (${site.q}, ${site.r})"
-
     def routeAvailable(route: ExplorationDestination, data: AllData): Boolean =
       route.isUnlocked(data.exploration, data.ants, data.nestAttributes) &&
         ExplorationMap.remaining(data.exploration, route.id) > 0L
@@ -831,39 +911,6 @@ private[main] object ExploreView {
           ).map { case (icon, label) => span(MapIcons(icon), label) }
         ),
         child <-- selected.signal.map(sitePanel),
-        div(
-          className := "mission-status my-3",
-          b("Missions "),
-          span(child.text <-- explorationSignal.combineWith(upgradesSignal).map { case (data, upgrades) =>
-            s"${data.explorationParties.size} / ${ExplorationProgression.maxParties(data, upgrades)}"
-          }),
-          children <-- explorationSignal.map(
-            _.explorationParties.map(party =>
-              div(
-                className := "map-mission p-2",
-                b(
-                  if (party.mission == "aphids") s"Relocating ${party.aphids} aphids"
-                  else if (party.mission == "reveal") "Exploring surroundings"
-                  else if (party.mission == "study")
-                    s"Searching ${hexLabel(ExplorationMap.site(party.destination))}"
-                  else ExplorationDestination.forParty(party).name
-                ),
-                s" · ${party.scouts / u} scouts · ${party.amountWorkers / u} workers · ",
-                span(
-                  child.text <-- currentTickSignal.map(tick =>
-                    prettyTimeFromTicks(Math.max(0L, party.targetTick - tick))
-                  )
-                ),
-                if (
-                  party.mission == "haul" && RaidProgression
-                    .isRaid(ExplorationDestination.forParty(party))
-                )
-                  div(className := "text-danger small", RaidProgression.risk(party.amountWorkers))
-                else emptyNode,
-              )
-            )
-          ),
-        ),
       ),
       child.maybe <-- ifUnlockedOpt(explorationSignal.map(_.carcassDiscovered)) {
         div(
