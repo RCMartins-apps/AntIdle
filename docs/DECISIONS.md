@@ -73,3 +73,5 @@ the game's direction and [Ideas](IDEAS.md) for proposals.
 - **D59 · Screenshots.** Provide actual mobile-first screenshots for visual changes. Report capture or delivery limits.
 - **D60 · PR previews.** Publish isolated previews for eligible PRs, replacing debug deployments. Put the actual preview URL first in PR descriptions and include its status and link in handoffs. See [CI workflow](CI-WORKFLOW.md#playable-pull-request-previews).
 - **D74 · Colony Workshop.** The editor, game, and simulator share canonical catalogs. Model editable bonuses with typed effects and derive them from stable upgrade IDs or chamber levels. Upgrade prerequisites are ordinary research links. Validate edits before saving. See [Workshop](BALANCING.md#colony-workshop).
+
+- **Parallel PR handoffs.** Keep task status, checks, and open questions in the PR description or linked issue. Update `docs/HANDOFF.md` in a dedicated PR when shared project context changes.

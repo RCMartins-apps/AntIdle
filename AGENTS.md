@@ -5,7 +5,7 @@
 Before planning or editing, read these small context files:
 1. [Game direction](docs/VISION.md): agreed identity and long-term goals.
 2. [Design decisions](docs/DECISIONS.md): constraints and the reasons behind them.
-3. [Handoff](docs/HANDOFF.md): last verified state and unresolved work.
+3. [Handoff](docs/HANDOFF.md): shared project context and cross-PR work.
 
 Then inspect `git status --short`, the current branch, and recent commits. Verify
 handoff claims against the checkout and relevant PRs before relying on them.
@@ -180,10 +180,12 @@ and do not promise a local file link will work on the user's device.
 - Update `docs/DECISIONS.md` when the user establishes or changes a lasting rule.
 - Update `docs/VISION.md` only when the agreed product direction changes.
 - Update relevant README sections when implemented behavior or setup changes.
-- Before handing off substantive work, replace the dated snapshot in
-  `docs/HANDOFF.md` with verified state, checks, unfinished work and uncertainties.
-  Keep it short; use Git/PR history for the full change log. Do not repeat an
-  unchanged handoff or append tool transcripts.
+- Put task-specific handoff notes in the PR description. Record verified
+  behavior, checks run, outstanding work, and uncertainties. Use the issue for
+  checkpoints before a PR exists.
+- Reserve `docs/HANDOFF.md` for shared project context that spans PRs. Update
+  it in a dedicated PR when that context changes. Keep routine feature and fix
+  branches free of handoff-file edits.
 - Keep suggestions explicitly tentative. If intent is missing, inspect these
   files and related code first, then ask only if the missing choice matters.
 
@@ -270,8 +272,8 @@ project changes to `origin`, including documentation-only design decisions.
   separate "push" request. Preserve unrelated local work and exclude artifacts.
 - Completion is not required for a backup: if work is unfinished, commit and
   push a clearly labeled checkpoint on the task branch before handing back.
-  Record what remains, known failures and checks not yet run in HANDOFF; do not
-  present a checkpoint as tested or ready to merge. For long tasks, also push
+  Record what remains, known failures and checks not yet run in the issue or
+  PR description. Mark the checkpoint as unfinished. For long tasks, also push
   meaningful intermediate checkpoints when practical. Continue toward completion
   after saving; checkpointing is not a reason to stop an actionable task early.
 - Report the branch and push result. If blocked, identify what remains local;
@@ -281,6 +283,6 @@ project changes to `origin`, including documentation-only design decisions.
   Production deploys only from main. Same-repository PRs publish isolated
   previews after validation; `debug*` branch names have no special behavior.
 - A pushed branch is remotely saved, but new checkouts of `main` receive its
-  context only after merge. Keep pending work discoverable in the handoff and
-  inspect relevant remote branches when resuming unfinished work. Open the PR
+  changes only after merge. Keep pending work discoverable in the issue or PR
+  and inspect relevant remote branches when resuming unfinished work. Open the PR
   after the task is finished and validated.
