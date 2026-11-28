@@ -200,6 +200,23 @@ object TickCalculator {
 
   private val sugarSamples = recentSamples(sugarTickGain.contributions)
 
+  val constructionResourceRates: Signal[ActionCost] = sugarTickGain.sum
+    .combineWith(
+      proteinTickGain.sum,
+      waterTickGain.sum,
+      resinTickGain.sum,
+      tunnelingSpaceTickGain.sum
+    )
+    .map { case (sugar, protein, water, resin, space) =>
+      ActionCost(
+        sugar = sugar,
+        protein = protein,
+        water = water,
+        resin = resin,
+        tunnelingSpace = space
+      )
+    }
+
   val displayedSugarRate: Signal[Long] = sugarSamples.map { samples =>
     math.round(
       samples.iterator.map(_.iterator.map(_.tickResourceU.toDouble).sum).sum / samples.size

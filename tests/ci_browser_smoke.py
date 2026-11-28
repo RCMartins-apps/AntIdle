@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from http.server import ThreadingHTTPServer
+import copy
 import os
 from pathlib import Path
 import shutil
@@ -247,10 +248,26 @@ def check_game(page, width, url):
     foraging = page.get_by_role('button', name='Foraging Techniques 1', exact=True)
     expect(foraging).to_be_disabled()
     expect(page.get_by_role('button', name='Foraging Techniques 2', exact=True)).to_have_count(0)
+    card = page.locator('.action-cell').filter(has=foraging)
+    expect(card.locator('.upgrade-estimate')).to_have_count(0)
+    forecast = copy.deepcopy(research)
+    forecast['ants'].update(workers=30 * UNIT, tasks=[[{'SugarCollector': {}}, 30 * UNIT]])
+    forecast['basicResources']['sugar']['amount'] = 50 * UNIT
+    load_game(page, forecast)
+    select_tab(page, 'Upgrades')
+    estimate = card.locator('.upgrade-estimate')
+    expect(estimate).to_contain_text('Resources in ~')
+    artifacts = Path(os.environ.get('ANTIDLE_ARTIFACTS', '/tmp/antidle-upgrades'))
+    artifacts.mkdir(parents=True, exist_ok=True)
+    card.screenshot(path=str(artifacts / f'upgrade-estimate-{width}.png'))
+    before_estimate = estimate.inner_text()
+    page.clock.run_for(5000)
+    expect(estimate).not_to_have_text(before_estimate)
     research['basicResources']['sugar']['amount'] = 150 * UNIT
     load_game(page, research)
     select_tab(page, 'Upgrades')
     expect(foraging).to_be_enabled()
+    expect(card.locator('.upgrade-estimate')).to_have_count(0)
     foraging.click()
     expect(foraging).to_have_count(0)
     researched = save_game(page)
