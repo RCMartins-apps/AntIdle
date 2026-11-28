@@ -169,6 +169,8 @@
 .map-site-card .action-cell:not(:has(.action-details)) > button {font-size:1rem!important;min-height:44px}
 .antidle-app .map-site-card .action-cell > button .resource-icon {color:inherit}
 .mission-preview {font-size:.9rem;margin-bottom:.4rem}
+.explore-mission-roster {display:none}
+.card-body:has(> .tab-content > :is(#exploreContent, #discoveriesContent, #territoryContent).active) > .explore-mission-roster {display:block}
 .map-mission {border-bottom:1px solid #ddd;font-size:.9rem}
 .antidle-app .game-main .btn, .antidle-app .game-panel .btn {min-height:44px;min-width:44px;font-size:1rem !important;touch-action:manipulation}
 .antidle-app .game-main input:not([type="checkbox"]), .antidle-app .game-main select {min-height:44px}

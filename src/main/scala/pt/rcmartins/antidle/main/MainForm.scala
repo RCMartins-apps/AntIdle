@@ -497,6 +497,7 @@ object MainForm {
       ),
       div(
         className := "card-body",
+        child.maybe <-- ifUnlockedOpt(exploreTabUnlockedSignal)(ExploreView.missionRoster),
         div(
           className := "tab-content",
           div(

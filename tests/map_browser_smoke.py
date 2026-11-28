@@ -184,6 +184,7 @@ def check_map(page, width, url):
     select_tab(page, 'Explore')
     expect(outer_tile).to_have_attribute('aria-pressed', 'true')
 
+    check_mission_roster(page, width, ring, artifacts)
     check_trails(page, width, ring)
     check_aphids(page, width, ring)
     check_territory_guards(page, width, ring)
@@ -211,6 +212,46 @@ def staffing_counts(page, width, saved):
     assert sum(scouts.values()) * UNIT == saved['ants']['scouts'], scouts
     assert_fits(page, width)
     return workers, scouts
+
+
+def check_mission_roster(page, width, ring, artifacts):
+    load_game(page, ring)
+    select_tab(page, 'Explore')
+    page.locator('.map-hex[data-site="woodland-edge"]').click()
+    page.get_by_role('button', name='Search Site', exact=True).click()
+    page.get_by_role('button', name='Collect Insects', exact=True).click()
+    roster = page.locator('.explore-mission-roster')
+    summary = roster.locator('summary')
+    missions = roster.locator('.map-mission')
+    expect(summary).to_have_text('Active missions 2 / 2')
+    search = missions.filter(has_text='Searching Ring 1')
+    collection = missions.filter(has_text='Up to')
+    expect(collection.locator('.resource-icon-protein')).to_be_visible()
+    for tab in ('Discoveries', 'Territory', 'Explore'):
+        select_tab(page, tab)
+        expect(search).to_be_visible()
+        expect(collection).to_be_visible()
+    assert_fits(page, width)
+    if width == 390:
+        roster.screenshot(path=str(artifacts / 'mission-roster-390.png'))
+    summary.click()
+    select_tab(page, 'Discoveries')
+    expect(summary).to_have_text('Active missions 2 / 2')
+    expect(search).to_be_hidden()
+    summary.click()
+    saved = save_game(page)
+    load_game(page, saved)
+    select_tab(page, 'Territory')
+    expect(search).to_be_visible()
+    expect(collection).to_be_visible()
+    timer = collection.locator('.mission-time')
+    before = timer.inner_text()
+    page.clock.run_for(1000)
+    expect(timer).not_to_have_text(before)
+    final_tick = max(party['targetTick'] for party in saved['exploration']['explorationParties'])
+    page.clock.run_for((final_tick - saved['world']['currentTick'] + 5) * 200)
+    expect(summary).to_have_text('Active missions 0 / 2')
+    expect(missions).to_have_count(0)
 
 
 def check_trails(page, width, base):
