@@ -214,6 +214,7 @@ object SaveLoad {
       messageAlert: Option[String] = Some("Game Loaded!"),
   ): Unit = {
     Utils.pause = true
+    Utils.resetLiveClock()
     actionUpdater.writer.onNext(_ => loadedAllData)
     lastSavedTick.set(loadedAllData.world.currentTick)
     Utils.pause = false
